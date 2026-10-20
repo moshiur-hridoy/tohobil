@@ -16,6 +16,7 @@ import {
 import type { Env } from '../lib/env';
 import { audit } from '../lib/audit';
 import { inTransaction, type Db } from '../lib/tx';
+import { queueAuditorDeviceAlert, type DeviceEventKind } from '../notifications/device-alert';
 
 export const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
 export const REFRESH_TOKEN_TTL_MS = 30 * 24 * 3600_000;
@@ -107,6 +108,23 @@ async function issueSession(
   };
 }
 
+/** Append to the security feed and alert the auditor, in the caller's transaction. */
+async function recordDeviceEvent(
+  tx: Db,
+  deps: AuthDeps,
+  userId: string,
+  kind: DeviceEventKind,
+  by: string | null,
+): Promise<void> {
+  await tx.query(`INSERT INTO device_events (user_id, kind, at, by) VALUES ($1,$2,$3,$4)`, [
+    userId,
+    kind,
+    deps.clock.now(),
+    by,
+  ]);
+  await queueAuditorDeviceAlert(tx, deps.clock, userId, kind);
+}
+
 // ---- activation ---------------------------------------------------------------------------
 
 const INVALID_ACTIVATION = () =>
@@ -160,10 +178,7 @@ export async function activate(
         [user.id, now],
       );
       if (revoked.rowCount) {
-        await tx.query(
-          `INSERT INTO device_events (user_id, kind, at, by) VALUES ($1,'reset',$2,$1)`,
-          [user.id, now],
-        );
+        await recordDeviceEvent(tx, deps, user.id, 'reset', user.id);
       }
     }
 
@@ -178,10 +193,7 @@ export async function activate(
       [user.id, input.device.label ?? null, input.device.platform, input.device.install_id, now],
     );
     const deviceId = (device.rows[0] as { id: string }).id;
-    await tx.query(
-      `INSERT INTO device_events (user_id, kind, at, by) VALUES ($1,'registered',$2,$1)`,
-      [user.id, now],
-    );
+    await recordDeviceEvent(tx, deps, user.id, 'registered', user.id);
     await audit(tx, {
       actor: user.id,
       action: 'auth.activate',
@@ -293,10 +305,7 @@ export async function login(deps: AuthDeps, input: Login, client: ClientInfo): P
         [row.id, dev.label ?? null, dev.platform, dev.install_id, now],
       );
       deviceId = (created.rows[0] as { id: string }).id;
-      await tx.query(
-        `INSERT INTO device_events (user_id, kind, at, by) VALUES ($1,'registered',$2,$1)`,
-        [row.id, now],
-      );
+      await recordDeviceEvent(tx, deps, row.id, 'registered', row.id);
     }
     await audit(tx, {
       actor: row.id,
@@ -352,10 +361,7 @@ export async function issueMemberPin(
       [target.id, now],
     );
     if (revoked.rowCount) {
-      await tx.query(
-        `INSERT INTO device_events (user_id, kind, at, by) VALUES ($1,'reset',$2,$3)`,
-        [target.id, now, actor?.id ?? null],
-      );
+      await recordDeviceEvent(tx, deps, target.id, 'reset', actor?.id ?? null);
     }
     await audit(tx, {
       actor: actor?.id ?? null,
@@ -451,10 +457,7 @@ export async function refresh(deps: AuthDeps, input: Refresh): Promise<Session> 
         d.id,
         now,
       ]);
-      await tx.query(
-        `INSERT INTO device_events (user_id, kind, at, by) VALUES ($1,'revoked',$2,NULL)`,
-        [d.user_id, now],
-      );
+      await recordDeviceEvent(tx, deps, d.user_id, 'revoked', null);
       await audit(tx, {
         actor: d.user_id,
         action: 'auth.refresh_reuse',
@@ -707,10 +710,7 @@ export async function revokeOwnDevice(
       [deviceId, user.id, now],
     );
     if (!res.rowCount) throw notFound('device.not_found', 'Device not found');
-    await tx.query(
-      `INSERT INTO device_events (user_id, kind, at, by) VALUES ($1,'revoked',$2,$1)`,
-      [user.id, now],
-    );
+    await recordDeviceEvent(tx, deps, user.id, 'revoked', user.id);
     await audit(tx, {
       actor: user.id,
       action: 'auth.device_revoked',

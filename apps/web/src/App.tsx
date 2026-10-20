@@ -27,6 +27,7 @@ import { CharityPage } from './pages/admin/CharityPage';
 import { SettingsPage } from './pages/admin/SettingsPage';
 import { AdminPlaceholderPage } from './pages/admin/AdminPlaceholderPage';
 import { VoteDetailPage } from './pages/member/VoteDetailPage';
+import { AdminNotificationsPage } from './pages/admin/AdminNotificationsPage';
 import { ChangePinPage } from './pages/member/ChangePinPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { UpdatePrompt } from './components/UpdatePrompt';
@@ -88,7 +89,8 @@ export function App() {
           <Route path="/admin/rules" element={<RulesPage />} />
           <Route path="/admin/charity" element={<CharityPage />} />
           <Route path="/admin/settings" element={<SettingsPage />} />
-          {ADMIN_NAV.filter(([to]) => !['/admin', '/admin/matrix', '/admin/payments', '/admin/ledger', '/admin/members', '/admin/proposals', '/admin/rules', '/admin/charity', '/admin/settings', '/admin/system'].includes(to)).map(([to, key]) => (
+          <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
+          {ADMIN_NAV.filter(([to]) => !['/admin', '/admin/matrix', '/admin/payments', '/admin/ledger', '/admin/members', '/admin/proposals', '/admin/rules', '/admin/charity', '/admin/settings', '/admin/notifications', '/admin/system'].includes(to)).map(([to, key]) => (
             <Route key={to} path={to} element={<AdminPlaceholderPage titleKey={key} />} />
           ))}
         </Route>

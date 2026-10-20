@@ -42,14 +42,21 @@ pnpm dues:generate            # current period (kept as manual until jobs assume
 pnpm check
 ```
 
-The scheduler starts automatically when `apps/api/src/index.ts` boots; set `DISABLE_JOBS=1` to run without it.
+The scheduler starts automatically when `apps/api/src/index.ts` boots. There is no switch to turn it off. It needs the pg-boss tables, which `pnpm migrate` installs (the app role cannot create them), so run `pnpm migrate` on any database that predates that step.
+
+## Added after the first Phase 2 pass
+
+- **Auditor push on device events**: every `registered`, `revoked` and `reset` device event queues a `device_event` push to the auditor in the same transaction (`notifications/device-alert.ts`, used by `recordDeviceEvent` in `auth/service.ts`). Tested in `routes/auth.test.ts`.
+- **Reminders pause while a payment is pending**: `remindDuesJob` skips a member with a `pending` payment. Tested in `jobs/reminders.test.ts`.
+- **Admin notifications page** (`/admin/notifications`): members not reachable by push with a rate-limited reminder button, and the send log with a template filter.
+- **Simulated-year jobs test** (`jobs/simulated-year.test.ts`): 365 days of the dues and fines jobs on a fake clock. Dues once per month, fines only on the 21st, one per due, month-end counts for all 12 months.
+- **e2e scenario (3)** (`e2e/specs/automation.spec.ts`): the scheduler's real `apply-fines` and `notify-fines` workers apply a fine and queue the notice, and the member sees it on the notices page. The scheduler runs on the system clock, so the scenario sets the `fine_day` rule to today instead of advancing the clock to the 21st.
 
 ## Known gaps
 
 - **Manual Android build checklist**: `pnpm android:release`, signed debug APK install, and a real FCM test push are not completed. `docs/ANDROID.md` instructions are in place but untested on hardware.
 - **Onboarding screens**: battery-optimisation and autostart-by-brand guidance pages exist as routes but have not been user-tested.
 - **PWA update flow**: cache headers and `sw.js` no-cache handling are implemented (`app.ts` `NO_CACHE_FILES`); a full simulate-old-client update test is recorded but not manually verified end-to-end.
-- **e2e scenario (3)**: the Playwright spec file is scaffolded but not yet recorded as passing against the real scheduler.
 - **Real FCM credentials / SMS gateway**: environment variables exist but point to console providers in dev.
 
 ## Review checklist for the owner

@@ -332,6 +332,10 @@
     "matrix": {
       "invalid_range": "The first month must not be after the last.",
       "range_too_long": "Choose at most 36 months."
+    },
+    "notification": {
+      "nudge_rate_limited": "A reminder was sent to this member recently. Try again after 6 hours.",
+      "invalid_nudge": "This kind of message cannot be sent by hand."
     }
   },
   "common": {
@@ -406,7 +410,8 @@
     "meeting_reminder": "Monthly meeting on {date} at {time}. The link is in the app.",
     "absence_fine": "{name}, a fine of ৳{amount} was charged for {count} consecutive unexcused absences (goes to the charity fund).",
     "charity_year_end": "Year end: fines and other money still to donate: ৳{amount}.",
-    "zakat_info": "Your paid-in capital and estimated current value are attached. You calculate your own zakat."
+    "zakat_info": "Your paid-in capital and estimated current value are attached. You calculate your own zakat.",
+    "device_event": "{code} {name}: {event}"
   },
   "auth": {
     "activateHint": "Enter the activation code the cashier gave you, or scan the QR code.",
@@ -1058,5 +1063,31 @@
     "again": "New PIN again",
     "submit": "Change PIN",
     "done": "PIN changed. Other devices must sign in with the new PIN."
+  },
+  "adminNotifications": {
+    "title": "Notifications",
+    "unreachable": "Not reachable by push",
+    "unreachableHint": "Based on the last 48 hours. Phone them, or send a manual reminder (once per 6 hours).",
+    "allReachable": "Everyone can be reached by push.",
+    "nudge": "Send reminder",
+    "nudged": "Sent",
+    "log": "Send log",
+    "template": "Template",
+    "allTemplates": "All",
+    "when": "When",
+    "member": "Member",
+    "channel": "Channel",
+    "opened": "Opened",
+    "reason": {
+      "push_disabled": "Push turned off",
+      "no_push_token": "No phone registered for push",
+      "recent_push_unopened": "Recent push not opened"
+    },
+    "status": {
+      "queued": "Queued",
+      "sent": "Sent",
+      "failed": "Failed",
+      "skipped": "Skipped"
+    }
   }
 }

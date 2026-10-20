@@ -478,6 +478,32 @@ describe('sign in from any device with the PIN', () => {
     expect((await post('/auth/login', { member_ref: 'M06', pin: '729405', device: device('m6-c') })).statusCode).toBe(200);
   });
 
+  it('queues a push to the auditor for every device event, in the same transaction', async (ctx) => {
+    if (!db) return ctx.skip();
+    const alerts = async () =>
+      (
+        await db!.admin.query(
+          `SELECT payload FROM notifications WHERE member_id=$1 AND template='device_event' AND channel='push'`,
+          [ids.M07],
+        )
+      ).rows.map((r) => r.payload as { code: string; kind: string; _body: string });
+    const before = (await alerts()).length;
+
+    const pin = await pinFor('M05');
+    await post('/auth/login', { member_ref: 'M05', pin, device: device('m5-alert') });
+
+    const after = await alerts();
+    const fresh = after.slice(before);
+    expect(fresh.map((a) => a.kind).sort()).toEqual(['registered']);
+    expect(fresh[0]).toMatchObject({ code: 'M05' });
+    expect(fresh[0]!._body).toContain('M05');
+    expect(fresh[0]!._body).not.toContain('{');
+
+    // a rolled-back event leaves no alert behind: a wrong PIN registers nothing
+    await post('/auth/login', { member_ref: 'M05', pin: '000111', device: device('m5-bad') });
+    expect((await alerts()).length).toBe(after.length);
+  });
+
   it('only a cashier can issue a PIN through the API', async (ctx) => {
     if (!db) return ctx.skip();
     const pin = await pinFor('M04');

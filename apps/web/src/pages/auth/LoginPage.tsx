@@ -7,34 +7,46 @@ import { ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { errorMessage } from '../../lib/errors';
 
-/** PIN pad on a registered device (spec 19.1), or the "device reset needed" screen. */
+/** Member ID, then the PIN pad. Works on any device: the PIN is the only credential members hold. */
 export function LoginPage() {
   const { t } = useTranslation();
   const auth = useAuth();
   const navigate = useNavigate();
+  const [ref, setRef] = useState('');
+  const [chosenRef, setChosenRef] = useState<string | null>(null);
   const [pin, setPin] = useState('');
   const [error, setError] = useState<{ message: string; requestId?: string } | null>(null);
-  const [resetNeeded, setResetNeeded] = useState(false);
+  const [forgot, setForgot] = useState(false);
   const [busy, setBusy] = useState(false);
 
   if (auth.status === 'authenticated') return <Navigate to="/" replace />;
   if (auth.status === 'loading') return null;
-  if (!auth.hasDevice && !resetNeeded) return <Navigate to="/activate" replace />;
 
-  if (resetNeeded) {
+  const activeRef = chosenRef ?? auth.memberRef;
+
+  if (!activeRef) {
+    const valid = /^M\d{2}$/.test(ref.trim().toUpperCase());
     return (
-      <AuthShell>
-        <h1 className="text-[22px] font-semibold leading-snug">{t('auth.deviceResetTitle')}</h1>
-        <p className="text-[13px] leading-normal text-muted">{t('auth.deviceResetBody')}</p>
+      <AuthShell footer={t('auth.pinFooter')}>
+        <h1 className="text-[22px] font-semibold leading-snug">{t('auth.signInTitle')}</h1>
+        <label className="block text-sm text-muted">
+          {t('auth.memberRef')}
+          <input
+            className="mt-1 h-14 w-full rounded-2xl border border-input bg-background px-4 text-[17px] uppercase text-foreground"
+            value={ref}
+            autoCapitalize="characters"
+            autoComplete="username"
+            placeholder="M01"
+            onChange={(e) => setRef(e.target.value)}
+          />
+        </label>
         <button
           type="button"
-          onClick={() => {
-            auth.forgetDevice();
-            void navigate('/activate', { replace: true });
-          }}
-          className="h-14 rounded-2xl bg-primary text-[17px] font-bold text-primary-foreground"
+          disabled={!valid}
+          onClick={() => setChosenRef(ref.trim().toUpperCase())}
+          className="h-14 rounded-2xl bg-primary text-[17px] font-bold text-primary-foreground disabled:opacity-50"
         >
-          {t('auth.haveNewCode')}
+          {t('auth.continue')}
         </button>
       </AuthShell>
     );
@@ -44,13 +56,9 @@ export function LoginPage() {
     setBusy(true);
     setError(null);
     try {
-      await auth.login(value);
+      await auth.login(value, activeRef);
       void navigate('/', { replace: true });
     } catch (err) {
-      if (err instanceof ApiError && err.code === 'auth.device_reset_needed') {
-        setResetNeeded(true);
-        return;
-      }
       const msg = errorMessage(t, err);
       const left = err instanceof ApiError ? err.extra.attempts_left : undefined;
       setError({
@@ -68,14 +76,30 @@ export function LoginPage() {
       <div>
         <h1 className="text-[22px] font-semibold leading-snug">{t('auth.pinTitle')}</h1>
         <p className="mt-1 text-[13px] leading-normal text-muted">
-          {t('auth.pinHint')} · {auth.memberRef}
+          {t('auth.pinHint')} · {activeRef}
         </p>
       </div>
       <PinPad value={pin} onChange={(v) => { setPin(v); setError(null); }} onComplete={(p) => void submit(p)} disabled={busy} invalid={!!error} />
       <FieldError message={error?.message ?? null} requestId={error?.requestId} />
-      <button type="button" className="text-sm text-muted underline" onClick={() => setResetNeeded(true)}>
-        {t('auth.forgotPin')}
-      </button>
+      {forgot && <p className="text-[13px] leading-normal text-muted">{t('auth.forgotPinBody')}</p>}
+      <div className="flex flex-wrap gap-4">
+        <button type="button" className="text-sm text-muted underline" onClick={() => setForgot(true)}>
+          {t('auth.forgotPin')}
+        </button>
+        <button
+          type="button"
+          className="text-sm text-muted underline"
+          onClick={() => {
+            auth.forgetDevice();
+            setChosenRef(null);
+            setRef('');
+            setPin('');
+            setError(null);
+          }}
+        >
+          {t('auth.notYou')}
+        </button>
+      </div>
     </AuthShell>
   );
 }

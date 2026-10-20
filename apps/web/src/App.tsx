@@ -27,14 +27,15 @@ import { CharityPage } from './pages/admin/CharityPage';
 import { SettingsPage } from './pages/admin/SettingsPage';
 import { AdminPlaceholderPage } from './pages/admin/AdminPlaceholderPage';
 import { VoteDetailPage } from './pages/member/VoteDetailPage';
+import { ChangePinPage } from './pages/member/ChangePinPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { UpdatePrompt } from './components/UpdatePrompt';
 
 /** Everything except /activate and /login needs a session. */
 function RequireAuth() {
-  const { status, hasDevice } = useAuth();
+  const { status } = useAuth();
   if (status === 'loading') return null;
-  if (status === 'anonymous') return <Navigate to={hasDevice ? '/login' : '/activate'} replace />;
+  if (status === 'anonymous') return <Navigate to="/login" replace />;
   return <Outlet />;
 }
 
@@ -68,6 +69,7 @@ export function App() {
           <Route path="/menu" element={<MenuPage />} />
           <Route path="/menu/ledger" element={<LedgerPage />} />
           <Route path="/menu/members" element={<MembersPage />} />
+          <Route path="/menu/pin" element={<ChangePinPage />} />
           <Route path="/menu/constitution" element={<ConstitutionPage />} />
           <Route path="/menu/notices" element={<NoticesPage />} />
           <Route path="/menu/settlement" element={<SettlementPage />} />

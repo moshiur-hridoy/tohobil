@@ -70,7 +70,8 @@ interface AuthContextValue {
   /** True when this install has a registered device and can sign in with a PIN. */
   hasDevice: boolean;
   activate(input: { member_ref: string; code: string; pin: string }): Promise<void>;
-  login(pin: string): Promise<void>;
+  /** Member ID + PIN from any device; `member_ref` overrides the remembered one. */
+  login(pin: string, member_ref?: string): Promise<void>;
   logout(): Promise<void>;
   /** Forget this device locally (after "device reset needed") so the activation screen opens. */
   forgetDevice(): void;
@@ -188,18 +189,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setMemberRef(member_ref.trim().toUpperCase());
         await loadMe();
       },
-      async login(pin) {
-        const device_id = read(KEYS.device);
-        const member_ref = read(KEYS.ref);
-        if (!device_id || !member_ref)
-          throw new ApiError(401, 'auth.device_reset_needed', 'No device');
+      async login(pin, refOverride) {
+        const member_ref = (refOverride ?? read(KEYS.ref))?.trim().toUpperCase();
+        if (!member_ref) throw new ApiError(401, 'auth.invalid_credentials', 'No member ID');
+        // A stored device id resumes that device; otherwise the server registers this one.
+        const device_id = refOverride && refOverride.trim().toUpperCase() !== read(KEYS.ref) ? null : read(KEYS.device);
+        const ua = navigator.userAgent;
         applySession(
           await api<Session>('/auth/login', {
             method: 'POST',
             auth: false,
-            body: { member_ref, pin, device_id },
+            body: {
+              member_ref,
+              pin,
+              ...(device_id ? { device_id } : {}),
+              device: {
+                label: /Android/i.test(ua) ? 'Android browser' : 'Web browser',
+                platform: 'web',
+                install_id: installId(),
+              },
+            },
           }),
         );
+        write(KEYS.ref, member_ref);
+        setMemberRef(member_ref);
         await loadMe();
       },
       async logout() {

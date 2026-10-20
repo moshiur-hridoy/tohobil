@@ -293,7 +293,8 @@
       "totp_invalid": "The authenticator code is incorrect.",
       "totp_enrollment_required": "Set up the authenticator app first.",
       "step_up_required": "Enter your authenticator code for this action.",
-      "totp_already_enrolled": "The authenticator is already set up."
+      "totp_already_enrolled": "The authenticator is already set up.",
+      "pin_unchanged": "Choose a different PIN."
     },
     "pageNotFound": "This page does not exist.",
     "requestId": "Reference",
@@ -437,7 +438,11 @@
     "forgotPin": "Forgot your PIN or new phone?",
     "deviceResetTitle": "Device reset needed",
     "deviceResetBody": "Ask the cashier for a new activation code to sign in on this device. Activating with a new code switches off the old device.",
-    "haveNewCode": "I have a new code"
+    "haveNewCode": "I have a new code",
+    "signInTitle": "Sign in",
+    "continue": "Continue",
+    "notYou": "Use a different member ID",
+    "forgotPinBody": "If you forgot your PIN, ask the cashier for a new one."
   },
   "menu": {
     "placeholder": "Profile, settings and more.",
@@ -998,7 +1003,10 @@
     "settlementKind": "Settlement kind",
     "settlementNetAmount": "Net payable amount (৳)",
     "settlementDueDate": "Payable date",
-    "noMembers": "No members."
+    "noMembers": "No members.",
+    "issuePin": "Issue PIN",
+    "issuePinHint": "A new random PIN will be created and the member is signed out of every device.",
+    "issuePinOnce": "The PIN is shown only now. Tell the member in person; they can change it later."
   },
   "contactKind": {
     "call": "Call",
@@ -1049,5 +1057,14 @@
   "ownerConflict": {
     "title": "Owner decision conflict: {{count}} unresolved.",
     "dismiss": "Dismiss"
+  },
+  "pinChange": {
+    "title": "Change PIN",
+    "hint": "Change your own PIN",
+    "current": "Current PIN",
+    "new": "New PIN",
+    "again": "New PIN again",
+    "submit": "Change PIN",
+    "done": "PIN changed. Other devices must sign in with the new PIN."
   }
 }

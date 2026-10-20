@@ -47,6 +47,10 @@ export function MenuPage() {
           <span className="font-medium">{t('menuLinks.notices')}</span>
           <span className="block text-sm text-muted">{t('menuLinks.noticesHint')}</span>
         </Link>
+        <Link to="/menu/pin" className="block rounded-lg border border-border bg-card p-4">
+          <span className="font-medium">{t('pinChange.title')}</span>
+          <span className="block text-sm text-muted">{t('pinChange.hint')}</span>
+        </Link>
         <Link to="/menu/constitution" className="block rounded-lg border border-border bg-card p-4">
           <span className="font-medium">{t('menuLinks.constitution')}</span>
           <span className="block text-sm text-muted">{t('menuLinks.constitutionHint')}</span>

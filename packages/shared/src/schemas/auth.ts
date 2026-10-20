@@ -84,13 +84,30 @@ export const activateSchema = z.object({
 
 export type Activate = z.infer<typeof activateSchema>;
 
-export const loginSchema = z.object({
-  member_ref: memberRefSchema,
-  pin: loginPinSchema,
-  device_id: z.string().uuid(),
-});
+/**
+ * Sign in with member ID + PIN from any device. A known `device_id` resumes that device; otherwise
+ * `device` is required and the server registers a new one after the PIN checks out.
+ */
+export const loginSchema = z
+  .object({
+    member_ref: memberRefSchema,
+    pin: loginPinSchema,
+    device_id: z.string().uuid().optional(),
+    device: deviceSchema.optional(),
+  })
+  .refine((v) => v.device_id !== undefined || v.device !== undefined, {
+    message: 'device_id or device is required',
+    path: ['device'],
+  });
 
 export type Login = z.infer<typeof loginSchema>;
+
+export const pinChangeSchema = z.object({
+  current_pin: loginPinSchema,
+  new_pin: newPinSchema,
+});
+
+export type PinChange = z.infer<typeof pinChangeSchema>;
 
 export const refreshSchema = z.object({
   refresh_token: z.string().min(1).max(500),

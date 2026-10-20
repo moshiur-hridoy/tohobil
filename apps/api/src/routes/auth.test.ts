@@ -5,7 +5,7 @@ import { createFakeClock } from '@barakah/shared';
 import { buildApp } from '../app';
 import { parseEnv, type Env } from '../lib/env';
 import { createTestDb, type TestDb } from '../test/db-harness';
-import { issueActivationCode } from '../auth/service';
+import { issueActivationCode, issueMemberPin } from '../auth/service';
 
 const env: Env = parseEnv({
   NODE_ENV: 'test',
@@ -262,19 +262,16 @@ describe('login, lockout and devices', () => {
 });
 
 describe('device policy', () => {
-  it('a regular member cannot add a second device (auth.device_limit)', async (ctx) => {
+  it('members and privileged users can add devices without a cap (owner decision)', async (ctx) => {
     if (!db) return ctx.skip();
-    await activateMember('M02', 'phone-a'); // replaces whatever was there
-    const res = await activateMember('M02', 'phone-b', 'add');
-    expect(res.statusCode).toBe(409);
-    expect(res.json().code).toBe('auth.device_limit');
-  });
-
-  it('the privileged cashier may add a second device, but not a third', async (ctx) => {
-    if (!db) return ctx.skip();
+    await activateMember('M02', 'phone-a');
+    for (const install of ['phone-b', 'phone-c', 'phone-d']) {
+      expect((await activateMember('M02', install, 'add')).statusCode).toBe(200);
+    }
     await activateMember('M01', 'cashier-phone');
-    expect((await activateMember('M01', 'cashier-desktop', 'add')).statusCode).toBe(200);
-    expect((await activateMember('M01', 'cashier-third', 'add')).statusCode).toBe(409);
+    for (const install of ['cashier-desktop', 'cashier-third']) {
+      expect((await activateMember('M01', install, 'add')).statusCode).toBe(200);
+    }
   });
 
   it('replacement revokes old devices and refresh tokens, and shows in the security feed', async (ctx) => {
@@ -282,12 +279,22 @@ describe('device policy', () => {
     const first = (await activateMember('M02', 'old-phone')).json();
     const second = (await activateMember('M02', 'new-phone')).json();
 
+    // the revoked device id alone no longer opens a session ...
     const oldLogin = await post('/auth/login', {
       member_ref: 'M02',
       pin: GOOD_PIN,
       device_id: first.device_id,
     });
-    expect(oldLogin.json().code).toBe('auth.device_reset_needed');
+    expect(oldLogin.statusCode).toBe(400);
+    // ... but with device details the PIN registers it again as a fresh device
+    const relogin = await post('/auth/login', {
+      member_ref: 'M02',
+      pin: GOOD_PIN,
+      device_id: first.device_id,
+      device: device('old-phone'),
+    });
+    expect(relogin.statusCode).toBe(200);
+    expect(relogin.json().device_id).not.toBe(first.device_id);
     const oldRefresh = await post('/auth/refresh', {
       refresh_token: first.refresh_token,
       device_id: first.device_id,
@@ -404,5 +411,78 @@ describe('access control', () => {
   it('the application role cannot delete audit rows', async (ctx) => {
     if (!db) return ctx.skip();
     await expect(db.app.query('DELETE FROM audit_log')).rejects.toThrow();
+  });
+});
+
+describe('sign in from any device with the PIN', () => {
+  const pinFor = async (memberCode: string, pin?: string) => {
+    const cashier = await db!.admin.query(
+      `SELECT u.id FROM users u JOIN members m ON m.id=u.member_id WHERE m.code='M01'`,
+    );
+    const actor = { id: (cashier.rows[0] as { id: string }).id, device_id: null } as never;
+    return (await issueMemberPin({ pool: db!.app, env, clock }, actor, ids[memberCode]!, {}, pin)).pin;
+  };
+
+  it('a cashier-issued PIN lets the member sign in on several new devices without activation', async (ctx) => {
+    if (!db) return ctx.skip();
+    const pin = await pinFor('M04');
+    expect(pin).toMatch(/^\d{6}$/);
+    const a = await post('/auth/login', { member_ref: 'M04', pin, device: device('laptop') });
+    const b = await post('/auth/login', { member_ref: 'M04', pin, device: device('phone') });
+    expect(a.statusCode).toBe(200);
+    expect(b.statusCode).toBe(200);
+    expect(a.json().device_id).not.toBe(b.json().device_id);
+    expect((await get('/me', b.json().access_token)).json()).toMatchObject({ member_code: 'M04' });
+
+    const feed = await get('/device-events', b.json().access_token);
+    const kinds = (feed.json().items as Array<{ kind: string; member_code: string }>).filter((e) => e.member_code === 'M04');
+    expect(kinds.filter((e) => e.kind === 'registered').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('a wrong PIN registers no device and a new device needs its details', async (ctx) => {
+    if (!db) return ctx.skip();
+    const pin = await pinFor('M05');
+    const count = async () =>
+      Number((await db!.admin.query(`SELECT count(*) FROM devices WHERE user_id=(SELECT u.id FROM users u WHERE u.member_id=$1)`, [ids.M05])).rows[0].count);
+    const before = await count();
+    const bad = await post('/auth/login', { member_ref: 'M05', pin: '000111', device: device('x') });
+    expect(bad.statusCode).toBe(401);
+    expect(await count()).toBe(before);
+    const noDevice = await post('/auth/login', { member_ref: 'M05', pin });
+    expect(noDevice.statusCode).toBe(400);
+  });
+
+  it('issuing a new PIN signs the member out everywhere and the old PIN stops working', async (ctx) => {
+    if (!db) return ctx.skip();
+    const first = await pinFor('M03');
+    const s = (await post('/auth/login', { member_ref: 'M03', pin: first, device: device('m3-a') })).json();
+    const second = await pinFor('M03');
+    expect(second).not.toBe(first);
+    expect((await get('/me', s.access_token)).statusCode).toBe(401);
+    expect((await post('/auth/login', { member_ref: 'M03', pin: first, device: device('m3-a') })).statusCode).toBe(401);
+    expect((await post('/auth/login', { member_ref: 'M03', pin: second, device: device('m3-a') })).statusCode).toBe(200);
+  });
+
+  it('a member changes their own PIN; other devices must sign in again', async (ctx) => {
+    if (!db) return ctx.skip();
+    const pin = await pinFor('M06');
+    const a = (await post('/auth/login', { member_ref: 'M06', pin, device: device('m6-a') })).json();
+    const b = (await post('/auth/login', { member_ref: 'M06', pin, device: device('m6-b') })).json();
+
+    expect((await post('/auth/pin/change', { current_pin: '000111', new_pin: '729405' }, a.access_token)).statusCode).toBe(401);
+    expect((await post('/auth/pin/change', { current_pin: pin, new_pin: '123456' }, a.access_token)).statusCode).toBe(400);
+    expect((await post('/auth/pin/change', { current_pin: pin, new_pin: '729405' }, a.access_token)).statusCode).toBe(204);
+
+    expect((await post('/auth/refresh', { refresh_token: b.refresh_token, device_id: b.device_id })).statusCode).toBe(401);
+    expect((await post('/auth/login', { member_ref: 'M06', pin, device: device('m6-c') })).statusCode).toBe(401);
+    expect((await post('/auth/login', { member_ref: 'M06', pin: '729405', device: device('m6-c') })).statusCode).toBe(200);
+  });
+
+  it('only a cashier can issue a PIN through the API', async (ctx) => {
+    if (!db) return ctx.skip();
+    const pin = await pinFor('M04');
+    const member = (await post('/auth/login', { member_ref: 'M04', pin, device: device('m4-x') })).json();
+    expect((await post(`/members/${ids.M02}/pin`, {}, member.access_token)).statusCode).toBe(403);
+    expect((await post(`/members/${ids.M02}/pin`, {})).statusCode).toBe(401);
   });
 });

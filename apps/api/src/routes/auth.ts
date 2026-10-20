@@ -5,6 +5,7 @@ import {
   activateSchema,
   activationModeSchema,
   loginSchema,
+  pinChangeSchema,
   refreshSchema,
   totpVerifySchema,
   uuidSchema,
@@ -17,7 +18,9 @@ import {
 } from '../auth/guards';
 import {
   activate,
+  changePin,
   issueActivationCode,
+  issueMemberPin,
   listDeviceEvents,
   listDevices,
   login,
@@ -135,6 +138,25 @@ export function authRoutes(deps: AuthDeps, guards: Guards) {
           ip: req.ip,
           deviceId: requireAuth(req).device_id,
         }),
+    );
+
+    app.post(
+      '/members/:id/pin',
+      {
+        preHandler: [authenticate, requireRole('cashier'), requireStepUp],
+        schema: { params: idParams },
+      },
+      (req) =>
+        issueMemberPin(deps, requireAuth(req), req.params.id, { ip: req.ip }),
+    );
+
+    app.post(
+      '/auth/pin/change',
+      { preHandler: authenticate, config: strictLimit, schema: { body: pinChangeSchema } },
+      async (req, reply) => {
+        await changePin(deps, requireAuth(req), req.body, { ip: req.ip });
+        return reply.status(204).send();
+      },
     );
 
     app.post(

@@ -19,7 +19,7 @@ export function MembersAdminPage() {
   const members = useQuery({ queryKey: ['members'], queryFn: () => api<{ items: MemberRow[] }>('/members') });
   const isCashier = me?.roles.includes('cashier') ?? false;
 
-  const [active, setActive] = useState<{ kind: 'status' | 'suspension' | 'reinstatement' | 'settlement' | 'contact'; member: MemberRow } | null>(null);
+  const [active, setActive] = useState<{ kind: 'status' | 'suspension' | 'reinstatement' | 'settlement' | 'contact' | 'pin'; member: MemberRow } | null>(null);
 
   return (
     <div className="space-y-4">
@@ -66,6 +66,7 @@ export function MembersAdminPage() {
                       {isCashier && (m.status === 'active' || m.status === 'warning') && <ActionButton onClick={() => setActive({ kind: 'suspension', member: m })}>{t('membersAdmin.createSuspension')}</ActionButton>}
                       {isCashier && m.status === 'suspended' && <ActionButton onClick={() => setActive({ kind: 'reinstatement', member: m })}>{t('membersAdmin.reinstate')}</ActionButton>}
                       {isCashier && (m.status === 'active' || m.status === 'warning' || m.status === 'suspended') && <ActionButton onClick={() => setActive({ kind: 'settlement', member: m })}>{t('membersAdmin.settlement')}</ActionButton>}
+                      {isCashier && <ActionButton onClick={() => setActive({ kind: 'pin', member: m })}>{t('membersAdmin.issuePin')}</ActionButton>}
                       <ActionButton onClick={() => setActive({ kind: 'contact', member: m })}>{t('membersAdmin.addContactLog')}</ActionButton>
                     </div>
                   </td>
@@ -80,6 +81,7 @@ export function MembersAdminPage() {
         <>
           <StatusHistoryDialog member={active.member} open={active.kind === 'status'} onClose={() => setActive(null)} />
           <SuspensionDialog member={active.member} open={active.kind === 'suspension'} onClose={() => setActive(null)} />
+          <IssuePinDialog member={active.member} open={active.kind === 'pin'} onClose={() => setActive(null)} />
           <ReinstatementDialog member={active.member} open={active.kind === 'reinstatement'} onClose={() => setActive(null)} />
           <SettlementDialog member={active.member} open={active.kind === 'settlement'} onClose={() => setActive(null)} />
           <ContactLogDialog member={active.member} open={active.kind === 'contact'} onClose={() => setActive(null)} isCashier={isCashier} />
@@ -186,6 +188,59 @@ function SuspensionDialog({ member, open, onClose }: { member: MemberRow; open: 
             <button type="button" disabled={busy} onClick={() => void submit()} className="h-11 flex-1 rounded-md bg-primary text-primary-foreground disabled:opacity-50">{busy ? t('common.working') : t('common.submit')}</button>
             <Dialog.Close className="h-11 flex-1 rounded-md border border-border">{t('common.cancel')}</Dialog.Close>
           </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
+
+function IssuePinDialog({ member, open, onClose }: { member: MemberRow; open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
+  const [pin, setPin] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+
+  const close = () => {
+    setPin(null);
+    setError(null);
+    onClose();
+  };
+
+  const issue = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      setPin((await api<{ pin: string }>(`/members/${member.id}/pin`, { method: 'POST' })).pin);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog.Root open={open} onOpenChange={(o) => !o && close()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
+        <Dialog.Content aria-describedby={undefined} className="fixed left-1/2 top-1/2 z-50 w-[min(32rem,92vw)] max-h-[90vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border border-border bg-card p-4 shadow-lg">
+          <Dialog.Title className="mb-3 text-lg font-semibold">{t('membersAdmin.issuePin')}</Dialog.Title>
+          <p className="mb-1 text-muted">{member.code} {member.full_name}</p>
+          {pin === null ? (
+            <>
+              <p className="mb-3 text-sm text-muted">{t('membersAdmin.issuePinHint')}</p>
+              {error != null && <p className="mb-2 text-bad">{error instanceof ApiError ? error.message : String(error)}</p>}
+              <div className="flex gap-2">
+                <button type="button" disabled={busy} onClick={() => void issue()} className="h-11 flex-1 rounded-md bg-primary text-primary-foreground disabled:opacity-50">{busy ? t('common.working') : t('membersAdmin.issuePin')}</button>
+                <Dialog.Close className="h-11 flex-1 rounded-md border border-border">{t('common.cancel')}</Dialog.Close>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="my-4 select-all text-center font-mono text-4xl tracking-[0.3em]" data-testid="issued-pin">{pin}</p>
+              <p className="mb-3 text-sm text-muted">{t('membersAdmin.issuePinOnce')}</p>
+              <button type="button" onClick={close} className="h-11 w-full rounded-md border border-border">{t('common.close')}</button>
+            </>
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

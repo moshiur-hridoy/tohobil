@@ -1,8 +1,9 @@
 import argon2 from 'argon2';
+import { randomInt } from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { authenticator } from 'otplib';
 import type pg from 'pg';
-import type { Activate, Clock, Login, Refresh } from '@barakah/shared';
+import { isValidPin, type Activate, type Clock, type Login, type PinChange, type Refresh } from '@barakah/shared';
 import { AppError, conflict, forbidden, notFound, unauthorized } from '../lib/errors';
 import {
   decryptSecret,
@@ -106,19 +107,6 @@ async function issueSession(
   };
 }
 
-async function deviceLimitFor(db: Db, roles: string[], today: string): Promise<number> {
-  const key =
-    roles.includes('cashier') || roles.includes('auditor')
-      ? 'max_devices_privileged'
-      : 'max_devices_per_member';
-  const res = await db.query(
-    `SELECT value FROM rules WHERE key=$1 AND valid_from <= $2 ORDER BY valid_from DESC LIMIT 1`,
-    [key, today],
-  );
-  const value = Number((res.rows[0] as { value: unknown } | undefined)?.value);
-  return Number.isInteger(value) && value > 0 ? value : 1;
-}
-
 // ---- activation ---------------------------------------------------------------------------
 
 const INVALID_ACTIVATION = () =>
@@ -177,15 +165,6 @@ export async function activate(
           [user.id, now],
         );
       }
-    } else {
-      const active = await tx.query(
-        `SELECT count(*)::int AS n FROM devices WHERE user_id=$1 AND revoked_at IS NULL`,
-        [user.id],
-      );
-      const limit = await deviceLimitFor(tx, user.roles, deps.clock.todayDhaka());
-      if ((active.rows[0] as { n: number }).n >= limit) {
-        throw new AppError(409, 'auth.device_limit', 'Device limit reached');
-      }
     }
 
     await tx.query(
@@ -221,6 +200,44 @@ export async function activate(
 const INVALID_CREDENTIALS = () =>
   new AppError(401, 'auth.invalid_credentials', 'Member ID or PIN is incorrect');
 
+/** Count a wrong PIN; lock the account on the fifth. Always throws. */
+async function failPin(
+  deps: AuthDeps,
+  row: { id: string; failed_attempts: number },
+  client: ClientInfo,
+  deviceId: string | null,
+): Promise<never> {
+  const now = deps.clock.now();
+  const failures = row.failed_attempts + 1;
+  if (failures >= PIN_MAX_FAILURES) {
+    const until = new Date(now.getTime() + PIN_LOCK_MS);
+    await deps.pool.query(`UPDATE users SET failed_attempts=0, locked_until=$2 WHERE id=$1`, [
+      row.id,
+      until,
+    ]);
+    await audit(deps.pool, {
+      actor: row.id,
+      action: 'auth.locked',
+      entityType: 'user',
+      entityId: row.id,
+      ip: client.ip,
+      deviceId,
+    });
+    throw new AppError(423, 'auth.locked', 'Account is locked', {
+      locked_until: until.toISOString(),
+    });
+  }
+  await deps.pool.query(`UPDATE users SET failed_attempts=$2 WHERE id=$1`, [row.id, failures]);
+  throw new AppError(401, 'auth.invalid_credentials', 'Member ID or PIN is incorrect', {
+    attempts_left: PIN_MAX_FAILURES - failures,
+  });
+}
+
+/**
+ * Member ID + PIN works from any device. A device id that is known and not revoked is resumed;
+ * anything else registers a fresh device, but only after the PIN has been verified, so unknown
+ * callers cannot create device rows. There is no device cap (owner decision, ASSUMPTIONS.md).
+ */
 export async function login(deps: AuthDeps, input: Login, client: ClientInfo): Promise<Session> {
   const now = deps.clock.now();
   const res = await deps.pool.query(
@@ -228,9 +245,9 @@ export async function login(deps: AuthDeps, input: Login, client: ClientInfo): P
             d.id AS device_id, d.revoked_at
      FROM members m
      JOIN users u ON u.member_id = m.id
-     LEFT JOIN devices d ON d.id = $2 AND d.user_id = u.id
+     LEFT JOIN devices d ON d.id = $2::uuid AND d.user_id = u.id
      WHERE m.code = $1`,
-    [input.member_ref, input.device_id],
+    [input.member_ref, input.device_id ?? null],
   );
   const row = res.rows[0] as
     | {
@@ -248,11 +265,6 @@ export async function login(deps: AuthDeps, input: Login, client: ClientInfo): P
     await fakePinCheck(input.pin, deps.env);
     throw INVALID_CREDENTIALS();
   }
-  if (!row.device_id || row.revoked_at) {
-    // The caller holds the device id of a replaced or unknown device: tell the app to show the
-    // "ask the cashier for a new activation code" screen (spec 19.1).
-    throw new AppError(401, 'auth.device_reset_needed', 'This device must be activated again');
-  }
   if (row.locked_until && row.locked_until > now) {
     throw new AppError(423, 'auth.locked', 'Account is locked', {
       locked_until: row.locked_until.toISOString(),
@@ -260,30 +272,11 @@ export async function login(deps: AuthDeps, input: Login, client: ClientInfo): P
   }
 
   const ok = await verifyPin(row.pin_hash, input.pin, deps.env).catch(() => false);
-  if (!ok) {
-    const failures = row.failed_attempts + 1;
-    if (failures >= PIN_MAX_FAILURES) {
-      const until = new Date(now.getTime() + PIN_LOCK_MS);
-      await deps.pool.query(`UPDATE users SET failed_attempts=0, locked_until=$2 WHERE id=$1`, [
-        row.id,
-        until,
-      ]);
-      await audit(deps.pool, {
-        actor: row.id,
-        action: 'auth.locked',
-        entityType: 'user',
-        entityId: row.id,
-        ip: client.ip,
-        deviceId: row.device_id,
-      });
-      throw new AppError(423, 'auth.locked', 'Account is locked', {
-        locked_until: until.toISOString(),
-      });
-    }
-    await deps.pool.query(`UPDATE users SET failed_attempts=$2 WHERE id=$1`, [row.id, failures]);
-    throw new AppError(401, 'auth.invalid_credentials', 'Member ID or PIN is incorrect', {
-      attempts_left: PIN_MAX_FAILURES - failures,
-    });
+  if (!ok) return failPin(deps, row, client, row.device_id);
+
+  const resume = row.device_id !== null && row.revoked_at === null;
+  if (!resume && !input.device) {
+    throw new AppError(400, 'request.invalid', 'Device details are required to sign in on a new device');
   }
 
   return inTransaction(deps.pool, async (tx) => {
@@ -291,15 +284,137 @@ export async function login(deps: AuthDeps, input: Login, client: ClientInfo): P
       `UPDATE users SET failed_attempts=0, locked_until=NULL, last_login_at=$2 WHERE id=$1`,
       [row.id, now],
     );
+    let deviceId = row.device_id as string;
+    if (!resume) {
+      const dev = input.device!;
+      const created = await tx.query(
+        `INSERT INTO devices (user_id, label, platform, install_id, last_seen_at)
+         VALUES ($1,$2,$3,$4,$5) RETURNING id`,
+        [row.id, dev.label ?? null, dev.platform, dev.install_id, now],
+      );
+      deviceId = (created.rows[0] as { id: string }).id;
+      await tx.query(
+        `INSERT INTO device_events (user_id, kind, at, by) VALUES ($1,'registered',$2,$1)`,
+        [row.id, now],
+      );
+    }
     await audit(tx, {
       actor: row.id,
-      action: 'auth.login',
+      action: resume ? 'auth.login' : 'auth.login_new_device',
       entityType: 'user',
       entityId: row.id,
       ip: client.ip,
-      deviceId: row.device_id,
+      deviceId,
     });
-    return issueSession(tx, deps, row.id, row.device_id as string);
+    return issueSession(tx, deps, row.id, deviceId);
+  });
+}
+
+// ---- PIN management -----------------------------------------------------------------------
+
+function randomPin(): string {
+  for (;;) {
+    const pin = String(randomInt(0, 1_000_000)).padStart(6, '0');
+    if (isValidPin(pin)) return pin;
+  }
+}
+
+/**
+ * The cashier hands a member a PIN (first time, forgotten, or lost phone). Returned once, never
+ * stored in clear or logged. Old devices lose their sessions so a lost phone cannot keep using the
+ * account. `fixedPin` is only for the local CLI.
+ */
+export async function issueMemberPin(
+  deps: AuthDeps,
+  actor: AuthUser | null,
+  memberId: string,
+  client: ClientInfo,
+  fixedPin?: string,
+): Promise<{ pin: string }> {
+  const pin = fixedPin ?? randomPin();
+  const pinHash = await hashPin(pin, deps.env);
+  const now = deps.clock.now();
+  return inTransaction(deps.pool, async (tx) => {
+    const found = await tx.query(
+      `SELECT id, status FROM users WHERE member_id=$1 FOR UPDATE`,
+      [memberId],
+    );
+    const target = found.rows[0] as { id: string; status: string } | undefined;
+    if (!target) throw notFound('member.not_found', 'Member not found');
+    if (target.status === 'disabled') throw conflict('auth.user_disabled', 'This account is disabled');
+    await tx.query(
+      `UPDATE users SET pin_hash=$2, status='active', failed_attempts=0, locked_until=NULL WHERE id=$1`,
+      [target.id, pinHash],
+    );
+    const revoked = await tx.query(
+      `UPDATE devices SET revoked_at=$2, refresh_token_hash=NULL
+       WHERE user_id=$1 AND revoked_at IS NULL RETURNING id`,
+      [target.id, now],
+    );
+    if (revoked.rowCount) {
+      await tx.query(
+        `INSERT INTO device_events (user_id, kind, at, by) VALUES ($1,'reset',$2,$3)`,
+        [target.id, now, actor?.id ?? null],
+      );
+    }
+    await audit(tx, {
+      actor: actor?.id ?? null,
+      action: 'auth.pin_issued',
+      entityType: 'user',
+      entityId: target.id,
+      ip: client.ip,
+      deviceId: actor?.device_id ?? null,
+    });
+    return { pin };
+  });
+}
+
+/** A signed-in user changes their own PIN. Other devices must sign in again with the new PIN. */
+export async function changePin(
+  deps: AuthDeps,
+  user: AuthUser,
+  input: PinChange,
+  client: ClientInfo,
+): Promise<void> {
+  const res = await deps.pool.query(
+    `SELECT pin_hash, failed_attempts, locked_until FROM users WHERE id=$1`,
+    [user.id],
+  );
+  const row = res.rows[0] as
+    | { pin_hash: string | null; failed_attempts: number; locked_until: Date | null }
+    | undefined;
+  const now = deps.clock.now();
+  if (!row?.pin_hash) throw INVALID_CREDENTIALS();
+  if (row.locked_until && row.locked_until > now) {
+    throw new AppError(423, 'auth.locked', 'Account is locked', {
+      locked_until: row.locked_until.toISOString(),
+    });
+  }
+  const ok = await verifyPin(row.pin_hash, input.current_pin, deps.env).catch(() => false);
+  if (!ok) return failPin(deps, { id: user.id, failed_attempts: row.failed_attempts }, client, user.device_id);
+  if (input.current_pin === input.new_pin) {
+    throw new AppError(400, 'auth.pin_unchanged', 'Choose a different PIN');
+  }
+
+  const pinHash = await hashPin(input.new_pin, deps.env);
+  await inTransaction(deps.pool, async (tx) => {
+    await tx.query(`UPDATE users SET pin_hash=$2, failed_attempts=0, locked_until=NULL WHERE id=$1`, [
+      user.id,
+      pinHash,
+    ]);
+    await tx.query(
+      `UPDATE devices SET refresh_token_hash=NULL, refresh_expires_at=NULL
+       WHERE user_id=$1 AND id <> $2 AND revoked_at IS NULL`,
+      [user.id, user.device_id],
+    );
+    await audit(tx, {
+      actor: user.id,
+      action: 'auth.pin_changed',
+      entityType: 'user',
+      entityId: user.id,
+      ip: client.ip,
+      deviceId: user.device_id,
+    });
   });
 }
 

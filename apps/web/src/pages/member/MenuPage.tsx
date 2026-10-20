@@ -1,8 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { LoadError } from '../../components/StateViews';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
+import { downloadFile } from '../../lib/download';
 
 interface DeviceEvent {
   id: string;
@@ -82,6 +85,8 @@ export function MenuPage() {
         </Link>
       )}
 
+      <MyStatements />
+
       <div className="rounded-lg border border-border bg-card p-4">
         <h2 className="mb-2 font-semibold">{t('menu.devices')}</h2>
         <ul className="space-y-1">
@@ -117,6 +122,36 @@ export function MenuPage() {
       >
         {t('menu.logout')}
       </button>
+    </div>
+  );
+}
+
+/** The member's own statement and zakat information as PDFs. */
+function MyStatements() {
+  const { t } = useTranslation();
+  const [year, setYear] = useState(String(new Date().getFullYear()));
+  const [error, setError] = useState<unknown>(null);
+  const get = async (path: string, name: string): Promise<void> => {
+    setError(null);
+    try {
+      await downloadFile(path, name);
+    } catch (err) {
+      setError(err);
+    }
+  };
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <h2 className="mb-1 font-semibold">{t('menuReports.title')}</h2>
+      <p className="mb-3 text-sm text-muted">{t('menuReports.hint')}</p>
+      <label className="block text-sm text-muted">
+        {t('menuReports.year')}
+        <input type="number" className="mt-1 h-11 w-28 rounded-md border border-input bg-background px-2" value={year} onChange={(e) => setYear(e.target.value)} />
+      </label>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button type="button" onClick={() => void get(`/reports/statement?period=${year}`, `statement-${year}.pdf`)} className="h-11 rounded-md bg-primary px-4 text-primary-foreground">{t('menuReports.statement')}</button>
+        <button type="button" onClick={() => void get('/reports/zakat-statement', 'zakat-statement.pdf')} className="h-11 rounded-md border border-border px-4">{t('menuReports.zakat')}</button>
+      </div>
+      {error != null && <div className="mt-3"><LoadError error={error} /></div>}
     </div>
   );
 }

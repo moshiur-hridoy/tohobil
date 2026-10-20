@@ -11,4 +11,6 @@ export const JOB_QUEUES = [
   'cleanup',
   'sms-fallback',
   'generate-rent-expected',
+  'verify-ledger',
+  'zakat-notice',
 ] as const;

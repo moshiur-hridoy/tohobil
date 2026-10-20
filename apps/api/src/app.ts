@@ -33,6 +33,9 @@ import { assetRoutes } from './routes/assets';
 import { rentRoutes } from './routes/rent';
 import { navRoutes } from './routes/nav';
 import { obligationRoutes } from './routes/obligations';
+import { periodRoutes } from './routes/periods';
+import { reportRoutes } from './routes/reports';
+import { systemRoutes } from './routes/system';
 import { proposalRoutes } from './routes/proposals';
 import { settingsRoutes } from './routes/settings';
 import { charityRoutes } from './routes/charity';
@@ -215,6 +218,19 @@ export async function buildApp({
     await app.register(rentRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
     await app.register(navRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
     await app.register(obligationRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
+    const archiveStore = new FileStore(env.FILES_DIR);
+    await app.register(
+      periodRoutes({ pool: deps.pool, clock: deps.clock, archivesDir: env.ARCHIVES_DIR, files: archiveStore }, guards),
+      { prefix: '/api/v1' },
+    );
+    await app.register(reportRoutes({ pool: deps.pool, clock: deps.clock, archivesDir: env.ARCHIVES_DIR }, guards), { prefix: '/api/v1' });
+    await app.register(
+      systemRoutes(
+        { pool: deps.pool, clock: deps.clock, statusDir: env.STATUS_DIR, filesDir: env.FILES_DIR, alertSecret: env.INTERNAL_ALERT_SECRET },
+        guards,
+      ),
+      { prefix: '/api/v1' },
+    );
     await app.register(proposalRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
     await app.register(charityRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
     await app.register(

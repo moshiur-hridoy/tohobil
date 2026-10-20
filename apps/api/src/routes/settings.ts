@@ -44,11 +44,11 @@ export function settingsRoutes(deps: SettingsRouteDeps, guards: Guards) {
           );
           const old = existing.rows[0]?.value ?? null;
 
-          await db.query(`UPDATE settings SET value = $2, updated_by = $3, updated_at = now() WHERE key = $1`, [
-            key,
-            JSON.stringify(value),
-            user.id,
-          ]);
+          await db.query(
+            `INSERT INTO settings (key, value, updated_by) VALUES ($1, $2::jsonb, $3)
+             ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_by = EXCLUDED.updated_by, updated_at = now()`,
+            [key, JSON.stringify(value), user.id],
+          );
 
           await audit(db, {
             actor: user.id,

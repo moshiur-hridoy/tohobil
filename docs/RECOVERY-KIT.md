@@ -14,11 +14,14 @@ No actual secrets are stored in this repository.
 - Losing `APP_ENCRYPTION_KEY` makes every enrolled TOTP secret unreadable (members re-enrol); losing `TOKEN_PEPPER` or `JWT_SECRET` only signs everyone out.
 - A copy is in the sealed envelope held by the auditor.
 
-## Age Encryption Keys
+## Age Encryption Keys and backup passphrase
 
-- Cashier key: [location]
-- Auditor key: [location]
-- Automation key: on server at /etc/barakah/backup-key.txt
+- Cashier key (private half): [location, held by the cashier + sealed paper copy with the auditor]
+- Auditor key (private half): [location, held by the auditor + sealed paper copy]
+- Automation key (private half): on the server (path in `AUTOMATION_KEY_FILE`, root-readable only) + a sealed paper copy
+- `RESTIC_PASSWORD` (opens the encrypted file backups): sealed envelope with the auditor
+- Off-site backup account (`RCLONE_REMOTE`): [provider and login in the sealed envelope]
+- Without at least one private key and `RESTIC_PASSWORD`, the backups cannot be opened. Losing all of them means losing the backups.
 
 ## Android Keystore
 

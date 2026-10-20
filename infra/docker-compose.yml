@@ -69,6 +69,8 @@ services:
       TOKEN_PEPPER: ${TOKEN_PEPPER:?set TOKEN_PEPPER}
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?set PUBLIC_ORIGIN}
       FILES_DIR: /data/files
+      ARCHIVES_DIR: /data/archives
+      STATUS_DIR: /data/status
       FCM_SERVICE_ACCOUNT_JSON_PATH: /run/secrets/fcm_service_account
       SMS_PROVIDER: ${SMS_PROVIDER:-console}
       SMS_HTTP_URL: ${SMS_HTTP_URL:-}
@@ -109,19 +111,21 @@ services:
     profiles: ['tunnel']
     logging: *logging
 
-  # The backup/restore-test sidecar image (alpine + postgresql-client + age + rclone + restic + cron)
-  # is delivered in Phase 5. Until it exists `docker compose up` fails on this service: that is
-  # deliberate, because a stack that silently runs without backups must not go live (docs/GO-LIVE.md).
+  # The backup and restore-test sidecar (infra/backup): nightly encrypted dump, incremental file backup, weekly
+  # restore test. A stack that runs without backups must not go live (docs/GO-LIVE.md).
   backup:
     image: barakah-backup:${TAG:?set TAG}
     restart: unless-stopped
-    mem_limit: 128m
+    mem_limit: 256m
     environment:
       DATABASE_URL: ${DATABASE_URL}
       BACKUP_AGE_RECIPIENTS: ${BACKUP_AGE_RECIPIENTS:?set BACKUP_AGE_RECIPIENTS}
       RCLONE_REMOTE: ${RCLONE_REMOTE:-}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:?set RESTIC_PASSWORD}
+      RESTIC_REMOTE_REPOSITORY: ${RESTIC_REMOTE_REPOSITORY:-}
       INTERNAL_ALERT_SECRET: ${INTERNAL_ALERT_SECRET}
       API_URL: http://api:3000
+      ALERT_PHONES: ${ALERT_PHONES:-}
       SMS_PROVIDER: ${SMS_PROVIDER:-console}
       SMS_HTTP_URL: ${SMS_HTTP_URL:-}
       SMS_HTTP_API_KEY: ${SMS_HTTP_API_KEY:-}
@@ -129,9 +133,12 @@ services:
       SMS_HTTP_BODY_TEMPLATE: ${SMS_HTTP_BODY_TEMPLATE:-}
     volumes:
       - files:/data/files:ro
+      - archives:/data/archives:ro
       # Bind-mount this volume from a DIFFERENT disk or path than pgdata (spec 12).
       - backups:/backups
       - backupstatus:/data/status
+      # The private half of the `automation` age key, needed only for the weekly restore test.
+      - ${AUTOMATION_KEY_FILE:?set AUTOMATION_KEY_FILE}:/run/backup/automation.key:ro
     logging: *logging
 
 volumes:

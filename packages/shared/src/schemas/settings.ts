@@ -17,8 +17,9 @@ export const settingsUpdateSchema = z.discriminatedUnion('key', [
   z.object({ key: z.literal('app_min_version'), value: versionStringSchema }),
   z.object({ key: z.literal('app_latest_version'), value: versionStringSchema }),
   z.object({ key: z.literal('apk_download_url'), value: z.string().url().max(500) }),
+  z.object({ key: z.literal('zakat_notice_date'), value: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }),
 ]);
 
 export type SettingsUpdate = z.infer<typeof settingsUpdateSchema>;
 
-export const settingReadWhitelist = ['payment_instructions', 'fund_name'] as const;
+export const settingReadWhitelist = ['payment_instructions', 'fund_name', 'zakat_notice_date'] as const;

@@ -17,6 +17,7 @@
     "migrate:create": "pnpm --filter @barakah/api migrate:create",
     "seed": "tsx db/seed/run.ts",
     "activation-code": "pnpm --filter @barakah/api activation-code",
+    "backup:smoke": "bash scripts/backup-smoke.sh",
     "dues:generate": "pnpm --filter @barakah/api dues:generate",
     "import:convert": "pnpm --filter @barakah/api import:convert",
     "import:load": "pnpm --filter @barakah/api import:load",

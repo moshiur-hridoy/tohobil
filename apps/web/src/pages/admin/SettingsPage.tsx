@@ -9,6 +9,7 @@ import type { PaymentInstructions } from '../../lib/types';
 interface SettingsResponse {
   payment_instructions?: PaymentInstructions;
   fund_name?: string;
+  zakat_notice_date?: string;
 }
 
 export function SettingsPage() {
@@ -23,6 +24,7 @@ export function SettingsPage() {
   const [bkash, setBkash] = useState(settings.data?.payment_instructions?.bkash ?? '');
   const [nagad, setNagad] = useState(settings.data?.payment_instructions?.nagad ?? '');
   const [bank, setBank] = useState(settings.data?.payment_instructions?.bank ?? '');
+  const [zakatDate, setZakatDate] = useState(settings.data?.zakat_notice_date ?? '');
   const [sheet, setSheet] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -32,6 +34,7 @@ export function SettingsPage() {
       setBkash(settings.data.payment_instructions?.bkash ?? '');
       setNagad(settings.data.payment_instructions?.nagad ?? '');
       setBank(settings.data.payment_instructions?.bank ?? '');
+      setZakatDate(settings.data.zakat_notice_date ?? '');
     }
   }, [settings.data]);
 
@@ -45,6 +48,9 @@ export function SettingsPage() {
       const current = settings.data?.payment_instructions ?? { bkash: '', nagad: '', bank: '' };
       if (next.bkash !== current.bkash || next.nagad !== current.nagad || next.bank !== current.bank) {
         promises.push(api('/settings', { method: 'PATCH', body: { key: 'payment_instructions', value: next } }));
+      }
+      if (zakatDate !== (settings.data?.zakat_notice_date ?? '') && zakatDate) {
+        promises.push(api('/settings', { method: 'PATCH', body: { key: 'zakat_notice_date', value: zakatDate } }));
       }
       await Promise.all(promises);
     },
@@ -61,7 +67,8 @@ export function SettingsPage() {
     fundName !== (settings.data?.fund_name ?? '') ||
     bkash !== (settings.data?.payment_instructions?.bkash ?? '') ||
     nagad !== (settings.data?.payment_instructions?.nagad ?? '') ||
-    bank !== (settings.data?.payment_instructions?.bank ?? '');
+    bank !== (settings.data?.payment_instructions?.bank ?? '') ||
+    (zakatDate !== (settings.data?.zakat_notice_date ?? '') && zakatDate !== '');
 
   if (settings.error) return <LoadError error={settings.error} onRetry={() => void settings.refetch()} />;
 
@@ -93,6 +100,12 @@ export function SettingsPage() {
             <textarea className="mt-1 min-h-20 w-full rounded-md border border-input bg-background p-2" value={bank} onChange={(e) => setBank(e.target.value)} />
           </label>
         </div>
+      </section>
+
+      <section className="rounded-lg border border-border bg-card p-4">
+        <h2 className="mb-1 font-semibold">{t('settingsPage.zakat')}</h2>
+        <p className="mb-3 text-sm text-muted">{t('settingsPage.zakatHint')}</p>
+        <input type="date" aria-label={t('settingsPage.zakat')} className="h-11 rounded-md border border-input bg-background px-2" value={zakatDate} onChange={(e) => setZakatDate(e.target.value)} />
       </section>
 
       <div className="flex items-center gap-3">

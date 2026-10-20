@@ -34,6 +34,7 @@ export type NotificationTemplate =
   | 'rent_overdue'
   | 'reconciliation_mismatch'
   | 'backup_failed'
+  | 'ledger_verify_failed'
   | 'final_notice'
   | 'meeting_reminder'
   | 'absence_fine'
@@ -85,6 +86,12 @@ export const TEMPLATE_META: Record<NotificationTemplate, TemplateMeta> = {
   rent_overdue: { channels: ['push'], roleRecipients: ['cashier'] },
   reconciliation_mismatch: { channels: ['push'], roleRecipients: ['cashier', 'auditor'] },
   backup_failed: {
+    channels: ['push', 'sms'],
+    ignoreSmsOptOut: true,
+    ignoreQuietHours: true,
+    roleRecipients: ['cashier', 'auditor'],
+  },
+  ledger_verify_failed: {
     channels: ['push', 'sms'],
     ignoreSmsOptOut: true,
     ignoreQuietHours: true,

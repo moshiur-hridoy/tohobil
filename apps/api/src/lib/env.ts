@@ -42,6 +42,10 @@ const envSchema = z
      * Production mounts the `files` volume here (/data/files); the dev default is a git-ignored folder.
      */
     FILES_DIR: z.string().min(1).default('data/files'),
+    /** Year-end archives, one folder per year (the `archives` volume, part of the backups, spec 12). */
+    ARCHIVES_DIR: z.string().min(1).default('data/archives'),
+    /** Where the backup sidecar writes status.json and restore-status.json (read-only here, spec 12). */
+    STATUS_DIR: z.string().min(1).default('data/status'),
     FCM_SERVICE_ACCOUNT_JSON_PATH: z.string().default('./service-account.json'),
 
     // Secrets (spec 11). Real use arrives in Phase 1; validating them now catches bad deployments early.

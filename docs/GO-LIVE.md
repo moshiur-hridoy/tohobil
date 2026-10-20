@@ -4,7 +4,8 @@ Completed in Phase 6 (hardening and handover). Items that already block a launch
 
 ## Blockers
 
-- [ ] Backup sidecar image `barakah-backup` exists and the first encrypted backup was restored on a throwaway database (Phase 5). The production compose file intentionally fails to start without it.
+- [ ] The backup sidecar `barakah-backup` is running, the System screen shows a green backup AND a green weekly restore test, and the three age keys are with the cashier, auditor and server (`docs/RUNBOOK.md`, Backups). The production compose file intentionally fails to start without it.
+- [ ] An off-site copy is configured (`RCLONE_REMOTE`) and a file from it was opened once.
 - [ ] Offline external copy of a monthly backup is held by the auditor.
 - [ ] Production `.env` has no placeholder values (the API enforces this) and was generated, not copied from `.env.example`.
 - [ ] Android keystore created, backed up (see `RECOVERY-KIT.md`), and the backup location confirmed by the auditor.

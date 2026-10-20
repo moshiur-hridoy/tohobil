@@ -126,15 +126,16 @@ Legend: `[x]` done, `[ ]` to do.
 - [x] New-member NAV invariance test (`members/entry.test.ts`)
 - [x] `docs/PHASE-4.md`
 
-## Phase 5: Audit and operations
-- [ ] Reconciliation entry, auditor approval, period locks
-- [ ] Annual archive (PDF summary + CSVs, including charity statement), zakat statement, annual audit sign-off
-- [ ] PDF statements (Bengali font), CSV exports (`/reports/*`), export audit logging
-- [ ] Ledger verify page, `GET /system/status`, system status screen
-- [ ] Backup and restore sidecar, restore test job, runbook, recovery kit
-- [ ] Optional sheet mirror (off by default)
-- [ ] Tests: restore on seeded data, tamper detection, archive for the fixture year
-- [ ] `docs/PHASE-5.md`, **stop for owner review**
+## Phase 5: Audit and operations (done, except the optional sheet mirror)
+- [x] Reconciliation entry (`POST /reconciliations`), auditor approval, period locks (`POST /periods/:period/lock`); open objections block a lock
+- [x] Annual audit request and auditor sign-off, annual archive (statements, CSVs, charity statement, constitution, documents, `SHA256SUMS`, README), ZIP download; never overwritten
+- [x] Zakat statement (PDF) and the zakat notice job
+- [x] PDF statements in Bengali (Noto Sans Bengali through PDFKit), CSV exports (`/reports/*`), every download audit-logged
+- [x] Ledger verify (System screen, "Check now"), daily `verify-ledger` job with alerts, `GET /system/status`, System status screen, `POST /internal/alert`
+- [x] Backup and restore sidecar (`infra/backup`), weekly restore test, runbook, recovery kit
+- [ ] (optional, off by default, not built) Sheet mirror: nothing in the app needs it; build it only if someone asks
+- [x] Tests: restore on a real schema (`pnpm backup:smoke`), tamper detection (ledger check and restore test), archive for a fixture year, reconciliation and lock rules
+- [x] `docs/PHASE-5.md`
 
 ## Phase 6: Hardening and handover
 - [ ] Security checklist and dependency audit

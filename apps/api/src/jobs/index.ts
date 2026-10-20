@@ -80,6 +80,14 @@ export function createScheduler(poolUrl: string, deps: JobDeps): Scheduler {
       const { finalizeProposalsJob } = await import('./workers/proposals');
       await finalizeProposalsJob(deps);
     });
+    await boss.work('verify-ledger', async () => {
+      const { verifyLedgerJob } = await import('./workers/ledger');
+      await verifyLedgerJob(deps);
+    });
+    await boss.work('zakat-notice', async () => {
+      const { zakatNoticeJob } = await import('./workers/zakat');
+      await zakatNoticeJob(deps);
+    });
     await boss.work('member-status', async () => {
       const { statusJob } = await import('./workers/status');
       await statusJob(deps);
@@ -103,6 +111,8 @@ export function createScheduler(poolUrl: string, deps: JobDeps): Scheduler {
     await boss.schedule('generate-rent-expected', '5 0 * * *', undefined, scheduleOpts);
     await boss.schedule('finalize-proposals', '* * * * *', undefined, scheduleOpts);
     await boss.schedule('member-status', '30 0 * * *', undefined, scheduleOpts);
+    await boss.schedule('verify-ledger', '0 3 * * *', undefined, scheduleOpts);
+    await boss.schedule('zakat-notice', '30 8 * * *', undefined, scheduleOpts);
   }
 
   async function stop(): Promise<void> {

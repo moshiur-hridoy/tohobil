@@ -69,6 +69,10 @@ export function createScheduler(poolUrl: string, deps: JobDeps): Scheduler {
       const { runSmsFallback } = await import('./workers/send');
       await runSmsFallback(deps);
     });
+    await boss.work('generate-rent-expected', async () => {
+      const { generateRentExpectedJob } = await import('./workers/rent');
+      await generateRentExpectedJob(deps);
+    });
 
     const queues = [
       'send-notifications',
@@ -79,6 +83,7 @@ export function createScheduler(poolUrl: string, deps: JobDeps): Scheduler {
       'pending-payment-alert',
       'cleanup',
       'sms-fallback',
+      'generate-rent-expected',
     ];
     for (const name of queues) {
       await boss.createQueue(name, { name, policy: 'singleton' });
@@ -93,6 +98,7 @@ export function createScheduler(poolUrl: string, deps: JobDeps): Scheduler {
     await boss.schedule('pending-payment-alert', '0 * * * *', undefined, scheduleOpts);
     await boss.schedule('cleanup', '0 4 * * *', undefined, scheduleOpts);
     await boss.schedule('sms-fallback', '*/15 * * * *', undefined, scheduleOpts);
+    await boss.schedule('generate-rent-expected', '5 0 * * *', undefined, scheduleOpts);
   }
 
   async function stop(): Promise<void> {

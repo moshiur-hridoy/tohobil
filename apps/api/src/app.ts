@@ -29,6 +29,9 @@ import { paymentRoutes } from './routes/payments';
 import { matrixRoutes } from './routes/matrix';
 import { objectionRoutes } from './routes/objections';
 import { notificationRoutes } from './routes/notifications';
+import { assetRoutes } from './routes/assets';
+import { rentRoutes } from './routes/rent';
+import { navRoutes } from './routes/nav';
 import { FileStore } from './files/storage';
 import { createGuards } from './auth/guards';
 import { createSmsProvider } from './notifications/providers/sms';
@@ -193,6 +196,9 @@ export async function buildApp({
       ),
       { prefix: '/api/v1' },
     );
+    await app.register(assetRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
+    await app.register(rentRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
+    await app.register(navRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
     await app.register(
       fileRoutes(
         {

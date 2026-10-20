@@ -95,6 +95,12 @@ export type AssetKind = (typeof ASSET_KINDS)[number];
 export const ASSET_STATUSES = ['planned', 'acquiring', 'held', 'sold'] as const;
 export type AssetStatus = (typeof ASSET_STATUSES)[number];
 
+export const ASSET_UNITS = ['vori', 'gram'] as const;
+export type AssetUnit = (typeof ASSET_UNITS)[number];
+
+export const RENT_STATUSES = ['expected', 'received', 'overdue', 'skipped'] as const;
+export type RentStatus = (typeof RENT_STATUSES)[number];
+
 export const SETTLEMENT_KINDS = [
   'early_exit',
   'compassionate_exit',

@@ -1,0 +1,195 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { authenticator } from 'otplib';
+import type { FastifyInstance } from 'fastify';
+import { systemClock } from '@barakah/shared';
+import { buildApp } from '../app';
+import { createTestDb, type TestDb } from '../test/db-harness';
+import { activateSession, seedFund, testEnv, type Fund, type TestSession } from '../test/fund-fixture';
+
+const clock = systemClock;
+const todayDhaka = '2026-10-20';
+
+let db: TestDb | null;
+let app: FastifyInstance;
+let fund: Fund;
+const cashier = {} as TestSession;
+const member = {} as TestSession;
+
+const call = (method: 'GET' | 'POST' | 'PATCH', url: string, who?: string, payload?: unknown) =>
+  app.inject({
+    method,
+    url: `/api/v1${url}`,
+    headers: who ? { authorization: `Bearer ${who}` } : {},
+    ...(payload === undefined ? {} : { payload: payload as Record<string, unknown> }),
+  });
+
+const q = async (sql: string, params: unknown[] = []) => (await db!.admin.query(sql, params)).rows;
+
+const secrets = new Map<string, string>();
+
+async function stepUp(session: TestSession): Promise<void> {
+  const res = await call('POST', '/auth/totp/verify', session.access_token, {
+    code: authenticator.generate(secrets.get(session.device_id) as string),
+  });
+  if (res.statusCode !== 200) throw new Error(`step-up failed: ${res.body}`);
+}
+
+async function enrolStepUp(session: TestSession): Promise<void> {
+  const enrol = await call('POST', '/auth/totp/enroll', session.access_token);
+  secrets.set(session.device_id, (enrol.json() as { secret: string }).secret);
+  await stepUp(session);
+}
+
+describe('assets, rent and NAV', () => {
+  beforeAll(async () => {
+    db = await createTestDb();
+    if (!db) return;
+    app = await buildApp({ env: testEnv, db: db.app, clock });
+    fund = await seedFund(db.admin);
+    Object.assign(cashier, await activateSession(app, db, clock, fund, 'M01'));
+    Object.assign(member, await activateSession(app, db, clock, fund, 'M02'));
+    await enrolStepUp(cashier);
+  }, 120_000);
+
+  afterAll(async () => {
+    await db?.close();
+  });
+
+  const dbIt = (name: string, fn: () => Promise<void>) =>
+    it(name, async (ctx) => {
+      if (!db) return ctx.skip();
+      await fn();
+    });
+
+  const assetCreate = async (body: Record<string, unknown>) => {
+    const res = await call('POST', '/assets', cashier.access_token, body);
+    expect(res.statusCode).toBe(200);
+    return res.json() as Record<string, unknown>;
+  };
+
+  dbIt('cashier creates an asset; member can read the list and detail', async () => {
+    const asset = await assetCreate({
+      kind: 'house',
+      name: 'Test House',
+      location: 'Dhaka',
+      cost_paisa: '100000000',
+      status: 'planned',
+    });
+    expect(asset.kind).toBe('house');
+    expect(asset.status).toBe('planned');
+
+    const list = await call('GET', '/assets', member.access_token);
+    expect(list.statusCode).toBe(200);
+    expect((list.json().items as unknown[]).length).toBeGreaterThanOrEqual(1);
+
+    const detail = await call('GET', `/assets/${asset.id}`, member.access_token);
+    expect(detail.statusCode).toBe(200);
+    expect(detail.json().name).toBe('Test House');
+  });
+
+  dbIt('cashier updates asset to held and records a valuation', async () => {
+    const asset = await assetCreate({
+      kind: 'gold',
+      name: 'Gold Bar',
+      quantity: '2.5000',
+      unit: 'vori',
+      cost_paisa: '5000000',
+      status: 'acquiring',
+    });
+
+    const patch = await call('PATCH', `/assets/${asset.id}`, cashier.access_token, { status: 'held' });
+    expect(patch.statusCode).toBe(200);
+    expect(patch.json().status).toBe('held');
+
+    const val = await call('POST', `/assets/${asset.id}/valuations`, cashier.access_token, {
+      value_paisa: '6000000',
+      as_of: todayDhaka,
+      basis: 'Market quote',
+    });
+    expect(val.statusCode).toBe(200);
+    const rows = val.json() as Array<Record<string, unknown>>;
+    expect(rows[0]).toMatchObject({ value_paisa: '6000000', as_of: todayDhaka });
+  });
+
+  dbIt('cashier attaches a document to an asset', async () => {
+    const asset = await assetCreate({
+      kind: 'land',
+      name: 'Agricultural Plot',
+      cost_paisa: '20000000',
+      status: 'planned',
+    });
+    const file = await db!.admin.query(
+      `INSERT INTO files (sha256, mime, size_bytes, path, original_name, created_by)
+       VALUES ($1,'application/pdf',1024,$2,'deed.pdf',$3) RETURNING id`,
+      ['a'.repeat(64), `/data/files/${'a'.repeat(64)}.pdf`, fund.users.M01],
+    );
+    const fileId = (file.rows[0] as { id: string }).id;
+
+    const attach = await call('POST', `/assets/${asset.id}/documents`, cashier.access_token, {
+      file_id: fileId,
+      doc_type: 'deed',
+      title: 'Ownership deed',
+    });
+    expect(attach.statusCode).toBe(204);
+
+    const docs = await call('GET', `/assets/${asset.id}/documents`, member.access_token);
+    expect(docs.statusCode).toBe(200);
+    expect((docs.json() as unknown[])[0]).toMatchObject({ doc_type: 'deed', title: 'Ownership deed' });
+  });
+
+  dbIt('rent stream generates expected rent and a receipt posts to the ledger', async () => {
+    const streamRes = await call('POST', '/rent/streams', cashier.access_token, {
+      name: 'Shop 1',
+      tenant_name: 'Rahim Traders',
+      monthly_amount_paisa: '300000',
+      due_day: 5,
+      active_from: '2026-10-01',
+    });
+    expect(streamRes.statusCode).toBe(200);
+
+    const gen = await call('POST', '/rent/expected/generate', cashier.access_token, { period: '2026-10' });
+    expect(gen.statusCode).toBe(200);
+    expect(gen.json().created).toBe(1);
+
+    const expectedList = await call('GET', '/rent/expected?period=2026-10', cashier.access_token);
+    expect(expectedList.statusCode).toBe(200);
+    const expected = (expectedList.json().items as Array<Record<string, unknown>>)[0];
+    expect(expected).toMatchObject({ amount_paisa: '300000', status: 'expected' });
+
+    const receipt = await call('POST', `/rent/expected/${expected!.id}/receive`, cashier.access_token, {
+      amount_paisa: '300000',
+      method: 'cash',
+      paid_at: todayDhaka,
+    });
+    expect(receipt.statusCode).toBe(200);
+    const receiptBody = receipt.json() as Record<string, unknown>;
+    expect(receiptBody.received_paisa).toBe('300000');
+
+    const ledger = await q(
+      `SELECT debit_account, credit_account, amount_paisa::text FROM ledger_entries WHERE ref_type='rent_receipt'`,
+    );
+    expect(ledger[0]).toMatchObject({ debit_account: 'CASH', credit_account: 'RENT_INCOME', amount_paisa: '300000' });
+  });
+
+  dbIt('GET /nav reflects cash and held asset valuation', async () => {
+    await assetCreate({
+      kind: 'house',
+      name: 'NAV House',
+      cost_paisa: '100000000',
+      status: 'held',
+    });
+
+    const navRes = await call('GET', '/nav', member.access_token);
+    expect(navRes.statusCode).toBe(200);
+    const nav = navRes.json() as Record<string, unknown>;
+    expect(nav.net_assets_paisa).toBeDefined();
+    expect(nav.shares_outstanding).toBe('20');
+    expect(nav.nav_per_share_paisa).toBeDefined();
+
+    const cash = nav.cash as Array<{ account: string; balance_paisa: string }>;
+    expect(cash.find((c) => c.account === 'CASH')?.balance_paisa).toBe('300000');
+
+    const assets = nav.assets as Array<{ name: string; valuation_paisa: string }>;
+    expect(assets.some((a) => a.name === 'NAV House' && a.valuation_paisa === '100000000')).toBe(true);
+  });
+});

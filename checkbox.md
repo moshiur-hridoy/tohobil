@@ -108,16 +108,17 @@ Legend: `[x]` done, `[ ]` to do.
 - [ ] Tests: voting, suspension, settlement, invariants; e2e scenarios (4) and (5)
 - [ ] `docs/PHASE-3.md`, **stop for owner review**
 
-## Phase 4: Assets and NAV
-- [ ] Assets, valuations, documents (`POST /assets/:id/documents`), asset creation only via approved proposals
-- [ ] Acquiring assets in NAV at amount paid so far (19.2); sold assets zero
-- [ ] `GET /nav`, NAV page, new-member invariance
-- [ ] Rent streams, expected rent, receipts (`/rent/*`), single source `rent_expected`
-- [ ] Sale, distribution, escrow payout
+## Phase 4: Assets and NAV (backend core done; proposal wiring pending Phase 3)
+- [x] Assets, valuations, documents (`GET/POST /assets`, `/assets/:id/valuations`, `/assets/:id/documents`) — direct cashier routes; proposal enforcement once Phase 3 exists
+- [x] Acquiring assets in NAV at amount paid so far (19.2); sold assets excluded
+- [x] `GET /nav` with breakdown, deductions and stale-valuation list
+- [x] Rent streams, expected rent, receipts (`GET/POST /rent/streams`, `/rent/expected`, `/rent/expected/:id/receive`, `/rent/expected/generate`), single source `rent_expected`
+- [ ] `POST /assets/:id/sale`, sale/distribution/escrow payout via approved proposals (Phase 3)
 - [ ] Compliance checklist, feasibility file, levy, `member_qard`, `financing_arrangement`, property title fields, wind-up
-- [ ] Member screens: assets list and detail
+- [ ] Member screens: assets list and detail / NAV page
 - [ ] Cashier screens: assets, rent
-- [ ] NAV tests, new-member invariance, asset lifecycle tests
+- [x] NAV tests and asset/rent lifecycle tests
+- [ ] New-member NAV invariance test (needs Phase 3 new-member flow)
 - [ ] `docs/PHASE-4.md`, **stop for owner review**
 
 ## Phase 5: Audit and operations

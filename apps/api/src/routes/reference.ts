@@ -56,5 +56,13 @@ export function referenceRoutes(deps: ReferenceDeps, guards: Guards) {
       { preHandler: authenticate, schema: { querystring: finesQuerySchema } },
       (req) => listFines(deps.pool, req.query),
     );
+
+    /**
+     * Simulated owner-decision conflicts (spec 18.12). The list is currently static and empty,
+     * which keeps the client banner hidden. Persisting unresolved conflicts is a future phase.
+     */
+    app.get('/owner-conflicts', { preHandler: authenticate }, async () => ({
+      items: [] as Array<{ id: string; title: string; description: string | null; status: 'open' | 'resolved'; raised_at: string }>,
+    }));
   };
 }

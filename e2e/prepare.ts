@@ -14,6 +14,8 @@ async function main(): Promise<void> {
   try {
     await root.query(`DROP DATABASE IF EXISTS ${E2E_DB} WITH (FORCE)`);
     await root.query(`CREATE DATABASE ${E2E_DB}`);
+    await root.query(`ALTER DATABASE ${E2E_DB} OWNER TO barakah_app`);
+    await root.query(`GRANT ALL PRIVILEGES ON DATABASE ${E2E_DB} TO barakah_migrator`);
   } finally {
     await root.end();
   }
@@ -27,6 +29,7 @@ async function main(): Promise<void> {
   }
 
   const env = { ...process.env, MIGRATOR_DATABASE_URL: E2E_MIGRATOR_URL, DATABASE_URL: E2E_APP_URL };
+  if (env.SMS_HTTP_URL === '') delete env.SMS_HTTP_URL;
   const run = (args: string[]) => execFileSync('pnpm', args, { env, stdio: 'inherit' });
   run(['exec', 'tsx', 'db/seed/run.ts']);
   run(['--filter', '@barakah/api', 'exec', 'tsx', 'src/cli/generate-dues.ts']);

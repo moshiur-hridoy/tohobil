@@ -1,8 +1,9 @@
 import { z } from 'zod';
-import { PROPOSAL_TYPES, SETTLEMENT_KINDS, type ProposalType } from '../enums';
+import { PROPOSAL_STATUSES, PROPOSAL_TYPES, SETTLEMENT_KINDS, type ProposalType } from '../enums';
 import {
   cashAccountSchema,
   dateSchema,
+  paginationSchema,
   paisaStringSchema,
   phoneSchema,
   positivePaisaSchema,
@@ -20,6 +21,14 @@ export const proposalCreateSchema = z.object({
 });
 
 export type ProposalCreate = z.infer<typeof proposalCreateSchema>;
+
+export const proposalsQuerySchema = paginationSchema.extend({
+  status: z.enum(PROPOSAL_STATUSES).optional(),
+  type: z.enum(PROPOSAL_TYPES).optional(),
+  subject_member_id: z.string().uuid().optional(),
+});
+
+export type ProposalsQuery = z.infer<typeof proposalsQuerySchema>;
 
 export const proposalOpenSchema = z.object({
   closes_at: timestampSchema,

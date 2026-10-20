@@ -32,6 +32,10 @@ import { notificationRoutes } from './routes/notifications';
 import { assetRoutes } from './routes/assets';
 import { rentRoutes } from './routes/rent';
 import { navRoutes } from './routes/nav';
+import { proposalRoutes } from './routes/proposals';
+import { settingsRoutes } from './routes/settings';
+import { charityRoutes } from './routes/charity';
+import { constitutionRoutes } from './routes/constitution';
 import { FileStore } from './files/storage';
 import { createGuards } from './auth/guards';
 import { createSmsProvider } from './notifications/providers/sms';
@@ -183,10 +187,20 @@ export async function buildApp({
     const deps = { pool: db as pg.Pool, env, clock };
     const guards = createGuards(deps);
     await app.register(authRoutes(deps, guards), { prefix: '/api/v1' });
-    await app.register(memberRoutes(deps, guards), { prefix: '/api/v1' });
+    await app.register(
+      memberRoutes(
+        { pool: deps.pool, clock: deps.clock, pushSender, smsProvider, log: log as unknown as Logger },
+        guards,
+      ),
+      { prefix: '/api/v1' },
+    );
     await app.register(referenceRoutes(deps, guards), { prefix: '/api/v1' });
+    await app.register(settingsRoutes({ pool: deps.pool }, guards), { prefix: '/api/v1' });
     await app.register(ledgerRoutes(deps, guards), { prefix: '/api/v1' });
-    await app.register(paymentRoutes(deps, guards), { prefix: '/api/v1' });
+    await app.register(
+      paymentRoutes({ ...deps, log: log as unknown as Logger, pushSender, smsProvider }, guards),
+      { prefix: '/api/v1' },
+    );
     await app.register(matrixRoutes(deps, guards), { prefix: '/api/v1' });
     await app.register(objectionRoutes(deps, guards), { prefix: '/api/v1' });
     await app.register(
@@ -199,6 +213,12 @@ export async function buildApp({
     await app.register(assetRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
     await app.register(rentRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
     await app.register(navRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
+    await app.register(proposalRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
+    await app.register(charityRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
+    await app.register(
+      constitutionRoutes({ pool: deps.pool, clock: deps.clock }, guards),
+      { prefix: '/api/v1' },
+    );
     await app.register(
       fileRoutes(
         {

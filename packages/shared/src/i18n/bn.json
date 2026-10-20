@@ -90,7 +90,14 @@
     "closesIn": "শেষ হতে ২ দিন ৫ ঘণ্টা · {{date}}",
     "exampleClose": "২০ জানুয়ারি, রাত ১০:০০",
     "whoVoted": "কে কী ভোট দিয়েছেন",
-    "publicHint": "ভোট সবার কাছে প্রকাশ্য। সময় শেষ হওয়ার আগে বদলানো যাবে।"
+    "publicHint": "ভোট সবার কাছে প্রকাশ্য। সময় শেষ হওয়ার আগে বদলানো যাবে।",
+    "closed": "বন্ধ",
+    "openCount": "চলমান ভোট: {{count}}টি",
+    "remainingDays": "{{days}} দিন {{hours}} ঘণ্টা",
+    "remainingHours": "{{hours}} ঘণ্টা {{minutes}} মিনিট",
+    "cannotVoteSubject": "আপনি এই প্রস্তাবের বিষয়বস্তু, তাই ভোট দিতে পারবেন না।",
+    "youVoted": "আপনি ভোট দিয়েছেন: {{choice}}",
+    "notVoted": "এখনও ভোট হয়নি"
   },
   "assets": {
     "title": "সম্পদ",
@@ -170,6 +177,8 @@
       "reconcile": "হিসাব মিলান",
       "reports": "প্রতিবেদন",
       "rules": "নিয়ম",
+      "charity": "দান তহবিল",
+      "settings": "সেটিংস",
       "system": "সিস্টেম",
       "group": {
         "overview": "ওভারভিউ",
@@ -178,6 +187,65 @@
         "administration": "প্রশাসন"
       }
     }
+  },
+  "proposalType": {
+    "fine_waiver": "জরিমানা মওকুফ",
+    "expense": "ব্যয়",
+    "investment_purchase": "বিনিয়োগ ক্রয়",
+    "asset_sale": "সম্পদ বিক্রি",
+    "valuation_update": "মূল্যায়ন হালনাগাদ",
+    "new_member": "নতুন সদস্য",
+    "suspension": "সদস্যপদ স্থগিতকরণ",
+    "reinstatement": "পুনঃস্থাপন",
+    "settlement": "সেটেলমেন্ট",
+    "member_deceased": "সদস্যের মৃত্যু",
+    "distribution": "মুনাফা বণ্টন",
+    "rule_change": "নিয়ম পরিবর্তন",
+    "constitution_amendment": "গঠনতন্ত্র সংশোধন",
+    "role_change": "ভূমিকা পরিবর্তন",
+    "general": "সাধারণ সিদ্ধান্ত",
+    "charity_donation": "দান",
+    "contribution_change": "চাঁদা পরিবর্তন",
+    "asset_cost_levy": "লেভি",
+    "member_qard": "সদস্য কর্জ",
+    "financing_arrangement": "ফাইন্যান্সিং ব্যবস্থা",
+    "dissolution": "বিলুপ্তি",
+    "wind_up": "শেষ বণ্টন",
+    "land_selection": "জমি নির্বাচন",
+    "project_closure": "প্রকল্প সমাপ্তি"
+  },
+  "proposal": {
+    "title": "প্রস্তাব",
+    "type": "ধরন",
+    "subject": "বিষয়",
+    "payload": "বিস্তারিত তথ্য",
+    "voterList": "ভোটার তালিকা",
+    "threshold": "সীমা",
+    "closesAt": "শেষ সময়",
+    "open": "খুলুন",
+    "closeEarly": "আগেই বন্ধ করুন",
+    "cancel": "বাতিল করুন",
+    "execute": "কার্যকর করুন",
+    "openTitle": "ভোট খুলুন",
+    "closeEarlyTitle": "ভোট আগেই বন্ধ করুন",
+    "cancelTitle": "প্রস্তাব বাতিল করুন",
+    "executeTitle": "প্রস্তাব কার্যকর করুন",
+    "openBody": "ভোট কমপক্ষে এক ঘণ্টা খোলা রাখুন। আপনি যেই তারিখ-সময় নির্ধারণ করবেন, তারপর সদস্যরা ভোট দিতে পারবেন।",
+    "closeEarlyBody": "আগেই বন্ধ করার জন্য ফলাফল গণিতভাবে নির্ধারিত হতে হবে (হ্যাঁ সীমা পেরোেছে বা পৌঁছানো সম্ভব নয়)।",
+    "cancelBody": "শুধু খসড়া প্রস্তাব বাতিল করা যায়। এই কাজটি সরাসরি হয়ে যাবে।",
+    "executeBody": "অনুমোদিত প্রস্তাবের কার্যকরী পদক্ষেপ নেওয়া হবে। অর্থ সংক্রান্ত হলে অথেন্টিকেটর কোড লাগবে।",
+    "clauseRef": "ধারা",
+    "byShares": "শেয়ার অনুপাতে",
+    "byMembers": "সদস্য সংখ্যা অনুযায়ী"
+  },
+  "compliance": {
+    "interest_free_instrument": "সুদমুক্ত ইনস্ট্রুমেন্ট",
+    "not_conventional_fixed_deposit": "প্রচলিত ফিক্সড ডিপোজিট নয়",
+    "not_conventional_insurance": "প্রচলিত বীমা নয়",
+    "not_speculative_trading": "অনুমাননির্ভর লেনদেন নয়",
+    "permissible_business": "ন্যায়সঙ্গত ব্যবসা",
+    "liquidatable_within_term": "মেয়াদের মধ্যে বিক্রয়যোগ্য",
+    "no_fixed_profit_promised": "নির্দিষ্ট মুনাফা প্রতিশ্রুতি নেই"
   },
   "ledger": {
     "title": "লেনদেন বই",
@@ -267,6 +335,7 @@
   "notif": {
     "due_reminder": "{name}, {month} মাসের ৳{outstanding} বকেয়া, শেষ তারিখ {due_date}। বিকাশ বা ব্যাংকে পাঠিয়ে অ্যাপে TrxID জমা দিন।",
     "fine_notice": "{name}, {month} মাসের বকেয়া সময়মতো না দেওয়ায় ৳{fine} ফাইন হয়েছে। মোট বকেয়া ৳{total}। মাফের আবেদনের জন্য অ্যাপ খুলুন।",
+    "member_onboarded": "{name}, আপনার সদস্যপদ সক্রিয় হয়েছে। শেয়ার {shares}টি, কোড {code}। অ্যাপে পেমেন্ট ও ভোট দেখুন।",
     "payment_submitted_ack": "আপনার ৳{amount} জমা পাওয়া গেছে, ক্যাশিয়ার যাচাই করছেন।",
     "payment_confirmed": "আপনার ৳{amount} পেমেন্ট গৃহীত হয়েছে। কোনো ভুল থাকলে অ্যাপে আপত্তি জানান।",
     "payment_rejected": "আপনার ৳{amount} জমা গ্রহণ করা যায়নি। কারণ: {reason}।",
@@ -274,6 +343,7 @@
     "vote_closing": "ভোট শেষ হতে ২৪ ঘণ্টা বাকি: {title}। আপনি এখনও ভোট দেননি।",
     "vote_result": "ভোটের ফল: {title}: {result} (হ্যাঁ {yes}, না {no})।",
     "suspension_notice": "{name}, ফান্ডের সিদ্ধান্তে আপনার সদস্যপদ {date} থেকে সাময়িক স্থগিত। বিস্তারিত অ্যাপে দেখুন।",
+    "reinstatement_notice": "{name}, আপনার সদস্যপদ পুনঃস্থাপিত হয়েছে। বকেয়া মাসের চাঁদা জমা দিন।",
     "entry_quote": "{name}, ফান্ডে যোগদানের জন্য {shares} শেয়ারের মূল্য ৳{price}। {expires} পর্যন্ত বৈধ।",
     "settlement_payout": "আপনার সেটেলমেন্টের ৳{amount} পরিশোধ করা হয়েছে।",
     "constitution_updated": "গঠনতন্ত্রের নতুন ভার্সন {version} কার্যকর। পড়ে 'পড়েছি' চাপুন।",
@@ -413,6 +483,15 @@
       "exited": "বিদায়ী",
       "prospective": "সম্ভাব্য",
       "inactive": "নিষ্ক্রিয়"
+    },
+    "proposal": {
+      "draft": "খসড়া",
+      "open": "চলমান",
+      "approved": "অনুমোদিত",
+      "rejected": "প্রত্যাখ্যাত",
+      "executed": "কার্যকর",
+      "lapsed": "মেয়াদোত্তীর্ণ",
+      "cancelled": "বাতিল"
     }
   },
   "pay": {
@@ -505,6 +584,17 @@
     "constitutionHint": "গঠনতন্ত্র ও সংশোধনী",
     "noticesHint": "সদস্য ও ফান্ড নোটিস",
     "settlementHint": "প্রস্থানের হিসাব"
+  },
+  "constitutionPage": {
+    "title": "গঠনতন্ত্র",
+    "version": "ভার্সন",
+    "effectiveFrom": "কার্যকর তারিখ",
+    "ack": "পড়েছি",
+    "acked": "স্বীকৃত",
+    "clauses": "ধারাসমূহ",
+    "search": "ধারা খুঁজুন",
+    "noVersions": "কোনো গঠনতন্ত্র ভার্সন নেই।",
+    "pdf": "পিডিএফ"
   },
   "adminDash": {
     "expectedThisMonth": "এই মাসে প্রত্যাশিত",
@@ -871,5 +961,85 @@
     "checkReturnWithinCapital": "ফেরত মূলধনের মধ্যে",
     "checkFeeExactlyTen": "সেবা চার্জ ১০%",
     "checkInstallmentsEqualNet": "কিস্তির যোগফল নেট ফেরতের সমান"
+  },
+  "proposalsPage": {
+    "title": "প্রস্তাব",
+    "type": "ধরন",
+    "empty": "কোনো প্রস্তাব নেই।",
+    "newProposal": "নতুন প্রস্তাব",
+    "count": "মোট {{count}}টি",
+    "compliance": "সম্মতি চেকলিস্ট",
+    "complianceIncomplete": "সমস্ত চেকলিস্ট পূর্ণ না হলে এই প্রস্তাব খুলতে পারবেন না।",
+    "created": "তৈরি: {{date}}"
+  },
+  "membersAdmin": {
+    "title": "সদস্য",
+    "currentPeriodDue": "এই মাসের পাওনা",
+    "statusHistory": "অবস্থার ইতিহাস",
+    "createSuspension": "স্থগিতকরণ প্রস্তাব",
+    "reinstate": "পুনঃস্থাপন",
+    "reinstateHint": "পুনঃস্থাপনের পর বকেয়া মাসের চাঁদা তৈরি হবে।",
+    "settlement": "সেটেলমেন্ট",
+    "noPrior": "পূর্ববর্তী অবস্থা নেই",
+    "contactLogTitle": "যোগাযোগের নথি",
+    "addContactLog": "নথি যোগ করুন",
+    "contactKind": "ধরন",
+    "contactOutcome": "ফলাফল",
+    "noContactLog": "কোনো যোগাযোগের নথি নেই।",
+    "chooseMember": "সদস্য বেছে নিন",
+    "settlementKind": "সেটেলমেন্টের ধরন",
+    "settlementNetAmount": "নিট পরিশোধযোগ্য (৳)",
+    "settlementDueDate": "পরিশোধের তারিখ",
+    "noMembers": "কোনো সদস্য নেই।"
+  },
+  "contactKind": {
+    "call": "ফোন",
+    "message": "বার্তা",
+    "email": "ইমেইল",
+    "registered_letter": "রেজিস্টার্ড চিঠি",
+    "visit": "সরাসরি দেখা"
+  },
+  "settlementKind": {
+    "early_exit": "আগেই প্রস্থান",
+    "compassionate_exit": "সহানুভূতিগত প্রস্থান",
+    "inactive_return": "নিষ্ক্রিয় ফেরত",
+    "death_surrender": "মৃত্যু: সারেন্ডার",
+    "wind_up": "শেষ বণ্টন"
+  },
+  "rulesPage": {
+    "title": "নিয়ম",
+    "current": "বর্তমান",
+    "history": "ইতিহাস",
+    "key": "নিয়মের কী",
+    "value": "মান",
+    "clause": "ধারা",
+    "createRuleChange": "নিয়ম পরিবর্তনের প্রস্তাব",
+    "validFrom": "কার্যকর তারিখ",
+    "empty": "কোনো নিয়ম নেই।",
+    "ruleChangeTitle": "নিয়ম পরিবর্তন"
+  },
+  "charityPage": {
+    "title": "দান",
+    "donations": "দানসমূহ",
+    "statement": "বিবৃতি",
+    "year": "বছর",
+    "opening": "শুরুর জের",
+    "receipts": "জমা",
+    "disbursements": "খরচ",
+    "closing": "শেষ জের",
+    "noDonations": "কোনো দানের তথ্য নেই।"
+  },
+  "settingsPage": {
+    "title": "সেটিংস",
+    "general": "সাধারণ",
+    "paymentInstructions": "পেমেন্টের নির্দেশনা",
+    "fundName": "ফান্ডের নাম",
+    "saveTitle": "সেটিংস সংরক্ষণ করুন",
+    "saved": "সংরক্ষণ হয়েছে।",
+    "changed": "পরিবর্তিত"
+  },
+  "ownerConflict": {
+    "title": "মালিকার সিদ্ধান্ত সংঘাত: {{count}}টি অমীমাংসিত।",
+    "dismiss": "বন্ধ করুন"
   }
 }

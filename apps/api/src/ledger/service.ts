@@ -1,8 +1,8 @@
-import type pg from 'pg';
 import { ACCOUNT_CODES, isValidIsoDate, type Clock } from '@barakah/shared';
 import { audit } from '../lib/audit';
 import { AppError, badRequest, conflict, notFound } from '../lib/errors';
 import { toBigInt } from '../lib/money';
+import type { Db } from '../lib/tx';
 
 /**
  * Ledger posting service (spec 5.6). The only code that inserts into `ledger_entries`.
@@ -120,7 +120,7 @@ const periodLocked = (period: string) =>
  * caller's transaction is rolled back by the thrown error, so a half-posted group cannot exist.
  */
 export async function postEntries(
-  tx: pg.PoolClient,
+  tx: Db,
   entries: readonly PostingInput[],
   actor: LedgerActor,
 ): Promise<PostedEntry[]> {
@@ -203,7 +203,7 @@ interface OriginalRow {
 const ORIGINAL_COLUMNS = `seq, entry_date::text AS entry_date, debit_account, credit_account,
   amount_paisa, member_id, ref_type, ref_id, reverses_seq`;
 
-async function isLocked(tx: pg.PoolClient, date: string): Promise<boolean> {
+async function isLocked(tx: Db, date: string): Promise<boolean> {
   const res = await tx.query(
     `SELECT 1 FROM periods WHERE period = to_char($1::date, 'YYYY-MM') AND locked_at IS NOT NULL`,
     [date],
@@ -220,7 +220,7 @@ async function isLocked(tx: pg.PoolClient, date: string): Promise<boolean> {
  *    locked it is dated today (Asia/Dhaka) instead; if today's period is locked too the call fails.
  */
 export async function reverseEntry(
-  tx: pg.PoolClient,
+  tx: Db,
   seq: bigint,
   opts: ReverseOptions,
 ): Promise<PostedEntry> {
@@ -302,7 +302,7 @@ export async function reverseEntry(
  * nothing left to reverse).
  */
 export async function reverseReference(
-  tx: pg.PoolClient,
+  tx: Db,
   refType: string,
   refId: string,
   opts: ReverseOptions,

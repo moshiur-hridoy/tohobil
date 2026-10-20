@@ -1,6 +1,7 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../lib/auth';
+import { OwnerConflictBanner } from '../components/OwnerConflictBanner';
 
 /** [route, i18n key]: one source for the desktop sidebar and the stacked mobile nav. */
 export const ADMIN_NAV = [
@@ -16,6 +17,8 @@ export const ADMIN_NAV = [
   ['/admin/reconcile', 'admin.nav.reconcile'],
   ['/admin/reports', 'admin.nav.reports'],
   ['/admin/rules', 'admin.nav.rules'],
+  ['/admin/charity', 'admin.nav.charity'],
+  ['/admin/settings', 'admin.nav.settings'],
   ['/admin/system', 'admin.nav.system'],
 ] as const;
 
@@ -34,6 +37,8 @@ const ADMIN_NAV_META: Record<AdminRoute, { icon: string }> = {
   '/admin/reconcile': { icon: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4' },
   '/admin/reports': { icon: 'M6 3h8l4 4v14H6zM14 3v4h4M9 13h6M9 17h6' },
   '/admin/rules': { icon: 'M4 7h10M18 7h2M4 17h2M10 17h10M16 5v4M8 15v4' },
+  '/admin/charity': { icon: 'M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z' },
+  '/admin/settings': { icon: 'M4 7h10M18 7h2M4 17h2M10 17h10M14 5v4M8 15v4' },
   '/admin/system': { icon: 'M3 4h18v7H3zM3 13h18v7H3zM7 7.5h.01M7 16.5h.01' },
 };
 
@@ -48,11 +53,11 @@ const NAV_GROUPS: { titleKey: string; routes: AdminRoute[] }[] = [
   },
   {
     titleKey: 'admin.nav.group.membersAndDecisions',
-    routes: ['/admin/members', '/admin/proposals', '/admin/notifications', '/admin/rules', '/admin/reports'],
+    routes: ['/admin/members', '/admin/proposals', '/admin/notifications', '/admin/rules', '/admin/reports', '/admin/charity'],
   },
   {
     titleKey: 'admin.nav.group.administration',
-    routes: ['/admin/system'],
+    routes: ['/admin/settings', '/admin/system'],
   },
 ];
 
@@ -110,8 +115,11 @@ export function CashierLayout() {
         ))}
       </nav>
 
-      <main className="flex-1 p-4 lg:p-6">
-        <Outlet />
+      <main className="flex-1">
+        <OwnerConflictBanner />
+        <div className="p-4 lg:p-6">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

@@ -90,7 +90,14 @@
     "closesIn": "Closes in 2 days 5 hours · {{date}}",
     "exampleClose": "20 Jan, 10:00 PM",
     "whoVoted": "Who voted what",
-    "publicHint": "Votes are public. They can be changed before the deadline."
+    "publicHint": "Votes are public. They can be changed before the deadline.",
+    "closed": "Closed",
+    "openCount": "Open votes: {{count}}",
+    "remainingDays": "{{days}}d {{hours}}h",
+    "remainingHours": "{{hours}}h {{minutes}}m",
+    "cannotVoteSubject": "You are the subject of this proposal and cannot vote.",
+    "youVoted": "You voted: {{choice}}",
+    "notVoted": "Not voted"
   },
   "assets": {
     "title": "Assets",
@@ -170,6 +177,8 @@
       "reconcile": "Reconcile",
       "reports": "Reports",
       "rules": "Rules",
+      "charity": "Charity",
+      "settings": "Settings",
       "system": "System",
       "group": {
         "overview": "Overview",
@@ -178,6 +187,65 @@
         "administration": "Administration"
       }
     }
+  },
+  "proposalType": {
+    "fine_waiver": "Fine waiver",
+    "expense": "Expense",
+    "investment_purchase": "Investment purchase",
+    "asset_sale": "Asset sale",
+    "valuation_update": "Valuation update",
+    "new_member": "New member",
+    "suspension": "Suspension",
+    "reinstatement": "Reinstatement",
+    "settlement": "Settlement",
+    "member_deceased": "Member deceased",
+    "distribution": "Profit distribution",
+    "rule_change": "Rule change",
+    "constitution_amendment": "Constitution amendment",
+    "role_change": "Role change",
+    "general": "General decision",
+    "charity_donation": "Charity donation",
+    "contribution_change": "Contribution change",
+    "asset_cost_levy": "Asset cost levy",
+    "member_qard": "Member qard",
+    "financing_arrangement": "Financing arrangement",
+    "dissolution": "Dissolution",
+    "wind_up": "Wind-up",
+    "land_selection": "Land selection",
+    "project_closure": "Project closure"
+  },
+  "proposal": {
+    "title": "Proposal",
+    "type": "Type",
+    "subject": "Subject",
+    "payload": "Details",
+    "voterList": "Voter list",
+    "threshold": "Threshold",
+    "closesAt": "Closes at",
+    "open": "Open vote",
+    "closeEarly": "Close early",
+    "cancel": "Cancel",
+    "execute": "Execute",
+    "openTitle": "Open proposal for voting",
+    "closeEarlyTitle": "Close vote early",
+    "cancelTitle": "Cancel proposal",
+    "executeTitle": "Execute approved proposal",
+    "openBody": "Voting must stay open for at least one hour. Set the closing time; members can vote until then.",
+    "closeEarlyBody": "Early close is only allowed when the result is mathematically decided (yes has reached threshold, or threshold is unreachable).",
+    "cancelBody": "Only draft proposals can be cancelled. This is immediate.",
+    "executeBody": "The approved decision will be carried out. Money actions need an authenticator code.",
+    "clauseRef": "Clause",
+    "byShares": "By share weight",
+    "byMembers": "By member count"
+  },
+  "compliance": {
+    "interest_free_instrument": "Interest-free instrument",
+    "not_conventional_fixed_deposit": "Not a conventional fixed deposit",
+    "not_conventional_insurance": "Not conventional insurance",
+    "not_speculative_trading": "Not speculative trading",
+    "permissible_business": "Permissible business",
+    "liquidatable_within_term": "Liquidatable within fund term",
+    "no_fixed_profit_promised": "No fixed profit promised"
   },
   "ledger": {
     "title": "Ledger",
@@ -315,6 +383,7 @@
   "notif": {
     "due_reminder": "{name}, ৳{outstanding} for {month} is due by {due_date}. Send it via bKash or bank and submit the TrxID in the app.",
     "fine_notice": "{name}, a fine of ৳{fine} was charged for late payment of {month}. Total due ৳{total}. Open the app to request a waiver.",
+    "member_onboarded": "{name}, your membership is now active. Shares: {shares}, code: {code}. View payments and votes in the app.",
     "payment_submitted_ack": "We received your ৳{amount}. The cashier is verifying it.",
     "payment_confirmed": "Your payment of ৳{amount} was accepted. If anything is wrong, raise an objection in the app.",
     "payment_rejected": "Your payment of ৳{amount} could not be accepted. Reason: {reason}.",
@@ -322,6 +391,7 @@
     "vote_closing": "24 hours left to vote: {title}. You have not voted yet.",
     "vote_result": "Vote result: {title}: {result} (yes {yes}, no {no}).",
     "suspension_notice": "{name}, by the fund's decision your membership is suspended from {date}. See the app for details.",
+    "reinstatement_notice": "{name}, your membership has been reinstated. Please pay the catch-up dues.",
     "entry_quote": "{name}, the price of {shares} share(s) to join the fund is ৳{price}. Valid until {expires}.",
     "settlement_payout": "Your settlement payment of ৳{amount} has been paid.",
     "constitution_updated": "Constitution version {version} is now in force. Read it and tap 'I have read it'.",
@@ -413,6 +483,15 @@
       "exited": "Exited",
       "prospective": "Prospective",
       "inactive": "Inactive"
+    },
+    "proposal": {
+      "draft": "Draft",
+      "open": "Open",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "executed": "Executed",
+      "lapsed": "Lapsed",
+      "cancelled": "Cancelled"
     }
   },
   "pay": {
@@ -505,6 +584,17 @@
     "constitutionHint": "Constitution and amendments",
     "noticesHint": "Member and fund notices",
     "settlementHint": "Exit settlement quote"
+  },
+  "constitutionPage": {
+    "title": "Constitution",
+    "version": "Version",
+    "effectiveFrom": "Effective from",
+    "ack": "I have read it",
+    "acked": "Acknowledged",
+    "clauses": "Clauses",
+    "search": "Search clauses",
+    "noVersions": "No constitution versions.",
+    "pdf": "PDF"
   },
   "adminDash": {
     "expectedThisMonth": "This month expected",
@@ -871,5 +961,85 @@
     "checkReturnWithinCapital": "Return within capital",
     "checkFeeExactlyTen": "Service charge exactly 10%",
     "checkInstallmentsEqualNet": "Installments equal net refund"
+  },
+  "proposalsPage": {
+    "title": "Proposals",
+    "type": "Type",
+    "empty": "No proposals.",
+    "newProposal": "New proposal",
+    "count": "Total: {{count}}",
+    "compliance": "Compliance checklist",
+    "complianceIncomplete": "All checklist items must be true before this proposal can be opened.",
+    "created": "Created: {{date}}"
+  },
+  "membersAdmin": {
+    "title": "Members",
+    "currentPeriodDue": "Current period due",
+    "statusHistory": "Status history",
+    "createSuspension": "Create suspension",
+    "reinstate": "Reinstate",
+    "reinstateHint": "Reinstatement will create catch-up dues for the months after suspension.",
+    "settlement": "Settlement proposal",
+    "noPrior": "No prior status",
+    "contactLogTitle": "Contact log",
+    "addContactLog": "Add contact log",
+    "contactKind": "Kind",
+    "contactOutcome": "Outcome",
+    "noContactLog": "No contact log entries.",
+    "chooseMember": "Choose a member",
+    "settlementKind": "Settlement kind",
+    "settlementNetAmount": "Net payable amount (৳)",
+    "settlementDueDate": "Payable date",
+    "noMembers": "No members."
+  },
+  "contactKind": {
+    "call": "Call",
+    "message": "Message",
+    "email": "Email",
+    "registered_letter": "Registered letter",
+    "visit": "Visit"
+  },
+  "settlementKind": {
+    "early_exit": "Early exit",
+    "compassionate_exit": "Compassionate exit",
+    "inactive_return": "Inactive return",
+    "death_surrender": "Death: surrender",
+    "wind_up": "Wind-up"
+  },
+  "rulesPage": {
+    "title": "Rules",
+    "current": "Current",
+    "history": "History",
+    "key": "Rule key",
+    "value": "Value",
+    "clause": "Clause",
+    "createRuleChange": "Create rule-change proposal",
+    "validFrom": "Valid from",
+    "empty": "No rules.",
+    "ruleChangeTitle": "Rule change"
+  },
+  "charityPage": {
+    "title": "Charity",
+    "donations": "Donations",
+    "statement": "Statement",
+    "year": "Year",
+    "opening": "Opening balance",
+    "receipts": "Receipts",
+    "disbursements": "Disbursements",
+    "closing": "Closing balance",
+    "noDonations": "No donations on record."
+  },
+  "settingsPage": {
+    "title": "Settings",
+    "general": "General",
+    "paymentInstructions": "Payment instructions",
+    "fundName": "Fund name",
+    "saveTitle": "Save settings",
+    "saved": "Saved.",
+    "changed": "Changed"
+  },
+  "ownerConflict": {
+    "title": "Owner decision conflict: {{count}} unresolved.",
+    "dismiss": "Dismiss"
   }
 }

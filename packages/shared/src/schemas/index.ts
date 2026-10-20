@@ -11,3 +11,6 @@ export * from './objection';
 export * from './matrix';
 export * from './notification';
 export * from './asset';
+export * from './settings';
+export * from './charity';
+export * from './constitution';

@@ -122,6 +122,17 @@ export type DevicePlatform = (typeof DEVICE_PLATFORMS)[number];
 export const DEVICE_EVENT_KINDS = ['registered', 'revoked', 'reset'] as const;
 export type DeviceEventKind = (typeof DEVICE_EVENT_KINDS)[number];
 
+/** Compliance checklist fields for investment proposals (spec 18.3). */
+export const COMPLIANCE_CHECKLIST_FIELDS = [
+  'interest_free_instrument',
+  'not_conventional_fixed_deposit',
+  'not_conventional_insurance',
+  'not_speculative_trading',
+  'permissible_business',
+  'liquidatable_within_term',
+  'no_fixed_profit_promised',
+] as const;
+
 export const NOTIFICATION_CHANNELS = ['push', 'sms'] as const;
 export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
 

@@ -31,6 +31,15 @@ export const memberContactUpdateSchema = z.object({
 
 export type MemberContactUpdate = z.infer<typeof memberContactUpdateSchema>;
 
+/** `POST /members/:id/contact-log`: the cashier records a contact attempt. */
+export const contactLogEntrySchema = z.object({
+  kind: z.enum(['call', 'message', 'email', 'registered_letter', 'visit']),
+  outcome: z.string().trim().max(200).optional(),
+  note: z.string().trim().max(2000).optional(),
+});
+
+export type ContactLogEntry = z.infer<typeof contactLogEntrySchema>;
+
 /** `GET /share-holdings`: holdings in force on `as_of` (default today), or the full history. */
 export const shareHoldingsQuerySchema = z.object({
   member_id: uuidSchema.optional(),

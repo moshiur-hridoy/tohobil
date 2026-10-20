@@ -1,5 +1,7 @@
 /** Response shapes of the API as the screens use them. Money is always a decimal string of paisa. */
 
+import type { ProposalStatus, ProposalType, ThresholdKind, VotingBasis } from '@barakah/shared';
+
 export type DueStatus = 'paid' | 'paid_late' | 'partial' | 'unpaid' | 'overdue';
 export type PaymentStatus = 'pending' | 'confirmed' | 'rejected' | 'reversed';
 
@@ -227,4 +229,154 @@ export interface NoticeRow {
   body: string | null;
   created_at: string;
   read: boolean;
+}
+
+export interface ProposalSummary {
+  id: string;
+  type: ProposalType;
+  title: string;
+  status: ProposalStatus;
+  subject_member_id: string | null;
+  basis: VotingBasis;
+  threshold_kind: ThresholdKind;
+  eligible_count: number;
+  eligible_weight: string;
+  threshold: number;
+  threshold_weight: string;
+  counts: {
+    yes: number;
+    no: number;
+    abstain: number;
+    yes_weight: string;
+    no_weight: string;
+    abstain_weight: string;
+  };
+  opens_at: string | null;
+  closes_at: string | null;
+  finalized_at: string | null;
+  executed_at: string | null;
+  created_at: string;
+  clause_ref: string | null;
+  amount_paisa: string | null;
+}
+
+export interface ProposalVoter {
+  member_id: string;
+  full_name: string;
+  code: string;
+  weight: number;
+}
+
+export interface ProposalVote {
+  member_id: string;
+  choice: 'yes' | 'no' | 'abstain';
+  cast_at: string;
+}
+
+export interface ProposalDetail extends ProposalSummary {
+  description: string | null;
+  subject: { full_name: string; code: string } | null;
+  payload: Record<string, unknown>;
+  voters: ProposalVoter[];
+  votes: ProposalVote[];
+}
+
+export interface RuleRow {
+  key: string;
+  value: unknown;
+  valid_from: string;
+  clause_ref: string | null;
+}
+
+export interface RulesResponse {
+  as_of: string | null;
+  items: RuleRow[];
+}
+
+export interface MemberStatusEvent {
+  id: string;
+  from_status: string | null;
+  to_status: string;
+  reason: string | null;
+  proposal_id: string | null;
+  created_by: string;
+  created_at: string;
+}
+
+export interface ContactLogItem {
+  id: string;
+  kind: string;
+  outcome: string | null;
+  note: string | null;
+  at: string;
+  by: string;
+}
+
+export interface MemberDetail {
+  id: string;
+  code: string;
+  full_name: string;
+  status: string;
+  photo_file_id: string | null;
+  phone: string | null;
+  joined_on: string;
+  suspended_on: string | null;
+  exited_on: string | null;
+  shares: number;
+  capital_paisa: string;
+  share_holdings: Array<Record<string, unknown>>;
+  share_register: Array<Record<string, unknown>>;
+  dues: DueRow[];
+  fines: Array<Record<string, unknown>>;
+  payments: Page<PaymentRow>;
+  ledger: Page<LedgerRow>;
+}
+
+export interface CharityDonation {
+  id: string;
+  proposal_id: string;
+  recipient: string;
+  amount_paisa: string;
+  donated_on: string;
+  proof_file_id: string | null;
+  ledger_seq: string | null;
+}
+
+export interface CharityStatement {
+  year: string;
+  opening_paisa: string;
+  receipts_paisa: string;
+  disbursements_paisa: string;
+  closing_paisa: string;
+}
+
+export interface ConstitutionVersionSummary {
+  id: string;
+  version: string;
+  file_id: string | null;
+  effective_from: string;
+  summary: string | null;
+  proposal_id: string | null;
+  created_at: string;
+}
+
+export interface ConstitutionClause {
+  id: string;
+  clause_no: string;
+  title: string | null;
+  summary: string | null;
+  body: string | null;
+}
+
+export interface ConstitutionVersion extends ConstitutionVersionSummary {
+  clauses: ConstitutionClause[];
+  acked_at?: string;
+}
+
+export interface OwnerConflict {
+  id: string;
+  title: string;
+  description: string | null;
+  status: 'open' | 'resolved';
+  raised_at: string;
 }

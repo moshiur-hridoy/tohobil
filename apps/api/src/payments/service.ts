@@ -1,4 +1,5 @@
 import type pg from 'pg';
+import type { Logger } from 'pino';
 import {
   toDhakaDate,
   type CashierEntry,
@@ -12,6 +13,7 @@ import {
   type ApprovalsQuery,
 } from '@barakah/shared';
 import type { AuthUser } from '../auth/service';
+import { activateProspectiveMember } from '../members/entry';
 import { LEDGER_REF, postEntries, reverseReference } from '../ledger/service';
 import { paymentPostings } from '../ledger/postings';
 import { audit } from '../lib/audit';
@@ -20,6 +22,8 @@ import { AppError, badRequest, conflict, forbidden, notFound } from '../lib/erro
 import { paisaOut, toBigInt } from '../lib/money';
 import { ruleString } from '../lib/rules';
 import { inTransaction, type Db } from '../lib/tx';
+import type { PushSender } from '../notifications/providers/push';
+import type { SmsProvider } from '../notifications/providers/sms';
 import {
   planDefaultAllocation,
   planManualAllocation,
@@ -31,6 +35,9 @@ import { parsePaymentSms } from './sms-parser';
 export interface PaymentDeps {
   pool: pg.Pool;
   clock: Clock;
+  log: Logger;
+  pushSender: PushSender;
+  smsProvider: SmsProvider;
 }
 
 export interface ClientCtx {
@@ -336,6 +343,23 @@ async function confirmInTx(
     }),
     { userId: actor.id, ip: ctx.ip, deviceId: actor.device_id },
   );
+
+  // Spec 5.9: when the entry due is fully paid, activate the prospective member.
+  if (p.purpose === 'entry') {
+    const entryDueId = plan.lines.find((l) => l.due_id !== undefined)?.due_id;
+    if (entryDueId) {
+      const dueStatus = await tx.query(
+        `SELECT outstanding_paisa FROM v_due_status WHERE due_id = $1`,
+        [entryDueId],
+      );
+      const outstanding = toBigInt(
+        (dueStatus.rows[0] as { outstanding_paisa: unknown } | undefined)?.outstanding_paisa ?? 0,
+      );
+      if (outstanding === 0n) {
+        await activateProspectiveMember(tx, deps, p.member_id);
+      }
+    }
+  }
 
   await audit(tx, {
     actor: actor.id,

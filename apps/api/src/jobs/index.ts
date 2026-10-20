@@ -1,6 +1,7 @@
 import PgBoss from 'pg-boss';
 import type pg from 'pg';
 import type { Clock } from '@barakah/shared';
+import type { Logger } from 'pino';
 import type { PushSender } from '../notifications/providers/push';
 import type { SmsProvider } from '../notifications/providers/sms';
 import type { Env } from '../lib/env';
@@ -11,6 +12,7 @@ export interface JobDeps {
   clock: Clock;
   pushSender: PushSender;
   smsProvider: SmsProvider;
+  log: Logger;
 }
 
 export interface Scheduler {
@@ -73,9 +75,19 @@ export function createScheduler(poolUrl: string, deps: JobDeps): Scheduler {
       const { generateRentExpectedJob } = await import('./workers/rent');
       await generateRentExpectedJob(deps);
     });
+    await boss.work('finalize-proposals', async () => {
+      const { finalizeProposalsJob } = await import('./workers/proposals');
+      await finalizeProposalsJob(deps);
+    });
+    await boss.work('member-status', async () => {
+      const { statusJob } = await import('./workers/status');
+      await statusJob(deps);
+    });
 
     const queues = [
       'send-notifications',
+      'finalize-proposals',
+      'member-status',
       'generate-dues',
       'apply-fines',
       'remind-dues',
@@ -99,6 +111,8 @@ export function createScheduler(poolUrl: string, deps: JobDeps): Scheduler {
     await boss.schedule('cleanup', '0 4 * * *', undefined, scheduleOpts);
     await boss.schedule('sms-fallback', '*/15 * * * *', undefined, scheduleOpts);
     await boss.schedule('generate-rent-expected', '5 0 * * *', undefined, scheduleOpts);
+    await boss.schedule('finalize-proposals', '* * * * *', undefined, scheduleOpts);
+    await boss.schedule('member-status', '30 0 * * *', undefined, scheduleOpts);
   }
 
   async function stop(): Promise<void> {

@@ -60,7 +60,7 @@ const envSchema = z
     UPLOAD_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(30),
 
     SMS_PROVIDER: z.enum(['console', 'http']).default('console'),
-    SMS_HTTP_URL: z.string().url().optional(),
+    SMS_HTTP_URL: z.union([z.string().url(), z.literal('')]).optional(),
     SMS_HTTP_API_KEY: z.string().optional(),
     SMS_SENDER_ID: z.string().max(20).optional(),
     SMS_HTTP_BODY_TEMPLATE: z.string().max(500).optional(),

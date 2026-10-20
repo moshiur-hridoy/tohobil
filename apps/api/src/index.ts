@@ -39,6 +39,7 @@ async function main(): Promise<void> {
     env,
     pool,
     clock,
+    log: logger,
     pushSender,
     smsProvider,
   });

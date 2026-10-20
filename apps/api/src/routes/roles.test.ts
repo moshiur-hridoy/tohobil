@@ -34,6 +34,16 @@ const ROUTES: Array<{ method: 'GET' | 'POST' | 'PATCH'; url: string; body?: unkn
   { method: 'PATCH', url: `/objections/${id}`, body: { status: 'resolved', resolution: 'abc' }, allowed: ['auditor'] },
   { method: 'GET', url: '/matrix', allowed: [...ALL, 'readonly'] },
   { method: 'GET', url: '/settings/payment-instructions', allowed: [...ALL, 'readonly'] },
+  { method: 'GET', url: '/settings', allowed: [...ALL, 'readonly'] },
+  { method: 'PATCH', url: '/settings', body: { key: 'fund_name', value: 'x' }, allowed: ['cashier'] },
+  { method: 'GET', url: '/proposals', allowed: [...ALL, 'readonly'] },
+  { method: 'GET', url: `/proposals/${id}`, allowed: [...ALL, 'readonly'] },
+  { method: 'POST', url: '/proposals', body: { type: 'general', title: 'Test', payload: { text: 'hello' } }, allowed: ACTIVE },
+  { method: 'POST', url: `/proposals/${id}/open`, body: { closes_at: '2099-01-01T00:00:00Z' }, allowed: ['cashier', 'auditor'] },
+  { method: 'POST', url: `/proposals/${id}/close-early`, body: {}, allowed: ['cashier', 'auditor'] },
+  { method: 'POST', url: `/proposals/${id}/cancel`, body: {}, allowed: ['cashier', 'auditor'] },
+  { method: 'POST', url: `/proposals/${id}/vote`, body: { choice: 'yes' }, allowed: ACTIVE },
+  { method: 'POST', url: `/proposals/${id}/execute`, body: {}, allowed: ['cashier'] },
 ];
 
 describe('role table for payments, approvals, objections, matrix', () => {

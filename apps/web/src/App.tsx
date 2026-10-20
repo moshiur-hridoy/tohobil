@@ -19,11 +19,14 @@ import { AdminDashboard } from './pages/admin/DashboardPage';
 import { MatrixPage } from './pages/admin/MatrixPage';
 import { PaymentsPage } from './pages/admin/PaymentsPage';
 import { AdminLedgerPage } from './pages/admin/AdminLedgerPage';
-import { AdminMembersPage } from './pages/admin/AdminMembersPage';
-import { AdminProposalsPage } from './pages/admin/AdminProposalsPage';
-import { NewProposalPage } from './pages/admin/NewProposalPage';
 import { AdminSystemStatusPage } from './pages/admin/AdminSystemStatusPage';
+import { MembersAdminPage } from './pages/admin/MembersAdminPage';
+import { ProposalsPage } from './pages/admin/ProposalsPage';
+import { RulesPage } from './pages/admin/RulesPage';
+import { CharityPage } from './pages/admin/CharityPage';
+import { SettingsPage } from './pages/admin/SettingsPage';
 import { AdminPlaceholderPage } from './pages/admin/AdminPlaceholderPage';
+import { VoteDetailPage } from './pages/member/VoteDetailPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { UpdatePrompt } from './components/UpdatePrompt';
 
@@ -59,7 +62,7 @@ export function App() {
           <Route path="/home" element={<HomePage />} />
           <Route path="/pay" element={<PayPage />} />
           <Route path="/votes" element={<VotesPage />} />
-          <Route path="/votes/:id" element={<VotesPage />} />
+          <Route path="/votes/:id" element={<VoteDetailPage />} />
           <Route path="/assets" element={<AssetsPage />} />
           <Route path="/assets/:id" element={<AssetsPage />} />
           <Route path="/menu" element={<MenuPage />} />
@@ -77,11 +80,13 @@ export function App() {
           <Route path="/admin/matrix" element={<MatrixPage />} />
           <Route path="/admin/payments" element={<PaymentsPage />} />
           <Route path="/admin/ledger" element={<AdminLedgerPage />} />
-          <Route path="/admin/members" element={<AdminMembersPage />} />
-          <Route path="/admin/proposals" element={<AdminProposalsPage />} />
-          <Route path="/admin/proposals/new" element={<NewProposalPage />} />
           <Route path="/admin/system" element={<AdminSystemStatusPage />} />
-          {ADMIN_NAV.filter(([to]) => !['/admin', '/admin/matrix', '/admin/payments', '/admin/ledger', '/admin/members', '/admin/proposals', '/admin/proposals/new', '/admin/system'].includes(to)).map(([to, key]) => (
+          <Route path="/admin/members" element={<MembersAdminPage />} />
+          <Route path="/admin/proposals" element={<ProposalsPage />} />
+          <Route path="/admin/rules" element={<RulesPage />} />
+          <Route path="/admin/charity" element={<CharityPage />} />
+          <Route path="/admin/settings" element={<SettingsPage />} />
+          {ADMIN_NAV.filter(([to]) => !['/admin', '/admin/matrix', '/admin/payments', '/admin/ledger', '/admin/members', '/admin/proposals', '/admin/rules', '/admin/charity', '/admin/settings', '/admin/system'].includes(to)).map(([to, key]) => (
             <Route key={to} path={to} element={<AdminPlaceholderPage titleKey={key} />} />
           ))}
         </Route>

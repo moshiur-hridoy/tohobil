@@ -79,10 +79,17 @@ export async function createTestDb(): Promise<TestDb | null> {
   await root.connect();
   try {
     await root.query(`CREATE DATABASE ${dbName}`);
-    // Roles are cluster-wide; create them once, as infra/initdb/10-roles.sh does for real stacks.
+    // Roles are cluster-wide; create them idempotently so parallel test files don't race.
     for (const role of ['barakah_app', 'barakah_readonly']) {
-      const exists = await root.query('SELECT 1 FROM pg_roles WHERE rolname = $1', [role]);
-      if (exists.rowCount === 0) await root.query(`CREATE ROLE ${role} LOGIN PASSWORD '${role}'`);
+      await root.query(
+        `DO $$
+         BEGIN
+           CREATE ROLE ${role} LOGIN PASSWORD '${role}';
+         EXCEPTION WHEN duplicate_object THEN
+           NULL;
+         END
+         $$`,
+      );
     }
   } finally {
     await root.end();
@@ -106,7 +113,11 @@ export async function createTestDb(): Promise<TestDb | null> {
     app,
     readonly,
     async close() {
-      await Promise.all([app.end(), readonly.end(), admin.end()]);
+      await app.end();
+      await readonly.end();
+      await admin.end();
+      // Give sockets a moment to close before the server forcibly terminates them.
+      await new Promise((r) => setTimeout(r, 200));
       const cleanup = new pg.Client({ connectionString: server.adminUrl });
       await cleanup.connect();
       try {

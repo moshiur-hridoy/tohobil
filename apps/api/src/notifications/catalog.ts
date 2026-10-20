@@ -17,6 +17,7 @@ import { bn } from '@barakah/shared';
 export type NotificationTemplate =
   | 'due_reminder'
   | 'fine_notice'
+  | 'member_onboarded'
   | 'payment_submitted_ack'
   | 'payment_confirmed'
   | 'payment_rejected'
@@ -24,6 +25,7 @@ export type NotificationTemplate =
   | 'vote_closing'
   | 'vote_result'
   | 'suspension_notice'
+  | 'reinstatement_notice'
   | 'entry_quote'
   | 'settlement_payout'
   | 'constitution_updated'
@@ -55,6 +57,7 @@ export const TEMPLATE_META: Record<NotificationTemplate, TemplateMeta> = {
     ignoreSmsOptOut: true,
     roleRecipients: ['member'],
   },
+  member_onboarded: { channels: ['push', 'sms'], roleRecipients: ['member'] },
   payment_submitted_ack: { channels: ['push'], roleRecipients: ['member'] },
   payment_confirmed: { channels: ['push', 'sms'], pushFallback: true, roleRecipients: ['member'] },
   payment_rejected: { channels: ['push', 'sms'], roleRecipients: ['member'] },
@@ -64,6 +67,10 @@ export const TEMPLATE_META: Record<NotificationTemplate, TemplateMeta> = {
   suspension_notice: {
     channels: ['push', 'sms'],
     ignoreSmsOptOut: true,
+    roleRecipients: ['member'],
+  },
+  reinstatement_notice: {
+    channels: ['push', 'sms'],
     roleRecipients: ['member'],
   },
   entry_quote: { channels: ['push', 'sms'], roleRecipients: ['member'] },

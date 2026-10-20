@@ -561,6 +561,7 @@ CREATE TABLE constitution_versions (
   version text NOT NULL UNIQUE,
   file_id uuid REFERENCES files,
   effective_from date NOT NULL,
+  summary text,
   proposal_id uuid,
   created_at timestamptz NOT NULL DEFAULT now()
 );

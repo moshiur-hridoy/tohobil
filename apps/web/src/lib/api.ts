@@ -86,7 +86,9 @@ export async function api<T = unknown>(path: string, opts: RequestOptions = {}):
   const res = await sendWithRefresh(path, opts);
   if (!res.ok) throw await toError(res);
   if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+  const text = await res.text();
+  if (!text) return undefined as T;
+  return JSON.parse(text) as T;
 }
 
 /** An authenticated binary download (proof thumbnails): `<img src>` cannot send a bearer token. */

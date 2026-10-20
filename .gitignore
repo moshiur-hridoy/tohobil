@@ -1,0 +1,40 @@
+node_modules/
+dist/
+coverage/
+*.log
+.DS_Store
+
+# Environment and secrets: only .env.example is committed
+.env
+.env.*
+!.env.example
+service-account*.json
+*.pem
+*.key
+*.jks
+*.keystore
+
+# Group-private documents and real legacy data (spec 18: the repo ships only the example constitution)
+/private/*
+/design/*
+!/private/.gitkeep
+/import/
+
+# Local state, backups, encrypted dumps
+pgdata/
+backups/
+/data/
+*.dump
+*.age
+*.tgz
+
+# Android: the native project IS committed (apps/web/android) so release builds are reproducible,
+# but never its build output, local SDK path or signing material.
+apps/web/android/.gradle/
+apps/web/android/build/
+apps/web/android/app/build/
+apps/web/android/local.properties
+apps/web/android/app/src/main/assets/public/
+apps/web/android/capacitor-cordova-android-plugins/
+ios/
+.capacitor/

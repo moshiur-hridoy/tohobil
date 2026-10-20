@@ -59,7 +59,7 @@
     "instructionsPlaceholder": "পেমেন্টের নির্দেশনা এখানে দেখা যাবে।"
   },
   "votes": {
-    "title": "ভোট",
+    "title": "ভোটের বিবরণ",
     "open": "চলমান",
     "past": "সম্পন্ন",
     "yes": "হ্যাঁ",
@@ -69,7 +69,28 @@
     "deadline": "শেষ সময়",
     "result": "ফলাফল",
     "approved": "অনুমোদিত",
-    "rejected": "প্রত্যাখ্যাত"
+    "rejected": "প্রত্যাখ্যাত",
+    "notYet": "এখনও দেননি",
+    "investmentPurchase": "বিনিয়োগ ক্রয়",
+    "shareBased": "শেয়ার ভিত্তিক",
+    "clause": "ধারা",
+    "exampleTitle": "স্বর্ণ ক্রয়: ২ ভরি",
+    "maxSpend": "সর্বোচ্চ ব্যয়",
+    "exampleMax": "৳৩,২০,০০০",
+    "sourceAccount": "উৎস হিসাব",
+    "exampleSource": "ব্যাংক",
+    "feasibilityAttached": "১,০০,০০০ টাকার বেশি, তাই ফিজিবিলিটি রিপোর্ট সংযুক্ত আছে।",
+    "shariaCompliant": "সুদমুক্ত বিনিয়োগের ৭টি শর্তই পূরণ হয়েছে",
+    "currentResult": "বর্তমান ফল",
+    "totalShares": "মোট {{count}} শেয়ার",
+    "yesCount": "হ্যাঁ {{count}}",
+    "noCount": "না {{count}}",
+    "remainingCount": "বাকি {{count}}",
+    "needYesToPass": "পাস করতে {{threshold}} শেয়ারের হ্যাঁ দরকার। আরও {{remaining}} শেয়ার বাকি।",
+    "closesIn": "শেষ হতে ২ দিন ৫ ঘণ্টা · {{date}}",
+    "exampleClose": "২০ জানুয়ারি, রাত ১০:০০",
+    "whoVoted": "কে কী ভোট দিয়েছেন",
+    "publicHint": "ভোট সবার কাছে প্রকাশ্য। সময় শেষ হওয়ার আগে বদলানো যাবে।"
   },
   "assets": {
     "title": "সম্পদ",
@@ -79,7 +100,84 @@
     "other": "অন্যান্য",
     "cost": "ক্রয় মূল্য",
     "valuation": "মূল্যায়ন",
-    "rent": "ভাড়া"
+    "rent": "ভাড়া",
+    "fundAssets": "ফান্ডের সম্পদ",
+    "allAssetStatus": "সব সম্পদের হালনাগাদ অবস্থা",
+    "totalEstimatedValue": "মোট আনুমানিক মূল্য (ধারণ করা সম্পদ)",
+    "acquiringNotIncluded": "জমি সংগ্রহ চলছে বলে এই মোটে ধরা হয়নি।",
+    "latestValuation": "সর্বশেষ মূল্যায়ন",
+    "paidSoFar": "পরিশোধিত",
+    "acquiringNote": "এই সম্পদ সংগ্রহ চলছে; সম্পূর্ণ হলে মূল্যায়ন ধারণ করা হবে।",
+    "noAcquireDate": "তারিখ নেই",
+    "valuationStale": "মূল্যায়ন ৩৬৫ দিনের বেশি পুরনো",
+    "staleCount": "{{count}}টি সম্পদের মূল্যায়ন পুরনো",
+    "vori": "ভরি",
+    "gram": "গ্রাম",
+    "status": {
+      "planned": "পরিকল্পনা",
+      "acquiring": "সংগ্রহ চলছে",
+      "held": "ধারণ",
+      "sold": "বিক্রি"
+    }
+  },
+  "member": {
+    "status": {
+      "active": "সক্রিয়",
+      "warning": "সতর্কতা",
+      "suspended": "স্থগিত",
+      "deceased": "মৃত",
+      "exited": "বের হয়েছেন",
+      "prospective": "সম্ভাব্য"
+    }
+  },
+  "admin": {
+    "dashboard": "ড্যাশবোর্ড",
+    "netAssets": "মোট সম্পদ",
+    "collectedThisMonth": "এই মাসে আদায়",
+    "overdueMembers": "বকেয়াদার সদস্য",
+    "pendingPayments": "যাচাইয়ের অপেক্ষায় পেমেন্ট",
+    "members": {
+      "title": "সদস্য ও শেয়ার",
+      "activeShares": "সক্রিয় {{count}} শেয়ার",
+      "ruleConflictHead": "নীতিমালায় ১৯ শেয়ার, সিস্টেমে ২০:",
+      "ruleConflictBody": "সংশোধনী প্রস্তাব দিন",
+      "member": "সদস্য",
+      "shares": "শেয়ার",
+      "capital": "জমা মূলধন",
+      "due": "বকেয়া",
+      "shareCount": "{{count}} শেয়ার",
+      "joined": "যোগদান",
+      "phone": "ফোন",
+      "details": "বিস্তারিত",
+      "declarationSteps": "নিষ্ক্রিয় ঘোষণার ধাপ (ধারা ১৩)",
+      "contactAttempts": "যোগাযোগ চেষ্টা",
+      "registeredLetter": "রেজিস্টার্ড চিঠি",
+      "wait30Days": "অপেক্ষা ৩০ দিন",
+      "addContactLog": "যোগাযোগ লগ যোগ করুন",
+      "settlementProposal": "সেটেলমেন্ট প্রস্তাব",
+      "declareInactive": "নিষ্ক্রিয় ঘোষণা (অডিটর অনুমোদন)"
+    },
+    "nav": {
+      "dashboard": "ড্যাশবোর্ড",
+      "matrix": "ম্যাট্রিক্স",
+      "payments": "পেমেন্ট",
+      "ledger": "লেনদেন বই",
+      "members": "সদস্য",
+      "proposals": "প্রস্তাব",
+      "assets": "সম্পদ",
+      "rent": "ভাড়া",
+      "notifications": "বিজ্ঞপ্তি",
+      "reconcile": "হিসাব মিলান",
+      "reports": "প্রতিবেদন",
+      "rules": "নিয়ম",
+      "system": "সিস্টেম",
+      "group": {
+        "overview": "ওভারভিউ",
+        "accounts": "হিসাব",
+        "membersAndDecisions": "সদস্য ও সিদ্ধান্ত",
+        "administration": "প্রশাসন"
+      }
+    }
   },
   "ledger": {
     "title": "লেনদেন বই",
@@ -194,11 +292,14 @@
     "save": "সংরক্ষণ",
     "cancel": "বাতিল",
     "confirm": "নিশ্চিত করুন",
+    "yes": "হ্যাঁ",
+    "no": "না",
     "loading": "লোড হচ্ছে...",
     "error": "সমস্যা",
     "success": "সফল",
     "close": "বন্ধ করুন",
     "back": "ফিরে যান",
+    "view": "দেখুন",
     "next": "পরবর্তী",
     "submit": "জমা দিন",
     "search": "খুঁজুন",
@@ -228,36 +329,12 @@
     "refreshing": "রিফ্রেশ হচ্ছে…",
     "details": "বিস্তারিত",
     "today": "আজ",
-    "yes": "হ্যাঁ",
-    "no": "না",
     "needsStepUp": "আগে আপনার অথেন্টিকেটর কোড দিন",
     "goToTotp": "অথেন্টিকেটর খুলুন",
     "working": "চলছে…",
     "none": "নেই",
     "of": "এর মধ্যে",
     "taka": "টাকা"
-  },
-  "admin": {
-    "dashboard": "ড্যাশবোর্ড",
-    "netAssets": "মোট সম্পদ",
-    "collectedThisMonth": "এই মাসে আদায়",
-    "overdueMembers": "বকেয়াদার সদস্য",
-    "pendingPayments": "যাচাইয়ের অপেক্ষায় পেমেন্ট",
-    "nav": {
-      "dashboard": "ড্যাশবোর্ড",
-      "matrix": "ম্যাট্রিক্স",
-      "payments": "পেমেন্ট",
-      "ledger": "লেনদেন বই",
-      "members": "সদস্য",
-      "proposals": "প্রস্তাব",
-      "assets": "সম্পদ",
-      "rent": "ভাড়া",
-      "notifications": "বিজ্ঞপ্তি",
-      "reconcile": "হিসাব মিলান",
-      "reports": "প্রতিবেদন",
-      "rules": "নিয়ম",
-      "system": "সিস্টেম"
-    }
   },
   "auth": {
     "activateHint": "ক্যাশিয়ারের দেওয়া অ্যাক্টিভেশন কোড লিখুন অথবা QR কোড স্ক্যান করুন।",
@@ -420,8 +497,14 @@
   "menuLinks": {
     "ledger": "লেজার",
     "members": "সদস্য ও শেয়ার",
+    "constitution": "নীতিমালা",
+    "notices": "নোটিস",
+    "settlement": "সেটেলমেন্ট",
     "ledgerHint": "সব এন্ট্রি, আপত্তির বোতামসহ",
-    "membersHint": "কার কয়টি শেয়ার"
+    "membersHint": "কার কয়টি শেয়ার",
+    "constitutionHint": "গঠনতন্ত্র ও সংশোধনী",
+    "noticesHint": "সদস্য ও ফান্ড নোটিস",
+    "settlementHint": "প্রস্থানের হিসাব"
   },
   "adminDash": {
     "expectedThisMonth": "এই মাসে প্রত্যাশিত",
@@ -530,5 +613,263 @@
     "answerTitle": "আপত্তির উত্তর দিন",
     "answered": "উত্তর দেওয়া হয়েছে।",
     "entry": "এন্ট্রি #{{seq}}"
+  },
+  "proposals": {
+    "title": "প্রস্তাব ব্যবস্থাপনা",
+    "subtitle": "সক্রিয় ও সম্পন্ন প্রস্তাবগুলো",
+    "newProposal": "নতুন প্রস্তাব",
+    "stats": {
+      "open": "চলমান",
+      "approved": "অনুমোদিত",
+      "draft": "খসড়া",
+      "implemented": "বাস্তবায়িত",
+      "openValue": "২টি",
+      "approvedValue": "১২টি",
+      "draftValue": "১টি",
+      "implementedValue": "৪৫টি"
+    },
+    "table": {
+      "proposal": "প্রস্তাব",
+      "basis": "ভিত্তি",
+      "result": "ফলাফল"
+    },
+    "row": {
+      "goldPurchase": "স্বর্ণ ক্রয়",
+      "flatValuation": "ফ্ল্যাট মূল্যায়ন",
+      "fineWaiver": "জরিমানা মওকুফ",
+      "charityDonation": "দান তহবিলে অর্থ",
+      "goldPurchaseSub": "২ ভরি · ব্যাংক হিসাব",
+      "flatValuationSub": "মিরপুর ফ্ল্যাট",
+      "fineWaiverSub": "৩ মাস",
+      "charityDonationSub": "বার্ষিক দান"
+    },
+    "basis": {
+      "share": "শেয়ার ভিত্তিক",
+      "member": "সদস্য ভিত্তিক"
+    },
+    "result": {
+      "goldPurchase": "অনুমোদিত · ১৪ শেয়ার",
+      "flatValuation": "চলমান · ৮/১১ হ্যাঁ",
+      "charityDonation": "প্রত্যাখ্যাত",
+      "none": "—",
+      "patternThree": "{{yes}} হ্যাঁ · {{no}} না · {{abstain}} বিরত",
+      "patternTwo": "{{yes}} হ্যাঁ · {{no}} না"
+    },
+    "maxAmount": "সর্বোচ্চ {{amount}}",
+    "newValue": "নতুন মূল্যায়ন",
+    "ends": "শেষ {{date}}",
+    "sampleDateShort": "১৮ জানু",
+    "fineToCharityFund": "জরিমানা দান তহবিলে যাবে",
+    "receiptRequired": "রসিদ সংযুক্ত",
+    "status": {
+      "open": "চলমান",
+      "approved": "অনুমোদিত",
+      "draft": "খসড়া",
+      "implemented": "বাস্তবায়িত"
+    },
+    "votes": {
+      "yes": "হ্যাঁ",
+      "no": "না",
+      "abstain": "বিরত",
+      "remaining": "{{count}} বাকি"
+    },
+    "checklist": {
+      "title": "চেকলিস্ট",
+      "subtitle": "বাস্তবায়নের আগে যাচাই",
+      "result": "সব চেক পাস",
+      "implementTOTP": "টিওটিপি দিয়ে বাস্তবায়ন করুন"
+    },
+    "check": {
+      "passed": "পাস হয়েছে",
+      "withinDeadline": "সময়সীমার মধ্যে",
+      "assetInfoValid": "সম্পদের তথ্য বৈধ",
+      "notPreviouslyImplemented": "আগে বাস্তবায়ন হয়নি"
+    },
+    "type": {
+      "investmentPurchase": "বিনিয়োগ ক্রয়",
+      "expense": "ব্যয়",
+      "ruleChange": "নীতি পরিবর্তন",
+      "fineWaiver": "জরিমানা মওকুফ",
+      "donation": "দান"
+    },
+    "form": {
+      "type": "প্রস্তাবের ধরন",
+      "title": "শিরোনাম",
+      "titlePlaceholder": "উদাহরণ: স্বর্ণ ক্রয়",
+      "subjectMember": "সংশ্লিষ্ট সদস্য",
+      "noMember": "কোনো সদস্য নয়",
+      "maxAmount": "সর্বোচ্চ অর্থ",
+      "maxAmountPlaceholder": "টাকায়",
+      "sourceAccount": "উৎস হিসাব",
+      "purpose": "উদ্দেশ্য",
+      "purposePlaceholder": "বিস্তারিত লিখুন",
+      "feasibilityFile": "ফিজিবিলিটি ফাইল",
+      "chooseFile": "ফাইল বেছে নিন",
+      "feasibilityRequired": "১,০০,০০০ টাকার বেশি হলে ফিজিবিলিটি রিপোর্ট লাগবে",
+      "voteDeadline": "ভোট শেষ হওয়ার সময়",
+      "voteDeadlinePlaceholder": "তারিখ ও সময়",
+      "saveDraft": "খসড়া সংরক্ষণ"
+    },
+    "account": {
+      "bank": "ব্যাংক",
+      "cash": "হাতে নগদ",
+      "charity": "দান তহবিল"
+    },
+    "voteRules": {
+      "title": "ভোটের নিয়ম",
+      "basis": "ভিত্তি",
+      "totalShares": "মোট শেয়ার",
+      "requiredYes": "প্রয়োজনীয় হ্যাঁ",
+      "conditions": "শর্তসমূহ",
+      "startVote": "ভোট চালু করুন",
+      "cannotStart": "চেকলিস্ট পাস না হলে চালু হবে না"
+    },
+    "condition": {
+      "interestFree": "সুদমুক্ত বিনিয়োগ",
+      "notFDR": "ফিক্সড ডিপোজিট নয়",
+      "notInsurance": "বীমা নয়",
+      "notSpeculation": "অনুমাননির্ভর বাণিজ্য নয়",
+      "legalBusiness": "বৈধ ব্যবসা",
+      "cashableWithinTerm": "মেয়াদের মধ্যে নগদীকরণযোগ্য",
+      "noFixedProfit": "নির্দিষ্ট লাভের প্রতিশ্রুতি নয়"
+    }
+  },
+  "systemStatus": {
+    "title": "সিস্টেম অবস্থা",
+    "subtitle": "স্বাস্থ্য, ব্যাকআপ ও অডিট লগ",
+    "allServicesUp": "সব সেবা চালু",
+    "health": {
+      "backup": "সর্বশেষ ব্যাকআপ",
+      "restore": "সর্বশেষ রিস্টোর টেস্ট",
+      "ledger": "লেজার চেইন",
+      "offlineCopy": "অডিটরের অফলাইন কপি"
+    },
+    "value": {
+      "ok": "ঠিক আছে",
+      "good": "ভালো",
+      "daysAgo": "{{count}} দিন আগে"
+    },
+    "sub": {
+      "backup": "স্বয়ংক্রিয় প্রতিদিন",
+      "restore": "পরীক্ষিত",
+      "ledger": "শেষ হ্যাশ মিলেছে",
+      "offlineCopy": "USB/e-Return"
+    },
+    "jobQueue": "জব কিউ",
+    "diskFree": "ডিস্ক ফাঁকা",
+    "memory": "মেমরি ব্যবহার",
+    "auditLog": "অডিট লগ",
+    "exportCsv": "CSV এক্সপোর্ট",
+    "time": "সময়",
+    "who": "কে",
+    "what": "কী",
+    "device": "ডিভাইস",
+    "log": {
+      "paymentReceived": "পেমেন্ট গৃহীত",
+      "voteViewed": "ভোট দেখা হয়েছে",
+      "paymentDeposit": "পেমেন্ট জমা",
+      "reconciliationViewed": "রিকনসিলিয়েশন দেখা হয়েছে",
+      "proposalOpened": "প্রস্তাব খোলা হয়েছে"
+    }
+  },
+  "constitution": {
+    "title": "নীতিমালা",
+    "newVersionBanner": "নতুন সংশোধনী প্রকাশিত",
+    "newVersionHint": "আপনি এখনো পড়েননি।",
+    "read": "পড়ুন",
+    "documentTitle": "গঠনতন্ত্র",
+    "currentVersion": "বর্তমান সংস্করণ",
+    "effectiveDate": "কার্যকর তারিখ",
+    "pdf": "PDF",
+    "searchPlaceholder": "ধারা খুঁজুন...",
+    "clause": {
+      "1_4": {
+        "title": "ধারা ১.৪ · ফান্ডের উদ্দেশ্য",
+        "sub": "সদস্যদের পারস্পরিক সহায়তার ভিত্তিতে ..."
+      },
+      "2_2": {
+        "title": "ধারা ২.২ · সদস্যপদ",
+        "sub": "সক্রিয় সদস্যদের অধিকার ও দায়িত্ব ..."
+      },
+      "2_4": {
+        "title": "ধারা ২.৪ · সতর্কতা ও স্থগিত",
+        "sub": "বকেয়া থাকলে সতর্কতা ..."
+      },
+      "4_2": {
+        "title": "ধারা ৪.২ · প্রস্তাব ও ভোট",
+        "sub": "বড় অর্থের প্রস্তাব শেয়ার ভিত্তিক ..."
+      },
+      "5_1": {
+        "title": "ধারা ৫.১ · সম্পদ",
+        "sub": "স্বর্ণ, জমি ও বাড়ি ..."
+      }
+    },
+    "olderVersions": "পুরনো সংস্করণ"
+  },
+  "notices": {
+    "title": "নোটিস",
+    "subtitle": "ফান্ড ও সদস্য নোটিস",
+    "filterLabel": "দেখুন",
+    "unreadTab": "অপঠিত",
+    "allTab": "সব",
+    "tags": {
+      "finalNotice": "চূড়ান্ত নোটিশ",
+      "fine": "জরিমানা",
+      "paymentReceived": "পেমেন্ট গৃহীত",
+      "meeting": "মিটিং",
+      "zakatInfo": "যাকাত তথ্য"
+    },
+    "finalNotice": {
+      "title": "চূড়ান্ত নোটিশ",
+      "body": "৩ মাস বকেয়া থাকায় সদস্যপদ স্থগিত হতে পারে।",
+      "action": "বিস্তারিত"
+    },
+    "fine": {
+      "title": "জরিমানা",
+      "body": "অনুপস্থিতির জন্য ৳৫০০ জরিমানা।",
+      "action": ""
+    },
+    "paymentReceived": {
+      "title": "পেমেন্ট গৃহীত",
+      "body": "আপনার সেপ্টেম্বর কিস্তি গৃহীত হয়েছে।",
+      "action": ""
+    },
+    "meeting": {
+      "title": "মাসিক মিটিং",
+      "body": "আগামী ২৫ তারিখ রাত ৯টায় জুম মিটিং।",
+      "action": ""
+    },
+    "zakatInfo": {
+      "title": "যাকাত তথ্য",
+      "body": "আপনার শেয়ারের বর্তমান মূল্য সংযুক্ত।",
+      "action": ""
+    }
+  },
+  "settlement": {
+    "title": "সেটেলমেন্ট হিসাব",
+    "subtitle": "প্রস্থানের আনুমানিক হিসাব",
+    "shareBasedTag": "শেয়ার ভিত্তিক",
+    "timeRemainingTag": "১৫ দিন বাকি",
+    "earlyExitTag": "আগাম প্রস্থান",
+    "humanitarianTag": "মানবিক কারণ",
+    "inactiveTag": "নিষ্ক্রিয়",
+    "deathTag": "মৃত্যু",
+    "memberInitial": "জা",
+    "memberName": "জামাল উদ্দিন",
+    "memberNameShares": "জামাল উদ্দিন · ৪ শেয়ার",
+    "paidInCapital": "জমা মূলধন",
+    "serviceCharge": "সেবা চার্জ",
+    "unpaidFines": "অপরিশোধিত জরিমানা",
+    "netRefund": "নেট ফেরত",
+    "dates": {
+      "feb15": "১৫ ফেব্রুয়ারি",
+      "mar15": "১৫ মার্চ",
+      "apr15": "১৫ এপ্রিল"
+    },
+    "disclaimer": "এটি আনুমানিক। চূড়ান্ত অডিটর অনুমোদনের পর পরিশোধ হবে।",
+    "payoutPlan": "কিস্তির পরিকল্পনা",
+    "checkReturnWithinCapital": "ফেরত মূলধনের মধ্যে",
+    "checkFeeExactlyTen": "সেবা চার্জ ১০%",
+    "checkInstallmentsEqualNet": "কিস্তির যোগফল নেট ফেরতের সমান"
   }
 }

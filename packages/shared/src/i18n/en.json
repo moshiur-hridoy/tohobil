@@ -59,7 +59,7 @@
     "instructionsPlaceholder": "Payment instructions will appear here."
   },
   "votes": {
-    "title": "Votes",
+    "title": "Vote detail",
     "open": "Open",
     "past": "Past",
     "yes": "Yes",
@@ -69,7 +69,28 @@
     "deadline": "Deadline",
     "result": "Result",
     "approved": "Approved",
-    "rejected": "Rejected"
+    "rejected": "Rejected",
+    "notYet": "Not yet",
+    "investmentPurchase": "Investment purchase",
+    "shareBased": "Share-based",
+    "clause": "Clause",
+    "exampleTitle": "Gold purchase: 2 vori",
+    "maxSpend": "Maximum spend",
+    "exampleMax": "৳320,000",
+    "sourceAccount": "Source account",
+    "exampleSource": "Bank",
+    "feasibilityAttached": "Above ৳100,000, so a feasibility report is attached.",
+    "shariaCompliant": "All 7 interest-free investment conditions are met",
+    "currentResult": "Current result",
+    "totalShares": "Total {{count}} shares",
+    "yesCount": "Yes {{count}}",
+    "noCount": "No {{count}}",
+    "remainingCount": "Remaining {{count}}",
+    "needYesToPass": "{{threshold}} yes shares needed to pass. {{remaining}} more to go.",
+    "closesIn": "Closes in 2 days 5 hours · {{date}}",
+    "exampleClose": "20 Jan, 10:00 PM",
+    "whoVoted": "Who voted what",
+    "publicHint": "Votes are public. They can be changed before the deadline."
   },
   "assets": {
     "title": "Assets",
@@ -79,7 +100,84 @@
     "other": "Other",
     "cost": "Purchase Cost",
     "valuation": "Valuation",
-    "rent": "Rent"
+    "rent": "Rent",
+    "fundAssets": "Fund Assets",
+    "allAssetStatus": "Latest status of all assets",
+    "totalEstimatedValue": "Total estimated value of held assets",
+    "acquiringNotIncluded": "Assets still being acquired are not included.",
+    "latestValuation": "Latest valuation",
+    "paidSoFar": "Paid so far",
+    "acquiringNote": "This asset is being acquired; valuation will count once completed.",
+    "noAcquireDate": "No date",
+    "valuationStale": "Valuation is older than 365 days",
+    "staleCount": "{{count}} asset valuations are stale",
+    "vori": "vori",
+    "gram": "gram",
+    "status": {
+      "planned": "Planned",
+      "acquiring": "Acquiring",
+      "held": "Held",
+      "sold": "Sold"
+    }
+  },
+  "member": {
+    "status": {
+      "active": "Active",
+      "warning": "Warning",
+      "suspended": "Suspended",
+      "deceased": "Deceased",
+      "exited": "Exited",
+      "prospective": "Prospective"
+    }
+  },
+  "admin": {
+    "dashboard": "Dashboard",
+    "netAssets": "Net assets",
+    "collectedThisMonth": "Collected this month",
+    "overdueMembers": "Overdue members",
+    "pendingPayments": "Payments under verification",
+    "members": {
+      "title": "Members & Shares",
+      "activeShares": "{{count}} active shares",
+      "ruleConflictHead": "Rules say 19 shares, system shows 20:",
+      "ruleConflictBody": "File an amendment proposal",
+      "member": "Member",
+      "shares": "Shares",
+      "capital": "Paid-in capital",
+      "due": "Due",
+      "shareCount": "{{count}} shares",
+      "joined": "Joined",
+      "phone": "Phone",
+      "details": "Details",
+      "declarationSteps": "Inactive declaration steps (clause 13)",
+      "contactAttempts": "Contact attempts",
+      "registeredLetter": "Registered letter",
+      "wait30Days": "Wait 30 days",
+      "addContactLog": "Add contact log",
+      "settlementProposal": "Settlement proposal",
+      "declareInactive": "Declare inactive (auditor approval)"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "matrix": "Matrix",
+      "payments": "Payments",
+      "ledger": "Ledger",
+      "members": "Members",
+      "proposals": "Proposals",
+      "assets": "Assets",
+      "rent": "Rent",
+      "notifications": "Notifications",
+      "reconcile": "Reconcile",
+      "reports": "Reports",
+      "rules": "Rules",
+      "system": "System",
+      "group": {
+        "overview": "Overview",
+        "accounts": "Accounts",
+        "membersAndDecisions": "Members & Decisions",
+        "administration": "Administration"
+      }
+    }
   },
   "ledger": {
     "title": "Ledger",
@@ -170,11 +268,14 @@
     "save": "Save",
     "cancel": "Cancel",
     "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
     "close": "Close",
     "back": "Back",
+    "view": "View",
     "next": "Next",
     "submit": "Submit",
     "search": "Search",
@@ -204,8 +305,6 @@
     "refreshing": "Refreshing…",
     "details": "Details",
     "today": "Today",
-    "yes": "Yes",
-    "no": "No",
     "needsStepUp": "Enter your authenticator code first",
     "goToTotp": "Open authenticator",
     "working": "Working…",
@@ -236,28 +335,6 @@
     "absence_fine": "{name}, a fine of ৳{amount} was charged for {count} consecutive unexcused absences (goes to the charity fund).",
     "charity_year_end": "Year end: fines and other money still to donate: ৳{amount}.",
     "zakat_info": "Your paid-in capital and estimated current value are attached. You calculate your own zakat."
-  },
-  "admin": {
-    "dashboard": "Dashboard",
-    "netAssets": "Net Assets",
-    "collectedThisMonth": "This Month Collected",
-    "overdueMembers": "Overdue Members",
-    "pendingPayments": "Pending Payments",
-    "nav": {
-      "dashboard": "Dashboard",
-      "matrix": "Matrix",
-      "payments": "Payments",
-      "ledger": "Ledger",
-      "members": "Members",
-      "proposals": "Proposals",
-      "assets": "Assets",
-      "rent": "Rent",
-      "notifications": "Notifications",
-      "reconcile": "Reconcile",
-      "reports": "Reports",
-      "rules": "Rules",
-      "system": "System"
-    }
   },
   "auth": {
     "activateHint": "Enter the activation code the cashier gave you, or scan the QR code.",
@@ -420,8 +497,14 @@
   "menuLinks": {
     "ledger": "Ledger",
     "members": "Members and shares",
+    "constitution": "Constitution",
+    "notices": "Notices",
+    "settlement": "Settlement",
     "ledgerHint": "Every entry, with an objection button",
-    "membersHint": "Who holds how many shares"
+    "membersHint": "Who holds how many shares",
+    "constitutionHint": "Constitution and amendments",
+    "noticesHint": "Member and fund notices",
+    "settlementHint": "Exit settlement quote"
   },
   "adminDash": {
     "expectedThisMonth": "This month expected",
@@ -530,5 +613,263 @@
     "answerTitle": "Answer the objection",
     "answered": "Answered.",
     "entry": "Entry #{{seq}}"
+  },
+  "proposals": {
+    "title": "Proposal management",
+    "subtitle": "Active and completed proposals",
+    "newProposal": "New proposal",
+    "stats": {
+      "open": "Open",
+      "approved": "Approved",
+      "draft": "Draft",
+      "implemented": "Implemented",
+      "openValue": "2",
+      "approvedValue": "12",
+      "draftValue": "1",
+      "implementedValue": "45"
+    },
+    "table": {
+      "proposal": "Proposal",
+      "basis": "Basis",
+      "result": "Result"
+    },
+    "row": {
+      "goldPurchase": "Gold purchase",
+      "flatValuation": "Flat valuation",
+      "fineWaiver": "Fine waiver",
+      "charityDonation": "Charity fund deposit",
+      "goldPurchaseSub": "2 vori · Bank account",
+      "flatValuationSub": "Mirpur flat",
+      "fineWaiverSub": "3 months",
+      "charityDonationSub": "Annual donation"
+    },
+    "basis": {
+      "share": "Share-based",
+      "member": "Member-based"
+    },
+    "result": {
+      "goldPurchase": "Approved · 14 shares",
+      "flatValuation": "Open · 8/11 yes",
+      "charityDonation": "Rejected",
+      "none": "—",
+      "patternThree": "{{yes}} yes · {{no}} no · {{abstain}} abstain",
+      "patternTwo": "{{yes}} yes · {{no}} no"
+    },
+    "maxAmount": "Max {{amount}}",
+    "newValue": "New valuation",
+    "ends": "Ends {{date}}",
+    "sampleDateShort": "18 Jan",
+    "fineToCharityFund": "Fine goes to charity fund",
+    "receiptRequired": "Receipt attached",
+    "status": {
+      "open": "Open",
+      "approved": "Approved",
+      "draft": "Draft",
+      "implemented": "Implemented"
+    },
+    "votes": {
+      "yes": "Yes",
+      "no": "No",
+      "abstain": "Abstain",
+      "remaining": "{{count}} left"
+    },
+    "checklist": {
+      "title": "Checklist",
+      "subtitle": "Verify before execution",
+      "result": "All checks passed",
+      "implementTOTP": "Execute with TOTP"
+    },
+    "check": {
+      "passed": "Passed",
+      "withinDeadline": "Within deadline",
+      "assetInfoValid": "Asset info valid",
+      "notPreviouslyImplemented": "Not previously implemented"
+    },
+    "type": {
+      "investmentPurchase": "Investment purchase",
+      "expense": "Expense",
+      "ruleChange": "Rule change",
+      "fineWaiver": "Fine waiver",
+      "donation": "Donation"
+    },
+    "form": {
+      "type": "Proposal type",
+      "title": "Title",
+      "titlePlaceholder": "e.g. Gold purchase",
+      "subjectMember": "Subject member",
+      "noMember": "No member",
+      "maxAmount": "Maximum amount",
+      "maxAmountPlaceholder": "In taka",
+      "sourceAccount": "Source account",
+      "purpose": "Purpose",
+      "purposePlaceholder": "Describe in detail",
+      "feasibilityFile": "Feasibility file",
+      "chooseFile": "Choose file",
+      "feasibilityRequired": "Feasibility report required above ৳100,000",
+      "voteDeadline": "Voting deadline",
+      "voteDeadlinePlaceholder": "Date and time",
+      "saveDraft": "Save draft"
+    },
+    "account": {
+      "bank": "Bank",
+      "cash": "Cash in hand",
+      "charity": "Charity fund"
+    },
+    "voteRules": {
+      "title": "Voting rules",
+      "basis": "Basis",
+      "totalShares": "Total shares",
+      "requiredYes": "Yes votes needed",
+      "conditions": "Conditions",
+      "startVote": "Open vote",
+      "cannotStart": "Cannot start until checklist passes"
+    },
+    "condition": {
+      "interestFree": "Interest-free investment",
+      "notFDR": "Not a fixed deposit",
+      "notInsurance": "Not insurance",
+      "notSpeculation": "Not speculative",
+      "legalBusiness": "Legal business",
+      "cashableWithinTerm": "Cashable within term",
+      "noFixedProfit": "No guaranteed profit"
+    }
+  },
+  "systemStatus": {
+    "title": "System status",
+    "subtitle": "Health, backups and audit log",
+    "allServicesUp": "All services up",
+    "health": {
+      "backup": "Latest backup",
+      "restore": "Latest restore test",
+      "ledger": "Ledger chain",
+      "offlineCopy": "Auditor offline copy"
+    },
+    "value": {
+      "ok": "OK",
+      "good": "Good",
+      "daysAgo": "{{count}} days ago"
+    },
+    "sub": {
+      "backup": "Automatic daily",
+      "restore": "Tested",
+      "ledger": "Last hash matched",
+      "offlineCopy": "USB/e-Return"
+    },
+    "jobQueue": "Job queue",
+    "diskFree": "Disk free",
+    "memory": "Memory usage",
+    "auditLog": "Audit log",
+    "exportCsv": "Export CSV",
+    "time": "Time",
+    "who": "Who",
+    "what": "What",
+    "device": "Device",
+    "log": {
+      "paymentReceived": "Payment received",
+      "voteViewed": "Vote viewed",
+      "paymentDeposit": "Payment deposited",
+      "reconciliationViewed": "Reconciliation viewed",
+      "proposalOpened": "Proposal opened"
+    }
+  },
+  "constitution": {
+    "title": "Constitution",
+    "newVersionBanner": "New amendment published",
+    "newVersionHint": "You have not read it yet.",
+    "read": "Read",
+    "documentTitle": "Constitution",
+    "currentVersion": "Current version",
+    "effectiveDate": "Effective date",
+    "pdf": "PDF",
+    "searchPlaceholder": "Search clauses...",
+    "clause": {
+      "1_4": {
+        "title": "Clause 1.4 · Purpose",
+        "sub": "Mutual assistance among members..."
+      },
+      "2_2": {
+        "title": "Clause 2.2 · Membership",
+        "sub": "Rights and duties of active members..."
+      },
+      "2_4": {
+        "title": "Clause 2.4 · Warning & suspension",
+        "sub": "Warning when dues are outstanding..."
+      },
+      "4_2": {
+        "title": "Clause 4.2 · Proposals & voting",
+        "sub": "Large-money proposals are share-based..."
+      },
+      "5_1": {
+        "title": "Clause 5.1 · Assets",
+        "sub": "Gold, land and houses..."
+      }
+    },
+    "olderVersions": "Older versions"
+  },
+  "notices": {
+    "title": "Notices",
+    "subtitle": "Fund and member notices",
+    "filterLabel": "Show",
+    "unreadTab": "Unread",
+    "allTab": "All",
+    "tags": {
+      "finalNotice": "Final notice",
+      "fine": "Fine",
+      "paymentReceived": "Payment received",
+      "meeting": "Meeting",
+      "zakatInfo": "Zakat info"
+    },
+    "finalNotice": {
+      "title": "Final notice",
+      "body": "Membership may be suspended after 3 months overdue.",
+      "action": "Details"
+    },
+    "fine": {
+      "title": "Fine",
+      "body": "৳500 fine for absence.",
+      "action": ""
+    },
+    "paymentReceived": {
+      "title": "Payment received",
+      "body": "Your September instalment was received.",
+      "action": ""
+    },
+    "meeting": {
+      "title": "Monthly meeting",
+      "body": "Zoom meeting on the 25th at 9 PM.",
+      "action": ""
+    },
+    "zakatInfo": {
+      "title": "Zakat info",
+      "body": "Current share value is attached.",
+      "action": ""
+    }
+  },
+  "settlement": {
+    "title": "Settlement quote",
+    "subtitle": "Estimated exit calculation",
+    "shareBasedTag": "Share-based",
+    "timeRemainingTag": "15 days left",
+    "earlyExitTag": "Early exit",
+    "humanitarianTag": "Humanitarian",
+    "inactiveTag": "Inactive",
+    "deathTag": "Death",
+    "memberInitial": "Ja",
+    "memberName": "Jamal Uddin",
+    "memberNameShares": "Jamal Uddin · 4 shares",
+    "paidInCapital": "Paid-in capital",
+    "serviceCharge": "Service charge",
+    "unpaidFines": "Unpaid fines",
+    "netRefund": "Net refund",
+    "dates": {
+      "feb15": "15 Feb",
+      "mar15": "15 Mar",
+      "apr15": "15 Apr"
+    },
+    "disclaimer": "This is an estimate. Final payout requires auditor approval.",
+    "payoutPlan": "Payout plan",
+    "checkReturnWithinCapital": "Return within capital",
+    "checkFeeExactlyTen": "Service charge exactly 10%",
+    "checkInstallmentsEqualNet": "Installments equal net refund"
   }
 }

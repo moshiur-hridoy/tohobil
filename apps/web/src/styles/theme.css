@@ -24,6 +24,14 @@
   --card: #ffffff;
   --card-foreground: #1a1a1a;
   --hover: #f3f4f6;
+  --soft: #eef1ef;
+
+  /* Status backgrounds (designs use these as card/chip fills) */
+  --ok-bg: #e2f4ea;
+  --warn-bg: #fdf0d3;
+  --bad-bg: #fbe5e2;
+  --blue-bg: #e8eefb;
+  --blue: #2d5bc4;
 
   /* Borders and inputs */
   --border: #e4e9e6;
@@ -65,6 +73,12 @@
     --card: #1e293b;
     --card-foreground: #f1f5f9;
     --hover: #273449;
+    --soft: #1f2937;
+    --ok-bg: #142a1c;
+    --warn-bg: #2a1f0b;
+    --bad-bg: #2a1514;
+    --blue-bg: #152240;
+    --blue: #7aa7ff;
 
     --border: #334155;
     --input: #475569;

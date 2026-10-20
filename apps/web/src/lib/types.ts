@@ -17,6 +17,7 @@ export interface MemberRow {
   current_period: string;
   current_period_status: DueStatus | null;
   under_verification: boolean;
+  joined_on: string | null;
 }
 
 export interface DueRow {
@@ -184,4 +185,46 @@ export interface PaymentInstructions {
   bkash: string;
   nagad: string;
   bank: string;
+}
+
+export interface AssetRow {
+  id: string;
+  kind: 'gold' | 'land' | 'house' | 'other';
+  name: string;
+  description: string | null;
+  location: string | null;
+  acquired_on: string | null;
+  cost_paisa: string;
+  quantity: string | null;
+  unit: 'vori' | 'gram' | null;
+  status: 'planned' | 'acquiring' | 'held' | 'sold';
+  sold_on: string | null;
+  sale_price_paisa: string | null;
+  legal_owner_name: string | null;
+  latest_value_paisa: string | null;
+  latest_value_as_of: string | null;
+}
+
+export interface NavResponse {
+  net_assets_paisa: string;
+  shares_outstanding: string;
+  nav_per_share_paisa: string;
+  cash: Array<{ account: string; balance_paisa: string }>;
+  assets: Array<{
+    id: string;
+    name: string;
+    status: string;
+    valuation_paisa: string;
+    value_as_of: string | null;
+  }>;
+  deductions: Array<{ account: string; balance_paisa: string }>;
+  stale_valuations: Array<{ id: string; name: string; latest_as_of: string | null }>;
+}
+
+export interface NoticeRow {
+  id: string;
+  title: string;
+  body: string | null;
+  created_at: string;
+  read: boolean;
 }

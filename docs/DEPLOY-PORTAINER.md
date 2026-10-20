@@ -91,7 +91,15 @@ Check:
 
 ## 7. First cashier account
 
-The database starts empty. Make the first cashier with the activation-code command, from the Portainer container console of `api` (**Containers**, `barakah-api-1`, **Console**, command `/bin/sh`). The full steps are in `docs/RUNBOOK.md` ("First start"). Do not seed fictional data in production: the seed refuses a non-local database.
+The database starts empty, so there is no member yet. Members arrive with the legacy sheet import, which is planned for the rehearsal stage (see below). Once member `M01` exists, the first cashier gets in with a one-time activation code made on the server: Portainer, **Containers**, the `api` container, **Console**, command `/bin/sh`, then
+
+```
+node dist/cli/activation-code.js M01
+```
+
+Hand the printed code over in person. Do not seed fictional data in production: the seed refuses a non-local database.
+
+> Open item: the importer (`pnpm import:load`) currently runs from a development machine and needs a database connection, but the production database is deliberately not reachable from outside the server. The import step for the server will be added before the rehearsal (a one-off container run from Portainer).
 
 ## 8. Updating later
 

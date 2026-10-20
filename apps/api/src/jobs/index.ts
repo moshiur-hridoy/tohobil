@@ -1,4 +1,5 @@
 import PgBoss from 'pg-boss';
+import { JOB_QUEUES } from './queues';
 import type pg from 'pg';
 import type { Clock } from '@barakah/shared';
 import type { Logger } from 'pino';
@@ -84,20 +85,9 @@ export function createScheduler(poolUrl: string, deps: JobDeps): Scheduler {
       await statusJob(deps);
     });
 
-    const queues = [
-      'send-notifications',
-      'finalize-proposals',
-      'member-status',
-      'generate-dues',
-      'apply-fines',
-      'remind-dues',
-      'notify-fines',
-      'pending-payment-alert',
-      'cleanup',
-      'sms-fallback',
-      'generate-rent-expected',
-    ];
-    for (const name of queues) {
+    // Queues are created by `pnpm migrate` (the app role cannot attach partitions); this only
+    // covers a queue added in code before the next migrate run.
+    for (const name of JOB_QUEUES) {
       await boss.createQueue(name, { name, policy: 'singleton' });
     }
 

@@ -7,6 +7,8 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runner } from 'node-pg-migrate';
+import PgBoss from 'pg-boss';
+import { JOB_QUEUES } from './jobs/queues';
 import { createLogger } from './lib/logger';
 
 try {
@@ -49,6 +51,16 @@ async function main(): Promise<void> {
     log: (msg) => logger.info(msg),
   });
   logger.info({ dir, applied: applied.map((m) => m.name) }, 'Migrations complete');
+
+  // pg-boss installs its own tables on first start with `CREATE SCHEMA IF NOT EXISTS`, which the
+  // unprivileged app role may not run, so install them (and the queues, which attach partitions to a table the app role does not own) here as the owning role. Idempotent; the
+  // default privileges in the baseline migration give the app role access to what this creates.
+  const boss = new PgBoss({ connectionString: databaseUrl, max: 1, supervise: false, schedule: false });
+  boss.on('error', (err) => logger.error({ err }, 'pg-boss install error'));
+  await boss.start();
+  for (const name of JOB_QUEUES) await boss.createQueue(name, { name, policy: 'singleton' });
+  await boss.stop({ graceful: false });
+  logger.info('pg-boss schema and queues ready');
 }
 
 main().catch((err: unknown) => {

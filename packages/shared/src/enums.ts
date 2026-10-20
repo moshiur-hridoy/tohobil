@@ -36,6 +36,14 @@ export type DueKind = (typeof DUE_KINDS)[number];
 export const FINE_KINDS = ['late_payment', 'absence'] as const;
 export type FineKind = (typeof FINE_KINDS)[number];
 
+/** Derived from allocations and the due date (view `v_due_status`, spec 5.3). */
+export const DUE_STATUSES = ['unpaid', 'partial', 'overdue', 'paid', 'paid_late'] as const;
+export type DueStatus = (typeof DUE_STATUSES)[number];
+
+/** Derived from allocations and the waiver (view `v_fine_status`, spec 5.5). */
+export const FINE_STATUSES = ['unpaid', 'partial', 'paid', 'waived'] as const;
+export type FineStatus = (typeof FINE_STATUSES)[number];
+
 export const PROPOSAL_STATUSES = [
   'draft',
   'open',
@@ -146,6 +154,28 @@ export type AccountCode = (typeof ACCOUNT_CODES)[number];
 
 export const CASH_ACCOUNT_CODES = ['CASH', 'BANK', 'BKASH', 'NAGAD'] as const;
 export type CashAccountCode = (typeof CASH_ACCOUNT_CODES)[number];
+
+/**
+ * Net asset value (spec 5.7 as amended by 18.4 and 19.2). `net_assets` is
+ *   cash accounts + valuation of held assets (and cost paid so far for assets still being acquired)
+ *   - the natural balance of every account in NAV_DEDUCTION_ACCOUNTS.
+ * None of these deductions is fund money: they are owed to someone (a leaving member, charity, the
+ * registrar, an inactive member, a member who lent to the fund, a seller). Charity money in
+ * particular (fines, absence fines, bank interest, 18.2) never raises NAV or member profit.
+ * Phase 4 builds `GET /nav` from these lists; they live here so the exclusions are written once.
+ */
+export const NAV_CASH_ACCOUNTS = CASH_ACCOUNT_CODES;
+export const NAV_DEDUCTION_ACCOUNTS = [
+  'SETTLEMENT_PAYABLE',
+  'MEMBER_ESCROW',
+  'CHARITY_PAYABLE',
+  'LEVY_CLEARING',
+  'INACTIVE_HELD',
+  'MEMBER_QARD',
+  'DEFERRED_PURCHASE_PAYABLE',
+] as const satisfies readonly AccountCode[];
+/** Asset account that is never counted directly: the asset's valuation replaces it. */
+export const NAV_REPLACED_BY_VALUATION_ACCOUNT = 'INVESTMENTS_AT_COST' as const;
 
 /**
  * The cash account a payment method posts to (spec 5.4): `other` posts to BANK.

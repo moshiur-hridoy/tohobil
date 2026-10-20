@@ -3,6 +3,7 @@ import {
   addMonths,
   createFakeClock,
   currentPeriod,
+  dateInPeriod,
   formatDateBn,
   isValidIsoDate,
   parseDDMMYYYY,
@@ -44,6 +45,15 @@ describe('periods', () => {
     expect(periodEnd('2028-02')).toBe('2028-02-29');
     expect(periodEnd('2027-02')).toBe('2027-02-28');
     expect(periodEnd('2026-12')).toBe('2026-12-31');
+  });
+
+  it('dateInPeriod builds a due date and clamps to the month length', () => {
+    expect(dateInPeriod('2026-11', 20)).toBe('2026-11-20');
+    expect(dateInPeriod('2026-11', 5)).toBe('2026-11-05');
+    expect(dateInPeriod('2026-11', 31)).toBe('2026-11-30');
+    expect(dateInPeriod('2027-02', 30)).toBe('2027-02-28');
+    expect(dateInPeriod('2028-02', 30)).toBe('2028-02-29');
+    expect(dateInPeriod('2026-11', 0)).toBe('2026-11-01');
   });
 });
 

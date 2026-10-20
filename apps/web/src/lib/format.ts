@@ -32,3 +32,8 @@ export function formatCount(n: number, digits: DigitSystem = getDigits()): strin
   const text = String(n);
   return digits === 'bn' ? toBengaliDigits(text) : text;
 }
+
+/** Digits in running text (a ledger number, a count inside a sentence) in the user's numerals. */
+export function localDigits(text: string, digits: DigitSystem = getDigits()): string {
+  return digits === 'bn' ? toBengaliDigits(text) : text;
+}

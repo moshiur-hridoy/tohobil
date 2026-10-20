@@ -9,6 +9,7 @@ import '@fontsource/noto-sans-bengali/600.css';
 import '@fontsource/noto-sans-bengali/700.css';
 import { i18n } from './lib/i18n';
 import { App } from './App';
+import { AuthProvider } from './lib/auth';
 import './styles/theme.css';
 import './styles/globals.css';
 
@@ -29,7 +30,9 @@ ReactDOM.createRoot(root).render(
     <QueryClientProvider client={queryClient}>
       <I18nextProvider i18n={i18n}>
         <BrowserRouter>
-          <App />
+          <AuthProvider>
+            <App />
+          </AuthProvider>
         </BrowserRouter>
       </I18nextProvider>
     </QueryClientProvider>

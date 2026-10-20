@@ -1,0 +1,5 @@
+entry_date,debit_account,credit_account,amount_paisa,memo,member_key
+2026-02-20,BANK,OTHER_INCOME,120000,Profit (legacy sheet): Profit,
+2026-01-05,SMS_CHARGE,BANK,1200,Bank SMS charge,
+2026-01-25,BANK,CHARITY_PAYABLE,30000,Bank interest,
+2026-03-10,DISTRIBUTIONS,BANK,200000,Profit distribution,

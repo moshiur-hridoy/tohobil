@@ -16,6 +16,8 @@ await build({
     index: 'src/index.ts',
     migrate: 'src/migrate.ts',
     healthcheck: 'src/healthcheck.ts',
+    'cli/activation-code': 'src/cli/activation-code.ts',
+    'cli/generate-dues': 'src/cli/generate-dues.ts',
   },
   outdir: 'dist',
   bundle: true,

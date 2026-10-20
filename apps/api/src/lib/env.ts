@@ -34,6 +34,11 @@ const envSchema = z
     CORS_EXTRA_ORIGINS: z.string().default('https://localhost,capacitor://localhost'),
     /** Directory holding the built web app; served at / when it exists. */
     WEB_DIST_DIR: z.string().default('public'),
+    /**
+     * Where uploaded files live, content-addressed by sha256 (spec 2, 11). Never under a static path.
+     * Production mounts the `files` volume here (/data/files); the dev default is a git-ignored folder.
+     */
+    FILES_DIR: z.string().min(1).default('data/files'),
 
     // Secrets (spec 11). Real use arrives in Phase 1; validating them now catches bad deployments early.
     APP_ENCRYPTION_KEY: z
@@ -42,6 +47,13 @@ const envSchema = z
     JWT_SECRET: secret(MIN_SECRET_LENGTH),
     TOKEN_PEPPER: secret(16),
     INTERNAL_ALERT_SECRET: secret(16),
+
+    /** Per-IP limit on login/activation/refresh/TOTP routes (brute-force guard on top of the PIN lockout). */
+    AUTH_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(10),
+    /** Per-IP limit on every other route. */
+    RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(120),
+    /** Per-IP limit on `POST /files` (each upload is re-encoded, which costs CPU and memory). */
+    UPLOAD_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(30),
 
     SMS_PROVIDER: z.enum(['console', 'http']).default('console'),
   })

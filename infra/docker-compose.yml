@@ -68,6 +68,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
       TOKEN_PEPPER: ${TOKEN_PEPPER:?set TOKEN_PEPPER}
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?set PUBLIC_ORIGIN}
+      FILES_DIR: /data/files
       FCM_SERVICE_ACCOUNT_JSON_PATH: /run/secrets/fcm_service_account
       SMS_PROVIDER: ${SMS_PROVIDER:-console}
       SMS_HTTP_URL: ${SMS_HTTP_URL:-}

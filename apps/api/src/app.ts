@@ -17,12 +17,25 @@ import { createLogger } from './lib/logger';
 import { errorHandler, buildProblem } from './lib/error-handler';
 import { AppError } from './lib/errors';
 import { parseTrustProxy, type Env } from './lib/env';
+import { systemClock, type Clock } from '@barakah/shared';
+import type pg from 'pg';
 import type { DbHandle } from './lib/db';
+import { authRoutes } from './routes/auth';
+import { memberRoutes } from './routes/members';
+import { referenceRoutes } from './routes/reference';
+import { fileRoutes } from './routes/files';
+import { ledgerRoutes } from './routes/ledger';
+import { paymentRoutes } from './routes/payments';
+import { matrixRoutes } from './routes/matrix';
+import { objectionRoutes } from './routes/objections';
+import { FileStore } from './files/storage';
+import { createGuards } from './auth/guards';
 
 export interface BuildAppOptions {
   env: Env;
   db: DbHandle;
   logger?: Logger;
+  clock?: Clock;
 }
 
 /** Files that must never be served from cache, or users keep running a stale app (spec 8, PWA). */
@@ -39,7 +52,12 @@ function isApiPath(url: string): boolean {
   return path === '/api' || path.startsWith('/api/');
 }
 
-export async function buildApp({ env, db, logger }: BuildAppOptions): Promise<FastifyInstance> {
+export async function buildApp({
+  env,
+  db,
+  logger,
+  clock = systemClock,
+}: BuildAppOptions): Promise<FastifyInstance> {
   const log: FastifyBaseLogger = logger ?? createLogger(env.LOG_LEVEL);
 
   const app = Fastify({
@@ -94,7 +112,7 @@ export async function buildApp({ env, db, logger }: BuildAppOptions): Promise<Fa
 
   await app.register(rateLimit, {
     global: true,
-    max: 120,
+    max: env.RATE_LIMIT_PER_MINUTE,
     timeWindow: '1 minute',
     // Per-user keys and the stricter auth-route limit (10/min/IP) arrive with auth in Phase 1.
     keyGenerator: (request) => request.ip,
@@ -124,6 +142,30 @@ export async function buildApp({ env, db, logger }: BuildAppOptions): Promise<Fa
 
   // ---- API routes --------------------------------------------------------------------------
   await app.register(healthRoutes(db, env.APP_VERSION), { prefix: '/api/v1' });
+
+  // Routes that need transactions require a real pool; the health tests pass a bare fake.
+  if (typeof (db as Partial<pg.Pool>).connect === 'function') {
+    const deps = { pool: db as pg.Pool, env, clock };
+    const guards = createGuards(deps);
+    await app.register(authRoutes(deps, guards), { prefix: '/api/v1' });
+    await app.register(memberRoutes(deps, guards), { prefix: '/api/v1' });
+    await app.register(referenceRoutes(deps, guards), { prefix: '/api/v1' });
+    await app.register(ledgerRoutes(deps, guards), { prefix: '/api/v1' });
+    await app.register(paymentRoutes(deps, guards), { prefix: '/api/v1' });
+    await app.register(matrixRoutes(deps, guards), { prefix: '/api/v1' });
+    await app.register(objectionRoutes(deps, guards), { prefix: '/api/v1' });
+    await app.register(
+      fileRoutes(
+        {
+          ...deps,
+          store: new FileStore(env.FILES_DIR),
+          uploadsPerMinute: env.UPLOAD_RATE_LIMIT_PER_MINUTE,
+        },
+        guards,
+      ),
+      { prefix: '/api/v1' },
+    );
+  }
 
   // ---- Web app (the API image serves the built SPA at /, spec 12) ---------------------------
   const webRoot = resolve(env.WEB_DIST_DIR);

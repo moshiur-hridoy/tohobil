@@ -1,0 +1,7 @@
+,,Owner One,,,,Owner Two,,,,Owner Three,,
+Month,Due Date,Status,Fine,Amount,,Status,Fine,Amount,,Status,Fine,Amount
+Start Boost,31 Dec 2025,Paid,৳0,"৳16,000",,Paid,৳0,"৳8,000",,Paid,৳0,"৳8,000"
+January,20 Jan 2026,Paid,৳0,"৳10,000",,Paid,৳0,"৳5,000",,L Paid,৳500,"৳5,000"
+February,21 Feb 2026,L Paid,"৳1,000","৳10,000",,Paid,৳0,"৳5,000",,Unpaid,৳500,"৳5,000"
+March,20 Mar 2026,Unpaid,"৳1,000","৳10,000",,Paid,৳0,"৳5,000",,Unpaid,৳0,"৳5,000"
+April,20 Apr 2026,,,,,,,,,,,

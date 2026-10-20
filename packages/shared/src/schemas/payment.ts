@@ -1,6 +1,13 @@
 import { z } from 'zod';
-import { PAYMENT_METHODS, PAYMENT_PURPOSES } from '../enums';
-import { paisaOutSchema, periodSchema, positivePaisaSchema, timestampSchema } from './common';
+import { APPROVAL_KINDS, PAYMENT_METHODS, PAYMENT_PURPOSES, PAYMENT_STATUSES } from '../enums';
+import {
+  paginationSchema,
+  paisaOutSchema,
+  periodSchema,
+  positivePaisaSchema,
+  timestampSchema,
+  uuidSchema,
+} from './common';
 
 /** Methods that settle through a counterparty that issues a transaction id (5.4). */
 const METHODS_REQUIRING_TRX = ['bkash', 'nagad', 'bank'] as const;
@@ -111,8 +118,36 @@ export const parseSmsResultSchema = z.object({
     z.object({
       payment_id: z.string().uuid(),
       match_type: z.enum(['trx_id', 'amount_phone']),
+      member_id: z.string().uuid(),
+      member_code: z.string(),
+      amount_paisa: paisaOutSchema,
+      /** Same TrxID and same amount: safe for bulk approval (still confirmed by a human). */
+      exact: z.boolean(),
     }),
   ),
 });
 
 export type ParseSmsResult = z.input<typeof parseSmsResultSchema>;
+
+/** `GET /payments?status&member_id&cursor&limit` */
+export const paymentsQuerySchema = paginationSchema.extend({
+  status: z.enum(PAYMENT_STATUSES).optional(),
+  member_id: uuidSchema.optional(),
+});
+
+export type PaymentsQuery = z.infer<typeof paymentsQuerySchema>;
+
+/** `GET /approvals?status&kind` */
+export const approvalsQuerySchema = paginationSchema.extend({
+  status: z.enum(['pending', 'approved', 'rejected']).optional(),
+  kind: z.enum(APPROVAL_KINDS).optional(),
+});
+
+export type ApprovalsQuery = z.infer<typeof approvalsQuerySchema>;
+
+/** Auditor decision on an approval item. The note goes to the audit log. */
+export const approvalDecisionSchema = z.object({
+  note: z.string().trim().min(3).max(500).optional(),
+});
+
+export type ApprovalDecision = z.infer<typeof approvalDecisionSchema>;

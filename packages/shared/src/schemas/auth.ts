@@ -104,3 +104,6 @@ export const totpVerifySchema = z.object({
 });
 
 export type TotpVerify = z.infer<typeof totpVerifySchema>;
+
+/** 'replace' (default) revokes old devices; 'add' keeps them within the device limit (cashier/auditor). */
+export const activationModeSchema = z.enum(['replace', 'add']).default('replace');

@@ -1,0 +1,4 @@
+member_key,principal_paid_paisa,fines_paid_paisa,principal_outstanding_paisa,fines_outstanding_paisa
+M01,3600000,100000,1000000,100000
+M02,2300000,0,0,0
+M03,1300000,50000,1000000,50000

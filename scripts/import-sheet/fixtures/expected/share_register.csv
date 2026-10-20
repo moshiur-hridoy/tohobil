@@ -1,0 +1,5 @@
+share_no,member_key,registered_name,nominee_name,nominee_relation
+1,M01,Share Name 1,Nominee 1,Son
+2,M01,Share Name 2,Nominee 2,Daughter
+3,M02,Share Name 3,Nominee 3,Spouse
+4,M03,Share Name 4,Nominee 4,Brother

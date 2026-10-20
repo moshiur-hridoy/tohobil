@@ -1,29 +1,81 @@
+import { useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { AuthShell, FieldError } from '../../components/AuthShell';
+import { PinPad } from '../../components/PinPad';
+import { ApiError } from '../../lib/api';
+import { useAuth } from '../../lib/auth';
+import { errorMessage } from '../../lib/errors';
 
+/** PIN pad on a registered device (spec 19.1), or the "device reset needed" screen. */
 export function LoginPage() {
   const { t } = useTranslation();
+  const auth = useAuth();
+  const navigate = useNavigate();
+  const [pin, setPin] = useState('');
+  const [error, setError] = useState<{ message: string; requestId?: string } | null>(null);
+  const [resetNeeded, setResetNeeded] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-sm rounded-lg border border-border bg-card p-6">
-        <h1 className="mb-6 text-center text-xl font-semibold">{t('app.name')}</h1>
-        <p className="mb-4 text-center text-muted">{t('auth.pinHint')}</p>
-        <input
-          type="password"
-          inputMode="numeric"
-          autoComplete="current-password"
-          aria-label={t('auth.pinHint')}
-          placeholder={t('auth.pinPlaceholder')}
-          className="w-full rounded-md border border-input bg-background px-4 py-3 text-center text-2xl tracking-widest"
-          maxLength={6}
-        />
+  if (auth.status === 'authenticated') return <Navigate to="/" replace />;
+  if (auth.status === 'loading') return null;
+  if (!auth.hasDevice && !resetNeeded) return <Navigate to="/activate" replace />;
+
+  if (resetNeeded) {
+    return (
+      <AuthShell>
+        <h1 className="text-[22px] font-semibold leading-snug">{t('auth.deviceResetTitle')}</h1>
+        <p className="text-[13px] leading-normal text-muted">{t('auth.deviceResetBody')}</p>
         <button
           type="button"
-          className="mt-4 w-full rounded-md bg-primary py-3 font-medium text-primary-foreground"
+          onClick={() => {
+            auth.forgetDevice();
+            void navigate('/activate', { replace: true });
+          }}
+          className="h-14 rounded-2xl bg-primary text-[17px] font-bold text-primary-foreground"
         >
-          {t('common.submit')}
+          {t('auth.haveNewCode')}
         </button>
+      </AuthShell>
+    );
+  }
+
+  const submit = async (value: string) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await auth.login(value);
+      void navigate('/', { replace: true });
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'auth.device_reset_needed') {
+        setResetNeeded(true);
+        return;
+      }
+      const msg = errorMessage(t, err);
+      const left = err instanceof ApiError ? err.extra.attempts_left : undefined;
+      setError({
+        ...msg,
+        message: typeof left === 'number' ? `${msg.message} ${t('auth.attemptsLeft', { count: left })}` : msg.message,
+      });
+      setPin('');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <AuthShell footer={t('auth.pinFooter')}>
+      <div>
+        <h1 className="text-[22px] font-semibold leading-snug">{t('auth.pinTitle')}</h1>
+        <p className="mt-1 text-[13px] leading-normal text-muted">
+          {t('auth.pinHint')} · {auth.memberRef}
+        </p>
       </div>
-    </div>
+      <PinPad value={pin} onChange={(v) => { setPin(v); setError(null); }} onComplete={(p) => void submit(p)} disabled={busy} invalid={!!error} />
+      <FieldError message={error?.message ?? null} requestId={error?.requestId} />
+      <button type="button" className="text-sm text-muted underline" onClick={() => setResetNeeded(true)}>
+        {t('auth.forgotPin')}
+      </button>
+    </AuthShell>
   );
 }

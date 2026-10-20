@@ -1,5 +1,8 @@
 node_modules/
 dist/
+# Local uploaded files (FILES_DIR default)
+/data/
+/apps/api/data/
 coverage/
 *.log
 .DS_Store
@@ -38,3 +41,7 @@ apps/web/android/app/src/main/assets/public/
 apps/web/android/capacitor-cordova-android-plugins/
 ios/
 .capacitor/
+
+# Playwright
+/test-results/
+/playwright-report/

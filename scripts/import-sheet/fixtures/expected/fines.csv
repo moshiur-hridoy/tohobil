@@ -1,0 +1,5 @@
+member_key,period,amount_paisa,status
+M01,2026-02,100000,paid
+M01,2026-03,100000,unpaid
+M03,2026-01,50000,paid
+M03,2026-02,50000,unpaid

@@ -64,6 +64,9 @@ CREATE TABLE activation_codes (
   expires_at timestamptz NOT NULL,
   consumed_at timestamptz,
   attempts int NOT NULL DEFAULT 0,
+  -- 'replace' revokes every old device on use (lost phone, new PIN); 'add' keeps them and is
+  -- limited by max_devices_per_member / max_devices_privileged (cashier and auditor: phone + desktop).
+  mode text NOT NULL DEFAULT 'replace' CHECK (mode IN ('replace','add')),
   created_by uuid NOT NULL REFERENCES users,
   created_at timestamptz NOT NULL DEFAULT now()
 );
@@ -78,6 +81,8 @@ CREATE TABLE devices (
   push_enabled boolean NOT NULL DEFAULT true,
   refresh_token_hash text,
   refresh_expires_at timestamptz,
+  -- Last successful TOTP check on this device; step-up actions need it within 12 h (spec 7).
+  step_up_at timestamptz,
   revoked_at timestamptz,
   last_seen_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now()
@@ -266,8 +271,17 @@ CREATE TABLE ledger_entries (
   created_at timestamptz NOT NULL DEFAULT now(),
   prev_hash char(64) NOT NULL,
   hash char(64) NOT NULL UNIQUE,
-  CHECK (debit_account <> credit_account)
+  -- A correction is a NEW row that cancels an old one; it never edits or deletes it. The link is a
+  -- column (so "already reversed" can be a unique index) and is also written into the hashed memo, so
+  -- it is covered by the hash chain. The trigger below checks the reversal really mirrors its target.
+  reverses_seq bigint REFERENCES ledger_entries (seq),
+  CHECK (debit_account <> credit_account),
+  -- COALESCE: a NULL memo would make the LIKE NULL, which a CHECK treats as passing.
+  CHECK (reverses_seq IS NULL OR COALESCE(memo LIKE 'Reversal of #' || reverses_seq::text || ':%', false))
 );
+
+-- An entry can be reversed at most once.
+CREATE UNIQUE INDEX ledger_one_reversal ON ledger_entries (reverses_seq) WHERE reverses_seq IS NOT NULL;
 
 -- ============================================================
 -- ASSETS
@@ -749,7 +763,7 @@ WITH alloc AS (
   SELECT
     pa.due_id,
     SUM(pa.amount_paisa) AS allocated_paisa,
-    MAX((p.paid_at AT TIME ZONE 'Asia/Dhaka')::date) FILTER (WHERE pa.amount_paisa > 0) AS last_paid_on
+    MAX((p.paid_at AT TIME ZONE 'Asia/Dhaka')::date) FILTER (WHERE pa.amount_paisa > 0 AND p.status = 'confirmed') AS last_paid_on
   FROM payment_allocations pa
   JOIN payments p ON p.id = pa.payment_id
   WHERE pa.due_id IS NOT NULL
@@ -1049,6 +1063,7 @@ CREATE OR REPLACE FUNCTION ledger_hash_chain() RETURNS trigger LANGUAGE plpgsql 
 DECLARE
   v_prev_hash char(64);
   v_canonical text;
+  v_orig ledger_entries%ROWTYPE;
 BEGIN
   -- The "last row" read below must see every committed row; a REPEATABLE READ/SERIALIZABLE snapshot
   -- taken before the lock would not, and would fork the chain.
@@ -1063,6 +1078,24 @@ BEGIN
   SELECT hash INTO v_prev_hash FROM ledger_entries ORDER BY seq DESC LIMIT 1;
   IF v_prev_hash IS NULL THEN
     v_prev_hash := repeat('0', 64);
+  END IF;
+
+  -- A reversal must exactly mirror an existing original: opposite accounts, same amount, same member,
+  -- and the original must not itself be a reversal (post a fresh entry instead of reversing twice).
+  IF NEW.reverses_seq IS NOT NULL THEN
+    SELECT * INTO v_orig FROM ledger_entries WHERE seq = NEW.reverses_seq;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'ledger entry % to reverse does not exist', NEW.reverses_seq;
+    END IF;
+    IF v_orig.reverses_seq IS NOT NULL THEN
+      RAISE EXCEPTION 'ledger entry % is itself a reversal and cannot be reversed', v_orig.seq;
+    END IF;
+    IF NEW.debit_account <> v_orig.credit_account
+       OR NEW.credit_account <> v_orig.debit_account
+       OR NEW.amount_paisa <> v_orig.amount_paisa
+       OR NEW.member_id IS DISTINCT FROM v_orig.member_id THEN
+      RAISE EXCEPTION 'reversal of ledger entry % does not mirror the original', v_orig.seq;
+    END IF;
   END IF;
 
   NEW.prev_hash := v_prev_hash;

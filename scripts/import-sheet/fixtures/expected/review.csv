@@ -1,0 +1,19 @@
+file,row,what,why,suggested
+Share Holder.csv,1,phone of Owner One,The sheet has no phone numbers; a placeholder was written,+8801700000001
+Share Holder.csv,1,joined_on of Owner One,The sheet has no join date; the Start Boost date was used,2025-12-31
+Share Holder.csv,2,phone of Owner Two,The sheet has no phone numbers; a placeholder was written,+8801700000002
+Share Holder.csv,2,joined_on of Owner Two,The sheet has no join date; the Start Boost date was used,2025-12-31
+Share Holder.csv,3,phone of Owner Three,The sheet has no phone numbers; a placeholder was written,+8801700000003
+Share Holder.csv,3,joined_on of Owner Three,The sheet has no join date; the Start Boost date was used,2025-12-31
+Collection 26.csv,5,due date of February,"The label says ""21 Feb 2026""; the rule is the 20th",2026-02-20
+Dashboard.csv,3,Owner Two / March,Dashboard says FALSE but Collection 26 says Paid,check the sheet
+Transection.csv,9,"payment date of Owner Two for ""March""",The message has no date; the due date was used,2026-03-20T12:00:00+06:00
+Investments.csv,2,quantity and unit of A01,The sheet has neither; the asset is created without them,vori or gram
+Investments.csv,2,source account of A01,The sheet does not say which account paid; BANK was assumed,BANK
+Investments.csv,3,quantity and unit of A02,The sheet has neither; the asset is created without them,vori or gram
+Investments.csv,3,source account of A02,The sheet does not say which account paid; BANK was assumed,BANK
+Investments.csv,4,Profit row,Booked as OTHER_INCOME into BANK; is it permitted profit or charity money?,OTHER_INCOME
+Miscellaneous.csv,3,"bank interest ""Bank interest""","Interest is charity money (18.2): posted to CHARITY_PAYABLE, not BANK_INTEREST",CHARITY_PAYABLE
+Miscellaneous.csv,4,"row ""Fine total""",Fine totals are not imported; fines come from the payments,
+Miscellaneous.csv,5,"distribution ""Profit distribution""",A negative revenue labelled as a distribution; booked as DISTRIBUTIONS paid from BANK,DISTRIBUTIONS
+Miscellaneous.csv,6,"row ""scratch""",Unlabelled or undated scratch numbers; ignored,

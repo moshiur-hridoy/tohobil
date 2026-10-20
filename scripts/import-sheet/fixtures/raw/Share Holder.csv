@@ -1,0 +1,10 @@
+SL,Registered Name,Nominee,Relation,Share Price,Responsible Owner
+1,Share Name 1,Nominee 1,Son,"৳10,000",Owner One
+2,Share Name 2,Nominee 2,Daughter,"৳10,000",Owner One
+3,Share Name 3,Nominee 3,Spouse,"৳10,000",Owner Two
+4,Share Name 4,Nominee 4,Brother,"৳10,000",Owner Three
+
+Owner,Shares
+Owner One,2
+Owner Two,1
+Owner Three,1

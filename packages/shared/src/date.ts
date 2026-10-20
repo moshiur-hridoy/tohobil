@@ -107,6 +107,16 @@ export function periodEnd(period: string): string {
 }
 
 /**
+ * The date of `day` within `period`, clamped to the month's length (day 31 of a 30-day month is the
+ * 30th). Used for due dates, so a rule value can never produce a non-existent date.
+ */
+export function dateInPeriod(period: string, day: number): string {
+  const lastDay = Number(periodEnd(period).slice(8));
+  const clamped = Math.min(Math.max(Math.trunc(day), 1), lastDay);
+  return `${period}-${String(clamped).padStart(2, '0')}`;
+}
+
+/**
  * Add months to a period string (negative values go back).
  */
 export function addMonths(period: string, months: number): string {

@@ -15,7 +15,11 @@
     "lint": "eslint --ext .ts src/",
     "typecheck": "tsc --noEmit",
     "migrate": "tsx src/migrate.ts",
+    "activation-code": "tsx src/cli/activation-code.ts",
+    "dues:generate": "tsx src/cli/generate-dues.ts",
     "migrate:create": "node-pg-migrate create -m ../../db/migrations --migration-file-language sql",
+    "import:convert": "tsx ../../scripts/import-sheet/convert.ts",
+    "import:load": "tsx ../../scripts/import-sheet/load.ts",
     "import:verify": "tsx ../../scripts/import-sheet/verify.ts"
   },
   "dependencies": {

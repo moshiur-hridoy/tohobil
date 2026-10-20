@@ -62,6 +62,12 @@ export const paginationSchema = z.object({
 
 export type Pagination = z.infer<typeof paginationSchema>;
 
+/**
+ * Boolean in a query string. `z.coerce.boolean()` would turn the text "false" into true, so spell
+ * the two accepted values out.
+ */
+export const boolQuerySchema = z.enum(['true', 'false']).transform((v) => v === 'true');
+
 export const problemSchema = z.object({
   type: z.string(),
   title: z.string(),

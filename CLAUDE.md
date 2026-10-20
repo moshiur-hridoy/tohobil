@@ -22,6 +22,7 @@ docker compose -f infra/docker-compose.dev.yml up -d db
 pnpm migrate            # needs MIGRATOR_DATABASE_URL (see .env.example)
 pnpm seed               # fictional fixture; refuses non-local databases
 pnpm dev                # API on :3000, web on :5173 (proxies /api)
+pnpm dues:generate      # dues for the current period (or `2026-11`); idempotent, until the Phase 2 scheduler
 
 # Run tests (DB tests use Testcontainers, which needs Docker;
 # or point TEST_DATABASE_URL at any Postgres superuser connection).
@@ -37,6 +38,15 @@ pnpm migrate:create my-migration
 
 # Verify the ledger hash chain (uses READONLY_DATABASE_URL, else DATABASE_URL)
 pnpm verify-ledger
+
+# End-to-end scenarios (Playwright + installed Chrome; builds a throwaway barakah_e2e database)
+pnpm e2e
+
+# Fixed activation code for local testing (8 chars; refused in production or on a non-local database)
+pnpm activation-code M01 --code=12345678
+
+# Legacy sheet importer: convert tabs to CSV, dry-run load (add --commit), verify the totals
+pnpm import:convert && pnpm import:load && pnpm import:verify
 ```
 
 ## Layout

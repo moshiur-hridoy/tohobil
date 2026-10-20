@@ -1,0 +1,4 @@
+# Postgres with the role-creation script baked in, so the stack needs no bind-mounted files (Portainer-friendly).
+# Build from the repository root:  docker buildx build -f infra/Dockerfile.db -t barakah-db:$TAG infra
+FROM postgres:16-alpine
+COPY --chmod=755 initdb/10-roles.sh /docker-entrypoint-initdb.d/10-roles.sh

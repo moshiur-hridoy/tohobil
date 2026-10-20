@@ -73,4 +73,5 @@ jobs:
           cache-to: type=gha,mode=max,scope=db
 
       - name: Show the tag to deploy
-        run: echo "### Deploy tag: \`${{ steps.meta.outputs.tag }}\`" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "### Deploy tag - ${{ steps.meta.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"

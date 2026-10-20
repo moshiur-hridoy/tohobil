@@ -137,20 +137,25 @@ Legend: `[x]` done, `[ ]` to do.
 - [x] Tests: restore on a real schema (`pnpm backup:smoke`), tamper detection (ledger check and restore test), archive for a fixture year, reconciliation and lock rules
 - [x] `docs/PHASE-5.md`
 
-## Phase 6: Hardening and handover
-- [ ] Security checklist and dependency audit
-- [ ] Performance sanity: p95 under 300 ms on main endpoints with 100k ledger rows
-- [ ] Accessibility pass on member screens (contrast, 200 percent font scaling)
-- [ ] Bengali copy review list
-- [ ] OpenAPI at `/api/v1/openapi.json` and `kysely-codegen` types (int8 mapping)
-- [ ] Final docs, `docs/GO-LIVE.md` checklist complete
-- [ ] All tests green, **stop for owner review**
+## Phase 6: Hardening and handover (done)
+- [x] Security checklist (Doc.md 11) reviewed against the code; per-user rate limits added; `pnpm audit --audit-level=high` clean
+- [x] Performance sanity: p95 under 300 ms (actually under 40 ms) with 100k ledger rows (`pnpm perf`)
+- [x] Accessibility pass on member screens: contrast test over the theme, axe-core in light and dark mode, 200 percent text fits a phone
+- [x] Bengali copy review list (`docs/BENGALI-REVIEW.md`, `pnpm i18n:report`)
+- [x] OpenAPI at `/api/v1/openapi.json` (kysely-codegen dropped: the code uses parameterised `pg` queries, see `docs/ASSUMPTIONS.md` 81)
+- [x] Final docs: `docs/PHASE-6.md`, `docs/TEST-GUIDE.md`, `docs/GO-LIVE.md`
+- [x] All tests green
 
 ---
 
 ## Outside the phases (owner or manual)
+Work through `docs/TEST-GUIDE.md` first (testing), then `docs/GO-LIVE.md` (launch).
+- [ ] Test everything with `docs/TEST-GUIDE.md`
 - [ ] Owner decisions list (Doc.md 18.12) resolved at the group meeting
+- [ ] A Bengali speaker reviews `docs/BENGALI-REVIEW.md`
 - [ ] Real app icons replacing placeholders
-- [ ] Android native project generated and keystore backed up (`docs/ANDROID.md`, `docs/RECOVERY-KIT.md`)
+- [ ] Constitution PDF and clauses loaded as version 1; real history imported and checked against the sheet
+- [ ] Backups running on the real server and a restore test green (`docs/RUNBOOK.md`)
 - [ ] Production deploy (manual, per `docs/RUNBOOK.md`); never from a dev session
+- [ ] (optional) Android app: native project, keystore backed up (`docs/ANDROID.md`, `docs/RECOVERY-KIT.md`)
 - [ ] Targets from the owner's plan: Phases 1 and 2 usable before 20 Dec 2026; Phases 3 to 5 by March 2027

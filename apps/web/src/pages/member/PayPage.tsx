@@ -99,10 +99,10 @@ function HowToPay() {
       ) : (
         <ul className="space-y-2">
           {rows.map((k) => (
-            <li key={k} className="flex items-center justify-between gap-3">
-              <span>
+            <li key={k} className="flex flex-wrap items-center justify-between gap-3">
+              <span className="min-w-0">
                 <span className="block text-sm text-muted">{PAYMENT_METHOD_LABELS[k].bn}</span>
-                <span className="select-all font-medium">{q.data?.[k]}</span>
+                <span className="select-all break-all font-medium">{q.data?.[k]}</span>
               </span>
               <CopyButton text={q.data?.[k] ?? ''} />
             </li>
@@ -233,7 +233,7 @@ function SendMoneyForm({ periods, levyPeriods, onSent }: { periods: string[]; le
 
         <div>
           <span className="text-sm text-muted">{t('pay.screenshotLabel')}</span>
-          <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="mt-1 block w-full" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+          <input type="file" aria-label={t('pay.screenshotLabel')} accept="image/jpeg,image/png,image/webp,application/pdf" className="mt-1 block w-full" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
           {file && (
             <p className="mt-1 text-sm">
               {t('pay.screenshotAttached', { name: file.name })}{' '}

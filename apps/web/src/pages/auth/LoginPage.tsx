@@ -28,11 +28,11 @@ export function LoginPage() {
     const valid = /^M\d{2}$/.test(ref.trim().toUpperCase());
     return (
       <AuthShell footer={t('auth.pinFooter')}>
-        <h1 className="text-[22px] font-semibold leading-snug">{t('auth.signInTitle')}</h1>
+        <h1 className="text-[1.375rem] font-semibold leading-snug">{t('auth.signInTitle')}</h1>
         <label className="block text-sm text-muted">
           {t('auth.memberRef')}
           <input
-            className="mt-1 h-14 w-full rounded-2xl border border-input bg-background px-4 text-[17px] uppercase text-foreground"
+            className="mt-1 h-14 w-full rounded-2xl border border-input bg-background px-4 text-[1.0625rem] uppercase text-foreground"
             value={ref}
             autoCapitalize="characters"
             autoComplete="username"
@@ -44,7 +44,7 @@ export function LoginPage() {
           type="button"
           disabled={!valid}
           onClick={() => setChosenRef(ref.trim().toUpperCase())}
-          className="h-14 rounded-2xl bg-primary text-[17px] font-bold text-primary-foreground disabled:opacity-50"
+          className="h-14 rounded-2xl bg-primary text-[1.0625rem] font-bold text-primary-foreground disabled:opacity-50"
         >
           {t('auth.continue')}
         </button>
@@ -74,14 +74,14 @@ export function LoginPage() {
   return (
     <AuthShell footer={t('auth.pinFooter')}>
       <div>
-        <h1 className="text-[22px] font-semibold leading-snug">{t('auth.pinTitle')}</h1>
-        <p className="mt-1 text-[13px] leading-normal text-muted">
+        <h1 className="text-[1.375rem] font-semibold leading-snug">{t('auth.pinTitle')}</h1>
+        <p className="mt-1 text-[0.8125rem] leading-normal text-muted">
           {t('auth.pinHint')} · {activeRef}
         </p>
       </div>
       <PinPad value={pin} onChange={(v) => { setPin(v); setError(null); }} onComplete={(p) => void submit(p)} disabled={busy} invalid={!!error} />
       <FieldError message={error?.message ?? null} requestId={error?.requestId} />
-      {forgot && <p className="text-[13px] leading-normal text-muted">{t('auth.forgotPinBody')}</p>}
+      {forgot && <p className="text-[0.8125rem] leading-normal text-muted">{t('auth.forgotPinBody')}</p>}
       <div className="flex flex-wrap gap-4">
         <button type="button" className="text-sm text-muted underline" onClick={() => setForgot(true)}>
           {t('auth.forgotPin')}

@@ -5,8 +5,11 @@ import Fastify, { LogController, type FastifyBaseLogger, type FastifyInstance } 
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
+import jwt from 'jsonwebtoken';
 import fastifyStatic from '@fastify/static';
+import swagger from '@fastify/swagger';
 import {
+  jsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
   type ZodTypeProvider,
@@ -119,6 +122,23 @@ export async function buildApp({
   app.setSerializerCompiler(serializerCompiler);
   app.setErrorHandler(errorHandler);
 
+  // The API description is built from the very zod schemas that validate requests, so it cannot drift.
+  // It must be registered before the routes so it sees all of them.
+  await app.register(swagger, {
+    openapi: {
+      openapi: '3.0.3',
+      info: {
+        title: 'Barakah Fund API',
+        version: env.APP_VERSION,
+        description:
+          'Money amounts are whole paisa written as decimal strings. Business dates are YYYY-MM-DD in Asia/Dhaka. Errors are RFC 7807 problems with a stable `code`.',
+      },
+      components: { securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' } } },
+      security: [{ bearerAuth: [] }],
+    },
+    transform: jsonSchemaTransform,
+  });
+
   // ---- Security (spec 11) ------------------------------------------------------------------
   await app.register(helmet, {
     contentSecurityPolicy: {
@@ -157,8 +177,22 @@ export async function buildApp({
     global: true,
     max: env.RATE_LIMIT_PER_MINUTE,
     timeWindow: '1 minute',
-    // Per-user keys and the stricter auth-route limit (10/min/IP) arrive with auth in Phase 1.
-    keyGenerator: (request) => request.ip,
+    // A signed-in member is counted by who they are (spec 11: 120/min per user), so members behind one
+    // shared Wi-Fi do not eat each other's allowance. The token is VERIFIED here: an unverified `sub`
+    // would let a caller dodge the limit by inventing a new identity on every request. Anyone without a
+    // valid token (login, activation, probes) is counted by IP.
+    keyGenerator: (request) => {
+      const header = request.headers.authorization;
+      if (header?.startsWith('Bearer ')) {
+        try {
+          const claims = jwt.verify(header.slice(7), env.JWT_SECRET, { algorithms: ['HS256'] });
+          if (typeof claims !== 'string' && typeof claims.sub === 'string') return `user:${claims.sub}`;
+        } catch {
+          /* fall through to the IP key */
+        }
+      }
+      return `ip:${request.ip}`;
+    },
     errorResponseBuilder: (_request, context) =>
       new AppError(429, 'rate_limit.exceeded', `Too many requests. Retry in ${context.after}.`),
   });
@@ -190,6 +224,8 @@ export async function buildApp({
   if (typeof (db as Partial<pg.Pool>).connect === 'function') {
     const deps = { pool: db as pg.Pool, env, clock };
     const guards = createGuards(deps);
+    // For signed-in users only: it describes the API surface, which is not for the open internet.
+    app.get('/api/v1/openapi.json', { preHandler: guards.authenticate, schema: { hide: true } }, () => app.swagger());
     await app.register(authRoutes(deps, guards), { prefix: '/api/v1' });
     await app.register(
       memberRoutes(

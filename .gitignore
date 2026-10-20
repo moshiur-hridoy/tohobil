@@ -45,3 +45,4 @@ ios/
 # Playwright
 /test-results/
 /playwright-report/
+perf-latest.txt

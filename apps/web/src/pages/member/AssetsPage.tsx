@@ -15,7 +15,7 @@ const ASSET_META: Record<
 > = {
   gold: {
     labelKey: 'assets.gold',
-    color: 'text-[#8F5A00]',
+    color: 'text-warn',
     bg: 'bg-warn-bg',
     icon: (c) => (
       <svg className={c} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 8h10l4 9H3z" /><path d="M10 8l-1.5 9" /><path d="M14 8l1.5 9" /></svg>
@@ -31,8 +31,8 @@ const ASSET_META: Record<
   },
   house: {
     labelKey: 'assets.house',
-    color: 'text-[#2D5BC4]',
-    bg: 'bg-[#E8EEFB]',
+    color: 'text-blue',
+    bg: 'bg-blue-bg',
     icon: (c) => (
       <svg className={c} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 21V5l8-2v18" /><path d="M12 9h8v12" /><path d="M4 21h16" /><path d="M7 9h2" /><path d="M7 13h2" /><path d="M7 17h2" /><path d="M15 13h2" /><path d="M15 17h2" /></svg>
     ),
@@ -102,9 +102,9 @@ export function AssetsPage() {
 
         <main className="flex-1 space-y-3 overflow-y-auto px-4 py-2 pb-4">
           <section className="rounded-[20px] border border-border bg-card p-4 shadow-sm">
-            <div className="text-[13px] text-muted">{t('assets.totalEstimatedValue')}</div>
+            <div className="text-[0.8125rem] text-muted">{t('assets.totalEstimatedValue')}</div>
             {assets.data ? (
-              <div className="mt-0.5 text-[32px] font-bold tracking-tight">{taka(total)}</div>
+              <div className="mt-0.5 text-[2rem] font-bold tracking-tight">{taka(total)}</div>
             ) : (
               <Skeleton className="mt-2 h-9 w-40" />
             )}
@@ -114,13 +114,13 @@ export function AssetsPage() {
                 {(['gold', 'land', 'house', 'other'] as const).map((k) => {
                   const pct = percent(k);
                   if (!pct) return null;
-                  const bg = k === 'gold' ? 'bg-[#C9922B]' : k === 'land' ? 'bg-primary' : k === 'house' ? 'bg-[#2D5BC4]' : 'bg-muted';
+                  const bg = k === 'gold' ? 'bg-warn' : k === 'land' ? 'bg-primary' : k === 'house' ? 'bg-blue' : 'bg-muted';
                   return <div key={k} className={bg} style={{ width: `${pct}%` }} />;
                 })}
               </div>
             )}
 
-            <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-foreground">
+            <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[0.8125rem] text-foreground">
               {(['gold', 'land', 'house', 'other'] as const).map((k) => {
                 const pct = percent(k);
                 if (!pct) return null;
@@ -173,7 +173,7 @@ function AssetCard({ asset }: { asset: AssetRow }) {
           {meta.icon('h-6 w-6')}
         </span>
         <div className="flex-1">
-          <div className="text-[17px] font-bold">
+          <div className="text-[1.0625rem] font-bold">
             {asset.name}
             {asset.quantity && asset.unit && (
               <span className="ml-1.5 text-sm font-normal text-muted">
@@ -181,7 +181,7 @@ function AssetCard({ asset }: { asset: AssetRow }) {
               </span>
             )}
           </div>
-          <div className="text-[13px] text-muted">
+          <div className="text-[0.8125rem] text-muted">
             {asset.location ?? t(meta.labelKey)} · {asset.acquired_on ? asset.acquired_on : t('assets.noAcquireDate')}
           </div>
         </div>
@@ -203,19 +203,19 @@ function AssetCard({ asset }: { asset: AssetRow }) {
           <div className="text-xs text-muted">{t('assets.latestValuation')}</div>
           <div className="mt-0.5 text-lg font-bold">{taka(asset.latest_value_paisa ?? asset.cost_paisa)}</div>
           {asset.latest_value_as_of && (
-            <div className="text-[11px] text-muted">{asset.latest_value_as_of}</div>
+            <div className="text-[0.6875rem] text-muted">{asset.latest_value_as_of}</div>
           )}
         </div>
       </div>
 
       {acquiring && (
-        <div className="mt-3 rounded-xl bg-background p-3 text-[13px] text-muted">
+        <div className="mt-3 rounded-xl bg-background p-3 text-[0.8125rem] text-muted">
           {t('assets.acquiringNote')}
         </div>
       )}
 
       {asset.status === 'held' && isStale(asset.latest_value_as_of) && (
-        <div className="mt-3 flex items-center gap-2 rounded-xl bg-warn-bg p-3 text-[13px] font-semibold text-warn">
+        <div className="mt-3 flex items-center gap-2 rounded-xl bg-warn-bg p-3 text-[0.8125rem] font-semibold text-warn">
           <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l10 18H2z" /><path d="M12 10v5" /><path d="M12 18h.01" /></svg>
           {t('assets.valuationStale')}
         </div>

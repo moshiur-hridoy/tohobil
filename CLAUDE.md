@@ -7,7 +7,9 @@
 - **Money**: All amounts are bigint paisa. No floats. Ever. On the wire (JSON) and inside jsonb payloads, paisa is a decimal **string**; the zod schemas in `packages/shared` convert to/from bigint.
 - **Dates**: business dates are `YYYY-MM-DD` strings in Asia/Dhaka, never JS `Date` objects. Anything that depends on "now" takes an injectable `Clock`.
 - **Language**: user-facing text is Bengali via i18n keys (English fallback, same keys in `bn.json` and `en.json`). Code, comments, docs and commits are English.
-- **Phases**: build one phase at a time (Doc.md section 15), finish it with green tests and a `docs/PHASE-N.md`, then stop for owner review. Current status: see `docs/PHASE-0.md`.
+- **Phases**: build one phase at a time (Doc.md section 15), finish it with green tests and a `docs/PHASE-N.md`. Phases 0 to 6 are built (the owner chose to build everything first and test afterwards, so there were no review stops between them). Progress is in [`checkbox.md`](./checkbox.md); the owner's step-by-step test plan is [`docs/TEST-GUIDE.md`](./docs/TEST-GUIDE.md); what is left is the optional Android app and the owner-side items listed at the end of `checkbox.md`.
+- **The owner is not a developer.** Prefer the simplest safe option, explain in plain words, and give exact commands when they must run something.
+- **Members sign in with member ID + PIN from any device** (owner decision, `docs/ASSUMPTIONS.md` 80); there is no device cap. The cashier issues PINs (`POST /members/:id/pin`).
 - Where the spec is silent, choose the conservative option, make it a rule or adapter, and record it in `docs/ASSUMPTIONS.md`. Never run against production from a dev session.
 
 ## Commands
@@ -47,7 +49,20 @@ pnpm activation-code M01 --code=12345678
 
 # Legacy sheet importer: convert tabs to CSV, dry-run load (add --commit), verify the totals
 pnpm import:convert && pnpm import:load && pnpm import:verify
+
+# Prove backups restore (Docker only): backs up a throwaway database, restores it, then checks a tampered ledger is caught
+pnpm backup:smoke
+
+# Performance check with 100,000 ledger rows (p95 under 300 ms); writes perf-latest.txt
+pnpm perf
+
+# Rewrite docs/BENGALI-REVIEW.md (every Bengali string next to its English, doubtful ones first)
+pnpm i18n:report
 ```
+
+The DB tests need a database. If Testcontainers does not start on your machine, run them against the dev Postgres:
+`TEST_DATABASE_URL=postgres://barakah_migrator:barakah_migrator@localhost:5432/postgres REQUIRE_DB_TESTS=1 pnpm test`
+(it only creates throwaway databases). A plain `pnpm test` would otherwise silently skip them.
 
 ## Layout
 

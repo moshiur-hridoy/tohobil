@@ -36,7 +36,7 @@ function kindMeta(kind: NoticeKind): { icon: JSX.Element; borderClass: string; c
   switch (kind) {
     case 'final_notice':
       return {
-        borderClass: 'border-[#F0C6C2]',
+        borderClass: 'border-border',
         chipClass: 'bg-bad-bg text-bad',
         icon: (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -71,7 +71,7 @@ function kindMeta(kind: NoticeKind): { icon: JSX.Element; borderClass: string; c
     case 'meeting':
       return {
         borderClass: 'border-border',
-        chipClass: 'bg-blue-bg text-[#2D5BC4]',
+        chipClass: 'bg-blue-bg text-blue',
         icon: (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M4 6h16v14H4z" />
@@ -128,8 +128,8 @@ export function NoticesPage() {
           </svg>
         </Link>
         <div className="flex-1 pl-1">
-          <div className="text-[19px] font-bold leading-tight">{t('notices.title', { defaultValue: 'নোটিস' })}</div>
-          <div className="text-[13px] text-muted">{t('notices.subtitle', { defaultValue: 'সব বার্তা এখানে থাকে' })}</div>
+          <div className="text-[1.1875rem] font-bold leading-tight">{t('notices.title', { defaultValue: 'নোটিস' })}</div>
+          <div className="text-[0.8125rem] text-muted">{t('notices.subtitle', { defaultValue: 'সব বার্তা এখানে থাকে' })}</div>
         </div>
       </header>
 
@@ -147,7 +147,7 @@ export function NoticesPage() {
           >
             {t('notices.unreadTab', { defaultValue: 'অপঠিত' })}
             {unreadCount > 0 && (
-              <span className="grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-bad px-1.5 text-[11px] font-bold text-white">
+              <span className="grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-bad px-1.5 text-[0.6875rem] font-bold text-white">
                 {unreadCount}
               </span>
             )}

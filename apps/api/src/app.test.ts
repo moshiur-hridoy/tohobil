@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Writable } from 'node:stream';
 import pino from 'pino';
+import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { FastifyInstance } from 'fastify';
@@ -191,6 +192,29 @@ describe('rate limiting', () => {
     expect(last).toBe(429);
     const res = await a.inject('/t/ping');
     expect(res.json()).toMatchObject({ status: 429, code: 'rate_limit.exceeded' });
+  });
+});
+
+describe('rate limiting per signed-in user (spec 11)', () => {
+  const token = (sub: string, secret = baseEnv.JWT_SECRET) => jwt.sign({ did: 'd' }, secret, { algorithm: 'HS256', subject: sub });
+  const hit = (a: FastifyInstance, bearer?: string) =>
+    a.inject({ url: '/t/ping', ...(bearer ? { headers: { authorization: `Bearer ${bearer}` } } : {}) });
+
+  it('gives each member their own allowance even from the same address', async () => {
+    const a = await make({ env: { RATE_LIMIT_PER_MINUTE: '3' } as never });
+    a.get('/t/ping', async () => ({ ok: true }));
+    for (let i = 0; i < 3; i++) expect((await hit(a, token('alice'))).statusCode).toBe(200);
+    expect((await hit(a, token('alice'))).statusCode).toBe(429);
+    // Bob, same IP, is untouched by Alice's burst
+    expect((await hit(a, token('bob'))).statusCode).toBe(200);
+  });
+
+  it('cannot be dodged with a forged or invented identity: those fall back to the shared IP allowance', async () => {
+    const a = await make({ env: { RATE_LIMIT_PER_MINUTE: '3' } as never });
+    a.get('/t/ping', async () => ({ ok: true }));
+    for (let i = 0; i < 3; i++) expect((await hit(a, token(`ghost-${i}`, 'x'.repeat(40)))).statusCode).toBe(200);
+    expect((await hit(a, token('ghost-9', 'x'.repeat(40)))).statusCode).toBe(429);
+    expect((await hit(a)).statusCode).toBe(429); // no token at all shares that same IP bucket
   });
 });
 

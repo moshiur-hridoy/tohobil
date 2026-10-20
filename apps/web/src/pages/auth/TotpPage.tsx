@@ -35,15 +35,15 @@ export function TotpPage() {
 
   return (
     <AuthShell>
-      <h1 className="text-[22px] font-semibold leading-snug">{t('totp.title')}</h1>
+      <h1 className="text-[1.375rem] font-semibold leading-snug">{t('totp.title')}</h1>
       {enrolling && !secret && (
         <>
-          <p className="text-[13px] leading-normal text-muted">{t('totp.enrolHint')}</p>
+          <p className="text-[0.8125rem] leading-normal text-muted">{t('totp.enrolHint')}</p>
           <button
             type="button"
             disabled={busy}
             onClick={() => void run(async () => setSecret((await api<{ secret: string }>('/auth/totp/enroll', { method: 'POST' })).secret))}
-            className="h-14 rounded-2xl bg-primary text-[17px] font-bold text-primary-foreground disabled:opacity-50"
+            className="h-14 rounded-2xl bg-primary text-[1.0625rem] font-bold text-primary-foreground disabled:opacity-50"
           >
             {t('totp.startEnrol')}
           </button>
@@ -51,7 +51,7 @@ export function TotpPage() {
       )}
       {secret && (
         <div className="rounded-2xl border border-border bg-background p-4">
-          <p className="text-[13px] text-muted">{t('totp.secretHint')}</p>
+          <p className="text-[0.8125rem] text-muted">{t('totp.secretHint')}</p>
           <p className="mt-2 select-all break-all text-center font-mono text-lg tracking-wider">{secret}</p>
         </div>
       )}
@@ -80,7 +80,7 @@ export function TotpPage() {
           <button
             type="submit"
             disabled={busy || code.length !== 6}
-            className="h-14 rounded-2xl bg-primary text-[17px] font-bold text-primary-foreground disabled:opacity-50"
+            className="h-14 rounded-2xl bg-primary text-[1.0625rem] font-bold text-primary-foreground disabled:opacity-50"
           >
             {t('totp.verify')}
           </button>

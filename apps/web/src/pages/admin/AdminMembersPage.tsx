@@ -9,8 +9,8 @@ import type { MemberRow } from '../../lib/types';
 
 const MEMBER_AVATAR_COLORS = [
   { bg: 'bg-primary-soft', fg: 'text-primary' },
-  { bg: 'bg-blue-bg', fg: 'text-[#2D5BC4]' },
-  { bg: 'bg-[#EDE8F8]', fg: 'text-[#6B4FB3]' },
+  { bg: 'bg-blue-bg', fg: 'text-blue' },
+  { bg: 'bg-primary-soft', fg: 'text-primary' },
   { bg: 'bg-warn-bg', fg: 'text-warn' },
   { bg: 'bg-bad-bg', fg: 'text-bad' },
 ];
@@ -64,7 +64,7 @@ export function AdminMembersPage() {
       </div>
 
       {/* Notice placeholder until rule-conflict feature is built */}
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#F0DDAE] bg-warn-bg px-4 py-3">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-warn-bg px-4 py-3">
         <span className="grid h-9 w-9 flex-none place-items-center rounded-[10px] bg-white text-warn">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l10 18H2z" /><path d="M12 10v5" /><path d="M12 18h.01" /></svg>
         </span>
@@ -99,12 +99,12 @@ export function AdminMembersPage() {
                       key={m.id}
                       type="button"
                       onClick={() => setSelectedId(m.id)}
-                      className={`grid w-full grid-cols-[minmax(0,1.5fr)_64px_minmax(0,1.5fr)_110px_100px_80px] items-center gap-3 border-b border-border px-4 py-3 text-left text-[15px] last:border-b-0 ${
+                      className={`grid w-full grid-cols-[minmax(0,1.5fr)_64px_minmax(0,1.5fr)_110px_100px_80px] items-center gap-3 border-b border-border px-4 py-3 text-left text-[0.9375rem] last:border-b-0 ${
                         isSelected ? 'bg-primary-soft' : 'hover:bg-hover'
                       }`}
                     >
                       <span className="flex items-center gap-2.5 font-semibold">
-                        <span className={`grid h-[34px] w-[34px] flex-none place-items-center rounded-full text-[13px] font-bold ${colors.bg} ${colors.fg}`}>
+                        <span className={`grid h-[34px] w-[34px] flex-none place-items-center rounded-full text-[0.8125rem] font-bold ${colors.bg} ${colors.fg}`}>
                           {initial(m.full_name)}
                         </span>
                         {m.full_name}
@@ -131,7 +131,7 @@ export function AdminMembersPage() {
           ) : (
             <>
               <div className="flex items-center gap-3">
-                <span className="grid h-11 w-11 flex-none place-items-center rounded-full bg-bad-bg text-[17px] font-bold text-bad">
+                <span className="grid h-11 w-11 flex-none place-items-center rounded-full bg-bad-bg text-[1.0625rem] font-bold text-bad">
                   {initial(selected.full_name)}
                 </span>
                 <div>
@@ -168,7 +168,7 @@ export function AdminMembersPage() {
                 </div>
               </div>
 
-              <div className="mt-5 text-[15px] font-bold">{t('admin.members.declarationSteps')}</div>
+              <div className="mt-5 text-[0.9375rem] font-bold">{t('admin.members.declarationSteps')}</div>
               <div className="mt-1 space-y-1">
                 <div className="flex justify-between gap-3 border-t border-border py-2.5 text-sm">
                   <span>{t('admin.members.contactAttempts')}</span>
@@ -185,13 +185,13 @@ export function AdminMembersPage() {
               </div>
 
               <div className="mt-5 flex flex-col gap-2.5">
-                <button type="button" className="min-h-[48px] rounded-[14px] border-[1.5px] border-primary bg-white px-4 text-[15px] font-bold text-primary">
+                <button type="button" className="min-h-[48px] rounded-[14px] border-[1.5px] border-primary bg-white px-4 text-[0.9375rem] font-bold text-primary">
                   {t('admin.members.addContactLog')}
                 </button>
-                <button type="button" className="min-h-[48px] rounded-[14px] border-[1.5px] border-primary bg-white px-4 text-[15px] font-bold text-primary">
+                <button type="button" className="min-h-[48px] rounded-[14px] border-[1.5px] border-primary bg-white px-4 text-[0.9375rem] font-bold text-primary">
                   {t('admin.members.settlementProposal')}
                 </button>
-                <button type="button" disabled className="min-h-[48px] cursor-not-allowed rounded-[14px] bg-soft px-4 text-[15px] font-bold text-muted">
+                <button type="button" disabled className="min-h-[48px] cursor-not-allowed rounded-[14px] bg-soft px-4 text-[0.9375rem] font-bold text-muted">
                   {t('admin.members.declareInactive')}
                 </button>
               </div>

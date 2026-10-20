@@ -52,7 +52,7 @@ export function MemberLayout() {
 
       {/* Bottom tab bar. The padding keeps it clear of the iPhone home indicator (viewport-fit=cover). */}
       <nav className="fixed bottom-0 left-0 right-0 mx-auto max-w-lg border-t border-border bg-card pb-[env(safe-area-inset-bottom)]">
-        <div className="flex h-16 items-center justify-around">
+        <div className="flex min-h-16 items-stretch justify-around">
           {TABS.map(({ to, labelKey, icon }) => (
             <TabItem key={to} to={to} label={t(labelKey)} icon={icon} />
           ))}
@@ -67,7 +67,7 @@ function TabItem({ to, label, icon }: { to: string; label: string; icon: string 
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex min-w-[3.5rem] flex-col items-center gap-1 px-2 py-1 text-xs ${
+        `flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-1 text-xs ${
           isActive ? 'font-bold text-primary' : 'text-muted'
         }`
       }
@@ -93,7 +93,7 @@ function TabItem({ to, label, icon }: { to: string; label: string; icon: string 
               <path d={icon} />
             </svg>
           </span>
-          <span>{label}</span>
+          <span className="max-w-full break-words text-center leading-tight">{label}</span>
         </>
       )}
     </NavLink>

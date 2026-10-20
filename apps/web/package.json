@@ -35,7 +35,7 @@
     "@barakah/shared": "workspace:*",
     "@capacitor/android": "^8.5.0",
     "@capacitor/cli": "^8.5.0",
-    "@types/node": "^22.10.0",
+    "@types/node": "^22.20.5",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^8.15.0",

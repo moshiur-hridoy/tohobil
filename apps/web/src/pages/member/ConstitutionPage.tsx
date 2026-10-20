@@ -97,7 +97,7 @@ export function ConstitutionPage() {
             <path d="M15 5l-7 7 7 7" />
           </svg>
         </Link>
-        <div className="flex-1 pl-1 text-[19px] font-bold">{t('constitutionPage.title')}</div>
+        <div className="flex-1 pl-1 text-[1.1875rem] font-bold">{t('constitutionPage.title')}</div>
       </header>
 
       <main className="flex-1 space-y-3 overflow-y-auto px-4 py-1 pb-4">
@@ -114,16 +114,16 @@ export function ConstitutionPage() {
         ) : (
           <>
             {!current.acked_at && (
-              <section className="flex items-center gap-3 rounded-[18px] border border-[#F0DDAE] bg-warn-bg p-3">
+              <section className="flex items-center gap-3 rounded-[18px] border border-border bg-warn-bg p-3">
                 <div className="flex-1">
-                  <div className="text-[15px] font-bold text-warn">{t('constitutionPage.newVersion')}</div>
-                  <div className="text-[13px] text-foreground">{t('constitutionPage.newVersionHint')}</div>
+                  <div className="text-[0.9375rem] font-bold text-warn">{t('constitutionPage.newVersion')}</div>
+                  <div className="text-[0.8125rem] text-foreground">{t('constitutionPage.newVersionHint')}</div>
                 </div>
                 <button
                   type="button"
                   disabled={ack.isPending}
                   onClick={() => ack.mutate()}
-                  className="h-11 rounded-xl bg-primary px-4 text-[15px] font-bold text-primary-foreground disabled:opacity-60"
+                  className="h-11 rounded-xl bg-primary px-4 text-[0.9375rem] font-bold text-primary-foreground disabled:opacity-60"
                 >
                   {t('constitutionPage.ack')}
                 </button>
@@ -133,7 +133,7 @@ export function ConstitutionPage() {
 
             <section className="flex items-center gap-3.5 rounded-[20px] border border-border bg-card p-4 shadow-sm">
               <div className="flex-1">
-                <div className="text-[17px] font-bold">
+                <div className="text-[1.0625rem] font-bold">
                   {t('constitutionPage.version')} {current.version}
                   {isLatest && <span className="ml-2 text-xs font-semibold text-primary">{t('constitutionPage.current')}</span>}
                 </div>
@@ -141,14 +141,14 @@ export function ConstitutionPage() {
                   {t('constitutionPage.effectiveFrom')} {fmtDate(current.effective_from)}
                   {current.acked_at && ` · ${t('constitutionPage.acked')}`}
                 </div>
-                {current.summary && <div className="mt-1 text-[13px]">{current.summary}</div>}
+                {current.summary && <div className="mt-1 text-[0.8125rem]">{current.summary}</div>}
               </div>
               {current.file_id && (
                 <button
                   type="button"
                   disabled={pdf.isPending}
                   onClick={() => pdf.mutate(current.file_id as string)}
-                  className="h-11 text-[13px] font-bold text-primary"
+                  className="h-11 text-[0.8125rem] font-bold text-primary"
                 >
                   {t('constitutionPage.pdf')}
                 </button>
@@ -163,7 +163,7 @@ export function ConstitutionPage() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('constitutionPage.search')}
                 aria-label={t('constitutionPage.search')}
-                className="flex-1 bg-transparent text-[15px] text-foreground outline-none placeholder:text-muted"
+                className="flex-1 bg-transparent text-[0.9375rem] text-foreground outline-none placeholder:text-muted"
               />
             </label>
 
@@ -189,10 +189,10 @@ export function ConstitutionPage() {
                         </span>
                         <span className="flex-1">
                           <span className="block text-base font-semibold">{c.title ?? c.clause_no}</span>
-                          {c.summary && <span className="block text-[13px] text-muted">{c.summary}</span>}
+                          {c.summary && <span className="block text-[0.8125rem] text-muted">{c.summary}</span>}
                         </span>
                       </button>
-                      {open === c.id && c.body && <p className="whitespace-pre-line pb-2 pl-14 text-[14px]">{c.body}</p>}
+                      {open === c.id && c.body && <p className="whitespace-pre-line pb-2 pl-14 text-[0.875rem]">{c.body}</p>}
                     </li>
                   ))}
                 </ul>

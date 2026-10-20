@@ -25,6 +25,7 @@ export default {
         'warn-bg': 'var(--warn-bg)',
         'bad-bg': 'var(--bad-bg)',
         'blue-bg': 'var(--blue-bg)',
+        blue: 'var(--blue)',
         border: 'var(--border)',
         input: 'var(--input)',
         ring: 'var(--ring)',

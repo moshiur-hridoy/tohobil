@@ -8,10 +8,10 @@
 
 :root {
   /* Status colours: paid / partial-pending / overdue / not due */
-  --ok: #15803d;
-  --warn: #b45309;
+  --ok: #16793a;
+  --warn: #a84e08;
   --bad: #b91c1c;
-  --muted: #6b7280;
+  --muted: #5f6775;
 
   /* Primary palette */
   --primary: #0e7a5a;
@@ -35,7 +35,7 @@
 
   /* Borders and inputs */
   --border: #e4e9e6;
-  --input: #d1d5db;
+  --input: #868e9b; /* field outlines need 3:1 against the page (WCAG 1.4.11) */
   --ring: #0e7a5a;
 
   /* Radii */
@@ -81,14 +81,15 @@
     --blue: #7aa7ff;
 
     --border: #334155;
-    --input: #475569;
+    --input: #64748b;
   }
 }
 
 /* Base styles */
 body {
   font-family: var(--font-sans);
-  font-size: 16px;
+  /* rem, not px: text then follows the browser's and the phone's font-size setting (up to 200%) */
+  font-size: 1rem;
   line-height: 1.6;
   color: var(--foreground);
   background-color: var(--background);

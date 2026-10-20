@@ -14,14 +14,14 @@ export function AuthShell({ children, footer }: { children: ReactNode; footer?: 
         </div>
         <div>
           <div className="text-2xl font-bold leading-tight">{t('app.name')}</div>
-          <div className="text-[13px] text-muted">{t('auth.tagline')}</div>
+          <div className="text-[0.8125rem] text-muted">{t('auth.tagline')}</div>
         </div>
       </div>
       <section className="flex flex-col gap-[18px] rounded-3xl border border-border bg-card p-5">
         {children}
       </section>
       {footer && (
-        <div className="mt-auto rounded-[18px] border border-border bg-card px-4 py-3.5 text-[13px] leading-[1.7] text-muted">
+        <div className="mt-auto rounded-[18px] border border-border bg-card px-4 py-3.5 text-[0.8125rem] leading-[1.7] text-muted">
           {footer}
         </div>
       )}

@@ -36,5 +36,10 @@ describe('i18n catalogues', () => {
   it('does not label Nagad with the Bengali word "নগদ" (19.3: ambiguous with cash)', () => {
     expect(b['payment.methods.nagad']).toBe('Nagad');
     expect(b['payment.methods.cash']).toBe('হাতে নগদ');
+    // the cash-account pickers added later follow the same rule
+    for (const group of ['cashAccount', 'proposalOptions']) {
+      expect(b[`${group}.NAGAD`], group).toBe('Nagad');
+      expect(b[`${group}.CASH`], group).toBe('হাতে নগদ');
+    }
   });
 });

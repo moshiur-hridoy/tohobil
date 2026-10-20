@@ -54,7 +54,7 @@ export function ActivationPage() {
 
   return (
     <AuthShell footer={t('auth.activateFooter')}>
-      <ol className="flex items-center gap-2 text-[13px] text-muted" aria-label={t('auth.steps')}>
+      <ol className="flex items-center gap-2 text-[0.8125rem] text-muted" aria-label={t('auth.steps')}>
         {steps.map((s, i) => (
           <li key={s} className="flex flex-1 items-center gap-2 last:flex-none">
             <span
@@ -82,8 +82,8 @@ export function ActivationPage() {
           }}
         >
           <div>
-            <h1 className="text-[22px] font-semibold leading-snug">{t('auth.activateTitle')}</h1>
-            <p className="mt-1 text-[13px] leading-normal text-muted">{t('auth.activateHint')}</p>
+            <h1 className="text-[1.375rem] font-semibold leading-snug">{t('auth.activateTitle')}</h1>
+            <p className="mt-1 text-[0.8125rem] leading-normal text-muted">{t('auth.activateHint')}</p>
           </div>
           <label className="flex flex-col gap-1 text-sm">
             {t('auth.memberRef')}
@@ -115,7 +115,7 @@ export function ActivationPage() {
           <button
             type="submit"
             disabled={!codeOk}
-            className="h-14 rounded-2xl bg-primary text-[17px] font-bold text-primary-foreground disabled:opacity-50"
+            className="h-14 rounded-2xl bg-primary text-[1.0625rem] font-bold text-primary-foreground disabled:opacity-50"
           >
             {t('common.next')}
           </button>
@@ -125,8 +125,8 @@ export function ActivationPage() {
       {step === 'pin' && (
         <div className="flex flex-col gap-4">
           <div>
-            <h1 className="text-[22px] font-semibold leading-snug">{t('auth.setPinTitle')}</h1>
-            <p className="mt-1 text-[13px] leading-normal text-muted">{t('auth.setPinHint')}</p>
+            <h1 className="text-[1.375rem] font-semibold leading-snug">{t('auth.setPinTitle')}</h1>
+            <p className="mt-1 text-[0.8125rem] leading-normal text-muted">{t('auth.setPinHint')}</p>
           </div>
           <PinPad
             value={pin}
@@ -152,8 +152,8 @@ export function ActivationPage() {
       {step === 'confirm' && (
         <div className="flex flex-col gap-4">
           <div>
-            <h1 className="text-[22px] font-semibold leading-snug">{t('auth.confirmPinTitle')}</h1>
-            <p className="mt-1 text-[13px] leading-normal text-muted">{t('auth.confirmPinHint')}</p>
+            <h1 className="text-[1.375rem] font-semibold leading-snug">{t('auth.confirmPinTitle')}</h1>
+            <p className="mt-1 text-[0.8125rem] leading-normal text-muted">{t('auth.confirmPinHint')}</p>
           </div>
           <PinPad
             value={confirm}

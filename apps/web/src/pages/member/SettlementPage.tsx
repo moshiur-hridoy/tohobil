@@ -26,8 +26,8 @@ export function SettlementPage() {
           </svg>
         </Link>
         <div className="flex-1 pl-1">
-          <div className="text-[19px] font-bold leading-tight">{t('settlement.title')}</div>
-          <div className="text-[13px] text-muted">{t('settlement.subtitle')}</div>
+          <div className="text-[1.1875rem] font-bold leading-tight">{t('settlement.title')}</div>
+          <div className="text-[0.8125rem] text-muted">{t('settlement.subtitle')}</div>
         </div>
       </header>
 
@@ -61,27 +61,27 @@ function SettlementCard({ s }: { s: SettlementView }) {
     <section className="rounded-[20px] border border-border bg-card p-4 shadow-sm" data-testid="settlement-card">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <div className="text-[17px] font-bold">{s.member_code} · {s.member_name}</div>
-          <div className="text-[13px] text-muted">{t(`settlementKind.${s.kind}`)} · {fmtDate(s.taken_on)}</div>
+          <div className="text-[1.0625rem] font-bold">{s.member_code} · {s.member_name}</div>
+          <div className="text-[0.8125rem] text-muted">{t(`settlementKind.${s.kind}`)} · {fmtDate(s.taken_on)}</div>
         </div>
         <span className="rounded-full bg-soft px-2.5 py-1 text-xs font-semibold">{t(`settlement.status.${s.status}`)}</span>
       </div>
 
       <ul>
         {lines.map((l) => (
-          <li key={l.label} className={`flex justify-between gap-3 border-t border-border py-2.5 text-[15px] first:border-t-0 ${l.className}`}>
+          <li key={l.label} className={`flex justify-between gap-3 border-t border-border py-2.5 text-[0.9375rem] first:border-t-0 ${l.className}`}>
             <span>{l.label}</span>
             <span>{l.value}</span>
           </li>
         ))}
-        <li className="flex justify-between gap-3 border-t border-border py-2.5 text-[15px] font-bold text-ok">
+        <li className="flex justify-between gap-3 border-t border-border py-2.5 text-[0.9375rem] font-bold text-ok">
           <span>{t('settlement.netRefund')}</span>
           <span>{taka(BigInt(s.net_paisa))}</span>
         </li>
       </ul>
 
       <h2 className="mb-1 mt-3 text-sm font-bold">{t('settlement.payoutPlan')}</h2>
-      <ul className="text-[15px]">
+      <ul className="text-[0.9375rem]">
         {s.payouts.map((p) => (
           <li key={p.due_on} className="flex justify-between gap-3 border-t border-border py-2 first:border-t-0">
             <span>{fmtDate(p.due_on)}{p.paid_at ? ` · ${t('settlement.paid')}` : ''}</span>

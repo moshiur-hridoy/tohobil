@@ -185,7 +185,8 @@
         "accounts": "Accounts",
         "membersAndDecisions": "Members & Decisions",
         "administration": "Administration"
-      }
+      },
+      "obligations": "Obligations"
     }
   },
   "proposalType": {
@@ -336,6 +337,35 @@
     "notification": {
       "nudge_rate_limited": "A reminder was sent to this member recently. Try again after 6 hours.",
       "invalid_nudge": "This kind of message cannot be sent by hand."
+    },
+    "asset": {
+      "not_acquiring": "This asset is not being acquired.",
+      "exceeds_approved": "Total paid would pass the maximum the members approved.",
+      "document_required": "Attach a document before completing the acquisition.",
+      "deed_required": "Attach the deed first for land or a house.",
+      "ownership_split_mismatch": "The ownership split must cover every share in the fund.",
+      "already_sold": "This asset has already been sold."
+    },
+    "levy": {
+      "exceeds_held": "That much levy money is not held.",
+      "period_taken": "A levy already exists in that month. Pick a date in another month.",
+      "no_members": "There are no active members to charge."
+    },
+    "qard": {
+      "exceeds_balance": "You cannot repay more than this member lent."
+    },
+    "financing": {
+      "instalments_mismatch": "The instalments must add up to the total price.",
+      "already_paid": "This instalment is already paid.",
+      "instalment_not_found": "Instalment not found."
+    },
+    "wind_up": {
+      "already_started": "Winding up has already started.",
+      "no_new_members": "The fund is being wound up; no new members can join."
+    },
+    "proposal": {
+      "compliance_incomplete": "Every compliance box must be ticked before voting.",
+      "feasibility_required": "A feasibility file is needed before voting."
     }
   },
   "common": {
@@ -543,7 +573,10 @@
     "fineAllocated": "Fine",
     "invalidAmount": "Enter an amount greater than zero.",
     "invalidDate": "The date cannot be in the future.",
-    "uploadFailed": "The screenshot could not be uploaded."
+    "uploadFailed": "The screenshot could not be uploaded.",
+    "purposeLabel": "What is it for",
+    "purposeDues": "Monthly dues",
+    "purposeLevy": "Levy (registration, tax)"
   },
   "ledgerPage": {
     "title": "Ledger",
@@ -1089,5 +1122,150 @@
       "failed": "Failed",
       "skipped": "Skipped"
     }
+  },
+  "cashAccount": {
+    "CASH": "Cash in hand",
+    "BANK": "Bank",
+    "BKASH": "bKash",
+    "NAGAD": "Nagad"
+  },
+  "assetsAdmin": {
+    "title": "Assets",
+    "netAssets": "Net assets",
+    "navPerShare": "Value per share",
+    "shares": "Total shares",
+    "kind": "Kind",
+    "name": "Name",
+    "addIdea": "Add idea",
+    "ideaHint": "You can only note down an asset the fund is thinking about. Buying, valuing and selling go through a members' vote.",
+    "status": {
+      "planned": "Planned",
+      "acquiring": "Being acquired",
+      "held": "Held",
+      "sold": "Sold"
+    },
+    "paid": "Paid so far",
+    "valued": "Valued",
+    "payInstalment": "Pay instalment",
+    "attachDocument": "Attach document",
+    "complete": "Mark acquisition complete",
+    "note": "Note",
+    "completeHint": "Land or a house needs the deed and an ownership split that covers every share.",
+    "docType": "Document type",
+    "docDeed": "Deed",
+    "docReceipt": "Receipt",
+    "docOther": "Other",
+    "sheet": {
+      "pay": "Pay instalment",
+      "complete": "Complete acquisition",
+      "document": "Attach document"
+    }
+  },
+  "rentAdmin": {
+    "title": "Rent",
+    "streams": "Rent streams",
+    "noStreams": "No rent streams.",
+    "dueDay": "due on the {{day}}th",
+    "name": "Name",
+    "tenant": "Tenant",
+    "monthly": "Monthly rent",
+    "dueDayLabel": "Due day (1-28)",
+    "activeFrom": "Start",
+    "addStream": "Add rent stream",
+    "expected": "Expected rent",
+    "period": "Month",
+    "generate": "Generate this month",
+    "noExpected": "No rent expected this month.",
+    "due": "due",
+    "receive": "Receive rent",
+    "receiveTitle": "Receive rent",
+    "remaining": "remaining"
+  },
+  "obligations": {
+    "title": "Obligations",
+    "levy": "Levy (registration, VAT, tax)",
+    "levyHint": "Levy money is not fund money; it is held apart until it is handed to the registrar.",
+    "held": "Held",
+    "remit": "Hand to the registrar",
+    "noLevy": "No levy.",
+    "members": "{{count}} members",
+    "outstanding": "outstanding",
+    "payee": "Paid to",
+    "financing": "Deferred purchases (interest-free)",
+    "financingHint": "Instalments of assets bought through an interest-free bank.",
+    "noFinancing": "No deferred purchases.",
+    "paid": "Paid",
+    "payInstalment": "Pay instalment"
+  },
+  "proposalFields": {
+    "optional": "optional",
+    "missing": "Please fill in",
+    "chooseAsset": "Choose an asset",
+    "instalments": "Instalments",
+    "addInstalment": "Add instalment",
+    "due_on": "Date",
+    "text": "Decision text",
+    "new_amount_paisa": "New monthly amount (per share)",
+    "reason": "Reason",
+    "effective_from": "Effective from",
+    "max_amount_paisa": "Maximum amount",
+    "account": "Account",
+    "payee": "Payee",
+    "purpose": "Purpose",
+    "recipient": "Recipient",
+    "amount_paisa": "Amount",
+    "kind": "Kind",
+    "name": "Name",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "source_account": "Paid from",
+    "notes": "Notes",
+    "feasibility_file_id": "Feasibility file",
+    "asset_id": "Asset",
+    "min_price_paisa": "Minimum sale price",
+    "value_paisa": "New value",
+    "as_of": "Value as of",
+    "basis": "Basis of value",
+    "total_paisa": "Total amount",
+    "due_date": "Due date",
+    "direction": "Direction",
+    "lender_member_id": "Member lending to the fund",
+    "counterparty": "Counterparty",
+    "description": "Description",
+    "asset_ids_to_sell": "Assets to sell",
+    "distribution_plan": "Distribution plan",
+    "role": "Role",
+    "member_id": "Member",
+    "phone": "Phone number",
+    "shares": "Number of shares",
+    "note": "Note",
+    "key": "Rule name",
+    "value": "Value",
+    "valid_from": "Valid from",
+    "version": "Version",
+    "file_id": "File (PDF)",
+    "summary": "Summary",
+    "nominee_name": "Nominee name",
+    "nominee_relation": "Nominee relation",
+    "clause_ref": "Clause",
+    "items": "Items"
+  },
+  "proposalOptions": {
+    "receive": "Receive (member lends to the fund)",
+    "repay": "Repay (fund pays the member back)",
+    "gold": "Gold",
+    "land": "Land",
+    "house": "House",
+    "other": "Other",
+    "vori": "Vori",
+    "gram": "Gram",
+    "MAINTENANCE": "Maintenance",
+    "OTHER_EXPENSE": "Other expense",
+    "CASH": "Cash in hand",
+    "BANK": "Bank",
+    "BKASH": "bKash",
+    "NAGAD": "Nagad",
+    "cashier": "Cashier",
+    "auditor": "Auditor"
   }
 }

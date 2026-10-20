@@ -34,7 +34,7 @@ export interface GenerateDuesResult {
   /** Dues that were already there (or, for `start_boost`, already issued in another period). */
   already_existed: number;
   /** Set when nothing was generated because the period starts after the fund's term ends. */
-  skipped: 'after_fund_term' | null;
+  skipped: 'after_fund_term' | 'winding_up' | null;
   /** Unallocated member credit that was applied to the new dues. */
   credit_applied_paisa: bigint;
 }
@@ -81,6 +81,18 @@ export async function generateDues(
         created: [],
         already_existed: 0,
         skipped: 'after_fund_term',
+        credit_applied_paisa: 0n,
+      };
+    }
+
+    // Winding up (spec 10): no new dues once the members have voted to dissolve the fund.
+    const windUp = await tx.query(`SELECT 1 FROM settings WHERE key = 'wind_up'`);
+    if ((windUp.rowCount ?? 0) > 0) {
+      return {
+        period,
+        created: [],
+        already_existed: 0,
+        skipped: 'winding_up',
         credit_applied_paisa: 0n,
       };
     }

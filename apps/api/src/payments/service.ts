@@ -44,11 +44,12 @@ export interface ClientCtx {
   ip?: string | undefined;
 }
 
-/** Purposes the allocation and posting rules cover so far; levy and settlement come with Phase 3 and 4. */
-const SUPPORTED_PURPOSES: readonly PaymentPurpose[] = ['dues', 'entry'];
+/** Purposes the allocation and posting rules cover; settlement shortfalls are not paid through here. */
+const SUPPORTED_PURPOSES: readonly PaymentPurpose[] = ['dues', 'entry', 'levy'];
 const PURPOSE_DUE_KINDS: Record<string, string[]> = {
   dues: ['monthly', 'start_boost'],
   entry: ['entry'],
+  levy: ['levy'],
 };
 
 const FUTURE_SLACK_MS = 5 * 60_000;
@@ -338,6 +339,7 @@ async function confirmInTx(
       memberId: p.member_id,
       paymentId: p.id,
       principalPaisa: plan.principal,
+      principalAccount: p.purpose === 'levy' ? 'LEVY_CLEARING' : 'MEMBER_CAPITAL',
       creditPaisa: plan.credit,
       finePaisa: plan.fine,
     }),

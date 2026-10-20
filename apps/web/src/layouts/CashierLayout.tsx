@@ -13,6 +13,7 @@ export const ADMIN_NAV = [
   ['/admin/proposals', 'admin.nav.proposals'],
   ['/admin/assets', 'admin.nav.assets'],
   ['/admin/rent', 'admin.nav.rent'],
+  ['/admin/obligations', 'admin.nav.obligations'],
   ['/admin/notifications', 'admin.nav.notifications'],
   ['/admin/reconcile', 'admin.nav.reconcile'],
   ['/admin/reports', 'admin.nav.reports'],
@@ -33,6 +34,7 @@ const ADMIN_NAV_META: Record<AdminRoute, { icon: string }> = {
   '/admin/proposals': { icon: 'M4 4h16v16H4zM9 12l2 2 4-4' },
   '/admin/assets': { icon: 'M12 3l9 5-9 5-9-5zM3 13l9 5 9-5' },
   '/admin/rent': { icon: 'M3 21h18M5 21V10l7-4 7 4v11M9 21v-6h6v6' },
+  '/admin/obligations': { icon: 'M4 7h16v12H4zM4 11h16M8 15h3' },
   '/admin/notifications': { icon: 'M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15zM10 21h4' },
   '/admin/reconcile': { icon: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4' },
   '/admin/reports': { icon: 'M6 3h8l4 4v14H6zM14 3v4h4M9 13h6M9 17h6' },
@@ -49,7 +51,7 @@ const NAV_GROUPS: { titleKey: string; routes: AdminRoute[] }[] = [
   },
   {
     titleKey: 'admin.nav.group.accounts',
-    routes: ['/admin/payments', '/admin/ledger', '/admin/assets', '/admin/rent', '/admin/reconcile'],
+    routes: ['/admin/payments', '/admin/ledger', '/admin/assets', '/admin/rent', '/admin/obligations', '/admin/reconcile'],
   },
   {
     titleKey: 'admin.nav.group.membersAndDecisions',

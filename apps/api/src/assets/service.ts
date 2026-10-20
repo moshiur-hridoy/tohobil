@@ -1,9 +1,10 @@
 import type pg from 'pg';
 import type { Clock } from '@barakah/shared';
-import type { AssetCreate, AssetUpdate, AssetValuationCreate, DocumentAttach } from '@barakah/shared';
-import { notFound } from '../lib/errors';
+import type { AssetComplete, AssetCreate, AssetPayment, AssetUpdate, DocumentAttach } from '@barakah/shared';
+import { badRequest, conflict, notFound } from '../lib/errors';
 import { audit } from '../lib/audit';
-import type { Db } from '../lib/tx';
+import { inTransaction, type Db } from '../lib/tx';
+import { postEntries } from '../ledger/service';
 
 export interface AssetDeps {
   pool: pg.Pool;
@@ -34,114 +35,202 @@ function serializeBigints(row: Record<string, unknown>): Record<string, unknown>
 }
 
 export async function createAsset(deps: AssetDeps, actor: AssetActor, input: AssetCreate): Promise<string> {
-  return deps.pool.connect().then(async (client) => {
-    try {
-      await client.query('BEGIN');
-      const res = await client.query(
-        `INSERT INTO assets
-           (kind, name, description, location, acquired_on, cost_paisa, quantity, unit, status,
-            legal_owner_name, ownership_split, compliance, feasibility_file_id, proposal_id)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
-         RETURNING id`,
-        [
-          input.kind,
-          input.name,
-          input.description ?? null,
-          input.location ?? null,
-          input.acquired_on ?? null,
-          input.cost_paisa.toString(),
-          input.quantity ?? null,
-          input.unit ?? null,
-          input.status,
-          input.legal_owner_name ?? null,
-          input.ownership_split ?? null,
-          input.compliance ?? null,
-          input.feasibility_file_id ?? null,
-          input.proposal_id ?? null,
-        ],
-      );
-      const assetId = (res.rows[0] as { id: string }).id;
-      await audit(client, {
-        actor: actor.userId,
-        action: 'asset.create',
-        entityType: 'asset',
-        entityId: assetId,
-        after: {
-          ...input,
-          cost_paisa: input.cost_paisa.toString(),
-          quantity: input.quantity ?? null,
-        },
-        ip: actor.ip,
-        deviceId: actor.deviceId,
-      });
-      await client.query('COMMIT');
-      return assetId;
-    } catch (err) {
-      await client.query('ROLLBACK').catch(() => undefined);
-      throw err;
-    } finally {
-      client.release();
-    }
+  return inTransaction(deps.pool, async (tx) => {
+    const res = await tx.query(
+      `INSERT INTO assets
+         (kind, name, description, location, cost_paisa, quantity, unit, status,
+          legal_owner_name, ownership_split, feasibility_file_id)
+       VALUES ($1,$2,$3,$4,0,$5,$6,'planned',$7,$8,$9)
+       RETURNING id`,
+      [
+        input.kind,
+        input.name,
+        input.description ?? null,
+        input.location ?? null,
+        input.quantity ?? null,
+        input.unit ?? null,
+        input.legal_owner_name ?? null,
+        input.ownership_split ? JSON.stringify(input.ownership_split) : null,
+        input.feasibility_file_id ?? null,
+      ],
+    );
+    const assetId = (res.rows[0] as { id: string }).id;
+    await audit(tx, {
+      actor: actor.userId,
+      action: 'asset.create',
+      entityType: 'asset',
+      entityId: assetId,
+      after: { ...input, status: 'planned' },
+      ip: actor.ip,
+      deviceId: actor.deviceId,
+    });
+    return assetId;
   });
 }
 
 export async function updateAsset(deps: AssetDeps, actor: AssetActor, id: string, input: AssetUpdate): Promise<void> {
-  return deps.pool.connect().then(async (client) => {
-    try {
-      await client.query('BEGIN');
-      const exists = await client.query(`SELECT 1 FROM assets WHERE id = $1`, [id]);
-      if (exists.rowCount === 0) throw notFound('asset.not_found', 'Asset not found');
+  await inTransaction(deps.pool, async (tx) => {
+    const before = await tx.query(`SELECT * FROM assets WHERE id = $1 FOR UPDATE`, [id]);
+    if (before.rowCount === 0) throw notFound('asset.not_found', 'Asset not found');
 
-      const set: string[] = [];
-      const values: unknown[] = [];
-      const add = (field: string, value: unknown | undefined, serializer?: (v: unknown) => unknown) => {
-        if (value === undefined) return;
-        values.push(serializer ? serializer(value) : value);
-        set.push(`${field} = $${values.length}`);
-      };
+    const set: string[] = [];
+    const values: unknown[] = [];
+    const add = (field: string, value: unknown | undefined, serializer?: (v: unknown) => unknown) => {
+      if (value === undefined) return;
+      values.push(serializer ? serializer(value) : value);
+      set.push(`${field} = $${values.length}`);
+    };
+    add('name', input.name);
+    add('description', input.description);
+    add('location', input.location);
+    add('acquired_on', input.acquired_on);
+    add('quantity', input.quantity);
+    add('unit', input.unit);
+    add('legal_owner_name', input.legal_owner_name);
+    add('ownership_split', input.ownership_split, JSON.stringify);
+    add('compliance', input.compliance, JSON.stringify);
+    add('feasibility_file_id', input.feasibility_file_id);
+    if (set.length === 0) return;
 
-      add('kind', input.kind);
-      add('name', input.name);
-      add('description', input.description);
-      add('location', input.location);
-      add('acquired_on', input.acquired_on);
-      add('cost_paisa', input.cost_paisa, (v) => (v as bigint).toString());
-      add('quantity', input.quantity);
-      add('unit', input.unit);
-      add('status', input.status);
-      add('legal_owner_name', input.legal_owner_name);
-      add('ownership_split', input.ownership_split, JSON.stringify);
-      add('compliance', input.compliance, JSON.stringify);
-      add('feasibility_file_id', input.feasibility_file_id);
-      add('proposal_id', input.proposal_id);
-      add('sold_on', input.sold_on);
-      add('sale_price_paisa', input.sale_price_paisa, (v) => (v as bigint).toString());
+    await tx.query(`UPDATE assets SET ${set.join(', ')} WHERE id = $${values.length + 1}`, [...values, id]);
+    const after = await tx.query(`SELECT * FROM assets WHERE id = $1`, [id]);
+    await audit(tx, {
+      actor: actor.userId,
+      action: 'asset.update',
+      entityType: 'asset',
+      entityId: id,
+      before: serializeBigints(before.rows[0] as Record<string, unknown>),
+      after: serializeBigints(after.rows[0] as Record<string, unknown>),
+      ip: actor.ip,
+      deviceId: actor.deviceId,
+    });
+  });
+}
 
-      if (set.length === 0) {
-        await client.query('COMMIT');
-        return;
-      }
+interface AcquiringAsset {
+  id: string;
+  kind: string;
+  status: string;
+  cost_paisa: string;
+  proposal_id: string | null;
+  ownership_split: Array<{ shares: number }> | null;
+}
 
-      const before = await client.query(`SELECT * FROM assets WHERE id = $1`, [id]);
-      await client.query(`UPDATE assets SET ${set.join(', ')} WHERE id = $${values.length + 1}`, [...values, id]);
-      const after = await client.query(`SELECT * FROM assets WHERE id = $1`, [id]);
-      await audit(client, {
-        actor: actor.userId,
-        action: 'asset.update',
-        entityType: 'asset',
-        entityId: id,
-        before: serializeBigints(before.rows[0] as Record<string, unknown>),
-        after: serializeBigints(after.rows[0] as Record<string, unknown>),
-        ip: actor.ip,
-        deviceId: actor.deviceId,
-      });
-      await client.query('COMMIT');
-    } catch (err) {
-      await client.query('ROLLBACK').catch(() => undefined);
-      throw err;
-    } finally {
-      client.release();
+async function lockAsset(tx: Db, id: string): Promise<AcquiringAsset> {
+  const res = await tx.query(
+    `SELECT id, kind, status, cost_paisa::text AS cost_paisa, proposal_id, ownership_split
+     FROM assets WHERE id = $1 FOR UPDATE`,
+    [id],
+  );
+  const asset = res.rows[0] as AcquiringAsset | undefined;
+  if (!asset) throw notFound('asset.not_found', 'Asset not found');
+  return asset;
+}
+
+/**
+ * Another payment on land or a house still being acquired (spec 5.11). Posts
+ * `DR INVESTMENTS_AT_COST, CR <account>`, raises the asset's cost (NAV counts an acquiring asset at
+ * what has been paid, 19.2) and never goes past the maximum the members approved.
+ */
+export async function payAssetInstalment(
+  deps: AssetDeps,
+  actor: AssetActor,
+  assetId: string,
+  input: AssetPayment,
+): Promise<{ ledger_seq: string; paid_paisa: string }> {
+  return inTransaction(deps.pool, async (tx) => {
+    const asset = await lockAsset(tx, assetId);
+    if (asset.status !== 'acquiring') {
+      throw conflict('asset.not_acquiring', 'Only an asset that is still being acquired takes staged payments');
     }
+    const paid = BigInt(asset.cost_paisa) + input.amount_paisa;
+    if (asset.proposal_id) {
+      const approved = await tx.query(`SELECT payload->>'max_amount_paisa' AS max FROM proposals WHERE id = $1`, [
+        asset.proposal_id,
+      ]);
+      const max = (approved.rows[0] as { max: string | null } | undefined)?.max;
+      if (max && paid > BigInt(max)) {
+        throw badRequest('asset.exceeds_approved', 'Total paid would exceed the maximum the members approved');
+      }
+    }
+    const posted = await postEntries(
+      tx as pg.PoolClient,
+      [
+        {
+          entry_date: deps.clock.todayDhaka(),
+          debit: 'INVESTMENTS_AT_COST',
+          credit: input.account,
+          amount_paisa: input.amount_paisa,
+          member_id: null,
+          ref_type: 'asset_payment',
+          ref_id: assetId,
+          memo: input.note,
+        },
+      ],
+      { userId: actor.userId, ip: actor.ip, deviceId: actor.deviceId },
+    );
+    await tx.query(`UPDATE assets SET cost_paisa = $2::bigint WHERE id = $1`, [assetId, paid.toString()]);
+    await audit(tx, {
+      actor: actor.userId,
+      action: 'asset.payment',
+      entityType: 'asset',
+      entityId: assetId,
+      after: { amount_paisa: input.amount_paisa.toString(), paid_paisa: paid.toString(), account: input.account },
+      ip: actor.ip,
+      deviceId: actor.deviceId,
+    });
+    return { ledger_seq: posted[0]!.seq.toString(), paid_paisa: paid.toString() };
+  });
+}
+
+/**
+ * The cashier marks an acquisition complete: acquiring -> held. It needs a note and a document, and
+ * land or a house also needs a deed and an ownership split that covers every share in the fund
+ * (spec 5.11 and 18.7). From then on the asset is valued by `valuation_update` proposals.
+ */
+export async function completeAcquisition(
+  deps: AssetDeps,
+  actor: AssetActor,
+  assetId: string,
+  input: AssetComplete,
+): Promise<void> {
+  await inTransaction(deps.pool, async (tx) => {
+    const asset = await lockAsset(tx, assetId);
+    if (asset.status !== 'acquiring') {
+      throw conflict('asset.not_acquiring', 'Only an asset that is still being acquired can be completed');
+    }
+    const docs = await tx.query(
+      `SELECT doc_type FROM documents WHERE entity_type = 'asset' AND entity_id = $1`,
+      [assetId],
+    );
+    if (docs.rowCount === 0) {
+      throw badRequest('asset.document_required', 'Attach a document before completing the acquisition');
+    }
+    if (asset.kind === 'land' || asset.kind === 'house') {
+      if (!docs.rows.some((d) => (d as { doc_type: string | null }).doc_type === 'deed')) {
+        throw badRequest('asset.deed_required', 'Attach the deed before completing a land or house acquisition');
+      }
+      const total = await tx.query(
+        `SELECT COALESCE(SUM(shares_on(m.id, $1::date)), 0)::int AS total
+         FROM members m WHERE m.status IN ('active','warning','suspended','deceased')`,
+        [deps.clock.todayDhaka()],
+      );
+      const fundShares = (total.rows[0] as { total: number }).total;
+      const split = (asset.ownership_split ?? []).reduce((sum, o) => sum + o.shares, 0);
+      if (split !== fundShares) {
+        throw badRequest('asset.ownership_split_mismatch', `Ownership split (${split}) must equal all shares in the fund (${fundShares})`);
+      }
+    }
+    await tx.query(`UPDATE assets SET status = 'held' WHERE id = $1`, [assetId]);
+    await audit(tx, {
+      actor: actor.userId,
+      action: 'asset.complete',
+      entityType: 'asset',
+      entityId: assetId,
+      after: { note: input.note },
+      ip: actor.ip,
+      deviceId: actor.deviceId,
+    });
   });
 }
 
@@ -181,51 +270,6 @@ export async function listAssets(
   const rows = res.rows.slice(0, filters.limit).map((r) => serializeBigints(r as Record<string, unknown>));
   const nextCursor = res.rows.length > filters.limit ? (res.rows[filters.limit] as { id: string }).id : undefined;
   return { items: rows, nextCursor };
-}
-
-export async function addValuation(
-  deps: AssetDeps,
-  actor: AssetActor,
-  assetId: string,
-  input: AssetValuationCreate,
-): Promise<string> {
-  return deps.pool.connect().then(async (client) => {
-    try {
-      await client.query('BEGIN');
-      const exists = await client.query(`SELECT 1 FROM assets WHERE id = $1`, [assetId]);
-      if (exists.rowCount === 0) throw notFound('asset.not_found', 'Asset not found');
-
-      const res = await client.query(
-        `INSERT INTO asset_valuations (asset_id, value_paisa, as_of, basis, proposal_id)
-         VALUES ($1,$2,$3,$4,$5)
-         RETURNING id`,
-        [assetId, input.value_paisa.toString(), input.as_of, input.basis ?? null, input.proposal_id ?? null],
-      );
-      const valuationId = (res.rows[0] as { id: string }).id;
-      await audit(client, {
-        actor: actor.userId,
-        action: 'asset_valuation.create',
-        entityType: 'asset_valuation',
-        entityId: valuationId,
-        after: {
-          asset_id: assetId,
-          value_paisa: input.value_paisa.toString(),
-          as_of: input.as_of,
-          basis: input.basis,
-          proposal_id: input.proposal_id,
-        },
-        ip: actor.ip,
-        deviceId: actor.deviceId,
-      });
-      await client.query('COMMIT');
-      return valuationId;
-    } catch (err) {
-      await client.query('ROLLBACK').catch(() => undefined);
-      throw err;
-    } finally {
-      client.release();
-    }
-  });
 }
 
 export async function listValuations(db: Db, assetId: string): Promise<Record<string, unknown>[]> {

@@ -67,16 +67,11 @@ describe('assets, rent and NAV', () => {
     return res.json() as Record<string, unknown>;
   };
 
-  dbIt('cashier creates an asset; member can read the list and detail', async () => {
-    const asset = await assetCreate({
-      kind: 'house',
-      name: 'Test House',
-      location: 'Dhaka',
-      cost_paisa: '100000000',
-      status: 'planned',
-    });
+  dbIt('cashier notes down a planned asset; member can read the list and detail', async () => {
+    const asset = await assetCreate({ kind: 'house', name: 'Test House', location: 'Dhaka' });
     expect(asset.kind).toBe('house');
     expect(asset.status).toBe('planned');
+    expect(asset.cost_paisa).toBe('0');
 
     const list = await call('GET', '/assets', member.access_token);
     expect(list.statusCode).toBe(200);
@@ -87,37 +82,24 @@ describe('assets, rent and NAV', () => {
     expect(detail.json().name).toBe('Test House');
   });
 
-  dbIt('cashier updates asset to held and records a valuation', async () => {
-    const asset = await assetCreate({
-      kind: 'gold',
-      name: 'Gold Bar',
-      quantity: '2.5000',
-      unit: 'vori',
-      cost_paisa: '5000000',
-      status: 'acquiring',
-    });
-
-    const patch = await call('PATCH', `/assets/${asset.id}`, cashier.access_token, { status: 'held' });
-    expect(patch.statusCode).toBe(200);
-    expect(patch.json().status).toBe('held');
-
-    const val = await call('POST', `/assets/${asset.id}/valuations`, cashier.access_token, {
-      value_paisa: '6000000',
-      as_of: todayDhaka,
-      basis: 'Market quote',
-    });
-    expect(val.statusCode).toBe(200);
-    const rows = val.json() as Array<Record<string, unknown>>;
-    expect(rows[0]).toMatchObject({ value_paisa: '6000000', as_of: todayDhaka });
+  dbIt('money, status, sale and valuation cannot be set by hand: only proposals move them', async () => {
+    // cost and status are not accepted on create or update (the schema is strict) ...
+    expect((await call('POST', '/assets', cashier.access_token, { kind: 'gold', name: 'G', cost_paisa: '5000000', status: 'held' })).statusCode).toBe(400);
+    const asset = await assetCreate({ kind: 'gold', name: 'Gold Bar', quantity: '2.5000', unit: 'vori' });
+    for (const body of [{ status: 'held' }, { status: 'sold' }, { cost_paisa: '1' }, { sale_price_paisa: '1' }]) {
+      expect((await call('PATCH', `/assets/${asset.id}`, cashier.access_token, body)).statusCode).toBe(400);
+    }
+    // ... and there is no route to write a valuation (valuation_update proposals do that)
+    const val = await call('POST', `/assets/${asset.id}/valuations`, cashier.access_token, { value_paisa: '6000000', as_of: todayDhaka });
+    expect(val.statusCode).toBe(404);
+    // descriptive edits are fine
+    const ok = await call('PATCH', `/assets/${asset.id}`, cashier.access_token, { location: 'Locker 4' });
+    expect(ok.statusCode).toBe(200);
+    expect(ok.json().location).toBe('Locker 4');
   });
 
   dbIt('cashier attaches a document to an asset', async () => {
-    const asset = await assetCreate({
-      kind: 'land',
-      name: 'Agricultural Plot',
-      cost_paisa: '20000000',
-      status: 'planned',
-    });
+    const asset = await assetCreate({ kind: 'land', name: 'Agricultural Plot' });
     const file = await db!.admin.query(
       `INSERT INTO files (sha256, mime, size_bytes, path, original_name, created_by)
        VALUES ($1,'application/pdf',1024,$2,'deed.pdf',$3) RETURNING id`,
@@ -172,12 +154,10 @@ describe('assets, rent and NAV', () => {
   });
 
   dbIt('GET /nav reflects cash and held asset valuation', async () => {
-    await assetCreate({
-      kind: 'house',
-      name: 'NAV House',
-      cost_paisa: '100000000',
-      status: 'held',
-    });
+    // A held asset can only come from an executed purchase; here the row is planted to test NAV alone.
+    await db!.admin.query(
+      `INSERT INTO assets (kind, name, cost_paisa, status) VALUES ('house', 'NAV House', 100000000, 'held')`,
+    );
 
     const navRes = await call('GET', '/nav', member.access_token);
     expect(navRes.statusCode).toBe(200);

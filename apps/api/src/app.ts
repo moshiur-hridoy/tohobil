@@ -32,6 +32,7 @@ import { notificationRoutes } from './routes/notifications';
 import { assetRoutes } from './routes/assets';
 import { rentRoutes } from './routes/rent';
 import { navRoutes } from './routes/nav';
+import { obligationRoutes } from './routes/obligations';
 import { proposalRoutes } from './routes/proposals';
 import { settingsRoutes } from './routes/settings';
 import { charityRoutes } from './routes/charity';
@@ -213,6 +214,7 @@ export async function buildApp({
     await app.register(assetRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
     await app.register(rentRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
     await app.register(navRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
+    await app.register(obligationRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
     await app.register(proposalRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
     await app.register(charityRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
     await app.register(

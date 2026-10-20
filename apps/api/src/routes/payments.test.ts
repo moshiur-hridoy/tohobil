@@ -150,8 +150,9 @@ describe('payments', () => {
     const cash = await call('POST', '/payments', s.M03.access_token, { amount_paisa: '100', method: 'cash' });
     expect(cash.statusCode).toBe(201);
     await call('POST', `/payments/${cash.json().id}/reject`, s.M01.access_token, { reason: 'test cleanup' });
-    const levy = await submit(s.M03.access_token, { purpose: 'levy' });
-    expect(levy.json().code).toBe('payment.purpose_unsupported');
+    // levy is a supported purpose now; a settlement shortfall is not paid through this route
+    const shortfall = await submit(s.M03.access_token, { purpose: 'settlement_shortfall' });
+    expect(shortfall.json().code).toBe('payment.purpose_unsupported');
   });
 
   dbIt('a suspended or read-only member cannot submit', async () => {

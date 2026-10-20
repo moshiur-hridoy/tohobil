@@ -74,7 +74,11 @@ export function PayPage() {
         </section>
 
         <HowToPay />
-        <SendMoneyForm periods={[...new Set(openDues.map((d) => d.period))]} onSent={() => void refresh()} />
+        <SendMoneyForm
+          periods={[...new Set(openDues.filter((d) => d.kind !== 'levy').map((d) => d.period))]}
+          levyPeriods={[...new Set(openDues.filter((d) => d.kind === 'levy').map((d) => d.period))]}
+          onSent={() => void refresh()}
+        />
         <History memberId={me?.member_id} />
       </div>
     </PullToRefresh>
@@ -109,7 +113,7 @@ function HowToPay() {
   );
 }
 
-function SendMoneyForm({ periods, onSent }: { periods: string[]; onSent: () => void }) {
+function SendMoneyForm({ periods, levyPeriods, onSent }: { periods: string[]; levyPeriods: string[]; onSent: () => void }) {
   const { t } = useTranslation();
   const { me } = useAuth();
   const [amount, setAmount] = useState('');
@@ -117,6 +121,7 @@ function SendMoneyForm({ periods, onSent }: { periods: string[]; onSent: () => v
   const [trx, setTrx] = useState('');
   const [date, setDate] = useState(todayDhaka());
   const [period, setPeriod] = useState('');
+  const [purpose, setPurpose] = useState<'dues' | 'levy'>('dues');
   const [file, setFile] = useState<File | null>(null);
   const [invalid, setInvalid] = useState<string | null>(null);
   const [sheet, setSheet] = useState(false);
@@ -154,6 +159,7 @@ function SendMoneyForm({ periods, onSent }: { periods: string[]; onSent: () => v
         method,
         ...(trx.trim() ? { trx_id: trx.trim() } : {}),
         paid_at: dayToIso(date),
+        ...(purpose === 'levy' ? { purpose } : {}),
         ...(period ? { for_periods: [period] } : {}),
         ...(proof ? { proof_file_id: proof } : {}),
       },
@@ -161,6 +167,7 @@ function SendMoneyForm({ periods, onSent }: { periods: string[]; onSent: () => v
     setAmount('');
     setTrx('');
     setPeriod('');
+    setPurpose('dues');
     setFile(null);
     setDone(true);
     onSent();
@@ -204,11 +211,21 @@ function SendMoneyForm({ periods, onSent }: { periods: string[]; onSent: () => v
           <input className={field} type="date" value={date} max={todayDhaka()} onChange={(e) => setDate(e.target.value)} />
         </label>
 
+        {levyPeriods.length > 0 && (
+          <label className="block">
+            <span className="text-sm text-muted">{t('pay.purposeLabel')}</span>
+            <select className={field} value={purpose} onChange={(e) => { setPurpose(e.target.value as 'dues' | 'levy'); setPeriod(''); }}>
+              <option value="dues">{t('pay.purposeDues')}</option>
+              <option value="levy">{t('pay.purposeLevy')}</option>
+            </select>
+          </label>
+        )}
+
         <label className="block">
           <span className="text-sm text-muted">{t('pay.periodHint')}</span>
           <select className={field} value={period} onChange={(e) => setPeriod(e.target.value)}>
             <option value="">{t('pay.periodAny')}</option>
-            {periods.map((p) => (
+            {(purpose === 'levy' ? levyPeriods : periods).map((p) => (
               <option key={p} value={p}>{fmtPeriod(p)}</option>
             ))}
           </select>

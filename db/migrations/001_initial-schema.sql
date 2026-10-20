@@ -519,6 +519,26 @@ CREATE TABLE settlement_payouts (
   ledger_seq bigint
 );
 
+CREATE TABLE financing_arrangements (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  proposal_id uuid NOT NULL,
+  asset_id uuid NOT NULL REFERENCES assets,
+  counterparty text NOT NULL,
+  description text NOT NULL,
+  total_paisa bigint NOT NULL CHECK (total_paisa > 0),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE financing_instalments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  arrangement_id uuid NOT NULL REFERENCES financing_arrangements,
+  due_on date NOT NULL,
+  amount_paisa bigint NOT NULL CHECK (amount_paisa > 0),
+  paid_at timestamptz,
+  ledger_seq bigint
+);
+
+
 -- ============================================================
 -- RECONCILIATION AND OBJECTIONS
 -- ============================================================
@@ -698,6 +718,7 @@ CREATE UNIQUE INDEX idx_devices_refresh_hash ON devices(refresh_token_hash) WHER
 CREATE INDEX idx_activation_codes_user ON activation_codes(user_id, created_at DESC);
 CREATE INDEX idx_device_events_at ON device_events(at DESC);
 CREATE INDEX idx_settlement_payouts_settlement ON settlement_payouts(settlement_id);
+CREATE INDEX idx_financing_instalments_arrangement ON financing_instalments(arrangement_id);
 CREATE INDEX idx_objections_ledger ON objections(ledger_seq);
 
 -- ============================================================
@@ -900,6 +921,10 @@ CREATE TRIGGER no_delete_proposal_voters BEFORE DELETE ON proposal_voters
 CREATE TRIGGER no_delete_settlements BEFORE DELETE ON settlements
   FOR EACH ROW EXECUTE FUNCTION forbid_delete();
 CREATE TRIGGER no_delete_settlement_payouts BEFORE DELETE ON settlement_payouts
+  FOR EACH ROW EXECUTE FUNCTION forbid_delete();
+CREATE TRIGGER no_delete_financing_arrangements BEFORE DELETE ON financing_arrangements
+  FOR EACH ROW EXECUTE FUNCTION forbid_delete();
+CREATE TRIGGER no_delete_financing_instalments BEFORE DELETE ON financing_instalments
   FOR EACH ROW EXECUTE FUNCTION forbid_delete();
 CREATE TRIGGER no_delete_reconciliations BEFORE DELETE ON reconciliations
   FOR EACH ROW EXECUTE FUNCTION forbid_delete();

@@ -12,9 +12,10 @@ import { useAuth } from '../../lib/auth';
 import { useCountdown } from '../../lib/countdown';
 import { fmtInstant } from '../../lib/dates';
 import { parseAmountInput, taka } from '../../lib/money';
-import type { MemberRow, ProposalDetail } from '../../lib/types';
+import type { ProposalDetail } from '../../lib/types';
+import { FORM_TYPES, ProposalFields, buildPayload, emptyForm, type FormState } from './proposalForms';
 
-const CREATE_TYPES: ProposalType[] = ['general', 'suspension', 'rule_change'];
+const CREATE_TYPES: ProposalType[] = FORM_TYPES;
 
 interface ProposalListRow {
   id: string;
@@ -314,67 +315,37 @@ function CreateProposalForm({
 }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
-  const members = useQuery({ queryKey: ['members'], queryFn: () => api<{ items: MemberRow[] }>('/members') });
   const [expanded, setExpanded] = useState(false);
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
   const [clauseRef, setClauseRef] = useState('');
-  const [memberId, setMemberId] = useState('');
-  const [reason, setReason] = useState('');
-  const [ruleKey, setRuleKey] = useState('');
-  const [ruleValue, setRuleValue] = useState('');
-  const [validFrom, setValidFrom] = useState(new Date().toISOString().slice(0, 10));
+  const [form, setForm] = useState<FormState>(emptyForm);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
-  const reset = () => {
-    setTitle('');
-    setDescription('');
-    setClauseRef('');
-    setMemberId('');
-    setReason('');
-    setRuleKey('');
-    setRuleValue('');
-    setValidFrom(new Date().toISOString().slice(0, 10));
+  const changeType = (next: ProposalType) => {
+    setForm(emptyForm());
+    setError(null);
+    onTypeChange(next);
   };
 
   const submit = async () => {
     setBusy(true);
     setError(null);
     try {
-      let payload: Record<string, unknown>;
-      let subject_member_id: string | undefined;
-      let reqClauseRef: string | undefined;
-      if (type === 'general') {
-        payload = { text: (description || title).trim() };
-      } else if (type === 'suspension') {
-        if (!memberId || !reason.trim()) throw new ApiError(400, 'request.invalid', 'Member and reason required');
-        payload = { member_id: memberId, reason: reason.trim() };
-        subject_member_id = memberId;
-      } else if (type === 'rule_change') {
-        if (!ruleKey.trim() || !ruleValue.trim()) throw new ApiError(400, 'request.invalid', 'Key and value required');
-        const parsedValue = parseJsonOrString(ruleValue.trim());
-        payload = { key: ruleKey.trim(), value: parsedValue, valid_from: validFrom };
-      } else {
-        payload = {};
-      }
-      if (clauseRef.trim()) {
-        payload.clause_ref = clauseRef.trim();
-        reqClauseRef = clauseRef.trim();
-      }
-
+      const { payload, subject } = await buildPayload(type, form);
       await api('/proposals', {
         method: 'POST',
         body: {
           type,
           title: title.trim() || t(`proposalType.${type}`),
-          description,
           payload,
-          ...(subject_member_id ? { subject_member_id } : {}),
-          ...(reqClauseRef ? { clause_ref: reqClauseRef } : {}),
+          ...(subject ? { subject_member_id: subject } : {}),
+          ...(clauseRef.trim() ? { clause_ref: clauseRef.trim() } : {}),
         },
       });
-      reset();
+      setTitle('');
+      setClauseRef('');
+      setForm(emptyForm());
       setExpanded(false);
       void qc.invalidateQueries({ queryKey: ['proposals'] });
       onCreated();
@@ -402,7 +373,7 @@ function CreateProposalForm({
           <h3 className="font-semibold">{t('proposalsPage.newProposal')}</h3>
           <label className="block text-sm text-muted">
             {t('proposalsPage.type')}
-            <select className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={type} onChange={(e) => onTypeChange(e.target.value as ProposalType)}>
+            <select className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={type} onChange={(e) => changeType(e.target.value as ProposalType)}>
               {CREATE_TYPES.map((s) => (
                 <option key={s} value={s}>{t(`proposalType.${s}`)}</option>
               ))}
@@ -412,44 +383,12 @@ function CreateProposalForm({
             {t('proposal.title')}
             <input className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={title} onChange={(e) => setTitle(e.target.value)} />
           </label>
-          {(type === 'general' || type === 'suspension') && (
-            <label className="block text-sm text-muted">
-              {t('common.reason')}
-              <textarea className="mt-1 min-h-20 w-full rounded-md border border-input bg-background p-2" value={description} onChange={(e) => setDescription(e.target.value)} />
-            </label>
-          )}
-          {type === 'suspension' && (
-            <label className="block text-sm text-muted">
-              {t('common.member')}
-              <select className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={memberId} onChange={(e) => setMemberId(e.target.value)}>
-                <option value="">{t('membersAdmin.chooseMember')}</option>
-                {members.data?.items.filter((m) => m.status === 'active' || m.status === 'warning').map((m) => (
-                  <option key={m.id} value={m.id}>{m.code} {m.full_name}</option>
-                ))}
-              </select>
-            </label>
-          )}
-          {type === 'rule_change' && (
-            <>
-              <label className="block text-sm text-muted">
-                {t('rulesPage.key')}
-                <input className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={ruleKey} onChange={(e) => setRuleKey(e.target.value)} />
-              </label>
-              <label className="block text-sm text-muted">
-                {t('rulesPage.value')}
-                <textarea className="mt-1 min-h-20 w-full rounded-md border border-input bg-background p-2" value={ruleValue} onChange={(e) => setRuleValue(e.target.value)} />
-              </label>
-              <label className="block text-sm text-muted">
-                {t('rulesPage.validFrom')}
-                <input type="date" className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={validFrom} onChange={(e) => setValidFrom(e.target.value)} />
-              </label>
-            </>
-          )}
+          <ProposalFields type={type} form={form} onChange={setForm} />
           <label className="block text-sm text-muted">
             {t('proposal.clauseRef')}
             <input className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={clauseRef} onChange={(e) => setClauseRef(e.target.value)} />
           </label>
-          {error != null && <p className="text-bad">{error instanceof ApiError ? t(`errors.${error.code}`, { defaultValue: t('errors.generic') }) : t('errors.generic')}</p>}
+          {error != null && <p className="text-bad">{error instanceof ApiError && error.code === 'request.invalid' ? `${t('proposalFields.missing')}: ${t(`proposalFields.${error.message}`, { defaultValue: error.message })}` : error instanceof ApiError ? t(`errors.${error.code}`, { defaultValue: t('errors.generic') }) : t('errors.generic')}</p>}
           <div className="flex gap-2">
             <button type="submit" disabled={busy} className="h-10 rounded-md bg-primary px-3 text-primary-foreground disabled:opacity-50">{busy ? t('common.working') : t('common.submit')}</button>
             <button type="button" className="h-10 rounded-md border border-border px-3" onClick={() => setExpanded(false)}>{t('common.cancel')}</button>
@@ -537,7 +476,7 @@ function PayloadPreview({ payload }: { payload: Record<string, unknown> }) {
       <p className="mb-1 font-medium">{t('proposal.payload')}</p>
       {entries.map(([k, v]) => (
         <div key={k} className="grid grid-cols-[9rem_1fr] gap-2 py-1">
-          <span className="text-muted">{t(`proposal.payload.${k}`, { defaultValue: k })}</span>
+          <span className="text-muted">{t(`proposalFields.${k}`, { defaultValue: k })}</span>
           <span className="break-words">
             {k.toLowerCase().includes('amount') || k.toLowerCase().includes('paisa') ? taka(String(v)) : typeof v === 'object' ? JSON.stringify(v) : typeof v === 'boolean' ? (v ? t('common.yes') : t('common.no')) : String(v)}
           </span>
@@ -547,10 +486,3 @@ function PayloadPreview({ payload }: { payload: Record<string, unknown> }) {
   );
 }
 
-function parseJsonOrString(value: string): unknown {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return value;
-  }
-}

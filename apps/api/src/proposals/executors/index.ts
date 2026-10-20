@@ -1,15 +1,17 @@
 import type { ProposalType } from '@barakah/shared';
 import {
-  assetCostLevyExecutor,
   contributionChangeExecutor,
   dissolutionExecutor,
-  financingArrangementExecutor,
   generalExecutor,
   landSelectionExecutor,
-  memberQardExecutor,
   projectClosureExecutor,
-  windUpExecutor,
 } from './general';
+import {
+  assetCostLevyExecutor,
+  financingArrangementExecutor,
+  memberQardExecutor,
+  windUpExecutor,
+} from './obligations';
 import {
   assetSaleExecutor,
   charityDonationExecutor,

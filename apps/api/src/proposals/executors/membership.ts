@@ -22,6 +22,10 @@ export const newMemberExecutor: ExecutorSignature = async (db, proposal, _input,
     note?: string;
   };
   const today = deps.clock.todayDhaka();
+  const windUp = await db.query(`SELECT 1 FROM settings WHERE key = 'wind_up'`);
+  if ((windUp.rowCount ?? 0) > 0) {
+    throw badRequest('wind_up.no_new_members', 'The fund is being wound up; no new members can join');
+  }
   const nav = await computeNav(db, today);
   if (nav.stale_valuations) {
     throw badRequest('nav.stale_valuation', 'Held asset valuations are stale; run a valuation_update first');

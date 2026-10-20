@@ -101,9 +101,17 @@ async function ensureMemberCanPropose(db: Db, memberId: string): Promise<void> {
   }
 }
 
-async function getPolicy(db: Db, type: ProposalType): Promise<{ basis: VotingBasis; threshold_kind: ThresholdKind }> {
-  const res = await db.query(`SELECT basis, threshold_kind FROM proposal_policies WHERE type = $1`, [type]);
-  const row = res.rows[0] as { basis: VotingBasis; threshold_kind: ThresholdKind } | undefined;
+async function getPolicy(
+  db: Db,
+  type: ProposalType,
+): Promise<{ basis: VotingBasis; threshold_kind: ThresholdKind; requires_feasibility: boolean }> {
+  const res = await db.query(
+    `SELECT basis, threshold_kind, requires_feasibility FROM proposal_policies WHERE type = $1`,
+    [type],
+  );
+  const row = res.rows[0] as
+    | { basis: VotingBasis; threshold_kind: ThresholdKind; requires_feasibility: boolean }
+    | undefined;
   if (!row) throw badRequest('proposal.unknown_type', 'Unknown proposal type');
   return row;
 }
@@ -199,6 +207,26 @@ export async function createProposal(
   });
 }
 
+/**
+ * An investment can only go to a vote with every compliance box ticked (spec 18.3) and, where the
+ * policy asks for one, a feasibility file. Checked here, not at creation, so a draft can be worked on.
+ */
+function assertReadyToOpen(proposal: ProposalRow, requiresFeasibility: boolean): void {
+  if (proposal.type !== 'investment_purchase') return;
+  const payload = proposal.payload as { compliance?: Record<string, unknown>; feasibility_file_id?: string };
+  const unticked = Object.entries(payload.compliance ?? {})
+    .filter(([, ok]) => ok !== true)
+    .map(([key]) => key);
+  if (unticked.length > 0) {
+    throw badRequest('proposal.compliance_incomplete', 'Every compliance check must be ticked before voting', {
+      unticked,
+    });
+  }
+  if (requiresFeasibility && !payload.feasibility_file_id) {
+    throw badRequest('proposal.feasibility_required', 'This kind of investment needs a feasibility file before voting');
+  }
+}
+
 export async function openProposal(
   deps: ProposalDeps,
   user: AuthUser,
@@ -218,6 +246,7 @@ export async function openProposal(
     }
 
     const policy = await getPolicy(db, proposal.type);
+    assertReadyToOpen(proposal, policy.requires_feasibility);
     const today = deps.clock.todayDhaka();
     const excludedSubject = proposal.subject_member_id ? [proposal.subject_member_id] : [];
 

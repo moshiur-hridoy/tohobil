@@ -14,6 +14,8 @@ export interface PaymentPostingInput {
   paymentId: string;
   /** Allocated to dues (monthly, start boost, entry): becomes member capital. */
   principalPaisa: bigint;
+  /** Where principal is credited: member capital, or `LEVY_CLEARING` for a levy (never capital, never NAV). */
+  principalAccount?: 'MEMBER_CAPITAL' | 'LEVY_CLEARING';
   /** Unallocated remainder: still the member's capital (5.4). */
   creditPaisa: bigint;
   /** Allocated to fines (late or absence): charity money, never fund income (18.2). */
@@ -24,7 +26,7 @@ export interface PaymentPostingInput {
  * The ledger entries of a confirmed payment (5.4), one per non-zero component, all with
  * `ref_type='payment'` and the member set:
  *
- *   principal -> DR <method account>, CR MEMBER_CAPITAL
+ *   principal -> DR <method account>, CR MEMBER_CAPITAL   (a levy credits LEVY_CLEARING instead, 18.7)
  *   credit    -> DR <method account>, CR MEMBER_CAPITAL
  *   fine      -> DR <method account>, CR CHARITY_PAYABLE      (18.2; FINE_INCOME is retired)
  *
@@ -32,7 +34,7 @@ export interface PaymentPostingInput {
  */
 export function paymentPostings(i: PaymentPostingInput): PostingInput[] {
   const parts = [
-    { name: 'principal', amount: i.principalPaisa, credit: 'MEMBER_CAPITAL' },
+    { name: 'principal', amount: i.principalPaisa, credit: i.principalAccount ?? 'MEMBER_CAPITAL' },
     { name: 'credit', amount: i.creditPaisa, credit: 'MEMBER_CAPITAL' },
     { name: 'fine', amount: i.finePaisa, credit: 'CHARITY_PAYABLE' },
   ] as const;

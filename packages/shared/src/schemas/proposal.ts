@@ -198,6 +198,7 @@ export const memberQardPayloadSchema = z.object({
 });
 
 export const financingArrangementPayloadSchema = z.object({
+  asset_id: z.string().uuid(),
   counterparty: z.string().min(1),
   description: z.string().min(3),
   total_paisa: paisaStringSchema,

@@ -83,13 +83,13 @@ Legend: `[x]` done, `[ ]` to do.
 - [x] Cashier "not reachable by push" list; `GET /notifications/admin`; `POST /notifications/nudge` (1 per member per 6 h)
 - [x] Admin notifications page (web UI)
 - [ ] PWA update behaviour verified (prompt, old caches cleared)
-- [ ] Capacitor Android build, secure storage for refresh token and install id, push permission rationale, deep links
-- [ ] Onboarding screens (battery optimisation, autostart by brand), repeat after 3 days
+- [ ] (optional, later; members use the installable web app meanwhile) Capacitor Android build, secure storage for refresh token and install id, push permission rationale, deep links
+- [ ] (optional, later, Android only) Onboarding screens (battery optimisation, autostart by brand), repeat after 3 days
 - [x] `GET /app/version`
   - [ ] In-app update banner
-  - [ ] `pnpm android:release` tested
+  - [ ] (optional, later) `pnpm android:release` tested
 - [x] Simulated-year jobs test; e2e scenario (3)
-- [ ] Signed debug APK installs and receives a test push (manual checklist in `docs/PHASE-2.md`)
+- [ ] (optional, later) Signed debug APK installs and receives a test push (manual checklist in `docs/PHASE-2.md`)
 - [ ] `docs/PHASE-2.md`, **stop for owner review**
 
 ## Phase 3: Governance
@@ -110,18 +110,21 @@ Legend: `[x]` done, `[ ]` to do.
 - [x] Tests: voting, suspension, settlement, invariants; e2e scenarios (4) and (5)
 - [x] `docs/PHASE-3.md`, **stop for owner review**
 
-## Phase 4: Assets and NAV (backend core done; proposal wiring pending Phase 3)
-- [x] Assets, valuations, documents (`GET/POST /assets`, `/assets/:id/valuations`, `/assets/:id/documents`) — direct cashier routes; proposal enforcement once Phase 3 exists
+## Phase 4: Assets and NAV (done)
+- [x] Assets, valuations, documents (`GET /assets`, `/assets/:id/valuations`, `/assets/:id/documents`). A cashier can only note down a `planned` asset; cost, status, sale and valuation move only through proposals, staged payments or completion
 - [x] Acquiring assets in NAV at amount paid so far (19.2); sold assets excluded
 - [x] `GET /nav` with breakdown, deductions and stale-valuation list
 - [x] Rent streams, expected rent, receipts (`GET/POST /rent/streams`, `/rent/expected`, `/rent/expected/:id/receive`, `/rent/expected/generate`), single source `rent_expected`
-- [ ] `POST /assets/:id/sale`, sale/distribution/escrow payout via approved proposals (Phase 3)
-- [ ] Compliance checklist, feasibility file, levy, `member_qard`, `financing_arrangement`, property title fields, wind-up
-- [ ] Member screens: assets list and detail / NAV page
-- [ ] Cashier screens: assets, rent
-- [x] NAV tests and asset/rent lifecycle tests
-- [ ] New-member NAV invariance test (needs Phase 3 new-member flow)
-- [ ] `docs/PHASE-4.md`, **stop for owner review**
+- [x] Sale, distribution and escrow payout through approved proposals (`asset_sale`, `distribution`, settlement payouts); no direct sale route by design
+- [x] Staged payments on land or a house (`POST /assets/:id/payments`) and completion (`POST /assets/:id/complete`: needs a note, a document, and for land or a house a deed and an ownership split covering every share)
+- [x] Compliance checklist and feasibility file enforced when an investment is opened for voting
+- [x] Levy (`asset_cost_levy` creates levy dues, payments with purpose `levy` go to `LEVY_CLEARING`, `POST /levy/remittances`), `member_qard`, `financing_arrangement` (instalments, `POST /financing/instalments/:id/pay`), wind-up (stops dues and new members)
+- [x] Property title fields (`legal_owner_name`, `ownership_split`)
+- [x] Member screens: assets list and detail / NAV page
+- [x] Cashier screens: assets, rent, obligations (levy and deferred purchases), and a proposal form for every proposal type
+- [x] NAV tests, asset/rent lifecycle tests, obligations tests (levy, qard, financing, wind-up, staged purchase, no-loan check)
+- [x] New-member NAV invariance test (`members/entry.test.ts`)
+- [x] `docs/PHASE-4.md`
 
 ## Phase 5: Audit and operations
 - [ ] Reconciliation entry, auditor approval, period locks

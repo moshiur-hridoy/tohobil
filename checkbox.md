@@ -69,18 +69,25 @@ Legend: `[x]` done, `[ ]` to do.
 - [x] `docs/PHASE-1.md` finalised, `pnpm check` green, **stop for owner review**
 
 ## Phase 2: Notifications and automation
-- [ ] Notification engine, templates (due reminder, fine notice, ack, final notice, meeting reminder)
-- [ ] FCM push (`firebase-admin`), device token registration (`POST /devices`)
-- [ ] `SmsProvider` (console, generic HTTP), `sms_enabled=false` default
-- [ ] In-app inbox: `GET /notifications`, `POST /notifications/:id/open`
-- [ ] pg-boss jobs from Section 9 except governance ones (reminders, fines, quiet hours, pause while payment pending)
+- [x] Notification engine, templates and channel policy (`notifications/catalog.ts`, `notifications/service.ts`)
+  - [x] Templates: `due_reminder`, `fine_notice`, `payment_submitted_ack`, `payment_confirmed`, `payment_rejected`, `final_notice`, `meeting_reminder`, etc.
+  - [x] Quiet-hours guard and SMS opt-out handling
+  - [ ] Pause reminders while a payment is pending (engine supports it; not wired yet)
+- [x] FCM push (`firebase-admin`), console fallback, and device token registration (`POST /devices`)
+- [x] `SmsProvider` (console, generic HTTP), `sms_enabled=false` default
+- [x] In-app inbox: `GET /notifications`, `POST /notifications/:id/open`
+- [x] pg-boss scheduler and core jobs (`jobs/index.ts` + workers)
+  - [x] `send-notifications`, `sms-fallback`, `generate-dues`, `apply-fines`, `remind-dues`, `notify-fines`, pending-payment alert, cleanup
+  - [ ] Final-notice / auto-suspension jobs (Phase 3 governance)
 - [ ] Auditor push on device events
-- [ ] Cashier "not reachable by push" daily list; `GET /notifications/admin`; `POST /notifications/nudge` (1 per member per 6 h)
-- [ ] Admin notifications page
+- [x] Cashier "not reachable by push" list; `GET /notifications/admin`; `POST /notifications/nudge` (1 per member per 6 h)
+- [ ] Admin notifications page (web UI)
 - [ ] PWA update behaviour verified (prompt, old caches cleared)
 - [ ] Capacitor Android build, secure storage for refresh token and install id, push permission rationale, deep links
 - [ ] Onboarding screens (battery optimisation, autostart by brand), repeat after 3 days
-- [ ] `GET /app/version` and in-app update banner; `pnpm android:release` tested
+- [x] `GET /app/version`
+  - [ ] In-app update banner
+  - [ ] `pnpm android:release` tested
 - [ ] Simulated-year jobs test; e2e scenario (3)
 - [ ] Signed debug APK installs and receives a test push (manual checklist in `docs/PHASE-2.md`)
 - [ ] `docs/PHASE-2.md`, **stop for owner review**

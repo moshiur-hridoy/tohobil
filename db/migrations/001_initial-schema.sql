@@ -1292,6 +1292,13 @@ BEGIN
     GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO barakah_app;
     -- DELETE only where the lifecycle genuinely purges rows (cleanup job).
     GRANT DELETE ON idempotency_keys, activation_codes TO barakah_app;
+
+    -- pg-boss job queue runs in its own schema and the app role creates its own objects there.
+    CREATE SCHEMA IF NOT EXISTS pgboss;
+    GRANT USAGE, CREATE ON SCHEMA pgboss TO barakah_app;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA pgboss GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO barakah_app;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA pgboss GRANT USAGE, SELECT ON SEQUENCES TO barakah_app;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA pgboss GRANT EXECUTE ON FUNCTIONS TO barakah_app;
     -- Append-only tables: no UPDATE/DELETE/TRUNCATE for the app (triggers enforce this for everyone).
     REVOKE UPDATE ON ledger_entries, audit_log, payment_allocations, member_snapshots,
       asset_valuations, rules, member_status_events, device_events, charity_donations FROM barakah_app;

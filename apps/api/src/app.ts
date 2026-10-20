@@ -12,8 +12,8 @@ import {
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import type { Logger } from 'pino';
-import { healthRoutes } from './routes/health';
 import { createLogger } from './lib/logger';
+import { healthRoutes } from './routes/health';
 import { errorHandler, buildProblem } from './lib/error-handler';
 import { AppError } from './lib/errors';
 import { parseTrustProxy, type Env } from './lib/env';
@@ -28,14 +28,21 @@ import { ledgerRoutes } from './routes/ledger';
 import { paymentRoutes } from './routes/payments';
 import { matrixRoutes } from './routes/matrix';
 import { objectionRoutes } from './routes/objections';
+import { notificationRoutes } from './routes/notifications';
 import { FileStore } from './files/storage';
 import { createGuards } from './auth/guards';
+import { createSmsProvider } from './notifications/providers/sms';
+import { ConsolePushSender, FcmPushSender } from './notifications/providers/push';
+import type { PushSender } from './notifications/providers/push';
+import type { SmsProvider } from './notifications/providers/sms';
 
-export interface BuildAppOptions {
+  export interface BuildAppOptions {
   env: Env;
   db: DbHandle;
   logger?: Logger;
   clock?: Clock;
+  pushSender?: PushSender;
+  smsProvider?: SmsProvider;
 }
 
 /** Files that must never be served from cache, or users keep running a stale app (spec 8, PWA). */
@@ -57,8 +64,33 @@ export async function buildApp({
   db,
   logger,
   clock = systemClock,
+  pushSender: pushSenderOpt,
+  smsProvider: smsProviderOpt,
 }: BuildAppOptions): Promise<FastifyInstance> {
   const log: FastifyBaseLogger = logger ?? createLogger(env.LOG_LEVEL);
+
+  const appVersionDefaults = {
+    min: env.APP_MIN_VERSION,
+    latest: env.APP_LATEST_VERSION,
+    download_url: env.APK_DOWNLOAD_URL,
+  };
+
+  const fcmFile = env.FCM_SERVICE_ACCOUNT_JSON_PATH;
+  const pushSender =
+    pushSenderOpt ??
+    (fcmFile && existsSync(fcmFile) ? new FcmPushSender() : new ConsolePushSender(log as unknown as Logger));
+  const smsProvider =
+    smsProviderOpt ??
+    createSmsProvider(
+      {
+        provider: env.SMS_PROVIDER,
+        httpUrl: env.SMS_HTTP_URL,
+        apiKey: env.SMS_HTTP_API_KEY,
+        senderId: env.SMS_SENDER_ID,
+        bodyTemplate: env.SMS_HTTP_BODY_TEMPLATE,
+      },
+      log as unknown as Logger,
+    );
 
   const app = Fastify({
     // Pass our pino instance so request.log works (with `logger: false` every request.log call,
@@ -154,6 +186,13 @@ export async function buildApp({
     await app.register(paymentRoutes(deps, guards), { prefix: '/api/v1' });
     await app.register(matrixRoutes(deps, guards), { prefix: '/api/v1' });
     await app.register(objectionRoutes(deps, guards), { prefix: '/api/v1' });
+    await app.register(
+      notificationRoutes(
+        { pool: deps.pool, clock: deps.clock, appVersionDefaults, pushSender, smsProvider },
+        guards,
+      ),
+      { prefix: '/api/v1' },
+    );
     await app.register(
       fileRoutes(
         {

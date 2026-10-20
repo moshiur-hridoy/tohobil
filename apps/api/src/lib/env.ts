@@ -27,6 +27,9 @@ const envSchema = z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
       .default('info'),
     APP_VERSION: z.string().default('0.1.0'),
+    APK_DOWNLOAD_URL: z.string().url().default('http://localhost:5173/app-release.apk'),
+    APP_MIN_VERSION: z.string().regex(/^\d+\.\d+\.\d+$/).default('0.1.0'),
+    APP_LATEST_VERSION: z.string().regex(/^\d+\.\d+\.\d+$/).default('0.1.0'),
 
     /** Fastify trustProxy: 'false', 'true', or a comma-separated list of IPs/CIDRs (the tunnel network). */
     TRUST_PROXY: z.string().default('false'),
@@ -39,6 +42,7 @@ const envSchema = z
      * Production mounts the `files` volume here (/data/files); the dev default is a git-ignored folder.
      */
     FILES_DIR: z.string().min(1).default('data/files'),
+    FCM_SERVICE_ACCOUNT_JSON_PATH: z.string().default('./service-account.json'),
 
     // Secrets (spec 11). Real use arrives in Phase 1; validating them now catches bad deployments early.
     APP_ENCRYPTION_KEY: z
@@ -56,6 +60,10 @@ const envSchema = z
     UPLOAD_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(30),
 
     SMS_PROVIDER: z.enum(['console', 'http']).default('console'),
+    SMS_HTTP_URL: z.string().url().optional(),
+    SMS_HTTP_API_KEY: z.string().optional(),
+    SMS_SENDER_ID: z.string().max(20).optional(),
+    SMS_HTTP_BODY_TEMPLATE: z.string().max(500).optional(),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== 'production') return;

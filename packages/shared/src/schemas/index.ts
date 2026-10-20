@@ -9,3 +9,4 @@ export * from './auth';
 export * from './common';
 export * from './objection';
 export * from './matrix';
+export * from './notification';

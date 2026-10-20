@@ -46,6 +46,8 @@ pnpm check
 
 ### Also in this phase
 
+- **Settlement view**: `GET /settlements` returns the caller's settlements (all of them for cashier and auditor) with the snapshot numbers and payout plan; `SettlementPage` shows them. Tested in `members/settlement-view.test.ts`.
+- **Clause links**: a rule's `clause_ref` links to `/menu/constitution?clause=<ref>`, which opens the matching clause. It matches `clause_no` exactly, so seed clause numbers in the same form as the rule refs.
 - **Member status machine and jobs** (`members/status.ts`, `jobs/workers/status.ts`): warning after consecutive unpaid months, final notice, and auto-suspension after `final_notice_days` when `auto_suspend` is on. Tested in `members/status.test.ts`.
 - **Settlement, new-member entry, contact log** (`members/settlement.ts`, `members/entry.ts`, `members/contact.ts`).
 - **Constitution**: versions, clause search and per-member ack (`routes/constitution.ts`). The member screen (`ConstitutionPage`) reads these endpoints, opens the PDF through an authenticated blob fetch, and lists older versions.
@@ -54,7 +56,6 @@ pnpm check
 
 ## Known gaps
 
-- `SettlementPage` (member menu, `/menu/settlement`) is still a static design with sample data: no endpoint exposes a member's own settlement quote yet.
 - `ConstitutionPage` shows what is seeded in `constitution_versions`; seeding from the private PDF is an owner step, not in the repo.
 - Testcontainers does not start on the owner's Mac (`reading 'bind'`), so a plain `pnpm test` skips the 324 DB tests. Run with `TEST_DATABASE_URL=<superuser url> REQUIRE_DB_TESTS=1`.
 

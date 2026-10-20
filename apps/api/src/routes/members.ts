@@ -28,7 +28,7 @@ import {
 } from '../members/service';
 import { reinstateMember } from '../members/status';
 import { addContactLogEntry, listContactLog } from '../members/contact';
-import { recordSettlementPayout } from '../members/settlement';
+import { listSettlements, recordSettlementPayout } from '../members/settlement';
 
 const idParams = z.object({ id: uuidSchema });
 
@@ -143,6 +143,12 @@ export function memberRoutes(deps: MemberRouteDeps, guards: Guards) {
       trx_id: z.string().trim().max(100).optional(),
       note: z.string().trim().max(500).optional(),
     });
+
+    app.get(
+      '/settlements',
+      { preHandler: authenticate, schema: { querystring: z.object({ member_id: uuidSchema.optional() }) } },
+      (req) => listSettlements(deps.pool, requireAuth(req), req.query.member_id),
+    );
 
     app.post(
       '/settlements/:id/payouts',

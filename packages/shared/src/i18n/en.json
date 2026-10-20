@@ -949,31 +949,23 @@
     }
   },
   "settlement": {
-    "title": "Settlement quote",
-    "subtitle": "Estimated exit calculation",
-    "shareBasedTag": "Share-based",
-    "timeRemainingTag": "15 days left",
-    "earlyExitTag": "Early exit",
-    "humanitarianTag": "Humanitarian",
-    "inactiveTag": "Inactive",
-    "deathTag": "Death",
-    "memberInitial": "Ja",
-    "memberName": "Jamal Uddin",
-    "memberNameShares": "Jamal Uddin · 4 shares",
-    "paidInCapital": "Paid-in capital",
+    "title": "Settlement",
+    "subtitle": "Exit calculation",
     "serviceCharge": "Service charge",
     "unpaidFines": "Unpaid fines",
     "netRefund": "Net refund",
-    "dates": {
-      "feb15": "15 Feb",
-      "mar15": "15 Mar",
-      "apr15": "15 Apr"
-    },
     "disclaimer": "This is an estimate. Final payout requires auditor approval.",
     "payoutPlan": "Payout plan",
-    "checkReturnWithinCapital": "Return within capital",
-    "checkFeeExactlyTen": "Service charge exactly 10%",
-    "checkInstallmentsEqualNet": "Installments equal net refund"
+    "empty": "No settlements.",
+    "gross": "Gross entitlement",
+    "escrow": "Held in escrow",
+    "unpaidDues": "Unpaid dues",
+    "paid": "paid",
+    "status": {
+      "approved": "Approved",
+      "paying": "Paying",
+      "completed": "Completed"
+    }
   },
   "proposalsPage": {
     "title": "Proposals",

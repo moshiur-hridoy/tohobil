@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ConfirmSheet } from '../../components/ConfirmSheet';
@@ -55,7 +56,14 @@ export function RulesPage() {
                   <li key={`${key}-${r.valid_from}`} className="flex justify-between py-2">
                     <div>
                       <span className="font-mono">{renderValue(r.value)}</span>
-                      {r.clause_ref && <span className="ml-2 text-muted">{t('rulesPage.clause')}: {r.clause_ref}</span>}
+                      {r.clause_ref && (
+                        <span className="ml-2 text-muted">
+                          {t('rulesPage.clause')}:{' '}
+                          <Link to={`/menu/constitution?clause=${encodeURIComponent(r.clause_ref)}`} className="text-primary underline">
+                            {r.clause_ref}
+                          </Link>
+                        </span>
+                      )}
                     </div>
                     <div className="text-muted">{fmtDate(r.valid_from)}</div>
                   </li>

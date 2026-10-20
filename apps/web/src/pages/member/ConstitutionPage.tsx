@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ListSkeleton } from '../../components/Skeleton';
 import { Empty, LoadError } from '../../components/StateViews';
@@ -36,6 +36,8 @@ export function ConstitutionPage() {
   const [query, setQuery] = useState('');
   const [debounced, setDebounced] = useState('');
   const [open, setOpen] = useState<string | null>(null);
+  const [params] = useSearchParams();
+  const wantedClause = params.get('clause');
 
   useEffect(() => {
     const id = setTimeout(() => setDebounced(query.trim()), 250);
@@ -53,6 +55,12 @@ export function ConstitutionPage() {
     queryFn: () => api<VersionDetail>(`/constitution/versions/${versionId}`),
     enabled: versionId !== null,
   });
+
+  // A rule's clause link (/menu/constitution?clause=2.4) opens that clause in the shown version.
+  useEffect(() => {
+    const hit = detail.data?.clauses.find((c) => c.clause_no === wantedClause);
+    if (hit) setOpen(hit.id);
+  }, [detail.data, wantedClause]);
 
   const search = useQuery({
     queryKey: ['constitution-search', versionId, debounced],
@@ -169,7 +177,7 @@ export function ConstitutionPage() {
               ) : (
                 <ul>
                   {clauses.map((c) => (
-                    <li key={c.id} className="border-b border-border py-2 last:border-b-0">
+                    <li key={c.id} id={`clause-${c.clause_no}`} className="border-b border-border py-2 last:border-b-0">
                       <button
                         type="button"
                         aria-expanded={open === c.id}

@@ -949,31 +949,23 @@
     }
   },
   "settlement": {
-    "title": "সেটেলমেন্ট হিসাব",
-    "subtitle": "প্রস্থানের আনুমানিক হিসাব",
-    "shareBasedTag": "শেয়ার ভিত্তিক",
-    "timeRemainingTag": "১৫ দিন বাকি",
-    "earlyExitTag": "আগাম প্রস্থান",
-    "humanitarianTag": "মানবিক কারণ",
-    "inactiveTag": "নিষ্ক্রিয়",
-    "deathTag": "মৃত্যু",
-    "memberInitial": "জা",
-    "memberName": "জামাল উদ্দিন",
-    "memberNameShares": "জামাল উদ্দিন · ৪ শেয়ার",
-    "paidInCapital": "জমা মূলধন",
+    "title": "সেটেলমেন্ট",
+    "subtitle": "প্রস্থানের হিসাব",
     "serviceCharge": "সেবা চার্জ",
     "unpaidFines": "অপরিশোধিত জরিমানা",
     "netRefund": "নেট ফেরত",
-    "dates": {
-      "feb15": "১৫ ফেব্রুয়ারি",
-      "mar15": "১৫ মার্চ",
-      "apr15": "১৫ এপ্রিল"
-    },
     "disclaimer": "এটি আনুমানিক। চূড়ান্ত অডিটর অনুমোদনের পর পরিশোধ হবে।",
     "payoutPlan": "কিস্তির পরিকল্পনা",
-    "checkReturnWithinCapital": "ফেরত মূলধনের মধ্যে",
-    "checkFeeExactlyTen": "সেবা চার্জ ১০%",
-    "checkInstallmentsEqualNet": "কিস্তির যোগফল নেট ফেরতের সমান"
+    "empty": "কোনো সেটেলমেন্ট নেই।",
+    "gross": "মোট প্রাপ্য",
+    "escrow": "জমা রাখা অংশ",
+    "unpaidDues": "বকেয়া চাঁদা",
+    "paid": "পরিশোধিত",
+    "status": {
+      "approved": "অনুমোদিত",
+      "paying": "পরিশোধ চলছে",
+      "completed": "সম্পন্ন"
+    }
   },
   "proposalsPage": {
     "title": "প্রস্তাব",

@@ -473,3 +473,71 @@ export async function recordSettlementPayout(
 }
 
 export { toPaisaBig };
+
+export interface SettlementView {
+  id: string;
+  member_id: string;
+  member_code: string;
+  member_name: string;
+  kind: SettlementKind;
+  status: 'approved' | 'paying' | 'completed';
+  gross_paisa: string;
+  escrow_paisa: string;
+  principal_paisa: string;
+  fines_paisa: string;
+  exit_fee_paisa: string;
+  net_paisa: string;
+  taken_on: string;
+  payouts: Array<{ due_on: string; amount_paisa: string; paid_at: string | null }>;
+}
+
+/**
+ * Settlements a user may see: their own, or everyone's for the cashier and the auditor. Amounts come
+ * from the snapshot taken when the quote was approved, so the screen shows the numbers voted on.
+ */
+export async function listSettlements(
+  db: Db,
+  user: { member_id: string; roles: string[] },
+  memberId?: string,
+): Promise<{ items: SettlementView[] }> {
+  const privileged = user.roles.includes('cashier') || user.roles.includes('auditor');
+  const scope = privileged ? (memberId ?? null) : user.member_id;
+  const res = await db.query(
+    `SELECT s.id, s.member_id, m.code AS member_code, m.full_name AS member_name, s.kind, s.status,
+            s.net_paisa::text AS net_paisa, s.payout_plan,
+            sn.taken_on::text AS taken_on, sn.gross_paisa::text AS gross_paisa,
+            sn.escrow_paisa::text AS escrow_paisa, sn.deductions,
+            coalesce((SELECT jsonb_agg(jsonb_build_object('due_on', p.due_on::text,
+                        'amount_paisa', p.amount_paisa::text, 'paid_at', p.paid_at) ORDER BY p.due_on)
+                      FROM settlement_payouts p WHERE p.settlement_id = s.id), '[]'::jsonb) AS payout_rows
+     FROM settlements s
+     JOIN members m ON m.id = s.member_id
+     JOIN member_snapshots sn ON sn.id = s.snapshot_id
+     WHERE ($1::uuid IS NULL OR s.member_id = $1)
+     ORDER BY s.created_at DESC`,
+    [scope],
+  );
+  return {
+    items: res.rows.map((r) => {
+      const ded = (r.deductions ?? {}) as Record<string, string | number>;
+      const rows = r.payout_rows as Array<{ due_on: string; amount_paisa: string; paid_at: string | null }>;
+      const plan = r.payout_plan as Array<{ due_on: string; amount_paisa: string }>;
+      return {
+        id: r.id,
+        member_id: r.member_id,
+        member_code: r.member_code,
+        member_name: r.member_name,
+        kind: r.kind,
+        status: r.status,
+        gross_paisa: r.gross_paisa ?? '0',
+        escrow_paisa: r.escrow_paisa ?? '0',
+        principal_paisa: String(ded.principal_paisa ?? '0'),
+        fines_paisa: String(ded.fines_paisa ?? '0'),
+        exit_fee_paisa: String(ded.exit_fee_paisa ?? '0'),
+        net_paisa: r.net_paisa,
+        taken_on: r.taken_on,
+        payouts: rows.length > 0 ? rows : plan.map((p) => ({ ...p, paid_at: null })),
+      };
+    }),
+  };
+}

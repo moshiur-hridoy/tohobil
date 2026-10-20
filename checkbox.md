@@ -102,9 +102,9 @@ Legend: `[x]` done, `[ ]` to do.
 - [x] Charity donations flow and statement inputs
 - [x] Contact log
 - [x] Constitution tab: versions, clause search, "I have read it", PDF link (seeding from the private file is an owner step)
-  - [ ] Clause links from rules
+  - [x] Clause links from rules (`?clause=` on the constitution page; matches `clause_ref` to `clause_no` exactly)
 - [x] Member screens: votes list and detail (countdown, voter list, big Yes/No/Abstain)
-- [ ] Member settlement screen (`/menu/settlement` is still a static mock; needs a quote endpoint)
+- [x] Member settlement screen (`GET /settlements`: own settlements, everyone's for cashier and auditor)
 - [x] Cashier screens: proposals (checklists), members (status history, actions create proposals), rules
 - [x] Owner-decision conflict banner (18.12)
 - [x] Tests: voting, suspension, settlement, invariants; e2e scenarios (4) and (5)

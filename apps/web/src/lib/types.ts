@@ -380,3 +380,20 @@ export interface OwnerConflict {
   status: 'open' | 'resolved';
   raised_at: string;
 }
+
+export interface SettlementView {
+  id: string;
+  member_id: string;
+  member_code: string;
+  member_name: string;
+  kind: 'early_exit' | 'compassionate_exit' | 'inactive_return' | 'death_surrender' | 'wind_up';
+  status: 'approved' | 'paying' | 'completed';
+  gross_paisa: string;
+  escrow_paisa: string;
+  principal_paisa: string;
+  fines_paisa: string;
+  exit_fee_paisa: string;
+  net_paisa: string;
+  taken_on: string;
+  payouts: Array<{ due_on: string; amount_paisa: string; paid_at: string | null }>;
+}

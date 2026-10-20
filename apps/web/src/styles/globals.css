@@ -1,0 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Noto Sans Bengali is self-hosted: the @fontsource CSS (imported in main.tsx) is bundled by Vite
+   together with its woff2 files, so no request ever leaves the app origin (CSP: font-src 'self'). */

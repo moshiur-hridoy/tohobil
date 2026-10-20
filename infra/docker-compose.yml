@@ -1,0 +1,141 @@
+# Production stack (spec 12). Run from the infra/ directory with the repo-level env file:
+#   cd infra && docker compose --env-file ../.env up -d
+# Images are built off-server (`docker buildx`) and shipped by registry or `docker save | ssh ... docker load`.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    mem_limit: 384m
+    shm_size: 128m
+    command: >
+      postgres -c shared_buffers=64MB -c effective_cache_size=256MB
+      -c work_mem=4MB -c maintenance_work_mem=32MB -c max_connections=20
+      -c wal_compression=on -c checkpoint_timeout=15min -c timezone=UTC
+      -c log_min_duration_statement=500
+    environment:
+      POSTGRES_DB: barakah
+      POSTGRES_USER: barakah_migrator
+      POSTGRES_PASSWORD: ${MIGRATOR_DB_PASSWORD:?set MIGRATOR_DB_PASSWORD}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?set APP_DB_PASSWORD}
+      READONLY_DB_PASSWORD: ${READONLY_DB_PASSWORD:?set READONLY_DB_PASSWORD}
+    volumes:
+      # Must live on a different disk/path than the `backups` volume (spec 12).
+      - pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U barakah_migrator -d barakah']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *logging
+
+  migrate:
+    image: barakah-api:${TAG:?set TAG}
+    command: ['node', 'dist/migrate.js'] # one-shot, runs before the api
+    restart: 'no'
+    environment:
+      MIGRATOR_DATABASE_URL: ${MIGRATOR_DATABASE_URL:?set MIGRATOR_DATABASE_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+    logging: *logging
+
+  api:
+    image: barakah-api:${TAG:?set TAG} # serves /api and the built web app at /
+    restart: unless-stopped
+    mem_limit: 384m
+    ports:
+      - '127.0.0.1:3000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      HOST: 0.0.0.0
+      APP_VERSION: ${TAG}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Keep V8's heap below the container limit so a leak ends in a GC, not an OOM kill.
+      NODE_OPTIONS: --max-old-space-size=256
+      # Only the compose network (cloudflared) may set X-Forwarded-*.
+      TRUST_PROXY: ${TRUST_PROXY:-172.16.0.0/12}
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:?set APP_ENCRYPTION_KEY}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      TOKEN_PEPPER: ${TOKEN_PEPPER:?set TOKEN_PEPPER}
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?set PUBLIC_ORIGIN}
+      FCM_SERVICE_ACCOUNT_JSON_PATH: /run/secrets/fcm_service_account
+      SMS_PROVIDER: ${SMS_PROVIDER:-console}
+      SMS_HTTP_URL: ${SMS_HTTP_URL:-}
+      SMS_HTTP_API_KEY: ${SMS_HTTP_API_KEY:-}
+      SMS_SENDER_ID: ${SMS_SENDER_ID:-}
+      SMS_HTTP_BODY_TEMPLATE: ${SMS_HTTP_BODY_TEMPLATE:-}
+      INTERNAL_ALERT_SECRET: ${INTERNAL_ALERT_SECRET:?set INTERNAL_ALERT_SECRET}
+      SHEETS_EXPORT_ENABLED: ${SHEETS_EXPORT_ENABLED:-false}
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - files:/data/files
+      - archives:/data/archives
+      - backupstatus:/data/status:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ['CMD', 'node', 'dist/healthcheck.js']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    logging: *logging
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest # pin to a tested tag before go-live (spec 11: pin versions)
+    restart: unless-stopped
+    mem_limit: 64m
+    command: tunnel run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN}
+    profiles: ['tunnel']
+    logging: *logging
+
+  # The backup/restore-test sidecar image (alpine + postgresql-client + age + rclone + restic + cron)
+  # is delivered in Phase 5. Until it exists `docker compose up` fails on this service: that is
+  # deliberate, because a stack that silently runs without backups must not go live (docs/GO-LIVE.md).
+  backup:
+    image: barakah-backup:${TAG:?set TAG}
+    restart: unless-stopped
+    mem_limit: 128m
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      BACKUP_AGE_RECIPIENTS: ${BACKUP_AGE_RECIPIENTS:?set BACKUP_AGE_RECIPIENTS}
+      RCLONE_REMOTE: ${RCLONE_REMOTE:-}
+      INTERNAL_ALERT_SECRET: ${INTERNAL_ALERT_SECRET}
+      API_URL: http://api:3000
+      SMS_PROVIDER: ${SMS_PROVIDER:-console}
+      SMS_HTTP_URL: ${SMS_HTTP_URL:-}
+      SMS_HTTP_API_KEY: ${SMS_HTTP_API_KEY:-}
+      SMS_SENDER_ID: ${SMS_SENDER_ID:-}
+      SMS_HTTP_BODY_TEMPLATE: ${SMS_HTTP_BODY_TEMPLATE:-}
+    volumes:
+      - files:/data/files:ro
+      # Bind-mount this volume from a DIFFERENT disk or path than pgdata (spec 12).
+      - backups:/backups
+      - backupstatus:/data/status
+    logging: *logging
+
+volumes:
+  pgdata: {}
+  files: {}
+  archives: {}
+  backups: {}
+  backupstatus: {}

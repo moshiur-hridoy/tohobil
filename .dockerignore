@@ -1,0 +1,26 @@
+# Keep secrets, private documents and local state out of the build context (and so out of image layers).
+.git
+.env
+.env.*
+!.env.example
+private/
+import/
+backups/
+data/
+*.pem
+*.key
+*.jks
+*.keystore
+service-account*.json
+
+node_modules
+**/node_modules
+**/dist
+coverage
+**/coverage
+.DS_Store
+apps/web/android
+apps/web/ios
+Doc.md
+design/
+docs/

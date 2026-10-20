@@ -1,0 +1,50 @@
+{
+  "name": "barakah",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter \"./apps/*\" dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm audit --audit-level=high",
+    "format": "prettier --write .",
+    "migrate": "pnpm --filter @barakah/api migrate",
+    "migrate:create": "pnpm --filter @barakah/api migrate:create",
+    "seed": "tsx db/seed/run.ts",
+    "import:verify": "pnpm --filter @barakah/api import:verify",
+    "verify-ledger": "tsx scripts/verify-ledger.ts",
+    "android:release": "pnpm --filter @barakah/web android:release"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.0",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "pg": "^8.13.0",
+    "prettier": "^3.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "argon2"
+    ],
+    "overrides": {
+      "glob@>=11.0.0 <11.1.0": "^11.1.0"
+    },
+    "auditConfig": {
+      "ignoreGhsas": [
+        "GHSA-vfj7-8cjw-p6xm"
+      ]
+    }
+  }
+}

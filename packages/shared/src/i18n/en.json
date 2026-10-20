@@ -1,0 +1,182 @@
+{
+  "app": {
+    "name": "Barakah Fund",
+    "shortName": "Barakah"
+  },
+  "nav": {
+    "home": "Home",
+    "pay": "Payment",
+    "votes": "Votes",
+    "assets": "Assets",
+    "menu": "Menu"
+  },
+  "home": {
+    "outstanding": "Outstanding",
+    "myOutstanding": "My Outstanding",
+    "principal": "Principal Due",
+    "fines": "Fines",
+    "nextDue": "Next Due",
+    "payNow": "Pay Now",
+    "underVerification": "Under Verification",
+    "fundNetAssets": "Fund Net Assets",
+    "myShareValue": "My Share Value",
+    "openVotes": "Open Votes",
+    "charityToDonate": "Charity to Donate"
+  },
+  "payment": {
+    "title": "Payment",
+    "submitPayment": "Submit Payment",
+    "amount": "Amount",
+    "method": "Method",
+    "trxId": "Transaction ID",
+    "date": "Date",
+    "period": "Month",
+    "screenshot": "Screenshot",
+    "history": "Payment History",
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "rejected": "Rejected",
+      "reversed": "Reversed"
+    },
+    "methods": {
+      "bkash": "bKash",
+      "nagad": "Nagad",
+      "bank": "Bank",
+      "cash": "Cash in hand",
+      "other": "Other"
+    },
+    "instructionsPlaceholder": "Payment instructions will appear here."
+  },
+  "votes": {
+    "title": "Votes",
+    "open": "Open",
+    "past": "Past",
+    "yes": "Yes",
+    "no": "No",
+    "abstain": "Abstain",
+    "voted": "Voted",
+    "deadline": "Deadline",
+    "result": "Result",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "assets": {
+    "title": "Assets",
+    "gold": "Gold",
+    "land": "Land",
+    "house": "House",
+    "other": "Other",
+    "cost": "Purchase Cost",
+    "valuation": "Valuation",
+    "rent": "Rent"
+  },
+  "ledger": {
+    "title": "Ledger",
+    "date": "Date",
+    "debit": "Debit",
+    "credit": "Credit",
+    "amount": "Amount",
+    "memo": "Description",
+    "objection": "Objection"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "No internet connection.",
+    "unauthorized": "Your session has expired. Please log in again.",
+    "forbidden": "You do not have permission for this action.",
+    "notFound": "Not found.",
+    "payment": {
+      "duplicate_trx": "This transaction ID has already been submitted.",
+      "amount_required": "Please enter an amount.",
+      "trx_required": "Transaction ID is required for bKash, Nagad, and Bank payments."
+    },
+    "auth": {
+      "invalid_pin": "Incorrect PIN.",
+      "locked": "Account temporarily locked due to too many wrong PIN attempts. Try again in 15 minutes.",
+      "device_limit": "Cannot add a new device. Contact the cashier.",
+      "activation_expired": "Code has expired. Ask the cashier for a new code.",
+      "activation_invalid": "Invalid code.",
+      "read_only": "Your account is read-only."
+    },
+    "pageNotFound": "This page does not exist.",
+    "requestId": "Reference"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "total": "Total",
+    "date": "Date",
+    "status": "Status",
+    "actions": "Actions",
+    "noData": "No data",
+    "updateAvailable": "Update available",
+    "reload": "Reload"
+  },
+  "notif": {
+    "due_reminder": "{name}, ৳{outstanding} for {month} is due by {due_date}. Send it via bKash or bank and submit the TrxID in the app.",
+    "fine_notice": "{name}, a fine of ৳{fine} was charged for late payment of {month}. Total due ৳{total}. Open the app to request a waiver.",
+    "payment_submitted_ack": "We received your ৳{amount}. The cashier is verifying it.",
+    "payment_confirmed": "Your payment of ৳{amount} was accepted. If anything is wrong, raise an objection in the app.",
+    "payment_rejected": "Your payment of ৳{amount} could not be accepted. Reason: {reason}.",
+    "vote_opened": "New vote: {title}. Closes {closes_at}. Vote in the app.",
+    "vote_closing": "24 hours left to vote: {title}. You have not voted yet.",
+    "vote_result": "Vote result: {title}: {result} (yes {yes}, no {no}).",
+    "suspension_notice": "{name}, by the fund's decision your membership is suspended from {date}. See the app for details.",
+    "entry_quote": "{name}, the price of {shares} share(s) to join the fund is ৳{price}. Valid until {expires}.",
+    "settlement_payout": "Your settlement payment of ৳{amount} has been paid.",
+    "constitution_updated": "Constitution version {version} is now in force. Read it and tap 'I have read it'.",
+    "cashier_daily_summary": "Today {unpaid_count} member(s) unpaid, {pending_count} payment(s) awaiting verification.",
+    "pending_payment_alert": "{count} payment(s) have waited more than {hours} hours for verification.",
+    "rent_overdue": "Rent for {stream} for {month} has not arrived yet.",
+    "reconciliation_mismatch": "{period}: {account} differs by ৳{diff}.",
+    "backup_failed": "Backup failed ({job}). Check immediately.",
+    "final_notice": "{name}, 3 consecutive months of dues and fines are unpaid. Pay ৳{total} within {days} days or membership will be suspended under clause 2.4.",
+    "meeting_reminder": "Monthly meeting on {date} at {time}. The link is in the app.",
+    "absence_fine": "{name}, a fine of ৳{amount} was charged for {count} consecutive unexcused absences (goes to the charity fund).",
+    "charity_year_end": "Year end: fines and other money still to donate: ৳{amount}.",
+    "zakat_info": "Your paid-in capital and estimated current value are attached. You calculate your own zakat."
+  },
+  "admin": {
+    "dashboard": "Dashboard",
+    "netAssets": "Net Assets",
+    "collectedThisMonth": "This Month Collected",
+    "overdueMembers": "Overdue Members",
+    "pendingPayments": "Pending Payments",
+    "nav": {
+      "dashboard": "Dashboard",
+      "matrix": "Matrix",
+      "payments": "Payments",
+      "ledger": "Ledger",
+      "members": "Members",
+      "proposals": "Proposals",
+      "assets": "Assets",
+      "rent": "Rent",
+      "notifications": "Notifications",
+      "reconcile": "Reconcile",
+      "reports": "Reports",
+      "rules": "Rules",
+      "system": "System"
+    }
+  },
+  "auth": {
+    "activateHint": "Enter the activation code the cashier gave you, or scan the QR code.",
+    "activateCode": "Activation code",
+    "pinHint": "Enter your PIN",
+    "pinPlaceholder": "••••••"
+  },
+  "menu": {
+    "placeholder": "Profile, settings and more."
+  }
+}

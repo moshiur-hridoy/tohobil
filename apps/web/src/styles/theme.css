@@ -1,0 +1,82 @@
+/* Barakah Fund Theme
+ * All colours, radii, spacing, and fonts come from CSS variables, so this single file can be
+ * restyled without touching components. Colours are plain hex on purpose (designer friendly).
+ *
+ * Contrast (WCAG AA, 4.5:1 for text) is checked against --background/--card for the status colours
+ * that are used as text: --ok, --warn, --bad, --muted. Keep that in mind when restyling.
+ */
+
+:root {
+  /* Status colours: paid / partial-pending / overdue / not due */
+  --ok: #15803d;
+  --warn: #b45309;
+  --bad: #b91c1c;
+  --muted: #6b7280;
+
+  /* Primary palette */
+  --primary: #1a5c3a;
+  --primary-foreground: #ffffff;
+  --primary-soft: #e6f0ea; /* tinted background for the active item */
+
+  /* Surfaces */
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --hover: #f3f4f6;
+
+  /* Borders and inputs */
+  --border: #e5e7eb;
+  --input: #d1d5db;
+  --ring: #1a5c3a;
+
+  /* Radii */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  /* Fonts (Noto Sans Bengali is self-hosted via @fontsource, imported in main.tsx) */
+  --font-sans: 'Noto Sans Bengali', system-ui, sans-serif;
+}
+
+/* Dark theme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ok: #4ade80;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --muted: #9ca3af;
+
+    --primary: #22c55e;
+    --primary-foreground: #0f172a;
+    --primary-soft: #14301f;
+
+    --background: #0f172a;
+    --foreground: #f1f5f9;
+    --card: #1e293b;
+    --card-foreground: #f1f5f9;
+    --hover: #273449;
+
+    --border: #334155;
+    --input: #475569;
+  }
+}
+
+/* Base styles */
+body {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--foreground);
+  background-color: var(--background);
+  -webkit-font-smoothing: antialiased;
+}

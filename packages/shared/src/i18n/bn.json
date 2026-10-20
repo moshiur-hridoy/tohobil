@@ -1,0 +1,182 @@
+{
+  "app": {
+    "name": "বারাকাহ ফান্ড",
+    "shortName": "বারাকাহ"
+  },
+  "nav": {
+    "home": "হোম",
+    "pay": "পেমেন্ট",
+    "votes": "ভোট",
+    "assets": "সম্পদ",
+    "menu": "মেনু"
+  },
+  "home": {
+    "outstanding": "বকেয়া",
+    "myOutstanding": "আমার বকেয়া",
+    "principal": "মূল বকেয়া",
+    "fines": "জরিমানা",
+    "nextDue": "পরবর্তী কিস্তি",
+    "payNow": "এখনই পরিশোধ করুন",
+    "underVerification": "যাচাইয়ের অপেক্ষায়",
+    "fundNetAssets": "ফান্ডের মোট সম্পদ",
+    "myShareValue": "আমার শেয়ারের মূল্য",
+    "openVotes": "চলমান ভোট",
+    "charityToDonate": "দান করার বাকি"
+  },
+  "payment": {
+    "title": "পেমেন্ট",
+    "submitPayment": "পেমেন্ট জমা দিন",
+    "amount": "পরিমাণ",
+    "method": "মাধ্যম",
+    "trxId": "ট্রান্সেকশন আইডি",
+    "date": "তারিখ",
+    "period": "মাস",
+    "screenshot": "স্ক্রিনশট",
+    "history": "পেমেন্ট ইতিহাস",
+    "status": {
+      "pending": "অপেক্ষমাণ",
+      "confirmed": "গৃহীত",
+      "rejected": "প্রত্যাখ্যাত",
+      "reversed": "ফেরত"
+    },
+    "methods": {
+      "bkash": "বিকাশ",
+      "nagad": "Nagad",
+      "bank": "ব্যাংক",
+      "cash": "হাতে নগদ",
+      "other": "অন্যান্য"
+    },
+    "instructionsPlaceholder": "পেমেন্টের নির্দেশনা এখানে দেখা যাবে।"
+  },
+  "votes": {
+    "title": "ভোট",
+    "open": "চলমান",
+    "past": "সম্পন্ন",
+    "yes": "হ্যাঁ",
+    "no": "না",
+    "abstain": "বিরত",
+    "voted": "ভোট দেওয়া হয়েছে",
+    "deadline": "শেষ সময়",
+    "result": "ফলাফল",
+    "approved": "অনুমোদিত",
+    "rejected": "প্রত্যাখ্যাত"
+  },
+  "assets": {
+    "title": "সম্পদ",
+    "gold": "স্বর্ণ",
+    "land": "জমি",
+    "house": "বাড়ি",
+    "other": "অন্যান্য",
+    "cost": "ক্রয় মূল্য",
+    "valuation": "মূল্যায়ন",
+    "rent": "ভাড়া"
+  },
+  "ledger": {
+    "title": "লেনদেন বই",
+    "date": "তারিখ",
+    "debit": "ডেবিট",
+    "credit": "ক্রেডিট",
+    "amount": "পরিমাণ",
+    "memo": "বিবরণ",
+    "objection": "আপত্তি"
+  },
+  "errors": {
+    "generic": "কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।",
+    "network": "ইন্টারনেট সংযোগ নেই।",
+    "unauthorized": "আপনার সেশন শেষ হয়ে গেছে। আবার লগইন করুন।",
+    "forbidden": "আপনার এই কাজের অনুমতি নেই।",
+    "notFound": "খুঁজে পাওয়া যায়নি।",
+    "payment": {
+      "duplicate_trx": "এই ট্রান্সেকশন আইডি আগেই জমা দেওয়া হয়েছে।",
+      "amount_required": "পরিমাণ দিন।",
+      "trx_required": "বিকাশ, Nagad বা ব্যাংক পেমেন্টে ট্রান্সেকশন আইডি আবশ্যক।"
+    },
+    "auth": {
+      "invalid_pin": "ভুল পিন।",
+      "locked": "অনেকবার ভুল পিন দেওয়ায় অ্যাকাউন্ট সাময়িক বন্ধ। ১৫ মিনিট পরে চেষ্টা করুন।",
+      "device_limit": "নতুন ডিভাইস যোগ করা যাবে না। ক্যাশিয়ারের সাথে যোগাযোগ করুন।",
+      "activation_expired": "কোডের মেয়াদ শেষ। ক্যাশিয়ারের কাছে নতুন কোড নিন।",
+      "activation_invalid": "ভুল কোড।",
+      "read_only": "আপনার অ্যাকাউন্ট শুধুমাত্র দেখার জন্য।"
+    },
+    "pageNotFound": "এই পাতাটি খুঁজে পাওয়া যায়নি।",
+    "requestId": "রেফারেন্স"
+  },
+  "notif": {
+    "due_reminder": "{name}, {month} মাসের ৳{outstanding} বকেয়া, শেষ তারিখ {due_date}। বিকাশ বা ব্যাংকে পাঠিয়ে অ্যাপে TrxID জমা দিন।",
+    "fine_notice": "{name}, {month} মাসের বকেয়া সময়মতো না দেওয়ায় ৳{fine} ফাইন হয়েছে। মোট বকেয়া ৳{total}। মাফের আবেদনের জন্য অ্যাপ খুলুন।",
+    "payment_submitted_ack": "আপনার ৳{amount} জমা পাওয়া গেছে, ক্যাশিয়ার যাচাই করছেন।",
+    "payment_confirmed": "আপনার ৳{amount} পেমেন্ট গৃহীত হয়েছে। কোনো ভুল থাকলে অ্যাপে আপত্তি জানান।",
+    "payment_rejected": "আপনার ৳{amount} জমা গ্রহণ করা যায়নি। কারণ: {reason}।",
+    "vote_opened": "নতুন ভোট: {title}। শেষ সময় {closes_at}। অ্যাপে ভোট দিন।",
+    "vote_closing": "ভোট শেষ হতে ২৪ ঘণ্টা বাকি: {title}। আপনি এখনও ভোট দেননি।",
+    "vote_result": "ভোটের ফল: {title}: {result} (হ্যাঁ {yes}, না {no})।",
+    "suspension_notice": "{name}, ফান্ডের সিদ্ধান্তে আপনার সদস্যপদ {date} থেকে সাময়িক স্থগিত। বিস্তারিত অ্যাপে দেখুন।",
+    "entry_quote": "{name}, ফান্ডে যোগদানের জন্য {shares} শেয়ারের মূল্য ৳{price}। {expires} পর্যন্ত বৈধ।",
+    "settlement_payout": "আপনার সেটেলমেন্টের ৳{amount} পরিশোধ করা হয়েছে।",
+    "constitution_updated": "গঠনতন্ত্রের নতুন ভার্সন {version} কার্যকর। পড়ে 'পড়েছি' চাপুন।",
+    "cashier_daily_summary": "আজ {unpaid_count} জন বাকি, {pending_count}টি পেমেন্ট যাচাইয়ের অপেক্ষায়।",
+    "pending_payment_alert": "{count}টি পেমেন্ট {hours} ঘণ্টার বেশি যাচাইয়ের অপেক্ষায়।",
+    "rent_overdue": "{stream}-এর {month} মাসের ভাড়া এখনও আসেনি।",
+    "reconciliation_mismatch": "{period} মাসের {account} হিসাবে ৳{diff} অমিল।",
+    "backup_failed": "Backup ব্যর্থ হয়েছে ({job})। অবিলম্বে দেখুন।",
+    "final_notice": "{name}, টানা ৩ মাস চাঁদা ও জরিমানা বকেয়া। {days} দিনের মধ্যে ৳{total} পরিশোধ না করলে নীতিমালার ২.৪ ধারা অনুযায়ী সদস্যপদ স্থগিত হবে।",
+    "meeting_reminder": "{date} {time}-এ মাসিক মিটিং। লিংক অ্যাপে আছে।",
+    "absence_fine": "{name}, কারণ ছাড়া টানা {count}টি মিটিংয়ে অনুপস্থিতির জন্য ৳{amount} জরিমানা হয়েছে (দান তহবিলে যাবে)।",
+    "charity_year_end": "বছর শেষ: দান করার বাকি জরিমানা ও অন্যান্য অর্থ ৳{amount}।",
+    "zakat_info": "আপনার জমা মূলধন ও বর্তমান আনুমানিক মূল্যের বিবরণ সংযুক্ত। যাকাত আপনি নিজে হিসাব করবেন।"
+  },
+  "common": {
+    "save": "সংরক্ষণ",
+    "cancel": "বাতিল",
+    "confirm": "নিশ্চিত করুন",
+    "loading": "লোড হচ্ছে...",
+    "error": "সমস্যা",
+    "success": "সফল",
+    "close": "বন্ধ করুন",
+    "back": "ফিরে যান",
+    "next": "পরবর্তী",
+    "submit": "জমা দিন",
+    "search": "খুঁজুন",
+    "filter": "ফিল্টার",
+    "export": "এক্সপোর্ট",
+    "total": "মোট",
+    "date": "তারিখ",
+    "status": "অবস্থা",
+    "actions": "কার্যক্রম",
+    "noData": "কোনো তথ্য নেই",
+    "updateAvailable": "নতুন আপডেট পাওয়া গেছে",
+    "reload": "রিলোড করুন"
+  },
+  "admin": {
+    "dashboard": "ড্যাশবোর্ড",
+    "netAssets": "মোট সম্পদ",
+    "collectedThisMonth": "এই মাসে আদায়",
+    "overdueMembers": "বকেয়াদার সদস্য",
+    "pendingPayments": "যাচাইয়ের অপেক্ষায় পেমেন্ট",
+    "nav": {
+      "dashboard": "ড্যাশবোর্ড",
+      "matrix": "ম্যাট্রিক্স",
+      "payments": "পেমেন্ট",
+      "ledger": "লেনদেন বই",
+      "members": "সদস্য",
+      "proposals": "প্রস্তাব",
+      "assets": "সম্পদ",
+      "rent": "ভাড়া",
+      "notifications": "বিজ্ঞপ্তি",
+      "reconcile": "হিসাব মিলান",
+      "reports": "প্রতিবেদন",
+      "rules": "নিয়ম",
+      "system": "সিস্টেম"
+    }
+  },
+  "auth": {
+    "activateHint": "ক্যাশিয়ারের দেওয়া অ্যাক্টিভেশন কোড লিখুন অথবা QR কোড স্ক্যান করুন।",
+    "activateCode": "অ্যাক্টিভেশন কোড",
+    "pinHint": "আপনার পিন লিখুন",
+    "pinPlaceholder": "••••••"
+  },
+  "menu": {
+    "placeholder": "প্রোফাইল, সেটিংস ও আরও কিছু।"
+  }
+}

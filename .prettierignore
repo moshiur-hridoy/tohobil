@@ -1,0 +1,8 @@
+Doc.md
+pnpm-lock.yaml
+dist/
+coverage/
+node_modules/
+db/migrations/
+private/
+design/

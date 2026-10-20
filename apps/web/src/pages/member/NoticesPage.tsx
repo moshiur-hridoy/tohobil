@@ -1,66 +1,36 @@
-// Static design implementation; backend pending.
-
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { ListSkeleton } from '../../components/Skeleton';
+import { LoadError } from '../../components/StateViews';
+import { api } from '../../lib/api';
 
 type NoticeKind = 'final_notice' | 'fine' | 'payment_received' | 'meeting' | 'zakat_info';
 
-interface Notice {
+interface InboxItem {
   id: string;
-  kind: NoticeKind;
-  titleKey: string;
-  bodyKey: string;
-  tagKey: string;
-  unread: boolean;
-  hasAction?: boolean;
-  actionKey?: string;
+  template: string;
+  payload: { _body?: string; [k: string]: unknown };
+  scheduled_for: string;
+  opened_at: string | null;
 }
 
-const NOTICES: Notice[] = [
-  {
-    id: 'n1',
-    kind: 'final_notice',
-    tagKey: 'notices.tags.finalNotice',
-    titleKey: 'notices.finalNotice.title',
-    bodyKey: 'notices.finalNotice.body',
-    unread: true,
-    hasAction: true,
-    actionKey: 'notices.finalNotice.action',
-  },
-  {
-    id: 'n2',
-    kind: 'fine',
-    tagKey: 'notices.tags.fine',
-    titleKey: 'notices.fine.title',
-    bodyKey: 'notices.fine.body',
-    unread: true,
-  },
-  {
-    id: 'n3',
-    kind: 'payment_received',
-    tagKey: 'notices.tags.paymentReceived',
-    titleKey: 'notices.paymentReceived.title',
-    bodyKey: 'notices.paymentReceived.body',
-    unread: false,
-  },
-  {
-    id: 'n4',
-    kind: 'meeting',
-    tagKey: 'notices.tags.meeting',
-    titleKey: 'notices.meeting.title',
-    bodyKey: 'notices.meeting.body',
-    unread: false,
-  },
-  {
-    id: 'n5',
-    kind: 'zakat_info',
-    tagKey: 'notices.tags.zakatInfo',
-    titleKey: 'notices.zakatInfo.title',
-    bodyKey: 'notices.zakatInfo.body',
-    unread: false,
-  },
-];
+const KIND_BY_TEMPLATE: Record<string, NoticeKind> = {
+  final_notice: 'final_notice',
+  fine_notice: 'fine',
+  payment_confirmed: 'payment_received',
+  payment_submitted_ack: 'payment_received',
+  meeting_reminder: 'meeting',
+};
+
+const TAG_KEY: Record<NoticeKind, string> = {
+  final_notice: 'notices.tags.finalNotice',
+  fine: 'notices.tags.fine',
+  payment_received: 'notices.tags.paymentReceived',
+  meeting: 'notices.tags.meeting',
+  zakat_info: 'notices.tags.zakatInfo',
+};
 
 function kindMeta(kind: NoticeKind): { icon: JSX.Element; borderClass: string; chipClass: string } {
   switch (kind) {
@@ -129,10 +99,21 @@ function kindMeta(kind: NoticeKind): { icon: JSX.Element; borderClass: string; c
 
 export function NoticesPage() {
   const { t } = useTranslation();
+  const qc = useQueryClient();
   const [filter, setFilter] = useState<'unread' | 'all'>('unread');
 
-  const unreadCount = useMemo(() => NOTICES.filter((n) => n.unread).length, []);
-  const visible = useMemo(() => (filter === 'unread' ? NOTICES.filter((n) => n.unread) : NOTICES), [filter]);
+  const inbox = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => api<{ items: InboxItem[] }>('/notifications?channel=push&limit=50'),
+  });
+  const open = useMutation({
+    mutationFn: (id: string) => api(`/notifications/${id}/open`, { method: 'POST' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
+  });
+
+  const all = inbox.data?.items ?? [];
+  const unreadCount = useMemo(() => all.filter((n) => !n.opened_at).length, [all]);
+  const visible = useMemo(() => (filter === 'unread' ? all.filter((n) => !n.opened_at) : all), [filter, all]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -184,80 +165,40 @@ export function NoticesPage() {
           </button>
         </div>
 
-        {visible.length === 0 ? (
-          <p className="py-8 text-center text-muted">{t('common.noData', { defaultValue: 'কোনো তথ্য নেই' })}</p>
+        {inbox.error ? (
+          <LoadError error={inbox.error} onRetry={() => void inbox.refetch()} />
+        ) : !inbox.data ? (
+          <ListSkeleton rows={4} />
+        ) : visible.length === 0 ? (
+          <p className="py-8 text-center text-muted">{t('common.noData')}</p>
         ) : (
-          visible.map((notice) => <NoticeCard key={notice.id} notice={notice} />)
+          visible.map((item) => (
+            <NoticeCard key={item.id} item={item} onOpen={() => !item.opened_at && open.mutate(item.id)} />
+          ))
         )}
       </main>
     </div>
   );
 }
 
-function getTagDefault(kind: NoticeKind): { defaultValue: string } {
-  switch (kind) {
-    case 'final_notice':
-      return { defaultValue: 'চূড়ান্ত নোটিশ · ধারা ২.৪' };
-    case 'fine':
-      return { defaultValue: 'ফাইন' };
-    case 'payment_received':
-      return { defaultValue: 'পেমেন্ট গৃহীত' };
-    case 'meeting':
-      return { defaultValue: 'মিটিং' };
-    case 'zakat_info':
-      return { defaultValue: 'যাকাত তথ্য' };
-  }
-}
-
-function getTitleDefault(kind: NoticeKind): { defaultValue: string } {
-  switch (kind) {
-    case 'final_notice':
-      return { defaultValue: 'টানা ৩ মাস বকেয়া: ৳৩৫,০০০' };
-    case 'fine':
-      return { defaultValue: '৳১,৫০০ ফাইন (৩ শেয়ার × ৳৫০০)' };
-    case 'payment_received':
-      return { defaultValue: 'আপনার ৳১৫,০০০ গৃহীত হয়েছে' };
-    case 'meeting':
-      return { defaultValue: '১১ জানুয়ারি, রাত ৯:০০ · অনলাইন' };
-    case 'zakat_info':
-      return { defaultValue: 'আপনার জমা মূলধনের বিবরণ প্রস্তুত' };
-  }
-}
-
-function getBodyDefault(kind: NoticeKind): { defaultValue: string } {
-  switch (kind) {
-    case 'final_notice':
-      return { defaultValue: '৫ দিনের মধ্যে পরিশোধ না করলে সদস্যপদ স্থগিত হবে।' };
-    case 'fine':
-      return { defaultValue: 'এই টাকা দান তহবিলে যাবে, ফান্ডের আয় নয়। মাফের আবেদন করা যায়।' };
-    case 'payment_received':
-      return { defaultValue: 'কিছু ভুল মনে হলে আপত্তি জানান ›' };
-    case 'meeting':
-      return { defaultValue: 'টানা ৩টি অনুপস্থিতিতে ৳৫০০ ফাইন (ধারা ৯.২)।' };
-    case 'zakat_info':
-      return { defaultValue: 'যাকাত আপনি নিজে হিসাব করবেন। PDF দেখুন ›' };
-  }
-}
-
-function NoticeCard({ notice }: { notice: Notice }) {
+function NoticeCard({ item, onOpen }: { item: InboxItem; onOpen: () => void }) {
   const { t } = useTranslation();
-  const meta = kindMeta(notice.kind);
+  const kind = KIND_BY_TEMPLATE[item.template] ?? 'zakat_info';
+  const meta = kindMeta(kind);
+  const known = item.template in KIND_BY_TEMPLATE;
 
   return (
-    <article className={`rounded-[18px] border bg-card p-4 shadow-sm ${meta.borderClass}`}>
+    <article
+      onClick={onOpen}
+      className={`rounded-[18px] border bg-card p-4 shadow-sm ${meta.borderClass} ${item.opened_at ? '' : 'ring-1 ring-primary'}`}
+    >
       <div className="flex items-center gap-2.5">
         <span className={`grid h-9 w-9 flex-none place-items-center rounded-[11px] ${meta.chipClass}`}>{meta.icon}</span>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${meta.chipClass}`}>{t(notice.tagKey, getTagDefault(notice.kind))}</span>
+        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${meta.chipClass}`}>
+          {known ? t(TAG_KEY[kind]) : t('notices.tags.general')}
+        </span>
       </div>
-      <h2 className="mt-2.5 text-base font-bold">{t(notice.titleKey, getTitleDefault(notice.kind))}</h2>
-      <p className="mt-1 text-sm leading-relaxed text-foreground">
-        {t(notice.bodyKey, getBodyDefault(notice.kind))}
-      </p>
-      {notice.hasAction && (
-        <button type="button" className="mt-3 h-12 rounded-xl bg-primary px-4 text-[15px] font-bold text-primary-foreground">
-          {t(notice.actionKey ?? 'notices.payNow', { defaultValue: 'এখনই পরিশোধ করুন' })}
-        </button>
-      )}
+      <p className="mt-2.5 text-sm leading-relaxed text-foreground">{item.payload._body ?? ''}</p>
     </article>
   );
 }

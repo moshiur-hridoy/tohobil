@@ -236,7 +236,8 @@
     "executeBody": "অনুমোদিত প্রস্তাবের কার্যকরী পদক্ষেপ নেওয়া হবে। অর্থ সংক্রান্ত হলে অথেন্টিকেটর কোড লাগবে।",
     "clauseRef": "ধারা",
     "byShares": "শেয়ার অনুপাতে",
-    "byMembers": "সদস্য সংখ্যা অনুযায়ী"
+    "byMembers": "সদস্য সংখ্যা অনুযায়ী",
+    "terms": "শর্তাবলী"
   },
   "compliance": {
     "interest_free_instrument": "সুদমুক্ত ইনস্ট্রুমেন্ট",
@@ -594,7 +595,13 @@
     "clauses": "ধারাসমূহ",
     "search": "ধারা খুঁজুন",
     "noVersions": "কোনো গঠনতন্ত্র ভার্সন নেই।",
-    "pdf": "পিডিএফ"
+    "pdf": "পিডিএফ",
+    "newVersion": "নতুন সংশোধনী প্রকাশিত",
+    "newVersionHint": "পড়ে “পড়েছি” চাপুন।",
+    "olderVersions": "পুরনো ভার্সনগুলো দেখুন",
+    "hideOlder": "পুরনো ভার্সন লুকান",
+    "current": "বর্তমান",
+    "noMatches": "কোনো ধারা মেলেনি।"
   },
   "adminDash": {
     "expectedThisMonth": "এই মাসে প্রত্যাশিত",
@@ -907,7 +914,8 @@
       "fine": "জরিমানা",
       "paymentReceived": "পেমেন্ট গৃহীত",
       "meeting": "মিটিং",
-      "zakatInfo": "যাকাত তথ্য"
+      "zakatInfo": "যাকাত তথ্য",
+      "general": "সাধারণ"
     },
     "finalNotice": {
       "title": "চূড়ান্ত নোটিশ",

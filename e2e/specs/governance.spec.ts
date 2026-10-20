@@ -95,15 +95,18 @@ test('(5) cashier executes a distribution proposal', async ({ browser, request }
 
   await page.goto('/admin/proposals');
   const row = page.getByTestId('proposal-row').filter({ hasText: title });
-  await expect(row).toContainText('approved');
-  await page.getByRole('button', { name: title }).click();
+  await expect(row).toContainText(tr('status.proposal.approved'));
 
-  await page.getByTestId('execute-proposal').click();
+  await row.getByTestId('execute-proposal').click();
   const sheet = page.getByRole('dialog');
   await expect(sheet).toContainText(tr('proposal.executeTitle'));
-  await sheet.getByRole('button', { name: tr('proposal.execute') }).click();
+  const [executeResponse] = await Promise.all([
+    page.waitForResponse((r) => r.url().includes(`/proposals/${created.id}/execute`) && r.request().method() === 'POST'),
+    sheet.getByRole('button', { name: tr('proposal.execute') }).click(),
+  ]);
+  expect(executeResponse.ok(), await executeResponse.text()).toBeTruthy();
 
-  await expect(page.getByTestId('proposal-row').filter({ hasText: title })).toContainText(tr('status.proposal.executed'));
+  await expect(row.getByTestId('execute-proposal')).toHaveCount(0);
 
   const after = await api.get<{ status: string }>(`/proposals/${created.id}`);
   expect(after.status).toBe('executed');

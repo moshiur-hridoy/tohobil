@@ -78,7 +78,7 @@ Legend: `[x]` done, `[ ]` to do.
 - [x] In-app inbox: `GET /notifications`, `POST /notifications/:id/open`
 - [x] pg-boss scheduler and core jobs (`jobs/index.ts` + workers)
   - [x] `send-notifications`, `sms-fallback`, `generate-dues`, `apply-fines`, `remind-dues`, `notify-fines`, pending-payment alert, cleanup
-  - [ ] Final-notice / auto-suspension jobs (Phase 3 governance)
+  - [x] Final-notice / auto-suspension jobs (built in Phase 3)
 - [ ] Auditor push on device events
 - [x] Cashier "not reachable by push" list; `GET /notifications/admin`; `POST /notifications/nudge` (1 per member per 6 h)
 - [ ] Admin notifications page (web UI)
@@ -93,20 +93,22 @@ Legend: `[x]` done, `[ ]` to do.
 - [ ] `docs/PHASE-2.md`, **stop for owner review**
 
 ## Phase 3: Governance
-- [ ] Settings table and settings routes (payment instructions etc.)
-- [ ] Proposals: create, open, close early, cancel, vote, execute (`proposal_policies`, weighted and unanimous voting, subject excluded)
-- [ ] Executors per proposal type; `rule_change` and `role_change` (auditor executes)
-- [ ] Member status machine (`inactive`, warning, suspended, exited), final notice and auto-suspension
-- [ ] Suspension, reinstatement, settlement (kinds per 18.6), escrow payouts, member snapshots
-- [ ] New-member entry (share price quote, entry due, register update)
-- [ ] Charity donations flow and statement inputs
-- [ ] Contact log
-- [ ] Constitution tab: PDF viewer, versions, clause search, clause links from rules, "I have read it", seeded from the private file
-- [ ] Member screens: votes list and detail (countdown, voter list, big Yes/No/Abstain)
-- [ ] Cashier screens: proposals (checklists), members (status history, actions create proposals), rules
-- [ ] Owner-decision conflict banner (18.12)
-- [ ] Tests: voting, suspension, settlement, invariants; e2e scenarios (4) and (5)
-- [ ] `docs/PHASE-3.md`, **stop for owner review**
+- [x] Settings table and settings routes (payment instructions etc.)
+- [x] Proposals: create, open, close early, cancel, vote, execute (`proposal_policies`, weighted and unanimous voting, subject excluded)
+- [x] Executors per proposal type; `rule_change` and `role_change` (auditor executes)
+- [x] Member status machine (`inactive`, warning, suspended, exited), final notice and auto-suspension
+- [x] Suspension, reinstatement, settlement (kinds per 18.6), escrow payouts, member snapshots
+- [x] New-member entry (share price quote, entry due, register update)
+- [x] Charity donations flow and statement inputs
+- [x] Contact log
+- [x] Constitution tab: versions, clause search, "I have read it", PDF link (seeding from the private file is an owner step)
+  - [ ] Clause links from rules
+- [x] Member screens: votes list and detail (countdown, voter list, big Yes/No/Abstain)
+- [ ] Member settlement screen (`/menu/settlement` is still a static mock; needs a quote endpoint)
+- [x] Cashier screens: proposals (checklists), members (status history, actions create proposals), rules
+- [x] Owner-decision conflict banner (18.12)
+- [x] Tests: voting, suspension, settlement, invariants; e2e scenarios (4) and (5)
+- [x] `docs/PHASE-3.md`, **stop for owner review**
 
 ## Phase 4: Assets and NAV (backend core done; proposal wiring pending Phase 3)
 - [x] Assets, valuations, documents (`GET/POST /assets`, `/assets/:id/valuations`, `/assets/:id/documents`) — direct cashier routes; proposal enforcement once Phase 3 exists

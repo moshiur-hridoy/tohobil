@@ -236,7 +236,8 @@
     "executeBody": "The approved decision will be carried out. Money actions need an authenticator code.",
     "clauseRef": "Clause",
     "byShares": "By share weight",
-    "byMembers": "By member count"
+    "byMembers": "By member count",
+    "terms": "Terms"
   },
   "compliance": {
     "interest_free_instrument": "Interest-free instrument",
@@ -594,7 +595,13 @@
     "clauses": "Clauses",
     "search": "Search clauses",
     "noVersions": "No constitution versions.",
-    "pdf": "PDF"
+    "pdf": "PDF",
+    "newVersion": "New amendment published",
+    "newVersionHint": "Read it, then tap “I have read it”.",
+    "olderVersions": "See older versions",
+    "hideOlder": "Hide older versions",
+    "current": "Current",
+    "noMatches": "No clauses matched."
   },
   "adminDash": {
     "expectedThisMonth": "This month expected",
@@ -907,7 +914,8 @@
       "fine": "Fine",
       "paymentReceived": "Payment received",
       "meeting": "Meeting",
-      "zakatInfo": "Zakat info"
+      "zakatInfo": "Zakat info",
+      "general": "General"
     },
     "finalNotice": {
       "title": "Final notice",

@@ -34,6 +34,10 @@ const LS = {
 export async function resumeSession(page: Page, ref: string, session: Session): Promise<void> {
   await page.context().addInitScript(
     ({ keys, values }) => {
+      // The init script runs on every document load; re-seeding would replay a refresh token the
+      // app has already rotated, which the server treats as reuse and revokes the session.
+      if (localStorage.getItem('e2e.seeded')) return;
+      localStorage.setItem('e2e.seeded', '1');
       for (const [k, v] of Object.entries(values)) {
         if (v === null) localStorage.removeItem(k);
         else localStorage.setItem(k, v);

@@ -19,7 +19,7 @@ export function MembersAdminPage() {
   const members = useQuery({ queryKey: ['members'], queryFn: () => api<{ items: MemberRow[] }>('/members') });
   const isCashier = me?.roles.includes('cashier') ?? false;
 
-  const [active, setActive] = useState<{ kind: 'status' | 'suspension' | 'settlement' | 'contact'; member: MemberRow } | null>(null);
+  const [active, setActive] = useState<{ kind: 'status' | 'suspension' | 'reinstatement' | 'settlement' | 'contact'; member: MemberRow } | null>(null);
 
   return (
     <div className="space-y-4">
@@ -64,7 +64,7 @@ export function MembersAdminPage() {
                     <div className="flex flex-wrap justify-end gap-1">
                       <ActionButton onClick={() => setActive({ kind: 'status', member: m })}>{t('membersAdmin.statusHistory')}</ActionButton>
                       {isCashier && (m.status === 'active' || m.status === 'warning') && <ActionButton onClick={() => setActive({ kind: 'suspension', member: m })}>{t('membersAdmin.createSuspension')}</ActionButton>}
-                      {isCashier && m.status === 'suspended' && <ActionButton onClick={() => setActive({ kind: 'contact', member: m })}>{t('membersAdmin.reinstate')}</ActionButton>}
+                      {isCashier && m.status === 'suspended' && <ActionButton onClick={() => setActive({ kind: 'reinstatement', member: m })}>{t('membersAdmin.reinstate')}</ActionButton>}
                       {isCashier && (m.status === 'active' || m.status === 'warning' || m.status === 'suspended') && <ActionButton onClick={() => setActive({ kind: 'settlement', member: m })}>{t('membersAdmin.settlement')}</ActionButton>}
                       <ActionButton onClick={() => setActive({ kind: 'contact', member: m })}>{t('membersAdmin.addContactLog')}</ActionButton>
                     </div>
@@ -80,6 +80,7 @@ export function MembersAdminPage() {
         <>
           <StatusHistoryDialog member={active.member} open={active.kind === 'status'} onClose={() => setActive(null)} />
           <SuspensionDialog member={active.member} open={active.kind === 'suspension'} onClose={() => setActive(null)} />
+          <ReinstatementDialog member={active.member} open={active.kind === 'reinstatement'} onClose={() => setActive(null)} />
           <SettlementDialog member={active.member} open={active.kind === 'settlement'} onClose={() => setActive(null)} />
           <ContactLogDialog member={active.member} open={active.kind === 'contact'} onClose={() => setActive(null)} isCashier={isCashier} />
         </>
@@ -179,6 +180,60 @@ function SuspensionDialog({ member, open, onClose }: { member: MemberRow; open: 
           <label className="mt-2 block text-sm text-muted">
             {t('proposal.clauseRef')}
             <input className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={clause} onChange={(e) => setClause(e.target.value)} />
+          </label>
+          {error != null && <p className="mt-2 text-bad">{error instanceof ApiError ? error.message : String(error)}</p>}
+          <div className="mt-4 flex gap-2">
+            <button type="button" disabled={busy} onClick={() => void submit()} className="h-11 flex-1 rounded-md bg-primary text-primary-foreground disabled:opacity-50">{busy ? t('common.working') : t('common.submit')}</button>
+            <Dialog.Close className="h-11 flex-1 rounded-md border border-border">{t('common.cancel')}</Dialog.Close>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
+
+function ReinstatementDialog({ member, open, onClose }: { member: MemberRow; open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const [terms, setTerms] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+
+  const submit = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await api('/proposals', {
+        method: 'POST',
+        body: {
+          type: 'reinstatement',
+          title: `${t('proposalType.reinstatement')}: ${member.code} ${member.full_name}`,
+          subject_member_id: member.id,
+          ...(terms.trim() ? { description: terms.trim() } : {}),
+          payload: { member_id: member.id, ...(terms.trim() ? { terms: terms.trim() } : {}) },
+        },
+      });
+      setTerms('');
+      void qc.invalidateQueries({ queryKey: ['proposals'] });
+      onClose();
+    } catch (err) {
+      setError(err);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
+        <Dialog.Content aria-describedby={undefined} className="fixed left-1/2 top-1/2 z-50 w-[min(32rem,92vw)] max-h-[90vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border border-border bg-card p-4 shadow-lg">
+          <Dialog.Title className="mb-3 text-lg font-semibold">{t('membersAdmin.reinstate')}</Dialog.Title>
+          <p className="mb-1 text-muted">{member.code} {member.full_name}</p>
+          <p className="mb-3 text-sm text-muted">{t('membersAdmin.reinstateHint')}</p>
+          <label className="block text-sm text-muted">
+            {t('proposal.terms')}
+            <textarea className="mt-1 min-h-20 w-full rounded-md border border-input bg-background p-2" value={terms} onChange={(e) => setTerms(e.target.value)} />
           </label>
           {error != null && <p className="mt-2 text-bad">{error instanceof ApiError ? error.message : String(error)}</p>}
           <div className="mt-4 flex gap-2">

@@ -1,8 +1,8 @@
-# Phase 3: Proposal executors
+# Phase 3: Governance
 
 Status: **built and green; ready for owner review.**
 
-The proposal execution pipeline is wired end-to-end: an approved proposal can be executed by an authorized officer, the correct mutations are applied, and the action is audited.
+Governance is built end to end (settings, proposals and voting, executors, member status machine, settlement, new-member entry, charity, contact log, constitution, and the matching screens). The proposal execution pipeline is wired: an approved proposal can be executed by an authorized officer, the correct mutations are applied, and the action is audited.
 
 ## What was built
 
@@ -44,9 +44,20 @@ pnpm --filter @barakah/api test
 pnpm check
 ```
 
+### Also in this phase
+
+- **Member status machine and jobs** (`members/status.ts`, `jobs/workers/status.ts`): warning after consecutive unpaid months, final notice, and auto-suspension after `final_notice_days` when `auto_suspend` is on. Tested in `members/status.test.ts`.
+- **Settlement, new-member entry, contact log** (`members/settlement.ts`, `members/entry.ts`, `members/contact.ts`).
+- **Constitution**: versions, clause search and per-member ack (`routes/constitution.ts`). The member screen (`ConstitutionPage`) reads these endpoints, opens the PDF through an authenticated blob fetch, and lists older versions.
+- **Screens**: votes list and detail, admin proposals (executes with a confirmation sheet), members (status history, suspension, reinstatement and settlement proposals, contact log), rules, charity, settings, the owner-conflict banner, and the member notices page (reads the push inbox).
+- **e2e**: scenarios (4) and (5) in `e2e/specs/governance.spec.ts` pass. Fixes made while running them: `resumeSession` re-seeded a rotated refresh token on every page load (server treated it as reuse and revoked the session), scenario 5 opened the details dialog over the Execute button, and its "executed" check matched the button label by substring.
+
 ## Known gaps
 
-- e2e proposal execution paths are not yet recorded with Playwright.
+- `SettlementPage` (member menu, `/menu/settlement`) is still a static design with sample data: no endpoint exposes a member's own settlement quote yet.
+- `ConstitutionPage` shows what is seeded in `constitution_versions`; seeding from the private PDF is an owner step, not in the repo.
+- Testcontainers does not start on the owner's Mac (`reading 'bind'`), so a plain `pnpm test` skips the 324 DB tests. Run with `TEST_DATABASE_URL=<superuser url> REQUIRE_DB_TESTS=1`.
+
 - Push/SMS notifications for executed proposals use the existing console providers in dev.
 
 ## Review checklist for the owner

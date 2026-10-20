@@ -447,6 +447,16 @@ async function finalize(db: Db, proposal: ProposalRow, ctx?: ClientCtx): Promise
   return newStatus;
 }
 
+/** True once the result can no longer change: already enough yes votes, or too few left to ever reach the threshold. */
+function outcomeDecided(p: ProposalRow): boolean {
+  return (
+    finalizedStatus(p) === 'approved' ||
+    (p.basis === 'share'
+      ? BigInt(p.eligible_weight) - BigInt(p.no_weight) - BigInt(p.abstain_weight) < BigInt(p.threshold_weight)
+      : p.eligible_count - p.no_count - p.abstain_count < p.threshold)
+  );
+}
+
 export async function closeEarlyProposal(
   deps: ProposalDeps,
   user: AuthUser,
@@ -465,12 +475,7 @@ export async function closeEarlyProposal(
     await recomputeVoteTotals(db, proposalId);
     const refreshed = await loadProposal(db, proposalId);
 
-    const decided =
-      finalizedStatus(refreshed) === 'approved' ||
-      (refreshed.basis === 'share'
-        ? BigInt(refreshed.eligible_weight) - BigInt(refreshed.no_weight) - BigInt(refreshed.abstain_weight) <
-          BigInt(refreshed.threshold_weight)
-        : refreshed.eligible_count - refreshed.no_count - refreshed.abstain_count < refreshed.threshold);
+    const decided = outcomeDecided(refreshed);
 
     if (!decided) {
       throw conflict('proposal.undecided', 'The outcome is not yet mathematically decided');
@@ -520,6 +525,28 @@ export async function cancelProposal(
       deviceId: user.device_id,
     });
   });
+}
+
+/**
+ * Owner decision (overrides Doc.md 5.8 "votes are public"): while a vote is open nobody sees how others
+ * voted or the running tally, only their own vote. The tally and the voter list appear once it closes.
+ * Only the API output is masked; the stored counts still drive finalisation.
+ */
+const ballotsHidden = (status: string): boolean => status === 'open';
+
+/** Cashiers and auditors may see how many have voted (never what), so they know when to close early. */
+const seesTurnout = (user: AuthUser): boolean => user.roles.includes('cashier') || user.roles.includes('auditor');
+
+function maskedCounts(row: ProposalRow): Record<string, unknown> {
+  const hide = ballotsHidden(row.status);
+  return {
+    yes: hide ? 0 : row.yes_count,
+    no: hide ? 0 : row.no_count,
+    abstain: hide ? 0 : row.abstain_count,
+    yes_weight: paisaOut(hide ? 0 : (row.yes_weight ?? 0)),
+    no_weight: paisaOut(hide ? 0 : (row.no_weight ?? 0)),
+    abstain_weight: paisaOut(hide ? 0 : (row.abstain_weight ?? 0)),
+  };
 }
 
 export async function getProposal(
@@ -572,14 +599,9 @@ export async function getProposal(
     eligible_weight: paisaOut(row.eligible_weight ?? 0),
     threshold: row.threshold ?? 0,
     threshold_weight: paisaOut(row.threshold_weight ?? 0),
-    counts: {
-      yes: row.yes_count,
-      no: row.no_count,
-      abstain: row.abstain_count,
-      yes_weight: paisaOut(row.yes_weight ?? 0),
-      no_weight: paisaOut(row.no_weight ?? 0),
-      abstain_weight: paisaOut(row.abstain_weight ?? 0),
-    },
+    counts: maskedCounts(row),
+    ballots_hidden: ballotsHidden(row.status),
+    ...(seesTurnout(user) ? { voted_count: votes.rows.length, can_close_early: row.status === 'open' && outcomeDecided(row) } : {}),
     opens_at: row.opens_at,
     closes_at: row.closes_at,
     finalized_at: row.finalized_at,
@@ -589,17 +611,20 @@ export async function getProposal(
     clause_ref: row.clause_ref,
     amount_paisa: row.amount_paisa,
     voters: voters.rows,
-    votes: votes.rows,
+    votes: ballotsHidden(row.status)
+      ? votes.rows.filter((v) => v.member_id === user.member_id)
+      : votes.rows,
   };
 }
 
 interface ProposalListRow extends ProposalRow {
   created_key: string;
+  voted_count: number;
 }
 
 export async function listProposals(
   deps: ProposalDeps,
-  _user: AuthUser,
+  user: AuthUser,
   query: ProposalsQuery,
 ): Promise<{ items: Array<Record<string, unknown>>; next_cursor: string | null }> {
   const cursor = decodeCursor(query.cursor, 2);
@@ -616,7 +641,10 @@ export async function listProposals(
             eligible_count, eligible_weight, threshold, threshold_weight,
             yes_count, no_count, abstain_count, yes_weight, no_weight, abstain_weight,
             opens_at, closes_at, finalized_at, executed_at, created_at, created_by, clause_ref,
-            amount_paisa, ${tsKey('created_at')} AS created_key
+            amount_paisa, ${tsKey('created_at')} AS created_key,
+            (SELECT count(*)::int FROM votes v
+               JOIN proposal_voters pv ON pv.proposal_id = v.proposal_id AND pv.member_id = v.member_id
+              WHERE v.proposal_id = proposals.id AND v.superseded_at IS NULL) AS voted_count
      FROM proposals
      WHERE ($1::text IS NULL OR status = $1)
        AND ($2::text IS NULL OR type = $2)
@@ -642,14 +670,9 @@ export async function listProposals(
     eligible_weight: paisaOut(row.eligible_weight ?? 0),
     threshold: row.threshold ?? 0,
     threshold_weight: paisaOut(row.threshold_weight ?? 0),
-    counts: {
-      yes: row.yes_count,
-      no: row.no_count,
-      abstain: row.abstain_count,
-      yes_weight: paisaOut(row.yes_weight ?? 0),
-      no_weight: paisaOut(row.no_weight ?? 0),
-      abstain_weight: paisaOut(row.abstain_weight ?? 0),
-    },
+    counts: maskedCounts(row),
+    ballots_hidden: ballotsHidden(row.status),
+    ...(seesTurnout(user) ? { voted_count: row.voted_count, can_close_early: row.status === 'open' && outcomeDecided(row) } : {}),
     opens_at: row.opens_at,
     closes_at: row.closes_at,
     finalized_at: row.finalized_at,

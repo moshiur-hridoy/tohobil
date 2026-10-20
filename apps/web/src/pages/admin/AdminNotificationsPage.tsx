@@ -71,9 +71,9 @@ export function AdminNotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">{t('adminNotifications.title')}</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{t('adminNotifications.title')}</h1>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <h2 className="mb-1 font-semibold">{t('adminNotifications.unreachable')}</h2>
         <p className="mb-3 text-sm text-muted">{t('adminNotifications.unreachableHint')}</p>
         {unreachable.error ? (
@@ -95,7 +95,7 @@ export function AdminNotificationsPage() {
                     type="button"
                     disabled={nudge.isPending}
                     onClick={() => nudge.mutate(u.member_id)}
-                    className="h-9 rounded-md border border-border px-3 text-xs hover:bg-hover disabled:opacity-50"
+                    className="h-9 rounded-xl border border-border px-3 text-xs hover:bg-hover disabled:opacity-50"
                   >
                     {nudged === u.member_id && nudge.isSuccess ? t('adminNotifications.nudged') : t('adminNotifications.nudge')}
                   </button>
@@ -107,7 +107,7 @@ export function AdminNotificationsPage() {
         {nudge.error && <div className="mt-3"><LoadError error={nudge.error} /></div>}
       </section>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-semibold">{t('adminNotifications.log')}</h2>
           <label className="text-sm text-muted">
@@ -155,7 +155,7 @@ export function AdminNotificationsPage() {
               </table>
             </div>
             {log.hasNextPage && (
-              <button type="button" disabled={log.isFetchingNextPage} onClick={() => void log.fetchNextPage()} className="mt-3 h-11 w-full rounded-md border border-border">
+              <button type="button" disabled={log.isFetchingNextPage} onClick={() => void log.fetchNextPage()} className="mt-3 h-11 w-full rounded-xl border border-border">
                 {t('common.loadMore')}
               </button>
             )}

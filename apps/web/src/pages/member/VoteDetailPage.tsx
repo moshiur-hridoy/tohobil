@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Icon } from '../../components/ui';
 import { ListSkeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
 import { api, ApiError } from '../../lib/api';
@@ -50,21 +51,23 @@ export function VoteDetailPage() {
 
   return (
     <div className="space-y-4 p-4">
-      <Link to="/votes" className="text-sm text-primary underline">{t('common.back')}</Link>
+      <Link to="/votes" aria-label={t('common.back')} className="grid h-11 w-11 place-items-center rounded-[14px] border border-border bg-card text-foreground">
+        <Icon d="M15 5l-7 7 7 7" size={22} sw={2} />
+      </Link>
 
       {!proposal.data ? (
         <ListSkeleton rows={6} />
       ) : (
         <>
-          <section className="rounded-lg border border-border bg-card p-4">
+          <section className="rounded-[20px] border border-border bg-card p-4 shadow-card">
             <div className="mb-2 flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold">{proposal.data.title}</h2>
+                <h2 className="text-[1.375rem] font-bold leading-snug">{proposal.data.title}</h2>
                 <p className="text-sm text-muted">
                   {t(`proposalType.${proposal.data.type}`)} · {t('votes.deadline')}: {remaining ?? fmtInstant(proposal.data.closes_at ?? proposal.data.created_at)}
                 </p>
               </div>
-              <span className="rounded-full bg-primary-soft px-2 py-1 text-sm text-primary">{t(`status.proposal.${proposal.data.status}`)}</span>
+              <span className="rounded-full bg-warn-bg px-3 py-1 text-xs font-bold text-warn">{t(`status.proposal.${proposal.data.status}`)}</span>
             </div>
 
             {proposal.data.description && <p className="mt-2">{proposal.data.description}</p>}
@@ -77,25 +80,39 @@ export function VoteDetailPage() {
 
             <PayloadPreview type={proposal.data.type as (typeof PROPOSAL_TYPES)[number]} payload={proposal.data.payload} />
 
-            <div className="mt-4 rounded-md border border-border p-3">
+            <div className="mt-4 rounded-2xl bg-background p-3.5">
               <p className="text-sm text-muted">{t('proposal.threshold')}</p>
-              <p className="text-lg font-semibold">
-                {proposal.data.basis === 'share'
-                  ? `${proposal.data.counts.yes_weight} / ${proposal.data.threshold_weight}`
-                  : `${proposal.data.counts.yes} / ${proposal.data.threshold}`}{' '}
-                <span className="text-sm font-normal text-muted">
-                  ({proposal.data.basis === 'share' ? t('proposal.byShares') : t('proposal.byMembers')})
-                </span>
-              </p>
-              <div className="mt-2 flex gap-4 text-sm">
-                <span className="text-ok">{t('votes.yes')}: {proposal.data.counts.yes}</span>
-                <span className="text-bad">{t('votes.no')}: {proposal.data.counts.no}</span>
-                <span className="text-muted">{t('votes.abstain')}: {proposal.data.counts.abstain}</span>
-              </div>
+              {proposal.data.ballots_hidden ? (
+                <>
+                  <p className="text-xl font-bold">
+                    {t('votes.needToPass', { need: proposal.data.basis === 'share' ? proposal.data.threshold_weight : proposal.data.threshold })}{' '}
+                    <span className="text-sm font-normal text-muted">
+                      ({proposal.data.basis === 'share' ? t('proposal.byShares') : t('proposal.byMembers')})
+                    </span>
+                  </p>
+                  <p className="mt-2 text-sm text-muted">{t('votes.hiddenUntilClose')}</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-xl font-bold">
+                    {proposal.data.basis === 'share'
+                      ? `${proposal.data.counts.yes_weight} / ${proposal.data.threshold_weight}`
+                      : `${proposal.data.counts.yes} / ${proposal.data.threshold}`}{' '}
+                    <span className="text-sm font-normal text-muted">
+                      ({proposal.data.basis === 'share' ? t('proposal.byShares') : t('proposal.byMembers')})
+                    </span>
+                  </p>
+                  <div className="mt-2 flex gap-4 text-sm">
+                    <span className="text-ok">{t('votes.yes')}: {proposal.data.counts.yes}</span>
+                    <span className="text-bad">{t('votes.no')}: {proposal.data.counts.no}</span>
+                    <span className="text-muted">{t('votes.abstain')}: {proposal.data.counts.abstain}</span>
+                  </div>
+                </>
+              )}
             </div>
 
             {isSubject && (
-              <p className="mt-3 rounded-md bg-primary-soft p-2 text-warn">
+              <p className="mt-3 rounded-xl bg-warn-bg p-2.5 text-warn">
                 {t('votes.cannotVoteSubject')}
               </p>
             )}
@@ -111,7 +128,7 @@ export function VoteDetailPage() {
                     aria-pressed={active}
                     disabled={!canVote}
                     onClick={() => vote.mutate(choice)}
-                    className={`h-12 rounded-md font-medium disabled:opacity-50 ${
+                    className={`h-[54px] rounded-2xl text-base font-bold disabled:opacity-50 ${
                       choice === 'yes'
                         ? active
                           ? 'bg-ok text-primary-foreground'
@@ -119,10 +136,10 @@ export function VoteDetailPage() {
                         : choice === 'no'
                           ? active
                             ? 'bg-bad text-primary-foreground'
-                            : 'border border-border'
+                            : 'border-[1.5px] border-bad bg-card text-bad'
                           : active
                             ? 'bg-muted text-primary-foreground'
-                            : 'border border-border'
+                            : 'border-[1.5px] border-border bg-card text-ink2'
                     }`}
                   >
                     {myVote?.choice === choice ? `${t(`votes.${choice}`)} ✓` : t(`votes.${choice}`)}
@@ -146,8 +163,9 @@ export function VoteDetailPage() {
             )}
           </section>
 
-          <section className="rounded-lg border border-border bg-card p-4">
-            <h3 className="mb-2 font-semibold">{t('proposal.voterList')}</h3>
+          <section className="rounded-[20px] border border-border bg-card p-4 shadow-card">
+            <h3 className="mb-1 text-base font-bold">{t('proposal.voterList')}</h3>
+            {proposal.data.ballots_hidden && <p className="mb-1 text-xs text-muted">{t('votes.hiddenUntilClose')}</p>}
             <ul className="divide-y divide-border">
               {proposal.data.voters.map((v) => {
                 const cast = proposal.data!.votes.find((vote) => vote.member_id === v.member_id);
@@ -157,9 +175,11 @@ export function VoteDetailPage() {
                       {v.code} {v.full_name}
                       {proposal.data!.basis === 'share' && <span className="text-muted"> · {v.weight}</span>}
                     </span>
-                    <span className="font-medium">
-                      {cast ? t(`votes.${cast.choice}`) : <span className="text-muted">{t('votes.notVoted')}</span>}
-                    </span>
+                    {!proposal.data!.ballots_hidden && (
+                      <span className="font-medium">
+                        {cast ? t(`votes.${cast.choice}`) : <span className="text-muted">{t('votes.notVoted')}</span>}
+                      </span>
+                    )}
                   </li>
                 );
               })}

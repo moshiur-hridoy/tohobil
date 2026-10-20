@@ -63,6 +63,27 @@ const NAV_GROUPS: { titleKey: string; routes: AdminRoute[] }[] = [
   },
 ];
 
+const TOTP_ICON = 'M6 11V8a6 6 0 0 1 12 0v3M5 11h14v10H5z';
+
+/** Links that live outside /admin (the authenticator setup page is shared with the member side). */
+function ExtraLink({ to, label, icon, compact = false }: { to: string; label: string; icon: string; compact?: boolean }) {
+  return (
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        `flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors ${compact ? 'whitespace-nowrap' : ''} ${
+          isActive ? 'bg-primary-soft font-bold text-primary' : 'text-foreground hover:bg-hover'
+        }`
+      }
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d={icon} />
+      </svg>
+      <span>{label}</span>
+    </NavLink>
+  );
+}
+
 function labelForRoute(to: AdminRoute): string {
   const found = ADMIN_NAV.find(([route]) => route === to);
   return found ? found[1] : '';
@@ -101,6 +122,10 @@ export function CashierLayout() {
               ))}
             </div>
           ))}
+          <div>
+            <div className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wider text-muted">{t('totp.title')}</div>
+            <ExtraLink to="/totp" label={t('totp.title')} icon={TOTP_ICON} />
+          </div>
         </nav>
       </aside>
 
@@ -115,6 +140,7 @@ export function CashierLayout() {
             compact
           />
         ))}
+        <ExtraLink to="/totp" label={t('totp.title')} icon={TOTP_ICON} compact />
       </nav>
 
       <main className="flex-1">

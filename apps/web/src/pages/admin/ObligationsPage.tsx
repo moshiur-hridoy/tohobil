@@ -49,9 +49,9 @@ export function ObligationsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">{t('obligations.title')}</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{t('obligations.title')}</h1>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-semibold">{t('obligations.levy')}</h2>
@@ -62,7 +62,7 @@ export function ObligationsPage() {
               <div className="text-sm text-muted">{t('obligations.held')}</div>
               <div className="text-lg font-semibold">{taka(levy.data.held_paisa)}</div>
               {isCashier && BigInt(levy.data.held_paisa) > 0n && (
-                <button type="button" onClick={() => setRemit(true)} className="mt-1 h-9 rounded-md border border-border px-3 text-xs hover:bg-hover">{t('obligations.remit')}</button>
+                <button type="button" onClick={() => setRemit(true)} className="mt-1 h-9 rounded-xl border border-border px-3 text-xs hover:bg-hover">{t('obligations.remit')}</button>
               )}
             </div>
           )}
@@ -92,7 +92,7 @@ export function ObligationsPage() {
         )}
       </section>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <h2 className="mb-1 font-semibold">{t('obligations.financing')}</h2>
         <p className="mb-3 text-sm text-muted">{t('obligations.financingHint')}</p>
         {financing.error ? (
@@ -113,7 +113,7 @@ export function ObligationsPage() {
                       <span className="text-ok">{t('obligations.paid')}</span>
                     ) : (
                       isCashier && (
-                        <button type="button" onClick={() => setPaying({ id: i.id, label: `${fmtDate(i.due_on)} · ${taka(i.amount_paisa)}` })} className="h-9 rounded-md border border-border px-3 text-xs hover:bg-hover">{t('obligations.payInstalment')}</button>
+                        <button type="button" onClick={() => setPaying({ id: i.id, label: `${fmtDate(i.due_on)} · ${taka(i.amount_paisa)}` })} className="h-9 rounded-xl border border-border px-3 text-xs hover:bg-hover">{t('obligations.payInstalment')}</button>
                       )
                     )}
                   </li>

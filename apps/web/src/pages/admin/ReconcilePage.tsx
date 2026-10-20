@@ -79,14 +79,14 @@ export function ReconcilePage() {
 
   const button = (label: string, which: Sheet, enabled: boolean) =>
     enabled && (
-      <button type="button" onClick={() => setSheet(which)} className="h-10 rounded-md bg-primary px-4 text-primary-foreground">{label}</button>
+      <button type="button" onClick={() => setSheet(which)} className="h-10 rounded-xl bg-primary px-4 text-primary-foreground">{label}</button>
     );
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">{t('reconcile.title')}</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{t('reconcile.title')}</h1>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-semibold">{t('reconcile.count')}</h2>
           <input type="month" aria-label={t('reconcile.month')} value={period} onChange={(e) => setPeriod(e.target.value)} className="h-11 rounded-md border border-input bg-background px-2" />
@@ -140,7 +140,7 @@ export function ReconcilePage() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-semibold">{t('reconcile.yearEnd')}</h2>
           <input type="number" aria-label={t('reconcile.year')} value={year} onChange={(e) => setYear(e.target.value)} className="h-11 w-28 rounded-md border border-input bg-background px-2" />
@@ -151,7 +151,7 @@ export function ReconcilePage() {
           {isAuditor && button(t('reconcile.signAudit'), 'signoff', audit.data?.status === 'pending')}
           {isCashier && button(t('reconcile.createArchive'), 'archive', audit.data?.status === 'approved')}
           {audit.data?.status === 'approved' && (
-            <button type="button" onClick={() => void downloadFile(`/reports/annual?year=${year}`, `barakah-${year}.zip`).catch(() => undefined)} className="h-10 rounded-md border border-border px-4 hover:bg-hover">{t('reconcile.downloadArchive')}</button>
+            <button type="button" onClick={() => void downloadFile(`/reports/annual?year=${year}`, `barakah-${year}.zip`).catch(() => undefined)} className="h-10 rounded-xl border border-border px-4 hover:bg-hover">{t('reconcile.downloadArchive')}</button>
           )}
         </div>
         <p className="mt-2 text-xs text-muted">{t('reconcile.yearHint')}</p>

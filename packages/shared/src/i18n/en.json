@@ -1,6 +1,7 @@
 {
   "app": {
     "name": "Barakah Fund",
+    "greeting": "Assalamu alaikum",
     "shortName": "Barakah"
   },
   "nav": {
@@ -59,6 +60,8 @@
     "instructionsPlaceholder": "Payment instructions will appear here."
   },
   "votes": {
+    "hiddenUntilClose": "Nobody can see how others voted, or the running result, until voting closes.",
+    "needToPass": "Needed to pass: {{need}}",
     "title": "Vote detail",
     "open": "Open",
     "past": "Past",
@@ -216,6 +219,8 @@
     "project_closure": "Project closure"
   },
   "proposal": {
+    "closeEarlyDisabled": "The result is not certain yet, so it cannot be closed early.",
+    "turnout": "Voted: {{voted}} of {{total}}",
     "title": "Proposal",
     "type": "Type",
     "subject": "Subject",
@@ -267,7 +272,7 @@
     "payment": {
       "duplicate_trx": "This transaction ID has already been submitted.",
       "amount_required": "Please enter an amount.",
-      "trx_required": "Transaction ID is required for bKash, Nagad, and Bank payments.",
+      "trx_required": "Enter the transaction ID or the last 4 digits of the sender number.",
       "paid_in_future": "The payment date cannot be in the future.",
       "purpose_unsupported": "This kind of payment is not available yet.",
       "not_pending": "This payment has already been handled.",
@@ -364,6 +369,26 @@
       "no_new_members": "The fund is being wound up; no new members can join."
     },
     "proposal": {
+      "undecided": "The result is not certain yet. A vote can only close early once the outcome cannot change. It closes by itself when the time ends.",
+      "not_open": "This proposal is not open for voting.",
+      "already_closed": "Voting has already ended.",
+      "closes_too_soon": "Voting must stay open for at least 1 hour.",
+      "voting_closed": "Voting on this proposal has ended.",
+      "not_eligible": "You cannot vote on this proposal.",
+      "not_found": "Proposal not found.",
+      "not_draft": "Only draft proposals can be opened or cancelled.",
+      "no_voters": "No member is eligible to vote on this proposal.",
+      "not_approved": "The proposal is not approved yet.",
+      "not_finalized": "Voting has not finished yet.",
+      "execute_not_ready": "The proposal is not ready to be carried out.",
+      "execution_window_expired": "The time to carry out this proposal has passed.",
+      "wrong_executor_role": "You are not allowed to carry out this proposal.",
+      "missing_subject": "This kind of proposal needs a member to be chosen.",
+      "unexpected_subject": "A member cannot be chosen for this kind of proposal.",
+      "subject_mismatch": "The chosen member does not match the proposal.",
+      "unknown_type": "Unknown proposal type.",
+      "invalid_payload": "Some fields of the proposal are not valid.",
+      "fine_waiver_multiple_members": "A fine waiver proposal can only cover one member’s fines.",
       "compliance_incomplete": "Every compliance box must be ticked before voting.",
       "feasibility_required": "A feasibility file is needed before voting."
     }
@@ -537,6 +562,21 @@
     }
   },
   "pay": {
+    "senderDigitsPhone": "Last 4 digits of the number you sent from",
+    "senderDigitsBank": "Last 4 digits of the account you sent from",
+    "senderDigitsHint": "If you send from abroad and have no transaction ID, this is enough.",
+    "senderDigitsInvalid": "Enter exactly 4 digits (numbers only).",
+    "senderNotePhone": "Sender number, last 4 digits: {{digits}}",
+    "senderNoteBank": "Sender account, last 4 digits: {{digits}}",
+    "trxHintOptional": "Add the transaction ID if the message has one; otherwise leave it empty.",
+    "totalIncludesFine": "This total includes a {{fine}} fine (dues {{due}} + fine {{fine}}).",
+    "withFine": "Dues {{due}} + fine {{fine}}",
+    "whichMonths": "Which months did you pay for? (you can pick more than one)",
+    "payableTotal": "Total to send",
+    "pickSomething": "Pick at least one month.",
+    "owedForMonth": "This month’s balance {{amount}} was filled in. Type a different amount if you like.",
+    "subtitle": "Send the money, then submit the details here",
+    "afterSendHint": "After sending, submit the TrxID in the form below. Your dues drop once the cashier verifies.",
     "duesAndFines": "My dues and fines",
     "noDues": "Nothing is due.",
     "fineLabel": "Fine",
@@ -1191,6 +1231,8 @@
     "payInstalment": "Pay instalment"
   },
   "proposalFields": {
+    "invalidFields": "These fields are not valid",
+    "phoneHint": "Write the phone number as +8801XXXXXXXXX (for example +8801712345678).",
     "optional": "optional",
     "missing": "Please fill in",
     "chooseAsset": "Choose an asset",

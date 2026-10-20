@@ -47,7 +47,7 @@ export function ApprovalsTab() {
       {notice && <p role="status" className="text-ok">{notice}</p>}
       <ul className="space-y-2">
         {rows.map((a) => (
-          <li key={a.id} className="rounded-lg border border-border bg-card p-3">
+          <li key={a.id} className="rounded-[18px] border border-border bg-card shadow-card p-3">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <span className="font-semibold">
                 {a.payment_member_code} · {a.payment_amount_paisa ? taka(a.payment_amount_paisa) : ''}
@@ -59,10 +59,10 @@ export function ApprovalsTab() {
             {a.reason && <p className="mt-1">{a.reason}</p>}
             {a.status === 'pending' && isAuditor && (
               <div className="mt-2 flex gap-2">
-                <button type="button" className="h-11 rounded-md bg-primary px-4 font-medium text-primary-foreground" onClick={() => { setNotice(null); setTarget({ row: a, action: 'approve' }); }}>
+                <button type="button" className="h-11 rounded-xl bg-primary px-4 font-medium text-primary-foreground" onClick={() => { setNotice(null); setTarget({ row: a, action: 'approve' }); }}>
                   {t('paymentsPage.approveReversal')}
                 </button>
-                <button type="button" className="h-11 rounded-md border border-border px-4" onClick={() => { setNotice(null); setTarget({ row: a, action: 'reject' }); }}>
+                <button type="button" className="h-11 rounded-xl border border-border px-4" onClick={() => { setNotice(null); setTarget({ row: a, action: 'reject' }); }}>
                   {t('paymentsPage.rejectReversal')}
                 </button>
               </div>
@@ -71,7 +71,7 @@ export function ApprovalsTab() {
         ))}
       </ul>
       {q.hasNextPage && (
-        <button type="button" onClick={() => void q.fetchNextPage()} className="h-11 w-full rounded-md border border-border">{t('common.loadMore')}</button>
+        <button type="button" onClick={() => void q.fetchNextPage()} className="h-11 w-full rounded-xl border border-border">{t('common.loadMore')}</button>
       )}
 
       <ConfirmSheet

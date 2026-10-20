@@ -28,6 +28,9 @@ interface ProposalListRow {
   threshold: number;
   threshold_weight: string;
   counts: { yes: number; no: number; abstain: number; yes_weight: string; no_weight: string; abstain_weight: string };
+  ballots_hidden: boolean;
+  voted_count?: number;
+  can_close_early?: boolean;
   subject_member_id: string | null;
   opens_at: string | null;
   closes_at: string | null;
@@ -61,7 +64,7 @@ export function ProposalsPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{t('proposalsPage.title')}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('proposalsPage.title')}</h1>
         <span className="text-sm text-muted">{t('proposalsPage.count', { count: proposals.data?.items.length ?? 0 })}</span>
       </div>
 
@@ -123,7 +126,7 @@ function ProposalItem({
   const remaining = useCountdown(p.closes_at);
 
   return (
-    <li data-testid="proposal-row" className="rounded-lg border border-border bg-card p-3">
+    <li data-testid="proposal-row" className="rounded-[18px] border border-border bg-card shadow-card p-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <button type="button" className="text-left font-semibold hover:text-primary" onClick={onOpenDetail}>
@@ -140,8 +143,11 @@ function ProposalItem({
 
       <div className="mt-2 flex flex-wrap gap-4 text-sm">
         <span>
-          {t('proposal.threshold')}: {p.basis === 'share' ? `${p.counts.yes_weight}/${p.threshold_weight}` : `${p.counts.yes}/${p.threshold}`}
+          {t('proposal.threshold')}: {p.ballots_hidden ? t('votes.needToPass', { need: p.basis === 'share' ? p.threshold_weight : p.threshold }) : p.basis === 'share' ? `${p.counts.yes_weight}/${p.threshold_weight}` : `${p.counts.yes}/${p.threshold}`}
         </span>
+        {p.voted_count !== undefined && (
+          <span data-testid="turnout">{t('proposal.turnout', { voted: p.voted_count, total: p.eligible_count })}</span>
+        )}
         <span>
           {t('votes.deadline')}: {p.closes_at ? (remaining ?? fmtInstant(p.closes_at)) : t('common.none')}
         </span>
@@ -152,9 +158,9 @@ function ProposalItem({
         <div className="mt-3 flex flex-wrap gap-2">
           {p.status === 'draft' && <OpenButton id={p.id} onDone={onRefresh} />}
           {p.status === 'draft' && <CancelButton id={p.id} onDone={onRefresh} />}
-          {p.status === 'open' && <CloseEarlyButton id={p.id} onDone={onRefresh} />}
+          {p.status === 'open' && <CloseEarlyButton id={p.id} onDone={onRefresh} canClose={p.can_close_early === true} />}
           {p.status === 'approved' && <ExecuteButton id={p.id} type={p.type} onDone={onRefresh} />}
-          <button type="button" className="h-10 rounded-md border border-border px-3" onClick={onOpenDetail}>
+          <button type="button" className="h-10 rounded-xl border border-border px-3" onClick={onOpenDetail}>
             {t('common.details')}
           </button>
         </div>
@@ -174,7 +180,7 @@ function OpenButton({ id, onDone }: { id: string; onDone: () => void }) {
 
   return (
     <>
-      <button type="button" className="h-10 rounded-md bg-primary px-3 text-primary-foreground" onClick={() => setOpen(true)}>
+      <button type="button" className="h-10 rounded-xl bg-primary px-3 text-primary-foreground" onClick={() => setOpen(true)}>
         {t('proposal.open')}
       </button>
       <ConfirmSheet
@@ -198,14 +204,21 @@ function OpenButton({ id, onDone }: { id: string; onDone: () => void }) {
   );
 }
 
-function CloseEarlyButton({ id, onDone }: { id: string; onDone: () => void }) {
+function CloseEarlyButton({ id, onDone, canClose }: { id: string; onDone: () => void; canClose: boolean }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button type="button" className="h-10 rounded-md border border-border px-3" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        disabled={!canClose}
+        title={canClose ? undefined : t('proposal.closeEarlyDisabled')}
+        className="h-10 rounded-xl border border-border px-3 disabled:cursor-not-allowed disabled:opacity-50"
+        onClick={() => setOpen(true)}
+      >
         {t('proposal.closeEarly')}
       </button>
+      {!canClose && <p className="basis-full text-xs text-muted">{t('proposal.closeEarlyDisabled')}</p>}
       <ConfirmSheet
         open={open}
         onClose={() => setOpen(false)}
@@ -229,7 +242,7 @@ function CancelButton({ id, onDone }: { id: string; onDone: () => void }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button type="button" className="h-10 rounded-md border border-border px-3" onClick={() => setOpen(true)}>
+      <button type="button" className="h-10 rounded-xl border border-border px-3" onClick={() => setOpen(true)}>
         {t('common.cancel')}
       </button>
       <ConfirmSheet
@@ -259,7 +272,7 @@ function ExecuteButton({ id, type, onDone }: { id: string; type: ProposalType; o
 
   return (
     <>
-      <button type="button" data-testid="execute-proposal" className="h-10 rounded-md bg-primary px-3 text-primary-foreground" onClick={() => setOpen(true)}>
+      <button type="button" data-testid="execute-proposal" className="h-10 rounded-xl bg-primary px-3 text-primary-foreground" onClick={() => setOpen(true)}>
         {t('proposal.execute')}
       </button>
       <ConfirmSheet
@@ -357,9 +370,9 @@ function CreateProposalForm({
   };
 
   return (
-    <div className="rounded-lg border border-border bg-card p-3">
+    <div className="rounded-[18px] border border-border bg-card shadow-card p-3">
       {!expanded ? (
-        <button type="button" className="h-10 rounded-md bg-primary px-3 text-primary-foreground" onClick={() => setExpanded(true)}>
+        <button type="button" className="h-10 rounded-xl bg-primary px-3 text-primary-foreground" onClick={() => setExpanded(true)}>
           {t('proposalsPage.newProposal')}
         </button>
       ) : (
@@ -388,10 +401,10 @@ function CreateProposalForm({
             {t('proposal.clauseRef')}
             <input className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={clauseRef} onChange={(e) => setClauseRef(e.target.value)} />
           </label>
-          {error != null && <p className="text-bad">{error instanceof ApiError && error.code === 'request.invalid' ? `${t('proposalFields.missing')}: ${t(`proposalFields.${error.message}`, { defaultValue: error.message })}` : error instanceof ApiError ? t(`errors.${error.code}`, { defaultValue: t('errors.generic') }) : t('errors.generic')}</p>}
+          {error != null && <p role="alert" className="text-bad">{proposalErrorText(error, t)}</p>}
           <div className="flex gap-2">
-            <button type="submit" disabled={busy} className="h-10 rounded-md bg-primary px-3 text-primary-foreground disabled:opacity-50">{busy ? t('common.working') : t('common.submit')}</button>
-            <button type="button" className="h-10 rounded-md border border-border px-3" onClick={() => setExpanded(false)}>{t('common.cancel')}</button>
+            <button type="submit" disabled={busy} className="h-10 rounded-xl bg-primary px-3 text-primary-foreground disabled:opacity-50">{busy ? t('common.working') : t('common.submit')}</button>
+            <button type="button" className="h-10 rounded-xl border border-border px-3" onClick={() => setExpanded(false)}>{t('common.cancel')}</button>
           </div>
         </form>
       )}
@@ -420,10 +433,11 @@ function ProposalDetailDialog({ id, onClose }: { id: string | null; onClose: () 
                   <SheetRow label={t('proposalsPage.type')} value={t(`proposalType.${proposal.data.type}`)} />
                   {proposal.data.subject && <SheetRow label={t('proposal.subject')} value={`${proposal.data.subject.code} ${proposal.data.subject.full_name}`} />}
                   {proposal.data.clause_ref && <SheetRow label={t('proposal.clauseRef')} value={proposal.data.clause_ref} />}
-                  <SheetRow label={t('proposal.threshold')} value={proposal.data.basis === 'share' ? `${proposal.data.counts.yes_weight}/${proposal.data.threshold_weight}` : `${proposal.data.counts.yes}/${proposal.data.threshold}`} />
+                  <SheetRow label={t('proposal.threshold')} value={proposal.data.ballots_hidden ? t('votes.hiddenUntilClose') : proposal.data.basis === 'share' ? `${proposal.data.counts.yes_weight}/${proposal.data.threshold_weight}` : `${proposal.data.counts.yes}/${proposal.data.threshold}`} />
                 </div>
                 <ComplianceChecklist type={proposal.data.type} payload={proposal.data.payload} />
                 <PayloadPreview payload={proposal.data.payload} />
+                {proposal.data.voted_count !== undefined && <p className="text-sm font-semibold">{t('proposal.turnout', { voted: proposal.data.voted_count, total: proposal.data.eligible_count })}</p>}
                 <h4 className="font-semibold">{t('proposal.voterList')}</h4>
                 <ul className="divide-y divide-border">
                   {proposal.data.voters.map((v) => {
@@ -431,12 +445,12 @@ function ProposalDetailDialog({ id, onClose }: { id: string | null; onClose: () 
                     return (
                       <li key={v.member_id} className="flex justify-between py-1">
                         <span>{v.code} {v.full_name}{proposal.data!.basis === 'share' && <span className="text-muted"> · {v.weight}</span>}</span>
-                        <span className="font-medium">{cast ? t(`votes.${cast.choice}`) : <span className="text-muted">{t('votes.notVoted')}</span>}</span>
+                        {!proposal.data!.ballots_hidden && <span className="font-medium">{cast ? t(`votes.${cast.choice}`) : <span className="text-muted">{t('votes.notVoted')}</span>}</span>}
                       </li>
                     );
                   })}
                 </ul>
-                <Dialog.Close className="mt-2 h-11 w-full rounded-md border border-border">{t('common.close')}</Dialog.Close>
+                <Dialog.Close className="mt-2 h-11 w-full rounded-xl border border-border">{t('common.close')}</Dialog.Close>
               </div>
             </>
           )}
@@ -472,7 +486,7 @@ function PayloadPreview({ payload }: { payload: Record<string, unknown> }) {
   const entries = Object.entries(payload).filter(([k, v]) => v !== undefined && v !== null && k !== 'compliance');
   if (entries.length === 0) return null;
   return (
-    <div className="rounded-md border border-border p-3">
+    <div className="rounded-xl border border-border p-3">
       <p className="mb-1 font-medium">{t('proposal.payload')}</p>
       {entries.map(([k, v]) => (
         <div key={k} className="grid grid-cols-[9rem_1fr] gap-2 py-1">
@@ -486,3 +500,17 @@ function PayloadPreview({ payload }: { payload: Record<string, unknown> }) {
   );
 }
 
+
+/** The message under the new-proposal form; for a rejected payload it names the fields that are wrong. */
+function proposalErrorText(error: unknown, t: (key: string, opts?: Record<string, unknown>) => string): string {
+  if (!(error instanceof ApiError)) return t('errors.generic');
+  if (error.code === 'request.invalid') return `${t('proposalFields.missing')}: ${t(`proposalFields.${error.message}`, { defaultValue: error.message })}`;
+  if (error.code === 'proposal.invalid_payload') {
+    const issues = (error.extra['errors'] ?? []) as Array<{ path?: Array<string | number> }>;
+    const fields = [...new Set(issues.map((i) => String(i.path?.[0] ?? '')).filter(Boolean))];
+    const names = fields.map((f) => t(`proposalFields.${f}`, { defaultValue: f })).join(', ');
+    const phoneHint = fields.includes('phone') ? ` ${t('proposalFields.phoneHint')}` : '';
+    return `${t('proposalFields.invalidFields')}: ${names}.${phoneHint}`;
+  }
+  return t(`errors.${error.code}`, { defaultValue: t('errors.generic') });
+}

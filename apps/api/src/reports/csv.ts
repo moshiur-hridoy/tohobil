@@ -75,13 +75,16 @@ const SPECS: Record<string, Spec> = {
           JOIN proposals p ON p.id = v.proposal_id
           JOIN members m ON m.id = v.member_id
           LEFT JOIN proposal_voters pv ON pv.proposal_id = v.proposal_id AND pv.member_id = v.member_id
-          WHERE ($1::date IS NULL OR v.cast_at::date >= $1::date) AND ($2::date IS NULL OR v.cast_at::date <= $2::date)
+          WHERE p.status <> 'open' -- ballots stay secret until the vote closes
+            AND ($1::date IS NULL OR v.cast_at::date >= $1::date) AND ($2::date IS NULL OR v.cast_at::date <= $2::date)
           ORDER BY v.cast_at, v.id`,
   },
   proposals: {
     columns: ['id', 'type', 'title', 'status', 'opens_at', 'closes_at', 'finalized_at', 'executed_at', 'yes_count', 'no_count', 'abstain_count'],
     sql: `SELECT id::text AS id, type, title, status, opens_at, closes_at, finalized_at, executed_at,
-                 yes_count, no_count, abstain_count
+                 CASE WHEN status = 'open' THEN NULL ELSE yes_count END AS yes_count,
+                 CASE WHEN status = 'open' THEN NULL ELSE no_count END AS no_count,
+                 CASE WHEN status = 'open' THEN NULL ELSE abstain_count END AS abstain_count
           FROM proposals
           WHERE ($1::date IS NULL OR created_at::date >= $1::date) AND ($2::date IS NULL OR created_at::date <= $2::date)
           ORDER BY created_at, id`,

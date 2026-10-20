@@ -1,5 +1,9 @@
-import { Outlet, NavLink, Link } from 'react-router-dom';
+import { Outlet, NavLink, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../lib/api';
+import { useAuth } from '../lib/auth';
+import type { ProposalSummary } from '../lib/types';
 
 const TABS = [
   {
@@ -31,20 +35,44 @@ const TABS = [
 
 export function MemberLayout() {
   const { t } = useTranslation();
+  const { me } = useAuth();
+  // Same query as the Votes page and Home, so it shares their cache; the tab shows how many votes are open.
+  const proposals = useQuery({
+    queryKey: ['proposals', 'member'],
+    queryFn: () => api<{ items: ProposalSummary[]; next_cursor: string | null }>('/proposals?limit=200'),
+    refetchInterval: 60_000,
+  });
+  const openVotes = proposals.data?.items.filter((p) => p.status === 'open').length ?? 0;
+  const onHome = useLocation().pathname === '/home';
+  const initial = me?.full_name?.trim().charAt(0) || '👤';
 
   return (
     <div className="mx-auto flex min-h-screen max-w-lg flex-col">
-      {/* Header: title on the left, avatar menu top right (spec 8) */}
-      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-card px-4 py-3">
-        <h1 className="text-lg font-semibold text-foreground">{t('app.name')}</h1>
+      {/* Header: greeting on the left, notices bell on the right (design: Member · Home) */}
+      {onHome && (
+      <header className="flex items-center gap-3 px-4 pb-3 pt-4">
         <Link
           to="/menu"
           aria-label={t('nav.menu')}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-soft text-primary"
+          className="grid h-11 w-11 place-items-center rounded-full bg-primary-soft text-lg font-bold text-primary"
         >
-          <span aria-hidden="true">👤</span>
+          {initial}
+        </Link>
+        <div className="min-w-0 flex-1">
+          <div className="text-[0.8125rem] text-muted">{t('app.greeting')}</div>
+          <div className="truncate text-[1.1875rem] font-bold leading-tight">{me?.full_name ?? t('app.name')}</div>
+        </div>
+        <Link
+          to="/menu/notices"
+          aria-label={t('notices.title')}
+          className="grid h-11 w-11 place-items-center rounded-[14px] border border-border bg-card text-foreground"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7 M10 20a2 2 0 0 0 4 0" />
+          </svg>
         </Link>
       </header>
+      )}
 
       <main className="flex-1 pb-24">
         <Outlet />
@@ -54,7 +82,7 @@ export function MemberLayout() {
       <nav className="fixed bottom-0 left-0 right-0 mx-auto max-w-lg border-t border-border bg-card pb-[env(safe-area-inset-bottom)]">
         <div className="flex min-h-16 items-stretch justify-around">
           {TABS.map(({ to, labelKey, icon }) => (
-            <TabItem key={to} to={to} label={t(labelKey)} icon={icon} />
+            <TabItem key={to} to={to} label={t(labelKey)} icon={icon} badge={to === '/votes' ? openVotes : 0} />
           ))}
         </div>
       </nav>
@@ -62,7 +90,8 @@ export function MemberLayout() {
   );
 }
 
-function TabItem({ to, label, icon }: { to: string; label: string; icon: string }) {
+function TabItem({ to, label, icon, badge = 0 }: { to: string; label: string; icon: string; badge?: number }) {
+  const { t } = useTranslation();
   return (
     <NavLink
       to={to}
@@ -75,7 +104,7 @@ function TabItem({ to, label, icon }: { to: string; label: string; icon: string 
       {({ isActive }) => (
         <>
           <span
-            className={`grid h-[30px] w-[52px] place-items-center rounded-[15px] ${
+            className={`relative grid h-[30px] w-[52px] place-items-center rounded-[15px] ${
               isActive ? 'bg-primary-soft text-primary' : 'text-muted'
             }`}
           >
@@ -92,6 +121,15 @@ function TabItem({ to, label, icon }: { to: string; label: string; icon: string 
             >
               <path d={icon} />
             </svg>
+            {badge > 0 && (
+              <span
+                role="status"
+                aria-label={t('votes.openCount', { count: badge })}
+                className="absolute -right-0.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-bad px-1 text-[0.6875rem] font-bold leading-none text-white"
+              >
+                {badge}
+              </span>
+            )}
           </span>
           <span className="max-w-full break-words text-center leading-tight">{label}</span>
         </>

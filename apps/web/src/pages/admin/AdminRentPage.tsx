@@ -88,9 +88,9 @@ export function AdminRentPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">{t('rentAdmin.title')}</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{t('rentAdmin.title')}</h1>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <h2 className="mb-3 font-semibold">{t('rentAdmin.streams')}</h2>
         {streams.error ? (
           <LoadError error={streams.error} onRetry={() => void streams.refetch()} />
@@ -119,19 +119,19 @@ export function AdminRentPage() {
             <input aria-label={t('rentAdmin.monthly')} placeholder={t('rentAdmin.monthly')} inputMode="decimal" className="h-11 rounded-md border border-input bg-background px-2" value={monthly} onChange={(e) => setMonthly(e.target.value)} />
             <input aria-label={t('rentAdmin.dueDayLabel')} type="number" min={1} max={28} className="h-11 rounded-md border border-input bg-background px-2" value={dueDay} onChange={(e) => setDueDay(e.target.value)} />
             <input aria-label={t('rentAdmin.activeFrom')} type="date" className="h-11 rounded-md border border-input bg-background px-2" value={from} onChange={(e) => setFrom(e.target.value)} />
-            <button type="button" disabled={!name.trim() || parseAmountInput(monthly) === null} onClick={() => void addStream()} className="h-11 rounded-md bg-primary px-4 text-primary-foreground disabled:opacity-50 sm:col-span-2 lg:col-span-5">
+            <button type="button" disabled={!name.trim() || parseAmountInput(monthly) === null} onClick={() => void addStream()} className="h-11 rounded-xl bg-primary px-4 text-primary-foreground disabled:opacity-50 sm:col-span-2 lg:col-span-5">
               {t('rentAdmin.addStream')}
             </button>
           </div>
         )}
       </section>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-semibold">{t('rentAdmin.expected')}</h2>
           <div className="flex items-center gap-2">
             <input type="month" aria-label={t('rentAdmin.period')} className="h-11 rounded-md border border-input bg-background px-2" value={period} onChange={(e) => setPeriod(e.target.value)} />
-            {isCashier && <button type="button" onClick={() => void generate()} className="h-11 rounded-md border border-border px-3 text-sm hover:bg-hover">{t('rentAdmin.generate')}</button>}
+            {isCashier && <button type="button" onClick={() => void generate()} className="h-11 rounded-xl border border-border px-3 text-sm hover:bg-hover">{t('rentAdmin.generate')}</button>}
           </div>
         </div>
         {expected.error ? (
@@ -151,7 +151,7 @@ export function AdminRentPage() {
                 <span className="flex items-center gap-3">
                   <span>{taka(e.received_paisa)} / {taka(e.amount_paisa)}</span>
                   {isCashier && remaining(e) > 0n && (
-                    <button type="button" onClick={() => { setReceiving(e); setAmount(''); }} className="h-9 rounded-md border border-border px-3 text-xs hover:bg-hover">{t('rentAdmin.receive')}</button>
+                    <button type="button" onClick={() => { setReceiving(e); setAmount(''); }} className="h-9 rounded-xl border border-border px-3 text-xs hover:bg-hover">{t('rentAdmin.receive')}</button>
                   )}
                 </span>
               </li>

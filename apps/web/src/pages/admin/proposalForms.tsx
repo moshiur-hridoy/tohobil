@@ -247,7 +247,7 @@ export function ProposalFields({ type, form, onChange }: { type: ProposalType; f
       ))}
 
       {type === 'investment_purchase' && (
-        <fieldset className="rounded-md border border-border p-3">
+        <fieldset className="rounded-xl border border-border p-3">
           <legend className="px-1 text-sm font-medium">{t('proposalsPage.compliance')}</legend>
           {COMPLIANCE_CHECKLIST_FIELDS.map((c) => (
             <label key={c} className="flex items-center gap-2 py-1 text-sm">
@@ -259,7 +259,7 @@ export function ProposalFields({ type, form, onChange }: { type: ProposalType; f
       )}
 
       {type === 'financing_arrangement' && (
-        <fieldset className="rounded-md border border-border p-3">
+        <fieldset className="rounded-xl border border-border p-3">
           <legend className="px-1 text-sm font-medium">{t('proposalFields.instalments')}</legend>
           {form.instalments.map((row, i) => (
             <div key={i} className="mb-2 flex gap-2">
@@ -267,14 +267,14 @@ export function ProposalFields({ type, form, onChange }: { type: ProposalType; f
               <input aria-label={t('common.amount')} placeholder={t('common.amount')} inputMode="decimal" className="h-11 flex-1 rounded-md border border-input bg-background px-2" value={row.amount} onChange={(e) => onChange({ ...form, instalments: form.instalments.map((r, j) => (j === i ? { ...r, amount: e.target.value } : r)) })} />
             </div>
           ))}
-          <button type="button" className="h-9 rounded-md border border-border px-3 text-sm" onClick={() => onChange({ ...form, instalments: [...form.instalments, { due_on: '', amount: '' }] })}>
+          <button type="button" className="h-9 rounded-xl border border-border px-3 text-sm" onClick={() => onChange({ ...form, instalments: [...form.instalments, { due_on: '', amount: '' }] })}>
             {t('proposalFields.addInstalment')}
           </button>
         </fieldset>
       )}
 
       {type === 'wind_up' && (
-        <fieldset className="rounded-md border border-border p-3">
+        <fieldset className="rounded-xl border border-border p-3">
           <legend className="px-1 text-sm font-medium">{t('proposalFields.asset_ids_to_sell')}</legend>
           {activeAssets.map((a) => (
             <label key={a.id} className="flex items-center gap-2 py-1 text-sm">

@@ -32,9 +32,9 @@ export function RulesPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{t('rulesPage.title')}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('rulesPage.title')}</h1>
         {isCashier && (
-          <button type="button" className="h-11 rounded-md bg-primary px-3 text-primary-foreground" onClick={() => setCreateOpen(true)}>
+          <button type="button" className="h-11 rounded-xl bg-primary px-3 text-primary-foreground" onClick={() => setCreateOpen(true)}>
             {t('rulesPage.createRuleChange')}
           </button>
         )}
@@ -49,7 +49,7 @@ export function RulesPage() {
       ) : (
         <div className="space-y-4">
           {Object.entries(grouped ?? {}).map(([key, versions]) => (
-            <section key={key} className="rounded-lg border border-border bg-card p-3">
+            <section key={key} className="rounded-[18px] border border-border bg-card shadow-card p-3">
               <h2 className="mb-2 font-semibold">{key}</h2>
               <ul className="divide-y divide-border text-sm">
                 {versions.slice(0, 3).map((r) => (
@@ -116,7 +116,7 @@ function RuleHistoryDialog({ ruleKey, onClose }: { ruleKey: string | null; onClo
               ))}
             </ul>
           )}
-          <Dialog.Close className="mt-4 h-11 w-full rounded-md border border-border">{t('common.close')}</Dialog.Close>
+          <Dialog.Close className="mt-4 h-11 w-full rounded-xl border border-border">{t('common.close')}</Dialog.Close>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

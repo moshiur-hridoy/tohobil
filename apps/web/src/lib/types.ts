@@ -251,6 +251,12 @@ export interface ProposalSummary {
     no_weight: string;
     abstain_weight: string;
   };
+  /** True while the vote is open: others' votes and the running tally are hidden. */
+  ballots_hidden: boolean;
+  /** How many have voted (never what); only sent to the cashier and the auditor. */
+  voted_count?: number;
+  /** Cashier and auditor only: the outcome is already certain, so an open vote may be closed early. */
+  can_close_early?: boolean;
   opens_at: string | null;
   closes_at: string | null;
   finalized_at: string | null;

@@ -54,7 +54,7 @@ export function MatrixPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{t('matrixPage.title')}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('matrixPage.title')}</h1>
         <div className="flex flex-wrap items-end gap-2">
           <label className="text-sm text-muted">
             {t('common.from')}
@@ -64,7 +64,7 @@ export function MatrixPage() {
             {t('common.to')}
             <input type="month" className={`${input} block`} value={to} min={from} onChange={(e) => e.target.value && setTo(e.target.value)} />
           </label>
-          <button type="button" className="h-11 rounded-md border border-border px-4" onClick={exportCsv} disabled={!q.data}>
+          <button type="button" className="h-11 rounded-xl border border-border px-4" onClick={exportCsv} disabled={!q.data}>
             {t('matrixPage.export')}
           </button>
         </div>
@@ -84,7 +84,7 @@ export function MatrixPage() {
       ) : empty ? (
         <Empty text={t('matrixPage.empty')} />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-card">
+        <div className="overflow-x-auto rounded-[18px] border border-border bg-card shadow-card">
           <table className="w-full min-w-max border-collapse text-sm">
             <thead className="text-muted">
               <tr>
@@ -156,7 +156,7 @@ export function MatrixPage() {
                   <Row label={t('matrixPage.finePaid')} value={taka(cell.data.fine_paid_paisa)} />
                 </dl>
                 {cell.data.pending && <p className="mt-2 text-warn">{t('matrixPage.pendingFlag')}</p>}
-                <Dialog.Close className="mt-4 h-11 w-full rounded-md border border-border">{t('common.close')}</Dialog.Close>
+                <Dialog.Close className="mt-4 h-11 w-full rounded-xl border border-border">{t('common.close')}</Dialog.Close>
               </>
             )}
           </Dialog.Content>

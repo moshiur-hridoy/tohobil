@@ -25,9 +25,9 @@ export function CharityPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">{t('charityPage.title')}</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{t('charityPage.title')}</h1>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-semibold">{t('charityPage.statement')}</h2>
           <label className="text-sm text-muted">
@@ -61,7 +61,7 @@ export function CharityPage() {
         )}
       </section>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <h2 className="mb-3 font-semibold">{t('charityPage.donations')}</h2>
         {donations.error ? (
           <LoadError error={donations.error} onRetry={() => void donations.refetch()} />

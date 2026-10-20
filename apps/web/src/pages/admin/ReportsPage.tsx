@@ -30,15 +30,15 @@ export function ReportsPage() {
       setError(err);
     }
   };
-  const button = 'h-11 rounded-md bg-primary px-4 text-primary-foreground';
+  const button = 'h-11 rounded-xl bg-primary px-4 text-primary-foreground';
   const input = 'mt-1 h-11 w-full rounded-md border border-input bg-background px-2';
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">{t('reportsPage.title')}</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{t('reportsPage.title')}</h1>
       {error != null && <LoadError error={error} />}
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <h2 className="mb-3 font-semibold">{t('reportsPage.statement')}</h2>
         <div className="grid gap-3 sm:grid-cols-3">
           <label className="text-sm text-muted">{t('common.member')}
@@ -51,12 +51,12 @@ export function ReportsPage() {
           </label>
           <div className="flex items-end gap-2">
             <button type="button" className={button} onClick={() => void get(`/reports/statement?member_id=${memberId}&period=${period}`, `statement-${period}.pdf`)}>{t('reportsPage.statementButton')}</button>
-            <button type="button" className="h-11 rounded-md border border-border px-4 hover:bg-hover" onClick={() => void get(`/reports/zakat-statement?member_id=${memberId}`, 'zakat-statement.pdf')}>{t('reportsPage.zakatButton')}</button>
+            <button type="button" className="h-11 rounded-xl border border-border px-4 hover:bg-hover" onClick={() => void get(`/reports/zakat-statement?member_id=${memberId}`, 'zakat-statement.pdf')}>{t('reportsPage.zakatButton')}</button>
           </div>
         </div>
       </section>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <h2 className="mb-3 font-semibold">{t('reportsPage.exports')}</h2>
         <div className="grid gap-3 sm:grid-cols-4">
           <label className="text-sm text-muted">{t('reportsPage.entity')}
@@ -72,7 +72,7 @@ export function ReportsPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <h2 className="mb-1 font-semibold">{t('reportsPage.annual')}</h2>
         <p className="mb-3 text-sm text-muted">{t('reportsPage.annualHint')}</p>
         <div className="flex items-end gap-3">

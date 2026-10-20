@@ -132,14 +132,26 @@ describe('proposals lifecycle', () => {
     const v2 = await call('POST', `/proposals/${id}/vote`, s.M02.access_token, { choice: 'no' });
     expect(v2.statusCode).toBe(200);
 
+    // Another member votes too; while the vote is open nobody sees how others voted or the running tally.
+    expect((await call('POST', `/proposals/${id}/vote`, s.M03.access_token, { choice: 'yes' })).statusCode).toBe(200);
+
     const detail = (await call('GET', `/proposals/${id}`, s.M02.access_token)).json() as {
-      counts: { yes: number; no: number };
-      votes: Array<{ choice: string }>;
+      counts: { yes: number; no: number; abstain: number };
+      ballots_hidden: boolean;
+      votes: Array<{ choice: string; member_id: string }>;
     };
-    expect(detail.counts.yes).toBe(0);
-    expect(detail.counts.no).toBe(1);
+    expect(detail.ballots_hidden).toBe(true);
+    expect(detail.counts).toMatchObject({ yes: 0, no: 0, abstain: 0 });
     expect(detail.votes).toHaveLength(1);
     expect(detail.votes[0]!.choice).toBe('no');
+    expect(detail.votes[0]!.member_id).toBe(fund.members.M02);
+
+    const list = (await call('GET', '/proposals?limit=50', s.M02.access_token)).json() as {
+      items: Array<{ id: string; counts: { yes: number; no: number }; ballots_hidden: boolean }>;
+    };
+    const listed = list.items.find((p) => p.id === id)!;
+    expect(listed.ballots_hidden).toBe(true);
+    expect(listed.counts.yes + listed.counts.no).toBe(0);
   });
 
   dbIt('rejects voting by a non-eligible subject member', async () => {

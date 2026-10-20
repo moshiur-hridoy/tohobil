@@ -40,7 +40,7 @@ export function SmsPanel({ onResults, onCreate }: { onResults: (r: SmsResult[]) 
   };
 
   return (
-    <section className="rounded-lg border border-border bg-card p-4" aria-labelledby="sms-title">
+    <section className="rounded-[18px] border border-border bg-card shadow-card p-4" aria-labelledby="sms-title">
       <h2 id="sms-title" className="font-semibold">{t('paymentsPage.pasteSms')}</h2>
       <p className="mb-2 text-sm text-muted">{t('paymentsPage.pasteHint')}</p>
       <textarea
@@ -50,14 +50,14 @@ export function SmsPanel({ onResults, onCreate }: { onResults: (r: SmsResult[]) 
         onChange={(e) => setText(e.target.value)}
         maxLength={5000}
       />
-      <button type="button" disabled={busy || !text.trim()} onClick={() => void parse()} className="mt-2 h-11 rounded-md bg-primary px-4 font-medium text-primary-foreground disabled:opacity-50">
+      <button type="button" disabled={busy || !text.trim()} onClick={() => void parse()} className="mt-2 h-11 rounded-xl bg-primary px-4 font-medium text-primary-foreground disabled:opacity-50">
         {busy ? t('common.working') : t('paymentsPage.parse')}
       </button>
       {error != null && <div className="mt-2"><LoadError error={error} /></div>}
       {error == null && results.length > 0 && (
         <ul className="mt-3 space-y-3">
           {results.map((r, i) => (
-            <li key={i} className="rounded-md border border-border p-3 text-sm">
+            <li key={i} className="rounded-xl border border-border p-3 text-sm">
               {!r.result.parsed ? (
                 <p className="text-warn">{t('paymentsPage.notParsed')}</p>
               ) : (
@@ -83,7 +83,7 @@ export function SmsPanel({ onResults, onCreate }: { onResults: (r: SmsResult[]) 
                       ))}
                     </p>
                   )}
-                  <button type="button" onClick={() => onCreate(r)} className="mt-2 h-10 rounded-md border border-border px-3">
+                  <button type="button" onClick={() => onCreate(r)} className="mt-2 h-10 rounded-xl border border-border px-3">
                     {t('paymentsPage.createFromSms')}
                   </button>
                 </>

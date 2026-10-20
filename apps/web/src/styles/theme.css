@@ -8,15 +8,19 @@
 
 :root {
   /* Status colours: paid / partial-pending / overdue / not due */
-  --ok: #16793a;
-  --warn: #a84e08;
-  --bad: #b91c1c;
-  --muted: #5f6775;
+  --ok: #12794f;
+  --warn: #8f5a00;
+  --bad: #b3302a;
+  --muted: #5d6a64;
 
   /* Primary palette */
   --primary: #0e7a5a;
   --primary-foreground: #ffffff;
   --primary-soft: #e5f3ed; /* tinted background for the active item */
+  --primary-deep: #0a5c45; /* hero cards and pressed states */
+  --vio: #6b4fb3;
+  --vio-bg: #ede8f8;
+  --ink2: #44534c; /* secondary text */
 
   /* Surfaces */
   --background: #f6f8f7;
@@ -41,8 +45,8 @@
   /* Radii */
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  --radius-lg: 1.125rem;
+  --radius-xl: 1.5rem;
 
   /* Spacing scale */
   --space-1: 0.25rem;
@@ -67,6 +71,10 @@
     --primary: #22c55e;
     --primary-foreground: #0f172a;
     --primary-soft: #14301f;
+    --primary-deep: #166534;
+    --vio: #b9a4f0;
+    --vio-bg: #2a2142;
+    --ink2: #cbd5e1;
 
     --background: #0f172a;
     --foreground: #f1f5f9;

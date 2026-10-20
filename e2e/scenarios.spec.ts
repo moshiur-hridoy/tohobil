@@ -44,7 +44,8 @@ test('(2) member submits, cashier pastes the SMS and approves, member sees it co
   const member = await newPage(browser, MOBILE);
   await activate(member.page, CODES.member.ref, CODES.member.code);
   await member.page.goto('/pay');
-  await member.page.getByLabel(tr('pay.amountLabel')).fill('5000');
+  // The amount is never typed: tick the oldest open month and the total is worked out from the dues.
+  await member.page.getByRole('checkbox').first().check();
   await member.page.getByLabel(tr('payment.trxId')).fill(trx);
   await member.page.getByRole('button', { name: tr('pay.send') }).click();
   const sheet = member.page.getByRole('dialog');

@@ -9,7 +9,11 @@ import {
   uuidSchema,
 } from './common';
 
-/** Methods that settle through a counterparty that issues a transaction id (5.4). */
+/**
+ * Methods that settle through a counterparty (5.4). The member must identify the transfer by its
+ * TrxID or, for senders abroad who cannot read it, by the last digits of the sending number or account
+ * (kept in `note`, shown to the cashier, who matches the SMS by amount and phone).
+ */
 const METHODS_REQUIRING_TRX = ['bkash', 'nagad', 'bank'] as const;
 
 /**
@@ -28,10 +32,11 @@ export const paymentSubmitSchema = z
     note: z.string().max(500).optional(),
   })
   .refine(
-    (data) => !(METHODS_REQUIRING_TRX as readonly string[]).includes(data.method) || !!data.trx_id,
+    (data) =>
+      !(METHODS_REQUIRING_TRX as readonly string[]).includes(data.method) || !!data.trx_id || !!data.note?.trim(),
     {
       path: ['trx_id'],
-      message: 'TrxID is required for bKash, Nagad, and Bank payments',
+      message: 'A TrxID or the last digits of the sender number are required for bKash, Nagad, and Bank payments',
     },
   );
 

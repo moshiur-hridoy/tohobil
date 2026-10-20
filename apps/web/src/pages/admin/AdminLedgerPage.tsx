@@ -52,7 +52,7 @@ function ObjectionsPanel() {
       ) : (
         <ul className="space-y-2">
           {rows.map((o) => (
-            <li key={o.id} className="rounded-lg border border-border bg-card p-3">
+            <li key={o.id} className="rounded-[18px] border border-border bg-card shadow-card p-3">
               <p className="font-medium">
                 {t('adminLedger.entry', { seq: localDigits(o.ledger_seq) })} · {taka(o.entry_amount_paisa)} · {o.entry_debit} → {o.entry_credit}
               </p>
@@ -60,8 +60,8 @@ function ObjectionsPanel() {
               <p className="mt-1">{o.text}</p>
               {isAuditor && (
                 <div className="mt-2 flex gap-2">
-                  <button type="button" className="h-11 rounded-md bg-primary px-4 font-medium text-primary-foreground" onClick={() => { setNotice(null); setAnswer(''); setTarget({ row: o, status: 'resolved' }); }}>{t('adminLedger.resolve')}</button>
-                  <button type="button" className="h-11 rounded-md border border-border px-4" onClick={() => { setNotice(null); setAnswer(''); setTarget({ row: o, status: 'dismissed' }); }}>{t('adminLedger.dismiss')}</button>
+                  <button type="button" className="h-11 rounded-xl bg-primary px-4 font-medium text-primary-foreground" onClick={() => { setNotice(null); setAnswer(''); setTarget({ row: o, status: 'resolved' }); }}>{t('adminLedger.resolve')}</button>
+                  <button type="button" className="h-11 rounded-xl border border-border px-4" onClick={() => { setNotice(null); setAnswer(''); setTarget({ row: o, status: 'dismissed' }); }}>{t('adminLedger.dismiss')}</button>
                 </div>
               )}
             </li>

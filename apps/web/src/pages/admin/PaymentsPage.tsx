@@ -93,7 +93,7 @@ export function PaymentsPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{t('paymentsPage.title')}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('paymentsPage.title')}</h1>
         <div role="tablist" className="flex gap-1">
           {(['queue', 'approvals'] as const).map((k) => (
             <button key={k} role="tab" aria-selected={tab === k} type="button" onClick={() => setParams(k === 'queue' ? {} : { tab: k })} className={`h-11 rounded-md px-4 ${tab === k ? 'bg-primary-soft font-medium text-primary' : 'border border-border'}`}>
@@ -123,11 +123,11 @@ export function PaymentsPage() {
             </label>
             {isCashier && (
               <>
-                <button type="button" className="h-11 rounded-md border border-border px-4" onClick={() => { setNotice(null); setEntry({ prefill: null }); }}>
+                <button type="button" className="h-11 rounded-xl border border-border px-4" onClick={() => { setNotice(null); setEntry({ prefill: null }); }}>
                   {t('paymentsPage.entryTitle')}
                 </button>
                 {bulkRows.length > 0 && (
-                  <button type="button" className="h-11 rounded-md bg-primary px-4 font-medium text-primary-foreground" onClick={() => { setNotice(null); setAction({ kind: 'bulk' }); }}>
+                  <button type="button" className="h-11 rounded-xl bg-primary px-4 font-medium text-primary-foreground" onClick={() => { setNotice(null); setAction({ kind: 'bulk' }); }}>
                     {t('paymentsPage.bulkApprove', { n: formatCount(bulkRows.length) })}
                   </button>
                 )}
@@ -176,16 +176,16 @@ export function PaymentsPage() {
                       <StatusPill status={r.status} />
                       {isCashier && r.status === 'pending' && (
                         <div className="flex gap-2">
-                          <button type="button" className="h-10 rounded-md bg-primary px-3 text-primary-foreground" onClick={() => { setNotice(null); setAction({ kind: 'approve', row: r }); }}>
+                          <button type="button" className="h-10 rounded-xl bg-primary px-3 text-primary-foreground" onClick={() => { setNotice(null); setAction({ kind: 'approve', row: r }); }}>
                             {t('paymentsPage.approve')}
                           </button>
-                          <button type="button" className="h-10 rounded-md border border-border px-3" onClick={() => { setReason(''); setNotice(null); setAction({ kind: 'reject', row: r }); }}>
+                          <button type="button" className="h-10 rounded-xl border border-border px-3" onClick={() => { setReason(''); setNotice(null); setAction({ kind: 'reject', row: r }); }}>
                             {t('paymentsPage.reject')}
                           </button>
                         </div>
                       )}
                       {isCashier && r.status === 'confirmed' && (
-                        <button type="button" className="h-10 rounded-md border border-border px-3" onClick={() => { setReason(''); setNotice(null); setAction({ kind: 'reverse', row: r }); }}>
+                        <button type="button" className="h-10 rounded-xl border border-border px-3" onClick={() => { setReason(''); setNotice(null); setAction({ kind: 'reverse', row: r }); }}>
                           {t('paymentsPage.reverse')}
                         </button>
                       )}
@@ -196,7 +196,7 @@ export function PaymentsPage() {
             </ul>
           )}
           {q.hasNextPage && (
-            <button type="button" onClick={() => void q.fetchNextPage()} disabled={q.isFetchingNextPage} className="h-11 w-full rounded-md border border-border">
+            <button type="button" onClick={() => void q.fetchNextPage()} disabled={q.isFetchingNextPage} className="h-11 w-full rounded-xl border border-border">
               {t('common.loadMore')}
             </button>
           )}

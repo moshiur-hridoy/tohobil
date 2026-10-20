@@ -23,7 +23,7 @@ export function MembersAdminPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">{t('membersAdmin.title')}</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{t('membersAdmin.title')}</h1>
 
       {members.error ? (
         <LoadError error={members.error} onRetry={() => void members.refetch()} />
@@ -32,7 +32,7 @@ export function MembersAdminPage() {
       ) : members.data.items.length === 0 ? (
         <Empty text={t('common.noData')} />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-card">
+        <div className="overflow-x-auto rounded-[18px] border border-border bg-card shadow-card">
           <table className="w-full min-w-max border-collapse text-sm">
             <thead className="text-muted">
               <tr>
@@ -93,7 +93,7 @@ export function MembersAdminPage() {
 
 function ActionButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
   return (
-    <button type="button" onClick={onClick} className="h-9 rounded-md border border-border px-2 text-xs hover:bg-hover">
+    <button type="button" onClick={onClick} className="h-9 rounded-xl border border-border px-2 text-xs hover:bg-hover">
       {children}
     </button>
   );
@@ -126,7 +126,7 @@ function StatusHistoryDialog({ member, open, onClose }: { member: MemberRow; ope
               ))}
             </ul>
           )}
-          <Dialog.Close className="mt-4 h-11 w-full rounded-md border border-border">{t('common.close')}</Dialog.Close>
+          <Dialog.Close className="mt-4 h-11 w-full rounded-xl border border-border">{t('common.close')}</Dialog.Close>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
@@ -185,8 +185,8 @@ function SuspensionDialog({ member, open, onClose }: { member: MemberRow; open: 
           </label>
           {error != null && <p className="mt-2 text-bad">{error instanceof ApiError ? error.message : String(error)}</p>}
           <div className="mt-4 flex gap-2">
-            <button type="button" disabled={busy} onClick={() => void submit()} className="h-11 flex-1 rounded-md bg-primary text-primary-foreground disabled:opacity-50">{busy ? t('common.working') : t('common.submit')}</button>
-            <Dialog.Close className="h-11 flex-1 rounded-md border border-border">{t('common.cancel')}</Dialog.Close>
+            <button type="button" disabled={busy} onClick={() => void submit()} className="h-11 flex-1 rounded-xl bg-primary text-primary-foreground disabled:opacity-50">{busy ? t('common.working') : t('common.submit')}</button>
+            <Dialog.Close className="h-11 flex-1 rounded-xl border border-border">{t('common.cancel')}</Dialog.Close>
           </div>
         </Dialog.Content>
       </Dialog.Portal>
@@ -230,15 +230,15 @@ function IssuePinDialog({ member, open, onClose }: { member: MemberRow; open: bo
               <p className="mb-3 text-sm text-muted">{t('membersAdmin.issuePinHint')}</p>
               {error != null && <p className="mb-2 text-bad">{error instanceof ApiError ? error.message : String(error)}</p>}
               <div className="flex gap-2">
-                <button type="button" disabled={busy} onClick={() => void issue()} className="h-11 flex-1 rounded-md bg-primary text-primary-foreground disabled:opacity-50">{busy ? t('common.working') : t('membersAdmin.issuePin')}</button>
-                <Dialog.Close className="h-11 flex-1 rounded-md border border-border">{t('common.cancel')}</Dialog.Close>
+                <button type="button" disabled={busy} onClick={() => void issue()} className="h-11 flex-1 rounded-xl bg-primary text-primary-foreground disabled:opacity-50">{busy ? t('common.working') : t('membersAdmin.issuePin')}</button>
+                <Dialog.Close className="h-11 flex-1 rounded-xl border border-border">{t('common.cancel')}</Dialog.Close>
               </div>
             </>
           ) : (
             <>
               <p className="my-4 select-all text-center font-mono text-4xl tracking-[0.3em]" data-testid="issued-pin">{pin}</p>
               <p className="mb-3 text-sm text-muted">{t('membersAdmin.issuePinOnce')}</p>
-              <button type="button" onClick={close} className="h-11 w-full rounded-md border border-border">{t('common.close')}</button>
+              <button type="button" onClick={close} className="h-11 w-full rounded-xl border border-border">{t('common.close')}</button>
             </>
           )}
         </Dialog.Content>
@@ -292,8 +292,8 @@ function ReinstatementDialog({ member, open, onClose }: { member: MemberRow; ope
           </label>
           {error != null && <p className="mt-2 text-bad">{error instanceof ApiError ? error.message : String(error)}</p>}
           <div className="mt-4 flex gap-2">
-            <button type="button" disabled={busy} onClick={() => void submit()} className="h-11 flex-1 rounded-md bg-primary text-primary-foreground disabled:opacity-50">{busy ? t('common.working') : t('common.submit')}</button>
-            <Dialog.Close className="h-11 flex-1 rounded-md border border-border">{t('common.cancel')}</Dialog.Close>
+            <button type="button" disabled={busy} onClick={() => void submit()} className="h-11 flex-1 rounded-xl bg-primary text-primary-foreground disabled:opacity-50">{busy ? t('common.working') : t('common.submit')}</button>
+            <Dialog.Close className="h-11 flex-1 rounded-xl border border-border">{t('common.cancel')}</Dialog.Close>
           </div>
         </Dialog.Content>
       </Dialog.Portal>
@@ -365,8 +365,8 @@ function SettlementDialog({ member, open, onClose }: { member: MemberRow; open: 
           </label>
           {error != null && <p className="mt-2 text-bad">{error instanceof ApiError ? error.message : String(error)}</p>}
           <div className="mt-4 flex gap-2">
-            <button type="button" disabled={busy} onClick={() => void submit()} className="h-11 flex-1 rounded-md bg-primary text-primary-foreground disabled:opacity-50">{busy ? t('common.working') : t('common.submit')}</button>
-            <Dialog.Close className="h-11 flex-1 rounded-md border border-border">{t('common.cancel')}</Dialog.Close>
+            <button type="button" disabled={busy} onClick={() => void submit()} className="h-11 flex-1 rounded-xl bg-primary text-primary-foreground disabled:opacity-50">{busy ? t('common.working') : t('common.submit')}</button>
+            <Dialog.Close className="h-11 flex-1 rounded-xl border border-border">{t('common.cancel')}</Dialog.Close>
           </div>
         </Dialog.Content>
       </Dialog.Portal>
@@ -426,8 +426,8 @@ function ContactLogDialog({ member, open, onClose, isCashier }: { member: Member
           <Dialog.Title className="mb-3 text-lg font-semibold">{t('membersAdmin.contactLogTitle')} — {member.code} {member.full_name}</Dialog.Title>
 
           {isCashier && member.status === 'suspended' && (
-            <div className="mb-3 rounded-md bg-primary-soft p-2">
-              <button type="button" disabled={busy} onClick={() => void reinstate()} className="h-10 w-full rounded-md bg-primary px-3 text-primary-foreground disabled:opacity-50">
+            <div className="mb-3 rounded-xl bg-primary-soft p-2">
+              <button type="button" disabled={busy} onClick={() => void reinstate()} className="h-10 w-full rounded-xl bg-primary px-3 text-primary-foreground disabled:opacity-50">
                 {busy ? t('common.working') : t('membersAdmin.reinstate')}
               </button>
               <p className="mt-1 text-xs text-muted">{t('membersAdmin.reinstateHint')}</p>
@@ -435,7 +435,7 @@ function ContactLogDialog({ member, open, onClose, isCashier }: { member: Member
           )}
 
           {isCashier && (
-            <div className="mb-3 space-y-2 rounded-md border border-border p-2">
+            <div className="mb-3 space-y-2 rounded-xl border border-border p-2">
               <label className="block text-sm text-muted">
                 {t('membersAdmin.contactKind')}
                 <select className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={kind} onChange={(e) => setKind(e.target.value)}>
@@ -452,7 +452,7 @@ function ContactLogDialog({ member, open, onClose, isCashier }: { member: Member
                 {t('common.note')}
                 <textarea className="mt-1 min-h-16 w-full rounded-md border border-input bg-background p-2" value={note} onChange={(e) => setNote(e.target.value)} />
               </label>
-              <button type="button" disabled={busy} onClick={() => void submit()} className="h-10 rounded-md bg-primary px-3 text-primary-foreground disabled:opacity-50">
+              <button type="button" disabled={busy} onClick={() => void submit()} className="h-10 rounded-xl bg-primary px-3 text-primary-foreground disabled:opacity-50">
                 {busy ? t('common.working') : t('membersAdmin.addContactLog')}
               </button>
             </div>
@@ -474,7 +474,7 @@ function ContactLogDialog({ member, open, onClose, isCashier }: { member: Member
               ))}
             </ul>
           )}
-          <Dialog.Close className="mt-4 h-11 w-full rounded-md border border-border">{t('common.close')}</Dialog.Close>
+          <Dialog.Close className="mt-4 h-11 w-full rounded-xl border border-border">{t('common.close')}</Dialog.Close>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

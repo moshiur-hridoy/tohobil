@@ -70,10 +70,10 @@ export function AdminAssetsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">{t('assetsAdmin.title')}</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{t('assetsAdmin.title')}</h1>
 
       {nav.data && (
-        <section className="grid grid-cols-2 gap-4 rounded-lg border border-border bg-card p-4 text-sm lg:grid-cols-3">
+        <section className="grid grid-cols-2 gap-4 rounded-[18px] border border-border bg-card shadow-card p-4 text-sm lg:grid-cols-3">
           <div><div className="text-muted">{t('assetsAdmin.netAssets')}</div><div className="text-lg font-semibold">{taka(nav.data.net_assets_paisa)}</div></div>
           <div><div className="text-muted">{t('assetsAdmin.navPerShare')}</div><div className="text-lg font-semibold">{taka(nav.data.nav_per_share_paisa)}</div></div>
           <div><div className="text-muted">{t('assetsAdmin.shares')}</div><div className="text-lg font-semibold">{nav.data.shares_outstanding}</div></div>
@@ -81,7 +81,7 @@ export function AdminAssetsPage() {
       )}
 
       {isCashier && (
-        <section className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4">
+        <section className="flex flex-wrap items-end gap-3 rounded-[18px] border border-border bg-card shadow-card p-4">
           <label className="text-sm text-muted">
             {t('assetsAdmin.kind')}
             <select className="mt-1 block h-11 rounded-md border border-input bg-background px-2" value={newKind} onChange={(e) => setNewKind(e.target.value as AssetRow['kind'])}>
@@ -92,7 +92,7 @@ export function AdminAssetsPage() {
             {t('assetsAdmin.name')}
             <input className="mt-1 block h-11 w-full rounded-md border border-input bg-background px-2" value={newName} onChange={(e) => setNewName(e.target.value)} />
           </label>
-          <button type="button" disabled={newName.trim().length === 0} onClick={() => void addIdea()} className="h-11 rounded-md bg-primary px-4 text-primary-foreground disabled:opacity-50">
+          <button type="button" disabled={newName.trim().length === 0} onClick={() => void addIdea()} className="h-11 rounded-xl bg-primary px-4 text-primary-foreground disabled:opacity-50">
             {t('assetsAdmin.addIdea')}
           </button>
           <p className="basis-full text-xs text-muted">{t('assetsAdmin.ideaHint')}</p>
@@ -108,7 +108,7 @@ export function AdminAssetsPage() {
       ) : (
         <ul className="space-y-3">
           {assets.data.items.map((a) => (
-            <li key={a.id} className="rounded-lg border border-border bg-card p-4" data-testid="asset-row">
+            <li key={a.id} className="rounded-[18px] border border-border bg-card shadow-card p-4" data-testid="asset-row">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <span className="font-semibold">{a.name}</span>
@@ -121,9 +121,9 @@ export function AdminAssetsPage() {
               </div>
               {isCashier && a.status === 'acquiring' && (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button type="button" onClick={() => setAction({ kind: 'pay', asset: a })} className="h-9 rounded-md border border-border px-3 text-sm hover:bg-hover">{t('assetsAdmin.payInstalment')}</button>
-                  <button type="button" onClick={() => setAction({ kind: 'document', asset: a })} className="h-9 rounded-md border border-border px-3 text-sm hover:bg-hover">{t('assetsAdmin.attachDocument')}</button>
-                  <button type="button" onClick={() => setAction({ kind: 'complete', asset: a })} className="h-9 rounded-md border border-border px-3 text-sm hover:bg-hover">{t('assetsAdmin.complete')}</button>
+                  <button type="button" onClick={() => setAction({ kind: 'pay', asset: a })} className="h-9 rounded-xl border border-border px-3 text-sm hover:bg-hover">{t('assetsAdmin.payInstalment')}</button>
+                  <button type="button" onClick={() => setAction({ kind: 'document', asset: a })} className="h-9 rounded-xl border border-border px-3 text-sm hover:bg-hover">{t('assetsAdmin.attachDocument')}</button>
+                  <button type="button" onClick={() => setAction({ kind: 'complete', asset: a })} className="h-9 rounded-xl border border-border px-3 text-sm hover:bg-hover">{t('assetsAdmin.complete')}</button>
                 </div>
               )}
             </li>

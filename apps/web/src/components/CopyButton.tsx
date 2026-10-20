@@ -13,7 +13,7 @@ export function CopyButton({ text }: { text: string }) {
           setTimeout(() => setDone(false), 1500);
         });
       }}
-      className="h-10 shrink-0 rounded-md border border-border px-3 text-sm"
+      className="h-11 min-w-11 shrink-0 rounded-xl border border-border bg-card px-3 text-sm font-medium text-primary"
     >
       {done ? t('common.copied') : t('common.copy')}
     </button>

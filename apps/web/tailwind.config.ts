@@ -15,6 +15,10 @@ export default {
         primary: 'var(--primary)',
         'primary-foreground': 'var(--primary-foreground)',
         'primary-soft': 'var(--primary-soft)',
+        'primary-deep': 'var(--primary-deep)',
+        vio: 'var(--vio)',
+        'vio-bg': 'var(--vio-bg)',
+        ink2: 'var(--ink2)',
         background: 'var(--background)',
         foreground: 'var(--foreground)',
         card: 'var(--card)',
@@ -29,6 +33,9 @@ export default {
         border: 'var(--border)',
         input: 'var(--input)',
         ring: 'var(--ring)',
+      },
+      boxShadow: {
+        card: '0 1px 2px rgba(15,27,22,0.04)',
       },
       borderRadius: {
         sm: 'var(--radius-sm)',

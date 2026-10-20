@@ -45,7 +45,7 @@ export function AdminSystemStatusPage() {
   const isCashier = me?.roles.includes('cashier') ?? false;
 
   const card = (title: string, ok: boolean | null, lines: string[]) => (
-    <section className="rounded-lg border border-border bg-card p-4">
+    <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-semibold">{title}</h2>
         <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${ok === null ? 'bg-soft text-muted' : ok ? 'bg-ok-bg text-ok' : 'bg-bad-bg text-bad'}`}>
@@ -59,7 +59,7 @@ export function AdminSystemStatusPage() {
   const s = status.data;
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">{t('systemStatus.title')}</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{t('systemStatus.title')}</h1>
       {status.error ? (
         <LoadError error={status.error} onRetry={() => void status.refetch()} />
       ) : !s ? (
@@ -93,21 +93,21 @@ export function AdminSystemStatusPage() {
             s.disk ? `${t('systemStatus.disk')}: ${gb(s.disk.free_bytes)} / ${gb(s.disk.total_bytes)} GB` : '',
             s.queue_depth !== null ? `${t('systemStatus.queue')}: ${s.queue_depth}` : '',
           ].filter(Boolean))}
-          <section className="rounded-lg border border-border bg-card p-4 lg:col-span-2">
+          <section className="rounded-[18px] border border-border bg-card shadow-card p-4 lg:col-span-2">
             <h2 className="font-semibold">{t('systemStatus.offline')}</h2>
             <p className="text-sm text-muted">{s.offline_copy ? `${t('systemStatus.last')}: ${fmtDate(s.offline_copy.on)}` : t('systemStatus.noOffline')}</p>
             <p className="mt-1 text-xs text-muted">{t('systemStatus.offlineHint')}</p>
             {isCashier && (
-              <button type="button" onClick={() => setConfirmCopy(true)} className="mt-2 h-10 rounded-md border border-border px-3 text-sm hover:bg-hover">{t('systemStatus.confirmOffline')}</button>
+              <button type="button" onClick={() => setConfirmCopy(true)} className="mt-2 h-10 rounded-xl border border-border px-3 text-sm hover:bg-hover">{t('systemStatus.confirmOffline')}</button>
             )}
           </section>
         </div>
       )}
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <h2 className="font-semibold">{t('systemStatus.verifyNow')}</h2>
         <p className="text-sm text-muted">{t('systemStatus.verifyHint')}</p>
-        <button type="button" disabled={verify.isPending} onClick={() => verify.mutate()} className="mt-2 h-10 rounded-md bg-primary px-4 text-primary-foreground disabled:opacity-50">
+        <button type="button" disabled={verify.isPending} onClick={() => verify.mutate()} className="mt-2 h-10 rounded-xl bg-primary px-4 text-primary-foreground disabled:opacity-50">
           {verify.isPending ? t('common.working') : t('systemStatus.verifyButton')}
         </button>
         {verify.error && <div className="mt-3"><LoadError error={verify.error} /></div>}

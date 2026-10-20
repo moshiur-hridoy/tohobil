@@ -74,9 +74,9 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">{t('settingsPage.title')}</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{t('settingsPage.title')}</h1>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <h2 className="mb-3 font-semibold">{t('settingsPage.general')}</h2>
         <label className="block text-sm text-muted">
           {t('settingsPage.fundName')}
@@ -84,7 +84,7 @@ export function SettingsPage() {
         </label>
       </section>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <h2 className="mb-3 font-semibold">{t('settingsPage.paymentInstructions')}</h2>
         <div className="space-y-3">
           <label className="block text-sm text-muted">
@@ -102,14 +102,14 @@ export function SettingsPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
         <h2 className="mb-1 font-semibold">{t('settingsPage.zakat')}</h2>
         <p className="mb-3 text-sm text-muted">{t('settingsPage.zakatHint')}</p>
         <input type="date" aria-label={t('settingsPage.zakat')} className="h-11 rounded-md border border-input bg-background px-2" value={zakatDate} onChange={(e) => setZakatDate(e.target.value)} />
       </section>
 
       <div className="flex items-center gap-3">
-        <button type="button" disabled={!changed || save.isPending} onClick={() => setSheet(true)} className="h-12 rounded-md bg-primary px-4 text-primary-foreground disabled:opacity-50">
+        <button type="button" disabled={!changed || save.isPending} onClick={() => setSheet(true)} className="h-12 rounded-xl bg-primary px-4 text-primary-foreground disabled:opacity-50">
           {save.isPending ? t('common.working') : t('common.save')}
         </button>
         {saved && <p className="text-ok">{t('settingsPage.saved')}</p>}

@@ -103,7 +103,7 @@ export function LedgerView({ variant }: { variant: 'member' | 'admin' }) {
       <div className={variant === 'member' ? 'space-y-3 p-4' : 'space-y-4'}>
         {variant === 'member' ? (
           <header>
-            <h2 className="text-lg font-semibold">{t('ledgerPage.title')}</h2>
+            <h2 className="text-2xl font-bold">{t('ledgerPage.title')}</h2>
             <p className="text-muted">{t('ledgerPage.subtitle')}</p>
           </header>
         ) : (
@@ -159,7 +159,7 @@ export function LedgerView({ variant }: { variant: 'member' | 'admin' }) {
         ) : variant === 'member' ? (
           <ul className="space-y-2">
             {rows.map((r) => (
-              <li key={r.seq} className="rounded-lg border border-border bg-card p-3">
+              <li key={r.seq} className="rounded-[18px] border border-border bg-card p-3.5">
                 <EntryBody r={r} />
                 {canObject && (
                   <button type="button" onClick={() => { attempt.current = crypto.randomUUID(); setNotice(null); setObjectTo(r); }} className="mt-2 h-10 rounded-md border border-border px-3 text-sm">
@@ -170,7 +170,7 @@ export function LedgerView({ variant }: { variant: 'member' | 'admin' }) {
             ))}
           </ul>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-border bg-card">
+          <div className="overflow-x-auto rounded-[18px] border border-border bg-card shadow-card">
             <table className="w-full min-w-[56rem] text-left text-sm">
               <thead className="border-b border-border text-muted">
                 <tr>

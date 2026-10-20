@@ -38,7 +38,7 @@ export function MembersPage() {
           {members.data.items.map((m) => {
             const mine = register.data?.items.filter((r) => r.member_id === m.id) ?? [];
             return (
-              <li key={m.id} className="rounded-lg border border-border bg-card p-3">
+              <li key={m.id} className="rounded-[18px] border border-border bg-card shadow-card p-3">
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="font-semibold">{m.code} · {m.full_name}</span>
                   <span className="text-sm text-muted">{t(`status.member.${m.status}`, { defaultValue: m.status })}</span>

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Installs the two schedules (Asia/Dhaka) and runs cron in the foreground.
 set -euo pipefail
+STATUS_DIR="${STATUS_DIR:-/data/status}"
 mkdir -p /etc/crontabs "$STATUS_DIR" /backups/daily 2> /dev/null || true
 cat > /etc/crontabs/root <<'CRON'
 0 2 * * * /opt/backup/backup.sh > /proc/1/fd/1 2>&1

@@ -45,11 +45,12 @@ export interface ClientCtx {
 }
 
 /** Purposes the allocation and posting rules cover; settlement shortfalls are not paid through here. */
-const SUPPORTED_PURPOSES: readonly PaymentPurpose[] = ['dues', 'entry', 'levy'];
+const SUPPORTED_PURPOSES: readonly PaymentPurpose[] = ['dues', 'entry', 'levy', 'special'];
 const PURPOSE_DUE_KINDS: Record<string, string[]> = {
   dues: ['monthly', 'start_boost'],
   entry: ['entry'],
   levy: ['levy'],
+  special: ['special'],
 };
 
 const FUTURE_SLACK_MS = 5 * 60_000;

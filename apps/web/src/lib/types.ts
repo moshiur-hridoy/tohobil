@@ -29,7 +29,7 @@ export interface DueRow {
   id: string;
   member_id: string;
   period: string;
-  kind: 'monthly' | 'start_boost' | 'entry' | 'levy';
+  kind: 'monthly' | 'start_boost' | 'entry' | 'levy' | 'special';
   amount_paisa: string;
   allocated_paisa: string;
   outstanding_paisa: string;

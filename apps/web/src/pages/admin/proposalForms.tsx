@@ -75,6 +75,11 @@ export const PROPOSAL_FORMS: Partial<Record<ProposalType, Field[]>> = {
     { key: 'due_date', kind: 'date' },
     { key: 'reason', kind: 'textarea' },
   ],
+  special_contribution: [
+    { key: 'per_share_paisa', kind: 'money' },
+    { key: 'due_date', kind: 'date' },
+    { key: 'reason', kind: 'textarea' },
+  ],
   member_qard: [
     { key: 'direction', kind: { select: ['receive', 'repay'] } },
     { key: 'lender_member_id', kind: 'member' },

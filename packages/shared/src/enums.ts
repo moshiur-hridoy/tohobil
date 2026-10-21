@@ -27,10 +27,10 @@ export const PAYMENT_SOURCES = [
 ] as const;
 export type PaymentSource = (typeof PAYMENT_SOURCES)[number];
 
-export const PAYMENT_PURPOSES = ['dues', 'entry', 'settlement_shortfall', 'levy'] as const;
+export const PAYMENT_PURPOSES = ['dues', 'entry', 'settlement_shortfall', 'levy', 'special'] as const;
 export type PaymentPurpose = (typeof PAYMENT_PURPOSES)[number];
 
-export const DUE_KINDS = ['monthly', 'start_boost', 'entry', 'levy'] as const;
+export const DUE_KINDS = ['monthly', 'start_boost', 'entry', 'levy', 'special'] as const;
 export type DueKind = (typeof DUE_KINDS)[number];
 
 export const FINE_KINDS = ['late_payment', 'absence'] as const;
@@ -74,6 +74,7 @@ export const PROPOSAL_TYPES = [
   'charity_donation',
   'contribution_change',
   'asset_cost_levy',
+  'special_contribution',
   'member_qard',
   'financing_arrangement',
   'dissolution',

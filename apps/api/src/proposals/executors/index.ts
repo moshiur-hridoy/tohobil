@@ -10,6 +10,7 @@ import {
   assetCostLevyExecutor,
   financingArrangementExecutor,
   memberQardExecutor,
+  specialContributionExecutor,
   windUpExecutor,
 } from './obligations';
 import {
@@ -39,6 +40,7 @@ export const EXECUTORS: Record<ProposalType, ExecutorSignature> = {
   general: generalExecutor,
   contribution_change: contributionChangeExecutor,
   asset_cost_levy: assetCostLevyExecutor,
+  special_contribution: specialContributionExecutor,
   member_qard: memberQardExecutor,
   financing_arrangement: financingArrangementExecutor,
   dissolution: dissolutionExecutor,

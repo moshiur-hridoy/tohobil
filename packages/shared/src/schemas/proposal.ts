@@ -207,6 +207,13 @@ export const assetCostLevyPayloadSchema = z.object({
   reason: z.string().min(3),
 });
 
+/** A one-off amount per share paid into capital by `due_date` (constitution 1.4 "boosting"). */
+export const specialContributionPayloadSchema = z.object({
+  per_share_paisa: paisaStringSchema,
+  due_date: dateSchema,
+  reason: z.string().min(3),
+});
+
 export const memberQardPayloadSchema = z.object({
   direction: z.enum(['receive', 'repay']),
   lender_member_id: z.string().uuid(),
@@ -254,6 +261,7 @@ export const PROPOSAL_PAYLOAD_SCHEMAS = {
   charity_donation: charityDonationPayloadSchema,
   contribution_change: contributionChangePayloadSchema,
   asset_cost_levy: assetCostLevyPayloadSchema,
+  special_contribution: specialContributionPayloadSchema,
   member_qard: memberQardPayloadSchema,
   financing_arrangement: financingArrangementPayloadSchema,
   dissolution: generalPayloadSchema,

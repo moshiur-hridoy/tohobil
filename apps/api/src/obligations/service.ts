@@ -28,6 +28,48 @@ export async function levySummary(pool: pg.Pool) {
   return { held_paisa: held.toString(), remittances: remitted.rows, levies: dues.rows };
 }
 
+/** Each special contribution (1.4) with what every member owes and has paid towards it, newest first. */
+export async function specialSummary(pool: pg.Pool) {
+  const rows = (
+    await pool.query(
+      `SELECT v.period, v.due_date::text AS due_date, m.code, m.full_name, v.shares_snapshot AS shares,
+              v.amount_paisa::text AS amount_paisa, v.allocated_paisa::text AS paid_paisa,
+              v.outstanding_paisa::text AS outstanding_paisa, v.status
+       FROM v_due_status v JOIN members m ON m.id = v.member_id
+       WHERE v.kind = 'special'
+       ORDER BY v.period DESC, m.code`,
+    )
+  ).rows as Array<{
+    period: string; due_date: string; code: string; full_name: string; shares: number;
+    amount_paisa: string; paid_paisa: string; outstanding_paisa: string; status: string;
+  }>;
+  // The reason is on the proposal that created the dues; its due date names the month.
+  const reasons = (
+    await pool.query(
+      `SELECT substr(payload->>'due_date', 1, 7) AS period, payload->>'reason' AS reason
+       FROM proposals WHERE type = 'special_contribution' AND status = 'executed'`,
+    )
+  ).rows as Array<{ period: string; reason: string }>;
+  const reasonOf = new Map(reasons.map((r) => [r.period, r.reason]));
+
+  const items = new Map<string, { period: string; due_date: string; reason: string | null; total: bigint; outstanding: bigint; members: typeof rows }>();
+  for (const r of rows) {
+    const item = items.get(r.period) ?? { period: r.period, due_date: r.due_date, reason: reasonOf.get(r.period) ?? null, total: 0n, outstanding: 0n, members: [] };
+    item.total += toBigInt(r.amount_paisa);
+    const left = toBigInt(r.outstanding_paisa);
+    if (left > 0n) item.outstanding += left;
+    item.members.push(r);
+    items.set(r.period, item);
+  }
+  return {
+    items: [...items.values()].map(({ total, outstanding, ...rest }) => ({
+      ...rest,
+      total_paisa: total.toString(),
+      outstanding_paisa: outstanding.toString(),
+    })),
+  };
+}
+
 export async function remitLevy(
   deps: ObligationDeps,
   actor: LedgerActor,

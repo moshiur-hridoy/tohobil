@@ -67,6 +67,7 @@ Tick each line when it behaves as described. "Cashier" means signed in as M01, "
 - [not need now ] **Land in stages:** purchase "Land": it shows *Being acquired*. Use **Pay instalment**, **Attach document** (type "Deed") and **Complete**. It is refused until the deed is attached and the ownership split covers every share.
 - [ not need now] **Rent:** Admin → Rent: add a rent stream, press "Generate this month", then **Receive rent**.
 - [ not need now] **Levy:** propose "Levy (asset cost)", vote, execute. Each member gets a levy due. A member pays it from **Pay** (choose "Levy"). Admin → Obligations shows the money held for the registrar; **Hand to the registrar** pays it out. The fund's value per share does not change.
+- [ ] **Special contribution (for example land money):** Admin → Proposals → New → "Special contribution (per share)". Amount per share 20,000, a due date (for example 31 December), a reason. Every member must vote yes (unanimous). Execute: each member gets a due of 20,000 × their shares. A member opens **Pay**, chooses "Special contribution" and pays it; the monthly dues are paid separately as before. Admin → Obligations shows who has paid. After the due date there is no fine on it and no warning because of it.
 
 ### Month end, reports and safety (Phase 5)
 - [ ] **Cashier:** Admin → Reconcile: pick last month, type what is really in each of the four accounts, submit. A wrong number needs a note.

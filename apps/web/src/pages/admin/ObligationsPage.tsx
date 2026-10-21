@@ -19,6 +19,17 @@ interface Levy {
   levies: Array<{ period: string; members: number; total_paisa: string; outstanding_paisa: string }>;
 }
 
+interface Special {
+  items: Array<{
+    period: string;
+    due_date: string;
+    reason: string | null;
+    total_paisa: string;
+    outstanding_paisa: string;
+    members: Array<{ code: string; full_name: string; shares: number; amount_paisa: string; outstanding_paisa: string; status: string }>;
+  }>;
+}
+
 interface Financing {
   id: string;
   asset_name: string;
@@ -28,7 +39,7 @@ interface Financing {
   instalments: Array<{ id: string; due_on: string; amount_paisa: string; paid_at: string | null }>;
 }
 
-/** Cashier: levy money held for the registrar, and the instalments of deferred purchases (spec 18.7). */
+/** Cashier: special contributions (who has paid), levy money held for the registrar, and the instalments of deferred purchases (spec 18.7). */
 export function ObligationsPage() {
   const { t } = useTranslation();
   const { me } = useAuth();
@@ -43,9 +54,11 @@ export function ObligationsPage() {
   const [payAccount, setPayAccount] = useState<CashAccount>('BANK');
 
   const levy = useQuery({ queryKey: ['levy'], queryFn: () => api<Levy>('/levy') });
+  const special = useQuery({ queryKey: ['special-contributions'], queryFn: () => api<Special>('/special-contributions') });
   const financing = useQuery({ queryKey: ['financing'], queryFn: () => api<{ items: Financing[] }>('/financing') });
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ['levy'] });
+    void qc.invalidateQueries({ queryKey: ['special-contributions'] });
     void qc.invalidateQueries({ queryKey: ['financing'] });
     void qc.invalidateQueries({ queryKey: ['nav'] });
   };
@@ -67,6 +80,45 @@ export function ObligationsPage() {
           value={financing.data ? (next ? fmtDate(next.due_on) : '—') : null}
           sub={next ? `${next.asset} · ${taka(next.amount_paisa)}` : undefined} />
       </StatGrid>
+
+      {(special.error || (special.data && special.data.items.length > 0)) && (
+        <Card className="px-5 pb-3 pt-5 sm:px-6">
+          <CardHead icon={ICONS.layers} tone="bg-primary-soft text-primary" title={t('obligations.special')} sub={t('obligations.specialHint')} />
+          {special.error ? (
+            <LoadError error={special.error} onRetry={() => void special.refetch()} />
+          ) : (
+            <div className="space-y-4 pb-2">
+              {special.data!.items.map((s) => {
+                const paid = s.members.filter((m) => BigInt(m.outstanding_paisa) <= 0n).length;
+                return (
+                  <div key={s.period} className="rounded-xl border border-border p-3.5">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <p className="font-semibold">{fmtPeriod(s.period)} · <span className="font-normal text-muted">{fmtDate(s.due_date)}</span></p>
+                      <p className="tabular-nums">
+                        <span className={BigInt(s.outstanding_paisa) > 0n ? 'font-semibold text-warn' : 'text-muted'}>{taka(s.outstanding_paisa)}</span>
+                        <span className="text-muted"> / {taka(s.total_paisa)} {t('obligations.outstanding')}</span>
+                      </p>
+                    </div>
+                    {s.reason && <p className="mt-0.5 text-sm text-muted">{s.reason}</p>}
+                    <p className="mt-1 text-xs text-muted">{t('obligations.specialPaidOf', { paid: formatCount(paid), count: s.members.length })}</p>
+                    <ul className="mt-2 text-sm">
+                      {s.members.map((m) => (
+                        <li key={m.code} className="flex flex-wrap items-center justify-between gap-2 border-t border-border py-2 first:border-t-0">
+                          <span className="min-w-0 truncate"><span className="font-medium">{m.code}</span> · {m.full_name}</span>
+                          <span className="flex items-center gap-2 tabular-nums">
+                            <b>{taka(BigInt(m.outstanding_paisa) > 0n ? m.outstanding_paisa : m.amount_paisa)}</b>
+                            <StatusPill status={m.status} />
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+      )}
 
       <div className="grid items-start gap-5 xl:grid-cols-2">
         <Card className="px-5 pb-3 pt-5 sm:px-6">

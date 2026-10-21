@@ -51,7 +51,8 @@ export async function computeConsecutiveUnpaidMonths(
     `SELECT period FROM (
        SELECT DISTINCT d.period
        FROM v_due_status d
-       WHERE d.member_id = $1 AND d.outstanding_paisa > 0
+       -- A special contribution is only shown as owed; it never makes a month "unpaid" (ASSUMPTIONS 90).
+       WHERE d.member_id = $1 AND d.outstanding_paisa > 0 AND d.kind <> 'special'
        UNION
        SELECT DISTINCT du.period
        FROM v_fine_status f

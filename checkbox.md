@@ -146,6 +146,9 @@ Legend: `[x]` done, `[ ]` to do.
 - [x] Final docs: `docs/PHASE-6.md`, `docs/TEST-GUIDE.md`, `docs/GO-LIVE.md`
 - [x] All tests green
 
+## Owner requests after Phase 6
+- [x] Special contribution (constitution 1.4 boosting, `docs/ASSUMPTIONS.md` 90): a unanimous proposal sets an amount per share and a due date; paid into capital from Pay; no fine, no warning; listed on Admin → Obligations
+
 ---
 
 ## Outside the phases (owner or manual)

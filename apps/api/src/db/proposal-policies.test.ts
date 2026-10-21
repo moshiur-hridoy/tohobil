@@ -23,6 +23,7 @@ const EXPECTED: ReadonlyArray<
   ['suspension', 'member', 'majority', '2.4', false],
   ['member_deceased', 'member', 'majority', '8', false],
   ['asset_cost_levy', 'member', 'majority', '6.2', false],
+  ['special_contribution', 'member', 'unanimous', '1.4', false],
   ['investment_purchase', 'share', 'majority', '4.2', true],
   ['asset_sale', 'share', 'majority', '4.2', false],
   ['distribution', 'share', 'majority', '4.2', false],

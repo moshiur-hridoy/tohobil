@@ -152,7 +152,7 @@ export async function annualSummaryPdf(db: Db, clock: Clock, year: string): Prom
   const collected = await one(
     `SELECT COALESCE(SUM(a.amount_paisa), 0)::text AS v FROM payment_allocations a
        JOIN payments p ON p.id = a.payment_id JOIN dues d ON d.id = a.due_id
-      WHERE p.status = 'confirmed' AND d.kind IN ('monthly','start_boost') AND d.due_date BETWEEN $1::date AND $2::date`,
+      WHERE p.status = 'confirmed' AND d.kind IN ('monthly','start_boost','special') AND d.due_date BETWEEN $1::date AND $2::date`,
     [`${year}-01-01`, to],
   );
   const fines = await one(

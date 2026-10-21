@@ -62,6 +62,53 @@ export const assetCostLevyExecutor: ExecutorSignature = async (db, proposal, _in
 };
 
 /**
+ * Special contribution (1.4 "boosting"): `per_share_paisa` times shares for every active member, due on
+ * `due_date`. Unlike the levy it is paid into MEMBER_CAPITAL, and unlike a monthly due it is never fined
+ * and never counts towards warning or suspension (ASSUMPTIONS 90). One per month, like the levy.
+ */
+export const specialContributionExecutor: ExecutorSignature = async (db, proposal, _input, _actor, _ctx, deps) => {
+  const payload = proposal.payload as { per_share_paisa: string; due_date: string; reason: string };
+  const perShare = toBigInt(payload.per_share_paisa);
+  const today = deps.clock.todayDhaka();
+  const period = payload.due_date.slice(0, 7);
+  if (payload.due_date < today) {
+    throw badRequest('special.due_in_past', 'The due date has already passed; pick a later date');
+  }
+
+  const members = (
+    await db.query(
+      `SELECT m.id, m.code, shares_on(m.id, $1::date) AS shares
+       FROM members m
+       WHERE m.status IN ('active','warning') AND shares_on(m.id, $1::date) > 0
+       ORDER BY m.code`,
+      [today],
+    )
+  ).rows as Array<{ id: string; code: string; shares: number }>;
+  if (members.length === 0) throw badRequest('special.no_members', 'There are no active members to charge');
+
+  const clash = await db.query(`SELECT 1 FROM dues WHERE kind = 'special' AND period = $1 LIMIT 1`, [period]);
+  if ((clash.rowCount ?? 0) > 0) {
+    throw conflict('special.period_taken', `A special contribution is already due in ${period}; pick a due date in another month`);
+  }
+  const portions = members.map((m) => ({ ...m, amount: perShare * BigInt(m.shares) }));
+  for (const p of portions) {
+    await db.query(
+      `INSERT INTO dues (member_id, period, kind, shares_snapshot, amount_paisa, due_date)
+       VALUES ($1, $2, 'special', $3, $4::bigint, $5::date)`,
+      [p.id, period, p.shares, p.amount.toString(), payload.due_date],
+    );
+  }
+
+  return serialised({
+    per_share_paisa: perShare.toString(),
+    total_paisa: portions.reduce((sum, p) => sum + p.amount, 0n).toString(),
+    period,
+    due_date: payload.due_date,
+    members: portions.map((p) => ({ member_id: p.id, shares: Number(p.shares), amount_paisa: p.amount.toString() })),
+  });
+};
+
+/**
  * Interest-free loan from a member to the fund (6.3). Receiving posts `DR <account>, CR MEMBER_QARD`;
  * repaying posts the reverse and can never exceed what that member has lent.
  */

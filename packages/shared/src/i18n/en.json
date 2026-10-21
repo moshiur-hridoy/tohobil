@@ -218,6 +218,7 @@
     "charity_donation": "Charity donation",
     "contribution_change": "Contribution change",
     "asset_cost_levy": "Asset cost levy",
+    "special_contribution": "Special contribution (per share)",
     "member_qard": "Member qard",
     "financing_arrangement": "Financing arrangement",
     "dissolution": "Dissolution",
@@ -371,6 +372,11 @@
       "exceeds_held": "That much levy money is not held.",
       "period_taken": "A levy already exists in that month. Pick a date in another month.",
       "no_members": "There are no active members to charge."
+    },
+    "special": {
+      "period_taken": "A special contribution already exists in that month. Pick a date in another month.",
+      "no_members": "There are no active members to charge.",
+      "due_in_past": "That due date has already passed. Pick a later date."
     },
     "qard": {
       "exceeds_balance": "You cannot repay more than this member lent."
@@ -618,7 +624,8 @@
       "monthly": "Monthly",
       "start_boost": "Start boost",
       "entry": "Entry",
-      "levy": "Levy"
+      "levy": "Levy",
+      "special": "Special contribution"
     },
     "outstanding": "Outstanding",
     "dueDate": "Due {{date}}",
@@ -649,6 +656,7 @@
     "purposeLabel": "What is it for",
     "purposeDues": "Monthly dues",
     "purposeLevy": "Levy (registration, tax)",
+    "purposeSpecial": "Special contribution",
     "step1": "Which months are you paying for?",
     "step1Hint": "Older months are paid first. Ticking a month also ticks the months before it.",
     "step2": "Send the money",
@@ -1591,6 +1599,10 @@
     "held": "Held",
     "remit": "Hand to the registrar",
     "noLevy": "No levy.",
+    "special": "Special contributions",
+    "specialHint": "A one-off amount per share, paid into the fund. It has no late fine and does not count towards a warning.",
+    "noSpecial": "No special contribution.",
+    "specialPaidOf": "{{paid}} of {{count}} members have paid",
     "members": "{{count}} members",
     "outstanding": "outstanding",
     "payee": "Paid to",
@@ -1611,6 +1623,7 @@
     "due_on": "Date",
     "text": "Decision text",
     "new_amount_paisa": "New monthly amount (per share)",
+    "per_share_paisa": "Amount per share",
     "reason": "Reason",
     "effective_from": "Effective from",
     "max_amount_paisa": "Maximum amount",

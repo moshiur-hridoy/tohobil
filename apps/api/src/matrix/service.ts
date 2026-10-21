@@ -78,7 +78,9 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
                FROM payment_allocations pa JOIN payments p ON p.id = pa.payment_id
                WHERE pa.due_id = v.due_id AND pa.amount_paisa > 0 AND p.status = 'confirmed'
                  AND p.source <> 'import') AS app_paid_on
-       FROM v_due_status v WHERE v.period >= $1 AND v.period <= $2`,
+       FROM v_due_status v
+       -- The sheet is the monthly collection; a special contribution is listed on the obligations page.
+       WHERE v.period >= $1 AND v.period <= $2 AND v.kind <> 'special'`,
       [from, to],
     ),
     deps.pool.query(

@@ -75,6 +75,11 @@ function Step({ n, title, hint, children }: { n: number; title: string; hint?: s
   );
 }
 
+type Purpose = 'dues' | 'levy' | 'special';
+const PURPOSES: readonly Purpose[] = ['dues', 'special', 'levy'];
+const SEPARATE_KINDS = new Set<string>(['levy', 'special']);
+const PURPOSE_LABEL: Record<Purpose, string> = { dues: 'pay.purposeDues', levy: 'pay.purposeLevy', special: 'pay.purposeSpecial' };
+
 /**
  * The member never types an amount: they tick what they are paying for and the total is worked out
  * from the dues, so a mistyped figure (or one that includes the bKash charge) cannot unbalance the books.
@@ -85,7 +90,7 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
   const { me } = useAuth();
   const today = todayDhaka();
   const currentPeriod = today.slice(0, 7);
-  const [purpose, setPurpose] = useState<'dues' | 'levy'>('dues');
+  const [purpose, setPurpose] = useState<Purpose>('dues');
   const [method, setMethod] = useState<PaymentMethod>('bkash');
   const [trx, setTrx] = useState('');
   const [digits, setDigits] = useState('');
@@ -99,8 +104,9 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
 
   const instructions = useQuery({ queryKey: ['payment-instructions'], queryFn: () => api<PaymentInstructions>('/settings/payment-instructions'), staleTime: 5 * 60_000 });
 
-  const hasLevy = openDues.some((d) => d.kind === 'levy');
-  const dues = openDues.filter((d) => (purpose === 'levy' ? d.kind === 'levy' : d.kind !== 'levy'));
+  // Levy and a special contribution are paid on their own, so a monthly payment never lands on them.
+  const purposes = PURPOSES.filter((p) => p === 'dues' || openDues.some((d) => d.kind === p));
+  const dues = openDues.filter((d) => (purpose === 'dues' ? !SEPARATE_KINDS.has(d.kind) : d.kind === purpose));
   const fines = purpose === 'dues' ? openFines : [];
 
   // One row per month (a month can hold a monthly due and a start boost); a month's fine goes with it.
@@ -186,7 +192,7 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
         ...(trx.trim() ? { trx_id: trx.trim() } : {}),
         ...(senderDigits ? { note: t(method === 'bank' ? 'pay.senderNoteBank' : 'pay.senderNotePhone', { digits: senderDigits }) } : {}),
         paid_at: dayToIso(date),
-        ...(purpose === 'levy' ? { purpose } : {}),
+        ...(purpose !== 'dues' ? { purpose } : {}),
         ...(periods.length > 0 ? { for_periods: periods } : {}),
         ...(proof ? { proof_file_id: proof } : {}),
       },
@@ -212,9 +218,9 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
       }}
     >
       <Step n={1} title={t('pay.step1')} hint={payable.length > 1 ? t('pay.step1Hint') : undefined}>
-        {hasLevy && (
+        {purposes.length > 1 && (
           <div role="radiogroup" aria-label={t('pay.purposeLabel')} className="mb-3 flex rounded-2xl border border-border bg-background p-1">
-            {(['dues', 'levy'] as const).map((p) => (
+            {purposes.map((p) => (
               <button
                 key={p}
                 type="button"
@@ -223,7 +229,7 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
                 onClick={() => { setPurpose(p); setPicked(new Set()); }}
                 className={`flex-1 rounded-xl py-2 text-sm font-bold ${purpose === p ? 'bg-primary-soft text-primary' : 'text-muted'}`}
               >
-                {t(p === 'dues' ? 'pay.purposeDues' : 'pay.purposeLevy')}
+                {t(PURPOSE_LABEL[p])}
               </button>
             ))}
           </div>

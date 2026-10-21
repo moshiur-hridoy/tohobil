@@ -8,12 +8,13 @@ import {
   listFinancing,
   payFinancingInstalment,
   remitLevy,
+  specialSummary,
   type ObligationDeps,
 } from '../obligations/service';
 
 const idParams = z.object({ id: uuidSchema });
 
-/** Levy money held for the registrar and deferred-purchase instalments (spec 18.7). Members read; the cashier pays. */
+/** Levy money held for the registrar, special contributions and deferred-purchase instalments (spec 18.7). Members read; the cashier pays. */
 export function obligationRoutes(deps: ObligationDeps, guards: Guards) {
   return async function register(instance: FastifyInstance): Promise<void> {
     const app = instance.withTypeProvider<ZodTypeProvider>();
@@ -31,6 +32,8 @@ export function obligationRoutes(deps: ObligationDeps, guards: Guards) {
       { preHandler: cashierStepUp, schema: { body: levyRemitSchema } },
       (req) => remitLevy(deps, actor(req), req.body),
     );
+
+    app.get('/special-contributions', { preHandler: authenticate }, () => specialSummary(deps.pool));
 
     app.get('/financing', { preHandler: authenticate }, () => listFinancing(deps.pool));
 

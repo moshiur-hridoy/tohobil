@@ -48,8 +48,17 @@ test('text at 200% still fits a phone: no sideways scrolling on any member scree
     await open(page, path);
     const { scroll, inner, offenders } = await page.evaluate(() => {
       const inner = window.innerWidth;
+      // An element inside an overflow-hidden ancestor is clipped, so it cannot widen the page (a vertical scroller
+      // computes overflow-x as auto, so only hidden and clip count).
+      const clipped = (el: Element): boolean => {
+        for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+          const o = getComputedStyle(p).overflowX;
+          if (o === 'hidden' || o === 'clip') return true;
+        }
+        return false;
+      };
       const offenders = [...document.querySelectorAll('body *')]
-        .filter((el) => el.getBoundingClientRect().right > inner + 1)
+        .filter((el) => el.getBoundingClientRect().right > inner + 1 && !clipped(el))
         .slice(0, 3)
         .map((el) => `<${el.tagName.toLowerCase()} class="${String(el.getAttribute('class') ?? '').slice(0, 60)}"> ${(el.textContent ?? '').trim().slice(0, 30)}`);
       return { scroll: document.documentElement.scrollWidth, inner, offenders };

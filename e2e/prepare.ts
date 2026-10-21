@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import pg from 'pg';
-import { ADMIN_URL, CODES, E2E_APP_URL, E2E_DB, E2E_MIGRATOR_URL, MIGRATION_FILE } from './env';
+import { ADMIN_URL, CODES, E2E_APP_URL, E2E_DB, E2E_MIGRATOR_URL, MIGRATIONS_DIR } from './env';
 
 /**
  * Build a fresh e2e database: drop and create `barakah_e2e`, apply the schema, load the fictional
@@ -23,7 +23,10 @@ async function main(): Promise<void> {
   const db = new pg.Client({ connectionString: E2E_MIGRATOR_URL });
   await db.connect();
   try {
-    await db.query((readFileSync(MIGRATION_FILE, 'utf8').split(/^-- Down Migration/m)[0]) as string);
+    // Every migration, in order, so the e2e schema is the one the app really runs on.
+    for (const file of readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith('.sql')).sort()) {
+      await db.query(readFileSync(`${MIGRATIONS_DIR}/${file}`, 'utf8').split(/^-- Down Migration/m)[0] as string);
+    }
   } finally {
     await db.end();
   }

@@ -45,15 +45,16 @@ test('(3) a late fine is applied by the scheduler and the member sees the notice
        VALUES ($1, $2, 'monthly', 4, 2000000, $3) ON CONFLICT DO NOTHING`,
       [member.id, period, yesterday],
     );
+    // Only this due's fine is looked at: after the 20th the seed's own current month is overdue too and
+    // is fined by the same run, so counting every fine of the member would depend on the date.
+    const ownFines = `SELECT f.id, f.amount_paisa::text AS amount FROM fines f JOIN dues d ON d.id = f.due_id WHERE d.member_id = $1 AND d.period = $2`;
 
     await boss.start();
     await boss.send('apply-fines');
     await expect
-      .poll(async () => Number((await admin.query(`SELECT count(*) FROM fines WHERE member_id=$1`, [member.id])).rows[0].count), {
-        timeout: 30_000,
-      })
+      .poll(async () => (await admin.query(ownFines, [member.id, period])).rowCount, { timeout: 30_000 })
       .toBe(1);
-    const fine = (await admin.query(`SELECT amount_paisa::text AS amount FROM fines WHERE member_id=$1`, [member.id])).rows[0];
+    const fine = (await admin.query(ownFines, [member.id, period])).rows[0];
     expect(fine.amount).toBe('200000'); // 4 shares x 500 BDT
 
     await boss.send('notify-fines');
@@ -61,8 +62,12 @@ test('(3) a late fine is applied by the scheduler and the member sees the notice
       .poll(
         async () =>
           Number(
-            (await admin.query(`SELECT count(*) FROM notifications WHERE member_id=$1 AND template='fine_notice' AND channel='push'`, [member.id]))
-              .rows[0].count,
+            (
+              await admin.query(
+                `SELECT count(*) FROM notifications WHERE member_id=$1 AND template='fine_notice' AND channel='push' AND dedupe_key LIKE '%' || $2 || '%'`,
+                [member.id, fine.id],
+              )
+            ).rows[0].count,
           ),
         { timeout: 30_000 },
       )
@@ -70,7 +75,7 @@ test('(3) a late fine is applied by the scheduler and the member sees the notice
 
     await page.goto('/menu/notices');
     await page.getByRole('tab').last().click(); // "All": the notice is unread, but do not depend on the default tab
-    await expect(page.locator('article').filter({ hasText: /২,০০০/ })).toBeVisible();
+    await expect(page.locator('article').filter({ hasText: /২,০০০/ }).first()).toBeVisible();
 
     await ctx.close();
   } finally {

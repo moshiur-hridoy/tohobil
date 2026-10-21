@@ -51,11 +51,11 @@ export function MenuPage() {
       <PageHeader title={t('nav.menu')} />
       <div className="flex flex-col gap-3 px-4 pb-4 pt-1">
       {me && (
-        <section className={CARD + ' flex items-center gap-3'}>
+        <section className={CARD + ' flex flex-wrap items-center gap-x-3 gap-y-1'}>
           <div className="grid h-[50px] w-[50px] shrink-0 place-items-center rounded-full bg-primary text-xl font-bold text-primary-foreground">
             {me.full_name.trim().charAt(0)}
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-[6rem] flex-1">
             <p className="truncate text-[1.0625rem] font-bold">{me.full_name}</p>
             <p className="text-[0.8125rem] text-muted">
               {me.member_code} · {me.roles.map((r) => t(`roles.${r}`)).join(', ')}
@@ -76,9 +76,9 @@ export function MenuPage() {
 
       <nav className="grid grid-cols-2 gap-3" aria-label={t('nav.menu')}>
         {tiles.map((x) => (
-          <Link key={x.to} to={x.to} className="flex items-center gap-3 rounded-[18px] border border-border bg-card p-3.5 text-foreground">
+          <Link key={x.to} to={x.to} className="flex min-w-0 items-center gap-3 rounded-[18px] border border-border bg-card p-3.5 text-foreground">
             <Chip tone={x.tone} d={x.d} size={40} iconSize={22} />
-            <span className="text-sm font-semibold leading-snug">{x.label}</span>
+            <span className="min-w-0 break-words text-sm font-semibold leading-snug">{x.label}</span>
           </Link>
         ))}
       </nav>

@@ -11,7 +11,7 @@ export const WEB_PORT = 5273;
 export const BASE_URL = `http://localhost:${WEB_PORT}`;
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-export const MIGRATION_FILE = `${ROOT}db/migrations/001_initial-schema.sql`;
+export const MIGRATIONS_DIR = `${ROOT}db/migrations`;
 
 function envFileValue(key: string): string | undefined {
   try {

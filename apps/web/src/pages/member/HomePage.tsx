@@ -118,19 +118,19 @@ export function HomePage() {
 
         {/* Fund summary tiles */}
         <section className="grid grid-cols-2 gap-3">
-          <div className="rounded-[18px] border border-border bg-card p-3.5">
+          <div className="min-w-0 rounded-[18px] border border-border bg-card p-3.5">
             <Chip tone="bg-primary-soft text-primary" d="M3 17l6-6 4 4 8-8 M15 7h6v6" />
             <h2 className="mt-2.5 text-[0.8125rem] font-normal text-muted">{t('home.fundNetAssets')}</h2>
             {accounts.data ? (
-              <p className="mt-0.5 text-[1.3125rem] font-bold">{taka(interimNetAssets(accounts.data.items))}</p>
+              <p className="mt-0.5 text-[1.3125rem] font-bold [overflow-wrap:anywhere]">{taka(interimNetAssets(accounts.data.items))}</p>
             ) : (
               <Skeleton className="mt-1 h-7 w-28" />
             )}
           </div>
-          <div className="rounded-[18px] border border-border bg-card p-3.5">
+          <div className="min-w-0 rounded-[18px] border border-border bg-card p-3.5">
             <Chip tone="bg-blue-bg text-blue" d="M12 3l9 5-9 5-9-5z M3 13l9 5 9-5" />
             <h2 className="mt-2.5 text-[0.8125rem] font-normal text-muted">{t('home.myCapital')}</h2>
-            <p className="mt-0.5 text-[1.3125rem] font-bold">{mine ? taka(mine.capital_paisa) : '…'}</p>
+            <p className="mt-0.5 text-[1.3125rem] font-bold [overflow-wrap:anywhere]">{mine ? taka(mine.capital_paisa) : '…'}</p>
           </div>
           {/* Charity balance (18.2): fines and riba are donated at year end, never fund income */}
           <div className="col-span-2 flex items-center gap-3 rounded-[18px] border border-border bg-card px-3.5 py-3">

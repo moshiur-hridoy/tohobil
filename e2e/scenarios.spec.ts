@@ -44,13 +44,15 @@ test('(2) member submits, cashier pastes the SMS and approves, member sees it co
   const member = await newPage(browser, MOBILE);
   await activate(member.page, CODES.member.ref, CODES.member.code);
   await member.page.goto('/pay');
-  // The amount is never typed: tick the oldest open month and the total is worked out from the dues.
+  // The amount is never typed: tick the oldest open month and the total is worked out from the dues
+  // (member M02 holds 4 shares, so a month is 4 x 5,000 = 20,000).
   await member.page.getByRole('checkbox').first().check();
-  await member.page.getByLabel(tr('payment.trxId')).fill(trx);
+  // The 4-digit sender field also mentions the TrxID in its hint, so take the first of the two.
+  await member.page.getByLabel(tr('payment.trxId')).first().fill(trx);
   await member.page.getByRole('button', { name: tr('pay.send') }).click();
   const sheet = member.page.getByRole('dialog');
   await expect(sheet.getByRole('heading', { name: tr('pay.reviewTitle') })).toBeVisible();
-  await expect(sheet).toContainText('৳৫,০০০');
+  await expect(sheet).toContainText('৳২০,০০০');
   await sheet.getByRole('button', { name: tr('pay.send') }).click();
   await expect(member.page.getByText(tr('pay.sent'))).toBeVisible();
 
@@ -65,7 +67,7 @@ test('(2) member submits, cashier pastes the SMS and approves, member sees it co
   // Cashier pastes the bKash message: the pending payment is matched exactly.
   await cashier.page.goto('/admin/payments');
   await cashier.page.getByRole('textbox', { name: tr('paymentsPage.pasteSms') }).fill(
-    `You have received Tk 5,000.00 from 01700000002. Fee Tk 0.00. Balance Tk 9,000.00. TrxID ${trx} at ${todayDdMmYyyy()} 10:00`,
+    `You have received Tk 20,000.00 from 01700000002. Fee Tk 0.00. Balance Tk 24,000.00. TrxID ${trx} at ${todayDdMmYyyy()} 10:00`,
   );
   await cashier.page.getByRole('button', { name: tr('paymentsPage.parse') }).click();
   await expect(cashier.page.getByText(tr('paymentsPage.exactMatch')).first()).toBeVisible();
@@ -78,7 +80,7 @@ test('(2) member submits, cashier pastes the SMS and approves, member sees it co
   const confirm = cashier.page.getByRole('dialog');
   await expect(confirm.getByRole('heading', { name: tr('paymentsPage.approveTitle') })).toBeVisible();
   await expect(confirm).toContainText(tr('paymentsPage.toPrincipal'));
-  await expect(confirm).toContainText('৳৫,০০০');
+  await expect(confirm).toContainText('৳২০,০০০');
   await shot(cashier.page, 'cashier-confirm-sheet');
   await confirm.getByRole('button', { name: tr('paymentsPage.approve'), exact: true }).click();
   await expect(cashier.page.getByText(tr('paymentsPage.confirmed'))).toBeVisible();
@@ -100,7 +102,7 @@ test('(2) member submits, cashier pastes the SMS and approves, member sees it co
 
   await shot(member.page, 'member-ledger');
   await cashier.page.goto('/admin');
-  await expect(cashier.page.getByText('৳৫,০০০').first()).toBeVisible();
+  await expect(cashier.page.getByText('৳২০,০০০').first()).toBeVisible();
   await shot(cashier.page, 'cashier-dashboard');
   await cashier.page.goto('/admin/matrix');
   await expect(cashier.page.getByRole('table')).toBeVisible();

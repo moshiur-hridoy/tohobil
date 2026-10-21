@@ -180,7 +180,7 @@
       "reconcile": "হিসাব মিলান",
       "reports": "প্রতিবেদন",
       "rules": "নিয়ম",
-      "charity": "দান তহবিল",
+      "charity": "দান ও খরচ",
       "settings": "সেটিংস",
       "system": "সিস্টেম",
       "group": {
@@ -1232,7 +1232,7 @@
     "ruleChangeTitle": "নিয়ম পরিবর্তন"
   },
   "charityPage": {
-    "title": "দান",
+    "title": "দান ও খরচ",
     "donations": "দানসমূহ",
     "statement": "বিবৃতি",
     "year": "বছর",
@@ -1240,7 +1240,31 @@
     "receipts": "জমা",
     "disbursements": "খরচ",
     "closing": "শেষ জের",
-    "noDonations": "কোনো দানের তথ্য নেই।"
+    "noDonations": "কোনো দানের তথ্য নেই।",
+    "charityFund": "দান তহবিলের লেনদেন",
+    "charityFundSub": "জরিমানা ও ব্যাংক মুনাফা এখানে জমা হয়, এখান থেকে দান করা হয়",
+    "noEntries": "এই বছরে দান তহবিলে কোনো লেনদেন নেই।",
+    "fundExpenses": "বারাকাহর নিজের খরচ",
+    "fundExpensesSub": "ব্যাংক ও এসএমএস চার্জের মতো খরচ; এগুলো দান তহবিল থেকে নয়",
+    "noExpenses": "কোনো খরচ নেই।",
+    "expensesTotal": "মোট খরচ",
+    "kind": {
+      "fine": "জরিমানা",
+      "bank_profit": "ব্যাংক মুনাফা",
+      "donation": "দান",
+      "reversal": "বাতিল (রিভার্সাল)",
+      "other": "অন্যান্য জমা"
+    },
+    "account": {
+      "BANK_CHARGE": "ব্যাংক চার্জ",
+      "SMS_CHARGE": "এসএমএস চার্জ",
+      "MAINTENANCE": "রক্ষণাবেক্ষণ",
+      "OTHER_EXPENSE": "অন্যান্য খরচ"
+    },
+    "tabCharity": "দান",
+    "tabExpenses": "খরচ",
+    "tabs": "দান না খরচ",
+    "expensesAllTime": "শুরু থেকে এ পর্যন্ত"
   },
   "settingsPage": {
     "title": "সেটিংস",

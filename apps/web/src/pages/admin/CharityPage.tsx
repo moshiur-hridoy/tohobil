@@ -3,36 +3,86 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListSkeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
-import { AdminHeader, AdminPage, Card, CardHead, EmptyCard, ICONS, StatGrid, StatTile } from '../../components/admin';
+import { AdminHeader, AdminPage, Card, CardHead, EmptyCard, ICONS, MemberBadge, Segmented, StatGrid, StatTile } from '../../components/admin';
+import { Chip } from '../../components/ui';
 import { localDigits } from '../../lib/format';
 import { api } from '../../lib/api';
 import { fmtDate, todayDhaka } from '../../lib/dates';
 import { taka } from '../../lib/money';
-import type { CharityDonation, CharityStatement, Page } from '../../lib/types';
+import type { CharityEntry, CharityStatement, FundExpenses } from '../../lib/types';
 
-export function CharityPage() {
+/** One charity fund movement: what it was, who or where, and the amount in or out. */
+function EntryRow({ e }: { e: CharityEntry }) {
   const { t } = useTranslation();
-  const [year, setYear] = useState(todayDhaka().slice(0, 4));
+  const into = e.direction === 'in';
+  const who = e.member_code ? e.member_name : e.recipient ?? e.memo;
+  return (
+    <li className="flex items-center gap-3 border-b border-border py-3 last:border-b-0">
+      {e.member_code ? (
+        <MemberBadge code={e.member_code} />
+      ) : (
+        <Chip tone={into ? 'bg-ok-bg text-ok' : 'bg-vio-bg text-vio'} d={into ? ICONS.plus : ICONS.heart} size={32} iconSize={16} />
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-semibold">{t(`charityPage.kind.${e.kind}`)}{who ? ` · ${who}` : ''}</p>
+        <p className="text-xs text-muted">{fmtDate(e.entry_date)} · #{localDigits(e.seq)}</p>
+      </div>
+      <span className={`font-bold tabular-nums ${into ? 'text-ok' : 'text-vio'}`}>
+        {into ? '+' : '−'}{taka(e.amount_paisa)}
+      </span>
+    </li>
+  );
+}
 
+/** The fund's own expenses (bank and SMS charges and the like), from the start, kept apart from charity. */
+function ExpensesTab() {
+  const { t } = useTranslation();
+  const expenses = useQuery({
+    queryKey: ['fund-expenses'],
+    queryFn: () => api<FundExpenses>('/charity/expenses'),
+  });
+  const ex = expenses.data;
+  return (
+    <>
+      {expenses.error && <LoadError error={expenses.error} onRetry={() => void expenses.refetch()} />}
+      <StatGrid>
+        <StatTile tone="bg-soft text-ink2" icon={ICONS.wallet} label={t('charityPage.expensesTotal')} value={ex ? taka(ex.total_paisa) : null} sub={t('charityPage.expensesAllTime')} />
+      </StatGrid>
+
+      <Card className="px-5 pb-3 pt-5 sm:px-6">
+        <CardHead icon={ICONS.wallet} tone="bg-soft text-ink2" title={t('charityPage.fundExpenses')} sub={t('charityPage.fundExpensesSub')} />
+        {!ex ? (
+          !expenses.error && <ListSkeleton rows={2} />
+        ) : ex.items.length === 0 ? (
+          <EmptyCard text={t('charityPage.noExpenses')} icon={ICONS.wallet} />
+        ) : (
+          <ul>
+            {ex.items.map((x) => (
+              <li key={x.seq} className="flex items-center justify-between gap-3 border-b border-border py-3 last:border-b-0">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">{t(`charityPage.account.${x.account}`)}{x.memo ? ` · ${x.memo.replace(/ \(legacy import\)$/, '')}` : ''}</p>
+                  <p className="text-xs text-muted">{fmtDate(x.entry_date)} · #{localDigits(x.seq)}</p>
+                </div>
+                <span className="font-bold tabular-nums">{taka(x.amount_paisa)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+    </>
+  );
+}
+
+/** Charity money for one year: the balance, and every fine, bank profit and donation behind it. */
+function CharityTab({ year }: { year: string }) {
+  const { t } = useTranslation();
   const statement = useQuery({
     queryKey: ['charity-statement', year],
     queryFn: () => api<CharityStatement>(`/charity/statement?year=${year}`),
   });
-
-  const donations = useQuery({
-    queryKey: ['charity-donations'],
-    queryFn: () => api<Page<CharityDonation>>('/charity/donations'),
-  });
-
   const st = statement.data;
   return (
-    <AdminPage>
-      <AdminHeader
-        title={t('charityPage.title')}
-        subtitle={t('adminUi.sub.charity')}
-        actions={<input type="number" aria-label={t('charityPage.year')} className="field w-28" value={year} onChange={(e) => setYear(e.target.value)} />}
-      />
-
+    <>
       {statement.error && <LoadError error={statement.error} onRetry={() => void statement.refetch()} />}
       <StatGrid>
         <StatTile tone="bg-soft text-ink2" icon={ICONS.book} label={t('charityPage.opening')} value={st ? taka(st.opening_paisa) : null} sub={year} />
@@ -42,27 +92,49 @@ export function CharityPage() {
       </StatGrid>
 
       <Card className="px-5 pb-3 pt-5 sm:px-6">
-        <CardHead icon={ICONS.heart} tone="bg-vio-bg text-vio" title={t('charityPage.donations')} />
-        {donations.error ? (
-          <LoadError error={donations.error} onRetry={() => void donations.refetch()} />
-        ) : !donations.data ? (
-          <ListSkeleton rows={3} />
-        ) : donations.data.items.length === 0 ? (
-          <EmptyCard text={t('charityPage.noDonations')} icon={ICONS.heart} />
+        <CardHead icon={ICONS.heart} tone="bg-vio-bg text-vio" title={t('charityPage.charityFund')} sub={t('charityPage.charityFundSub')} />
+        {!st ? (
+          !statement.error && <ListSkeleton rows={3} />
+        ) : st.entries.length === 0 ? (
+          <EmptyCard text={t('charityPage.noEntries')} icon={ICONS.heart} />
         ) : (
           <ul>
-            {donations.data.items.map((d) => (
-              <li key={d.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-border py-3 last:border-b-0">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{d.recipient}</p>
-                  <p className="text-xs text-muted">{fmtDate(d.donated_on)}{d.ledger_seq ? ` · #${localDigits(d.ledger_seq)}` : ''}</p>
-                </div>
-                <span className="font-bold tabular-nums">{taka(d.amount_paisa)}</span>
-              </li>
-            ))}
+            {st.entries.map((e) => <EntryRow key={e.seq} e={e} />)}
           </ul>
         )}
       </Card>
+    </>
+  );
+}
+
+export function CharityPage() {
+  const { t } = useTranslation();
+  const [tab, setTab] = useState<'charity' | 'expenses'>('charity');
+  const [year, setYear] = useState(todayDhaka().slice(0, 4));
+
+  return (
+    <AdminPage>
+      <AdminHeader
+        title={t('charityPage.title')}
+        subtitle={t('adminUi.sub.charity')}
+        actions={
+          <>
+            <Segmented
+              label={t('charityPage.tabs')}
+              value={tab}
+              options={[
+                { value: 'charity', label: t('charityPage.tabCharity') },
+                { value: 'expenses', label: t('charityPage.tabExpenses') },
+              ]}
+              onChange={setTab}
+            />
+            {tab === 'charity' && (
+              <input type="number" aria-label={t('charityPage.year')} className="field w-28" value={year} onChange={(e) => setYear(e.target.value)} />
+            )}
+          </>
+        }
+      />
+      {tab === 'charity' ? <CharityTab year={year} /> : <ExpensesTab />}
     </AdminPage>
   );
 }

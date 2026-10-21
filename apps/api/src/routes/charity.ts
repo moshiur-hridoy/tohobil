@@ -3,7 +3,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type pg from 'pg';
 import { type Clock, charityQuerySchema, charityStatementQuerySchema } from '@barakah/shared';
 import type { Guards } from '../auth/guards';
-import { listCharityDonations, charityStatement, type CharityDeps } from '../charity/service';
+import { listCharityDonations, charityStatement, listFundExpenses, type CharityDeps } from '../charity/service';
 
 export interface CharityRouteDeps {
   pool: pg.Pool;
@@ -30,6 +30,12 @@ export function charityRoutes(deps: CharityRouteDeps, guards: Guards) {
       '/charity/statement',
       { preHandler: [authenticate, requireRole('cashier', 'auditor')], schema: { querystring: charityStatementQuerySchema } },
       async (req) => charityStatement(serviceDeps.pool, req.query.year),
+    );
+
+    app.get(
+      '/charity/expenses',
+      { preHandler: [authenticate, requireRole('cashier', 'auditor')] },
+      async () => listFundExpenses(serviceDeps.pool),
     );
   };
 }

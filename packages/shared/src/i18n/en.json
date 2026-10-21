@@ -180,7 +180,7 @@
       "reconcile": "Reconcile",
       "reports": "Reports",
       "rules": "Rules",
-      "charity": "Charity",
+      "charity": "Charity & expenses",
       "settings": "Settings",
       "system": "System",
       "group": {
@@ -1232,7 +1232,7 @@
     "ruleChangeTitle": "Rule change"
   },
   "charityPage": {
-    "title": "Charity",
+    "title": "Charity & expenses",
     "donations": "Donations",
     "statement": "Statement",
     "year": "Year",
@@ -1240,7 +1240,31 @@
     "receipts": "Receipts",
     "disbursements": "Disbursements",
     "closing": "Closing balance",
-    "noDonations": "No donations on record."
+    "noDonations": "No donations on record.",
+    "charityFund": "Charity fund transactions",
+    "charityFundSub": "Fines and bank profit come in here; donations go out from here",
+    "noEntries": "No charity fund transactions this year.",
+    "fundExpenses": "Barakah's own expenses",
+    "fundExpensesSub": "Costs such as bank and SMS charges; these are not paid from the charity fund",
+    "noExpenses": "No expenses.",
+    "expensesTotal": "Total expenses",
+    "kind": {
+      "fine": "Fine",
+      "bank_profit": "Bank profit",
+      "donation": "Donation",
+      "reversal": "Reversal",
+      "other": "Other receipt"
+    },
+    "account": {
+      "BANK_CHARGE": "Bank charge",
+      "SMS_CHARGE": "SMS charge",
+      "MAINTENANCE": "Maintenance",
+      "OTHER_EXPENSE": "Other expense"
+    },
+    "tabCharity": "Charity",
+    "tabExpenses": "Expenses",
+    "tabs": "Charity or expenses",
+    "expensesAllTime": "Since the start"
   },
   "settingsPage": {
     "title": "Settings",

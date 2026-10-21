@@ -101,25 +101,128 @@ async function charityOpeningBalance(db: Db, year: string): Promise<bigint> {
   return toBigInt((res.rows[0] as { balance: unknown }).balance);
 }
 
+/** The fund's own running costs (not charity money); listed on their own tab beside charity. */
+export const FUND_EXPENSE_ACCOUNTS = ['BANK_CHARGE', 'SMS_CHARGE', 'MAINTENANCE', 'OTHER_EXPENSE'] as const;
+
+export type CharityEntryKind = 'fine' | 'bank_profit' | 'donation' | 'reversal' | 'other';
+
+export interface CharityEntry {
+  seq: string;
+  entry_date: string;
+  direction: 'in' | 'out';
+  kind: CharityEntryKind;
+  amount_paisa: string;
+  member_code: string | null;
+  member_name: string | null;
+  /** Recipient of a donation recorded through a proposal, when there is one. */
+  recipient: string | null;
+  memo: string | null;
+}
+
+export interface FundExpenseEntry {
+  seq: string;
+  entry_date: string;
+  account: string;
+  /** Negative for a reversal (money back into the fund). */
+  amount_paisa: string;
+  memo: string | null;
+}
+
+interface CharityEntryRow {
+  seq: string | bigint;
+  entry_date: string;
+  debit_account: string;
+  amount_paisa: string | bigint;
+  ref_type: string | null;
+  reverses_seq: string | bigint | null;
+  member_code: string | null;
+  member_name: string | null;
+  recipient: string | null;
+  memo: string | null;
+}
+
+function entryKind(r: CharityEntryRow, direction: 'in' | 'out'): CharityEntryKind {
+  if (r.reverses_seq !== null) return 'reversal';
+  if (direction === 'out') return 'donation';
+  if (r.ref_type === LEDGER_REF.ribaReceived) return 'bank_profit';
+  // Member money into charity is a fine (or absence fine) paid with a payment (18.2).
+  if (r.member_code !== null) return 'fine';
+  return 'other';
+}
+
+/** Every CHARITY_PAYABLE movement in a date range, oldest first: where the money came from and went. */
+async function charityEntries(db: Db, from: string, to: string): Promise<CharityEntry[]> {
+  const res = await db.query(
+    `SELECT e.seq, e.entry_date::text AS entry_date, e.debit_account, e.amount_paisa, e.ref_type,
+            e.reverses_seq, m.code AS member_code, m.full_name AS member_name, c.recipient, e.memo
+     FROM ledger_entries e
+     LEFT JOIN members m ON m.id = e.member_id
+     LEFT JOIN charity_donations c ON c.ledger_seq = e.seq
+     WHERE 'CHARITY_PAYABLE' IN (e.debit_account, e.credit_account)
+       AND e.entry_date BETWEEN $1::date AND $2::date
+     ORDER BY e.entry_date, e.seq`,
+    [from, to],
+  );
+  return (res.rows as CharityEntryRow[]).map((r) => {
+    const direction = r.debit_account === 'CHARITY_PAYABLE' ? 'out' : 'in';
+    return {
+      seq: String(r.seq),
+      entry_date: r.entry_date,
+      direction,
+      kind: entryKind(r, direction),
+      amount_paisa: paisaOut(r.amount_paisa),
+      member_code: r.member_code,
+      member_name: r.member_name,
+      recipient: r.recipient,
+      memo: r.memo,
+    };
+  });
+}
+
+/** Every expense of the fund's own, oldest first, with the total; a reversal counts negative. */
+export async function listFundExpenses(db: Db): Promise<{ total_paisa: string; items: FundExpenseEntry[] }> {
+  const res = await db.query(
+    `SELECT e.seq, e.entry_date::text AS entry_date,
+            CASE WHEN e.debit_account = ANY($1::text[]) THEN e.debit_account ELSE e.credit_account END AS account,
+            CASE WHEN e.debit_account = ANY($1::text[]) THEN e.amount_paisa ELSE -e.amount_paisa END AS amount_paisa,
+            e.memo
+     FROM ledger_entries e
+     WHERE e.debit_account = ANY($1::text[]) OR e.credit_account = ANY($1::text[])
+     ORDER BY e.entry_date, e.seq`,
+    [FUND_EXPENSE_ACCOUNTS],
+  );
+  const items = (res.rows as Array<{ seq: string | bigint; entry_date: string; account: string; amount_paisa: string | bigint; memo: string | null }>).map((r) => ({
+    seq: String(r.seq),
+    entry_date: r.entry_date,
+    account: r.account,
+    amount_paisa: paisaOut(r.amount_paisa),
+    memo: r.memo,
+  }));
+  const total = items.reduce((sum, e) => sum + BigInt(e.amount_paisa), 0n);
+  return { total_paisa: total.toString(), items };
+}
+
 export interface CharityStatementResult {
   year: string;
   opening_paisa: string;
   receipts_paisa: string;
   disbursements_paisa: string;
   closing_paisa: string;
+  entries: CharityEntry[];
 }
 
 /**
  * Aggregated charity receipts and disbursements for a calendar year with opening and closing
- * CHARITY_PAYABLE balance (spec 18.2).
+ * CHARITY_PAYABLE balance (spec 18.2) and each movement behind them.
  */
 export async function charityStatement(db: Db, year: string): Promise<CharityStatementResult> {
   const from = `${year}-01-01`;
   const to = `${year}-12-31`;
-  const [opening, receipts, disbursements] = await Promise.all([
+  const [opening, receipts, disbursements, entries] = await Promise.all([
     charityOpeningBalance(db, year),
     charityReceipts(db, from, to),
     charityDisbursements(db, from, to),
+    charityEntries(db, from, to),
   ]);
   const closing = opening + receipts - disbursements;
   return {
@@ -128,6 +231,7 @@ export async function charityStatement(db: Db, year: string): Promise<CharitySta
     receipts_paisa: receipts.toString(),
     disbursements_paisa: disbursements.toString(),
     closing_paisa: closing.toString(),
+    entries,
   };
 }
 

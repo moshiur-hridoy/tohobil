@@ -406,12 +406,38 @@ export interface CharityDonation {
   ledger_seq: string | null;
 }
 
+export interface CharityEntry {
+  seq: string;
+  entry_date: string;
+  direction: 'in' | 'out';
+  kind: 'fine' | 'bank_profit' | 'donation' | 'reversal' | 'other';
+  amount_paisa: string;
+  member_code: string | null;
+  member_name: string | null;
+  recipient: string | null;
+  memo: string | null;
+}
+
+export interface FundExpenseEntry {
+  seq: string;
+  entry_date: string;
+  account: 'BANK_CHARGE' | 'SMS_CHARGE' | 'MAINTENANCE' | 'OTHER_EXPENSE';
+  amount_paisa: string;
+  memo: string | null;
+}
+
 export interface CharityStatement {
   year: string;
   opening_paisa: string;
   receipts_paisa: string;
   disbursements_paisa: string;
   closing_paisa: string;
+  entries: CharityEntry[];
+}
+
+export interface FundExpenses {
+  total_paisa: string;
+  items: FundExpenseEntry[];
 }
 
 export interface ConstitutionVersionSummary {

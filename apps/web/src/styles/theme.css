@@ -6,41 +6,121 @@
  * that are used as text: --ok, --warn, --bad, --muted. Keep that in mind when restyling.
  */
 
+/* ---------------------------------------------------------------------------------------------
+ * Three layers. Components only ever use layers 2 and 3 (through the Tailwind names in
+ * tailwind.config.ts); the raw palette in layer 1 is never referenced from a component.
+ *
+ *   1. Palette   --ref-*     raw colours, the same in light and dark. Change the brand HERE.
+ *   2. Semantic  --primary, --card, --muted ...   what a colour MEANS; remapped for dark mode.
+ *   3. Component --hero-*    colours of one specific part of the UI (the outstanding card).
+ *
+ * Contrast rules (WCAG AA) are enforced by contrast.test.ts for every text/background pair listed
+ * there, in both themes: a pairing that fails breaks the build. When you add a token that carries
+ * text, add its pair to that test. Plain hex or var() only (no opacity modifiers, see tailwind.config.ts).
+ * --------------------------------------------------------------------------------------------- */
+
 :root {
-  /* Status colours: paid / partial-pending / overdue / not due */
-  --ok: #12794f;
-  --warn: #8f5a00;
-  --bad: #b3302a;
-  --muted: #5d6a64;
+  /* 1. Palette ------------------------------------------------------------------------------ */
+  /* Brand: lime from the logo, its green, and the dark olive of the wordmark */
+  --ref-lime-100: #eaf7d3;
+  --ref-lime-300: #c7fa4e;
+  --ref-lime-400: #aff900;
+  --ref-green-700: #007a24; /* the logo green (#008427), one notch darker so text on tinted surfaces passes AA */
+  --ref-olive-950: #1d2900;
+  --ref-olive-900: #26320a;
+  --ref-olive-800: #354800;
+  --ref-olive-700: #4b6212;
+  --ref-olive-600: #5c7a14;
 
-  /* Primary palette */
-  --primary: #0e7a5a;
-  --primary-foreground: #ffffff;
-  --primary-soft: #e5f3ed; /* tinted background for the active item */
-  --primary-deep: #0a5c45; /* hero cards and pressed states */
-  --vio: #6b4fb3;
-  --vio-bg: #ede8f8;
-  --ink2: #44534c; /* secondary text */
+  /* Neutrals (light surfaces and ink) */
+  --ref-white: #ffffff;
+  --ref-gray-50: #f6f8f7;
+  --ref-gray-100: #f3f4f6;
+  --ref-gray-150: #eef1ef;
+  --ref-gray-200: #e4e9e6;
+  --ref-gray-400: #868e9b;
+  --ref-gray-600: #5d6a64;
+  --ref-gray-700: #44534c;
+  --ref-gray-950: #0f1b16;
 
+  /* Neutrals (dark surfaces and ink): green-tinted so they sit with the lime/olive brand. Surfaces
+     step up in lightness with elevation: page 950 < card 900 < inset 850 < hover 800. */
+  --ref-night-50: #ecf2ee;
+  --ref-night-200: #bccac2;
+  --ref-night-400: #8f9e96;
+  --ref-night-500: #617369;
+  --ref-night-700: #2a362f;
+  --ref-night-800: #222d27;
+  --ref-night-850: #1b241f;
+  --ref-night-900: #131a16;
+  --ref-night-950: #0b100d;
+
+  /* Status hues: a strong text/fill stop and a tinted background stop per mode */
+  --ref-ok-600: #12794f;
+  --ref-ok-400: #4ade80;
+  --ref-ok-100: #e2f4ea;
+  --ref-ok-900: #0f2a1a;
+  --ref-warn-700: #8f5a00;
+  --ref-warn-400: #fbbf24;
+  --ref-warn-100: #fdf0d3;
+  --ref-warn-900: #2c2208;
+  --ref-bad-600: #b3302a;
+  --ref-bad-400: #f87171;
+  --ref-bad-100: #fbe5e2;
+  --ref-bad-900: #311715;
+  --ref-blue-600: #2d5bc4;
+  --ref-blue-300: #7aa7ff;
+  --ref-blue-100: #e8eefb;
+  --ref-blue-900: #15213f;
+  --ref-violet-600: #6b4fb3;
+  --ref-violet-300: #b9a4f0;
+  --ref-violet-100: #ede8f8;
+  --ref-violet-900: #261e3e;
+
+  /* 2. Semantic: light ------------------------------------------------------------------------ */
   /* Surfaces */
-  --background: #f6f8f7;
-  --foreground: #0f1b16;
-  --card: #ffffff;
-  --card-foreground: #1a1a1a;
-  --hover: #f3f4f6;
-  --soft: #eef1ef;
+  --background: var(--ref-gray-50);
+  --card: var(--ref-white);
+  --hover: var(--ref-gray-100);
+  --soft: var(--ref-gray-150);
+  --border: var(--ref-gray-200);
+  --input: var(--ref-gray-400); /* field outlines need 3:1 against the page (WCAG 1.4.11) */
 
-  /* Status backgrounds (designs use these as card/chip fills) */
-  --ok-bg: #e2f4ea;
-  --warn-bg: #fdf0d3;
-  --bad-bg: #fbe5e2;
-  --blue-bg: #e8eefb;
-  --blue: #2d5bc4;
+  /* Text */
+  --foreground: var(--ref-gray-950);
+  --card-foreground: var(--ref-gray-950);
+  --ink2: var(--ref-gray-700); /* secondary text */
+  --muted: var(--ref-gray-600); /* tertiary text, captions */
 
-  /* Borders and inputs */
-  --border: #e4e9e6;
-  --input: #868e9b; /* field outlines need 3:1 against the page (WCAG 1.4.11) */
-  --ring: #0e7a5a;
+  /* Brand / interactive. --primary is both a fill (buttons) and text/outline on a surface, so it
+     must pass against --primary-foreground AND against the surfaces: on light, the logo green. */
+  --primary: var(--ref-green-700);
+  --primary-foreground: var(--ref-white);
+  --primary-soft: var(--ref-lime-100); /* tinted background for the active item */
+  --primary-deep: var(--ref-olive-950); /* solid dark brand surface, pressed states */
+  --ring: var(--ref-green-700);
+
+  /* Status */
+  --ok: var(--ref-ok-600);
+  --ok-bg: var(--ref-ok-100);
+  --warn: var(--ref-warn-700);
+  --warn-bg: var(--ref-warn-100);
+  --bad: var(--ref-bad-600);
+  --bad-bg: var(--ref-bad-100);
+  --on-bad: var(--ref-white); /* text on a solid --bad fill (counter badges) */
+  --blue: var(--ref-blue-600);
+  --blue-bg: var(--ref-blue-100);
+  --vio: var(--ref-violet-600);
+  --vio-bg: var(--ref-violet-100);
+
+  /* 3. Component: the outstanding card on the member home screen ------------------------------- */
+  --hero: var(--ref-olive-950);
+  --on-hero: var(--ref-white);
+  --on-hero-muted: var(--ref-night-200);
+  --hero-chip: var(--ref-olive-700);
+  --hero-icon: var(--ref-olive-700);
+  --hero-action: var(--ref-lime-400);
+  --on-hero-action: var(--ref-olive-950);
 
   /* Radii */
   --radius-sm: 0.25rem;
@@ -60,37 +140,79 @@
   --font-sans: 'Noto Sans Bengali', system-ui, sans-serif;
 }
 
-/* Dark theme */
+/* 2. Semantic: dark (only what differs from light). Follows the device unless the user picked a theme
+   with the toggle (data-theme on <html>, see lib/theme.ts). */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --ok: #4ade80;
-    --warn: #fbbf24;
-    --bad: #f87171;
-    --muted: #9ca3af;
+  :root:not([data-theme='light']) {
+    --background: var(--ref-night-950);
+    --card: var(--ref-night-900);
+    --hover: var(--ref-night-800);
+    --soft: var(--ref-night-850);
+    --border: var(--ref-night-700);
+    --input: var(--ref-night-500);
 
-    --primary: #22c55e;
-    --primary-foreground: #0f172a;
-    --primary-soft: #14301f;
-    --primary-deep: #166534;
-    --vio: #b9a4f0;
-    --vio-bg: #2a2142;
-    --ink2: #cbd5e1;
+    --foreground: var(--ref-night-50);
+    --card-foreground: var(--ref-night-50);
+    --ink2: var(--ref-night-200);
+    --muted: var(--ref-night-400);
 
-    --background: #0f172a;
-    --foreground: #f1f5f9;
-    --card: #1e293b;
-    --card-foreground: #f1f5f9;
-    --hover: #273449;
-    --soft: #1f2937;
-    --ok-bg: #142a1c;
-    --warn-bg: #2a1f0b;
-    --bad-bg: #2a1514;
-    --blue-bg: #152240;
-    --blue: #7aa7ff;
+    --primary: var(--ref-lime-400);
+    --primary-foreground: var(--ref-olive-950);
+    --primary-soft: var(--ref-olive-900);
+    --primary-deep: var(--ref-olive-800);
+    --ring: var(--ref-lime-400);
 
-    --border: #334155;
-    --input: #64748b;
+    --ok: var(--ref-ok-400);
+    --ok-bg: var(--ref-ok-900);
+    --warn: var(--ref-warn-400);
+    --warn-bg: var(--ref-warn-900);
+    --bad: var(--ref-bad-400);
+    --bad-bg: var(--ref-bad-900);
+    --on-bad: var(--ref-olive-950);
+    --blue: var(--ref-blue-300);
+    --blue-bg: var(--ref-blue-900);
+    --vio: var(--ref-violet-300);
+    --vio-bg: var(--ref-violet-900);
+
+    --hero: var(--ref-olive-800);
+    --hero-chip: var(--ref-olive-600);
+    --hero-icon: var(--ref-olive-600);
   }
+}
+:root[data-theme='dark'] {
+    --background: var(--ref-night-950);
+    --card: var(--ref-night-900);
+    --hover: var(--ref-night-800);
+    --soft: var(--ref-night-850);
+    --border: var(--ref-night-700);
+    --input: var(--ref-night-500);
+
+    --foreground: var(--ref-night-50);
+    --card-foreground: var(--ref-night-50);
+    --ink2: var(--ref-night-200);
+    --muted: var(--ref-night-400);
+
+    --primary: var(--ref-lime-400);
+    --primary-foreground: var(--ref-olive-950);
+    --primary-soft: var(--ref-olive-900);
+    --primary-deep: var(--ref-olive-800);
+    --ring: var(--ref-lime-400);
+
+    --ok: var(--ref-ok-400);
+    --ok-bg: var(--ref-ok-900);
+    --warn: var(--ref-warn-400);
+    --warn-bg: var(--ref-warn-900);
+    --bad: var(--ref-bad-400);
+    --bad-bg: var(--ref-bad-900);
+    --on-bad: var(--ref-olive-950);
+    --blue: var(--ref-blue-300);
+    --blue-bg: var(--ref-blue-900);
+    --vio: var(--ref-violet-300);
+    --vio-bg: var(--ref-violet-900);
+
+    --hero: var(--ref-olive-800);
+    --hero-chip: var(--ref-olive-600);
+    --hero-icon: var(--ref-olive-600);
 }
 
 /* Base styles */

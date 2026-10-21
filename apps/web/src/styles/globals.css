@@ -4,3 +4,83 @@
 
 /* Noto Sans Bengali is self-hosted: the @fontsource CSS (imported in main.tsx) is bundled by Vite
    together with its woff2 files, so no request ever leaves the app origin (CSP: font-src 'self'). */
+
+/* ---------------------------------------------------------------------------------------------
+ * Form fields: one look for every text input, select and textarea (add the `field` class; layout
+ * such as width and margin stays on the element). `field-lg` is the roomy variant for the sign-in
+ * screens and the member pay form. Checkboxes and radios take the brand colour below.
+ * --------------------------------------------------------------------------------------------- */
+@layer components {
+  .field {
+    height: 2.75rem;
+    padding: 0 0.875rem;
+    border: 1px solid var(--input);
+    border-radius: 0.75rem;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-size: 0.9375rem;
+    transition: border-color 150ms, box-shadow 150ms, background-color 150ms;
+  }
+  .field::placeholder {
+    color: var(--muted);
+  }
+  .field:hover:not(:disabled):not(:focus) {
+    border-color: var(--ink2);
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+  }
+  .field:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  .field[aria-invalid='true'] {
+    border-color: var(--bad);
+  }
+  .field[aria-invalid='true']:focus {
+    box-shadow: 0 0 0 3px var(--bad-bg);
+  }
+  textarea.field {
+    height: auto;
+    padding: 0.625rem 0.875rem;
+    line-height: 1.6;
+  }
+  select.field {
+    appearance: none;
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238f9e96' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.875rem center;
+  }
+  /* the calendar icon of date inputs follows the theme */
+  .field::-webkit-calendar-picker-indicator {
+    opacity: 0.6;
+    cursor: pointer;
+  }
+  .field-lg {
+    height: 3.5rem;
+    border-radius: 1rem;
+    font-size: 1.0625rem;
+  }
+}
+
+@layer base {
+  input[type='checkbox'],
+  input[type='radio'] {
+    accent-color: var(--primary);
+  }
+  /* native date pickers and scrollbars match the active theme */
+  :root {
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+  }
+}

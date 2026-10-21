@@ -10,11 +10,24 @@ import { describe, expect, it } from 'vitest';
 
 const css = readFileSync(new URL('./theme.css', import.meta.url), 'utf8');
 
+/** `--name: #hex` or `--name: var(--other)`; a var() is resolved after the theme is assembled. */
 function tokens(block: string): Record<string, string> {
-  return Object.fromEntries([...block.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})/g)].map((m) => [m[1]!, m[2]!]));
+  return Object.fromEntries(
+    [...block.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6}|var\(--[\w-]+\))/g)].map((m) => [m[1]!, m[2]!]),
+  );
 }
-const light = tokens(css.slice(css.indexOf(':root'), css.indexOf('@media')));
-const dark = { ...light, ...tokens(css.slice(css.indexOf('@media'), css.indexOf('/* Base styles */'))) };
+function resolve(raw: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const name of Object.keys(raw)) {
+    let v = raw[name]!;
+    for (let i = 0; i < 5 && v.startsWith('var('); i++) v = raw[v.slice(6, -1)] ?? v;
+    out[name] = v;
+  }
+  return out;
+}
+const lightRaw = tokens(css.slice(css.indexOf(':root'), css.indexOf('@media')));
+const light = resolve(lightRaw);
+const dark = resolve({ ...lightRaw, ...tokens(css.slice(css.indexOf('@media'), css.indexOf('/* Base styles */'))) });
 
 function luminance(hex: string): number {
   const [r, g, b] = [1, 3, 5].map((i) => {
@@ -50,6 +63,22 @@ const PAIRS: Array<[string, string, number]> = [
   ['primary', 'primary-soft', 4.5],
   ['primary-foreground', 'primary', 4.5],
   ['blue', 'blue-bg', 4.5],
+  ['blue', 'card', 4.5],
+  ['vio', 'vio-bg', 4.5],
+  ['ink2', 'background', 4.5],
+  ['ink2', 'card', 4.5],
+  ['on-bad', 'bad', 4.5],
+  // the outstanding card on the member home screen and the button inside it
+  ['on-hero', 'hero', 4.5],
+  ['on-hero-muted', 'hero', 4.5],
+  ['on-hero', 'hero-chip', 4.5],
+  ['on-hero', 'hero-icon', 3],
+  ['on-hero-action', 'hero-action', 4.5],
+  ['hero-action', 'hero', 3],
+  // keyboard focus ring and the brand fill must be visible against the page
+  ['ring', 'background', 3],
+  ['ring', 'card', 3],
+  ['primary', 'hover', 4.5],
   ['foreground', 'hover', 4.5],
   ['foreground', 'primary-soft', 4.5],
   // the outline of a text field must be visible against the page (non-text contrast, 3:1)

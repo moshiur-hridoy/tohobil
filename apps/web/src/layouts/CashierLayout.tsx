@@ -153,7 +153,7 @@ export function CashierLayout() {
         <ThemeToggle />
       </nav>
 
-      <main className="flex-1">
+      <main className="min-w-0 flex-1">
         <OwnerConflictBanner />
         <div className="p-4 lg:p-6">
           <Outlet />

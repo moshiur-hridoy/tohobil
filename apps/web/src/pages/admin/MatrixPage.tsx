@@ -30,6 +30,13 @@ const CELL: Record<Look, { glyph: string; tone: string; chip: string; legend: st
   overdue: { glyph: '!', tone: 'bg-bad-bg text-bad', chip: 'bg-bad-bg text-bad', legend: 'matrixPage.legendOverdue' },
 };
 
+/**
+ * The member column is pinned on the left and the two total columns on the right, so only the months
+ * scroll sideways on a narrow screen. Fixed widths let the paid column sit exactly left of the balance.
+ */
+const OWED_COL = 'sticky right-0 w-36 min-w-36 border-border px-4 text-right';
+const PAID_COL = 'sticky right-36 w-32 min-w-32 border-l border-border px-4 text-right';
+
 const look = (c: MatrixCell): Look => (c.advance ? 'advance' : c.status);
 
 const sum = (values: string[]): bigint => values.reduce((a, v) => a + BigInt(v), 0n);
@@ -212,18 +219,18 @@ export function MatrixPage() {
         <Empty text={t('matrixPage.empty')} />
       ) : (
         <Card className="overflow-hidden">
-          <div ref={scroller} className="overflow-x-auto" onScroll={() => setHover(null)}>
+          <div ref={scroller} className="overflow-x-auto overscroll-x-contain" onScroll={() => setHover(null)}>
           <table className="w-full min-w-max border-separate border-spacing-0 text-sm" onMouseLeave={() => setHover(null)}>
             <thead>
               <tr className="text-xs font-semibold text-muted">
-                <th className="sticky left-0 z-20 border-b border-border bg-card px-4 py-3 text-left">{t('common.member')}</th>
+                <th className="sticky left-0 z-20 border-b border-r border-border bg-card px-4 py-3 text-left">{t('common.member')}</th>
                 {periods.map((p) => (
                   <th key={p} ref={p === current ? currentHead : undefined} className={`border-b border-border px-1 py-3 text-center font-semibold transition-colors ${p === current ? 'bg-primary-soft text-primary' : ''} ${p === hoverCol ? 'text-ink2' : ''}`}>
                     {fmtPeriod(p)}
                   </th>
                 ))}
-                <th className="border-b border-l border-border px-4 py-3 text-right">{t('matrixPage.paid')}</th>
-                <th className="border-b border-border px-4 py-3 text-right">{t('matrixPage.outstanding')}</th>
+                <th className={`${PAID_COL} z-20 border-b bg-card py-3`}>{t('matrixPage.paid')}</th>
+                <th className={`${OWED_COL} z-20 border-b bg-card py-3`}>{t('matrixPage.outstanding')}</th>
               </tr>
             </thead>
             <tbody>
@@ -234,7 +241,7 @@ export function MatrixPage() {
                 const ahead = periods.filter((p) => p > current && m.cells[p]?.advance).length;
                 return (
                   <tr key={m.member_id} className="group">
-                    <th scope="row" className="sticky left-0 z-10 whitespace-nowrap border-b border-border bg-card px-4 py-2 text-left font-normal transition-colors group-hover:bg-hover">
+                    <th scope="row" className="sticky left-0 z-10 whitespace-nowrap border-b border-r border-border bg-card px-4 py-2 text-left font-normal transition-colors group-hover:bg-hover">
                       <span className="flex items-center gap-2.5">
                         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-soft text-[0.6875rem] font-bold text-ink2">{m.member_code}</span>
                         <span className="font-semibold">{m.member_name}</span>
@@ -270,8 +277,8 @@ export function MatrixPage() {
                         </td>
                       );
                     })}
-                    <td className="whitespace-nowrap border-b border-l border-border px-4 py-2 text-right tabular-nums transition-colors group-hover:bg-hover">{taka(m.totals.paid_paisa)}</td>
-                    <td className="whitespace-nowrap border-b border-border px-4 py-2 text-right tabular-nums transition-colors group-hover:bg-hover">
+                    <td className={`${PAID_COL} z-10 whitespace-nowrap border-b bg-card py-2 tabular-nums transition-colors group-hover:bg-hover`}>{taka(m.totals.paid_paisa)}</td>
+                    <td className={`${OWED_COL} z-10 whitespace-nowrap border-b bg-card py-2 tabular-nums transition-colors group-hover:bg-hover`}>
                       {(owes > 0n || advancePaid === 0n) && <div className={`font-semibold ${owes > 0n ? 'text-bad' : 'text-muted'}`}>{taka(owes)}</div>}
                       {advancePaid > 0n && <div className={owes > 0n ? 'text-[0.6875rem] font-semibold text-ok' : 'font-semibold text-ok'}>+{taka(advancePaid)}</div>}
                       {fineOwed > 0n && <div className="text-[0.6875rem] text-bad">{t('matrixPage.plusFine', { amount: taka(fineOwed) })}</div>}
@@ -282,7 +289,7 @@ export function MatrixPage() {
             </tbody>
             <tfoot>
               <tr className="bg-soft">
-                <th scope="row" className="sticky left-0 z-10 bg-soft px-4 py-3 text-left text-sm font-bold">{t('matrixPage.collected')}</th>
+                <th scope="row" className="sticky left-0 z-10 border-r border-border bg-soft px-4 py-3 text-left text-sm font-bold">{t('matrixPage.collected')}</th>
                 {periods.map((p) => {
                   const tot = q.data.totals_by_period[p];
                   const paid = BigInt(tot?.paid_paisa ?? '0');
@@ -294,8 +301,8 @@ export function MatrixPage() {
                     </td>
                   );
                 })}
-                <td className="whitespace-nowrap border-l border-border px-4 py-3 text-right font-bold tabular-nums">{taka(sum(q.data.members.map((m) => m.totals.paid_paisa)))}</td>
-                <td className="whitespace-nowrap px-4 py-3 text-right font-bold text-bad tabular-nums">{taka(q.data.members.reduce((a, m) => a + balanceOf(m.cells, current).due, 0n))}</td>
+                <td className={`${PAID_COL} z-10 whitespace-nowrap bg-soft py-3 font-bold tabular-nums`}>{taka(sum(q.data.members.map((m) => m.totals.paid_paisa)))}</td>
+                <td className={`${OWED_COL} z-10 whitespace-nowrap bg-soft py-3 font-bold text-bad tabular-nums`}>{taka(q.data.members.reduce((a, m) => a + balanceOf(m.cells, current).due, 0n))}</td>
               </tr>
             </tfoot>
           </table>

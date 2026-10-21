@@ -30,7 +30,7 @@ echo "==> starting a throwaway PostgreSQL with the real schema"
 docker run -d --name "$PG" --network "$NET" -e POSTGRES_PASSWORD=smoke postgres:16-alpine > /dev/null
 for _ in $(seq 1 40); do docker exec "$PG" pg_isready -U postgres > /dev/null 2>&1 && break; sleep 1; done
 sleep 2
-sed '/^-- Down Migration/,$d' db/migrations/001_initial-schema.sql | docker exec -i "$PG" psql -q -v ON_ERROR_STOP=1 -U postgres > /dev/null
+for f in db/migrations/*.sql; do sed '/^-- Down Migration/,$d' "$f"; done | docker exec -i "$PG" psql -q -v ON_ERROR_STOP=1 -U postgres > /dev/null
 docker exec "$PG" psql -q -U postgres -c "
   INSERT INTO ledger_entries (entry_date, debit_account, credit_account, amount_paisa, ref_type, memo) VALUES
     ('2026-01-05','BANK','MEMBER_CAPITAL',500000,'import','smoke 1'),

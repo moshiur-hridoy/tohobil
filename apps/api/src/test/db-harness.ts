@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
@@ -15,9 +15,7 @@ import pg from 'pg';
  *      while silently skipping the ledger and money tests.
  */
 
-const MIGRATION_FILE = fileURLToPath(
-  new URL('../../../../db/migrations/001_initial-schema.sql', import.meta.url),
-);
+const MIGRATION_DIR = fileURLToPath(new URL('../../../../db/migrations/', import.meta.url));
 
 export interface TestDb {
   /** Superuser/owner pool: used to arrange data and to attempt tampering. */
@@ -63,10 +61,13 @@ function withDatabase(url: string, database: string, user?: string, password?: s
   return u.toString();
 }
 
-/** The "Up Migration" part of the SQL migration (the Down part is intentionally a hard stop). */
+/** The "Up Migration" part of every SQL migration in order (a Down part is never run here). */
 export function upMigrationSql(): string {
-  const sql = readFileSync(MIGRATION_FILE, 'utf8');
-  return sql.split(/^-- Down Migration/m)[0] as string;
+  return readdirSync(MIGRATION_DIR)
+    .filter((f) => f.endsWith('.sql'))
+    .sort()
+    .map((f) => (readFileSync(MIGRATION_DIR + f, 'utf8').split(/^-- Down Migration/m)[0] as string))
+    .join('\n');
 }
 
 export async function createTestDb(): Promise<TestDb | null> {

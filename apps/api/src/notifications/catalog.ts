@@ -102,7 +102,8 @@ export const TEMPLATE_META: Record<NotificationTemplate, TemplateMeta> = {
     ignoreSmsOptOut: true,
     roleRecipients: ['member'],
   },
-  meeting_reminder: { channels: ['push'], roleRecipients: ['member'] },
+  // Meetings are often after Isha: a reminder held back by quiet hours would arrive after the meeting.
+  meeting_reminder: { channels: ['push'], ignoreQuietHours: true, roleRecipients: ['member'] },
   absence_fine: {
     channels: ['push', 'sms'],
     ignoreSmsOptOut: true,

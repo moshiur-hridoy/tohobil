@@ -43,6 +43,7 @@ import { proposalRoutes } from './routes/proposals';
 import { settingsRoutes } from './routes/settings';
 import { charityRoutes } from './routes/charity';
 import { constitutionRoutes } from './routes/constitution';
+import { meetingRoutes } from './routes/meetings';
 import { FileStore } from './files/storage';
 import { createGuards } from './auth/guards';
 import { createSmsProvider } from './notifications/providers/sms';
@@ -269,6 +270,10 @@ export async function buildApp({
     );
     await app.register(proposalRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
     await app.register(charityRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
+    await app.register(
+      meetingRoutes({ pool: deps.pool, clock: deps.clock, pushSender, smsProvider, log: log as unknown as Logger }, guards),
+      { prefix: '/api/v1' },
+    );
     await app.register(
       constitutionRoutes({ pool: deps.pool, clock: deps.clock }, guards),
       { prefix: '/api/v1' },

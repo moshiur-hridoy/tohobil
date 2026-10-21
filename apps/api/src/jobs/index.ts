@@ -88,6 +88,14 @@ export function createScheduler(poolUrl: string, deps: JobDeps): Scheduler {
       const { zakatNoticeJob } = await import('./workers/zakat');
       await zakatNoticeJob(deps);
     });
+    await boss.work('meeting-draft', async () => {
+      const { meetingDraftJob } = await import('./workers/meetings');
+      await meetingDraftJob(deps);
+    });
+    await boss.work('meeting-reminders', async () => {
+      const { meetingRemindersJob } = await import('./workers/meetings');
+      await meetingRemindersJob(deps);
+    });
     await boss.work('member-status', async () => {
       const { statusJob } = await import('./workers/status');
       await statusJob(deps);
@@ -113,6 +121,8 @@ export function createScheduler(poolUrl: string, deps: JobDeps): Scheduler {
     await boss.schedule('member-status', '30 0 * * *', undefined, scheduleOpts);
     await boss.schedule('verify-ledger', '0 3 * * *', undefined, scheduleOpts);
     await boss.schedule('zakat-notice', '30 8 * * *', undefined, scheduleOpts);
+    await boss.schedule('meeting-draft', '20 0 * * *', undefined, scheduleOpts);
+    await boss.schedule('meeting-reminders', '0 * * * *', undefined, scheduleOpts);
   }
 
   async function stop(): Promise<void> {

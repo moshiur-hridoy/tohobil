@@ -15,3 +15,4 @@ export * from './settings';
 export * from './charity';
 export * from './constitution';
 export * from './periods';
+export * from './meeting';

@@ -1,5 +1,6 @@
 import { formatDateBn, toDhakaDate } from '@barakah/shared';
-import { getDigits } from './format';
+import type { TFunction } from 'i18next';
+import { getDigits, localDigits } from './format';
 
 /** "২০ জানুয়ারি ২০২৬" for a YYYY-MM-DD business date. */
 export function fmtDate(date: string): string {
@@ -27,4 +28,12 @@ export function dayToIso(date: string): string {
 export function fmtPeriod(period: string): string {
   const text = formatDateBn(`${period}-01`, { digits: getDigits() });
   return text.replace(/^\S+\s+/, '');
+}
+
+/** "21:30" as "রাত ৯:৩০": a 12-hour clock with the part of the day, the way people say it. */
+export function fmtClock(t: TFunction, time: string): string {
+  const [h, m] = time.split(':').map(Number) as [number, number];
+  const part = h < 4 ? 'night' : h < 6 ? 'dawn' : h < 12 ? 'morning' : h < 15 ? 'noon' : h < 18 ? 'afternoon' : h < 20 ? 'evening' : 'night';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return t('meetings.clock', { part: t(`meetings.dayPart.${part}`), time: localDigits(`${h12}:${String(m).padStart(2, '0')}`) });
 }

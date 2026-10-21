@@ -13,4 +13,6 @@ export const JOB_QUEUES = [
   'generate-rent-expected',
   'verify-ledger',
   'zakat-notice',
+  'meeting-draft',
+  'meeting-reminders',
 ] as const;

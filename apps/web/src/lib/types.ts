@@ -263,6 +263,20 @@ export interface HoldingResponse {
   entries: HoldingEntry[];
   documents: HoldingDocument[];
   valuations: HoldingValuation[];
+  withdrawals: HoldingWithdrawal[];
+}
+
+/** Money taken back from a shop: an `asset_sale` proposal with a `partner_id`. */
+export interface HoldingWithdrawal {
+  proposal_id: string;
+  status: 'draft' | 'open' | 'approved' | 'executed';
+  title: string;
+  /** The approved amount, or for everything the approved minimum price. */
+  amount_paisa: string;
+  everything: boolean;
+  withdrawn_paisa: string | null;
+  cost_paisa: string | null;
+  executed_on: string | null;
 }
 
 export interface NavResponse {
@@ -487,4 +501,25 @@ export interface SettlementView {
   net_paisa: string;
   taken_on: string;
   payouts: Array<{ due_on: string; amount_paisa: string; paid_at: string | null }>;
+}
+
+export interface MeetingRow {
+  id: string;
+  status: 'draft' | 'scheduled' | 'held' | 'cancelled';
+  /** Asia/Dhaka date and time; null on a draft with no time yet. */
+  date: string | null;
+  time: string | null;
+  scheduled_for: string | null;
+  link: string | null;
+  notes: string | null;
+  created_at: string;
+  present_count: number;
+  absent_count: number;
+}
+
+export type AttendanceStatus = 'present' | 'absent_excused' | 'absent_unexcused';
+
+export interface MeetingDetail extends MeetingRow {
+  attendance: Array<{ member_id: string; member_code: string; member_name: string; status: AttendanceStatus | null; reason: string | null }>;
+  absence_fines: Array<{ fine_id: string; member_id: string; amount_paisa: string }>;
 }

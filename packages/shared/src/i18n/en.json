@@ -18,6 +18,7 @@
     "fines": "Fines",
     "nextDue": "Next Due",
     "payNow": "Pay Now",
+    "payAdvance": "Pay in Advance",
     "underVerification": "Under Verification",
     "fundNetAssets": "Fund Net Assets",
     "myShareValue": "My Share Value",
@@ -25,14 +26,21 @@
     "charityToDonate": "Charity to Donate",
     "outstandingNone": "You are all paid up.",
     "nextDueOn": "Next due date: {{date}}",
-    "everyoneThisMonth": "Everyone this month",
     "underVerificationHint": "The cashier is checking your payment. Reminders are paused.",
     "myCapital": "My paid-in capital",
     "netAssetsHint": "Cash and assets at cost, after money owed to others (interim figure)",
     "reachCashier": "Open the payments page",
     "memberDueOwes": "owes {{amount}}",
     "memberAllPaid": "paid",
-    "loadFailed": "Could not load the figures."
+    "loadFailed": "Could not load the figures.",
+    "everyoneInMonth": "Everyone's standing",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "totalOwed": "Owes {{amount}} in total",
+    "noArrears": "Nothing owed",
+    "groupOwed": "Owed by everyone",
+    "noDuesInMonth": "No one had a due this month.",
+    "duesNotYetCreated": "This month's dues are not created yet. Money paid in advance is kept as credit and goes to them once they are."
   },
   "payment": {
     "title": "Payment",
@@ -113,8 +121,6 @@
     "rent": "Rent",
     "fundAssets": "Fund Assets",
     "allAssetStatus": "Latest status of all assets",
-    "totalEstimatedValue": "Total estimated value of held assets",
-    "acquiringNotIncluded": "Assets still being acquired are not included.",
     "latestValuation": "Latest valuation",
     "paidSoFar": "Paid so far",
     "acquiringNote": "This asset is being acquired; valuation will count once completed.",
@@ -189,7 +195,8 @@
         "membersAndDecisions": "Members & Decisions",
         "administration": "Administration"
       },
-      "obligations": "Obligations"
+      "obligations": "Obligations",
+      "meetings": "Meetings"
     }
   },
   "proposalType": {
@@ -243,7 +250,10 @@
     "clauseRef": "Clause",
     "byShares": "By share weight",
     "byMembers": "By member count",
-    "terms": "Terms"
+    "terms": "Terms",
+    "executeAmount": "Amount actually paid or received",
+    "executeAccount": "Account",
+    "executeAccountIn": "Money came into"
   },
   "compliance": {
     "interest_free_instrument": "Interest-free instrument",
@@ -266,6 +276,12 @@
   "errors": {
     "generic": "Something went wrong. Please try again.",
     "network": "No internet connection.",
+    "server": {
+      "unreachable": "Cannot reach the server. Please try again in a moment."
+    },
+    "internal": {
+      "error": "The server ran into a problem. Tell the cashier the reference number below."
+    },
     "unauthorized": "Your session has expired. Please log in again.",
     "forbidden": "You do not have permission for this action.",
     "notFound": "Not found.",
@@ -390,7 +406,20 @@
       "invalid_payload": "Some fields of the proposal are not valid.",
       "fine_waiver_multiple_members": "A fine waiver proposal can only cover one member’s fines.",
       "compliance_incomplete": "Every compliance box must be ticked before voting.",
-      "feasibility_required": "A feasibility file is needed before voting."
+      "feasibility_required": "A feasibility file is needed before voting.",
+      "price_below_min": "The amount is below the minimum the members approved.",
+      "amount_exceeds_approved": "The amount is more than the members approved.",
+      "amount_required": "Enter the amount actually paid or received."
+    },
+    "partner": {
+      "withdrawal_exceeds_value": "This is the whole value or more: withdraw everything instead.",
+      "nothing_held": "Nothing is held with this shop."
+    },
+    "meeting": {
+      "not_found": "Meeting not found.",
+      "wrong_status": "This meeting can no longer be changed (it was held or cancelled).",
+      "not_started": "Attendance can be marked once the meeting has started.",
+      "duplicate_member": "A member is listed twice."
     }
   },
   "common": {
@@ -504,6 +533,7 @@
     "continue": "Continue",
     "notYou": "Use a different member ID",
     "forgotPinBody": "If you forgot your PIN, ask the cashier for a new one.",
+    "haveActivationCode": "Have an activation code? Enter it here",
     "brandTagline": "The members' own savings fund",
     "trustLedger": "The ledger can never be edited or deleted",
     "trustOpen": "Every member can see where every taka goes",
@@ -545,6 +575,7 @@
   "status": {
     "paid": "Paid",
     "paid_late": "Paid late",
+    "advance": "Advance",
     "partial": "Partly paid",
     "unpaid": "Unpaid",
     "overdue": "Overdue",
@@ -576,15 +607,11 @@
     "senderNotePhone": "Sender number, last 4 digits: {{digits}}",
     "senderNoteBank": "Sender account, last 4 digits: {{digits}}",
     "trxHintOptional": "Add the transaction ID if the message has one; otherwise leave it empty.",
-    "totalIncludesFine": "This total includes a {{fine}} fine (dues {{due}} + fine {{fine}}).",
     "withFine": "Dues {{due}} + fine {{fine}}",
-    "whichMonths": "Which months did you pay for? (you can pick more than one)",
     "payableTotal": "Total to send",
     "pickSomething": "Pick at least one month.",
     "owedForMonth": "This month’s balance {{amount}} was filled in. Type a different amount if you like.",
     "subtitle": "Send the money, then submit the details here",
-    "afterSendHint": "After sending, submit the TrxID in the form below. Your dues drop once the cashier verifies.",
-    "duesAndFines": "My dues and fines",
     "noDues": "Nothing is due.",
     "fineLabel": "Fine",
     "dueKind": {
@@ -595,13 +622,10 @@
     },
     "outstanding": "Outstanding",
     "dueDate": "Due {{date}}",
-    "howToPay": "How to pay",
     "noInstructions": "The cashier has not published payment details yet.",
-    "iSentMoney": "I have sent money",
     "amountLabel": "Amount sent (৳)",
     "amountHint": "For example 5000 or 5,000.50",
     "trxHint": "The transaction ID from the bKash, Nagad or bank message",
-    "trxNotNeeded": "Not needed for cash",
     "periodHint": "Which month is it for? (optional)",
     "periodAny": "Not sure",
     "screenshotLabel": "Screenshot or receipt (optional)",
@@ -624,7 +648,18 @@
     "uploadFailed": "The screenshot could not be uploaded.",
     "purposeLabel": "What is it for",
     "purposeDues": "Monthly dues",
-    "purposeLevy": "Levy (registration, tax)"
+    "purposeLevy": "Levy (registration, tax)",
+    "step1": "Which months are you paying for?",
+    "step1Hint": "Older months are paid first. Ticking a month also ticks the months before it.",
+    "step2": "Send the money",
+    "step2Hint": "Send {{amount}} to the number below.",
+    "sendTo": "{{method}} number",
+    "cashHint": "Hand the money to the cashier, then submit below.",
+    "otherHint": "Ask the cashier how to send it.",
+    "step3": "Tell us about the payment",
+    "step3Hint": "The cashier uses these to match your money.",
+    "sentOn": "When did you send it",
+    "includesFine": "Includes {{fine}} in fines"
   },
   "ledgerPage": {
     "title": "Ledger",
@@ -699,7 +734,24 @@
     "contractPapers": "Contract papers",
     "partnerName": "Shop name",
     "looseHint": "{{n}} earlier purchases of this kind belong to no shop yet. Bring them under this one?",
-    "adopt": "Bring under this shop"
+    "adopt": "Bring under this shop",
+    "withdraw": "Withdraw money",
+    "withdrawEverything": "Withdraw everything",
+    "withdrawPart": "Part of it",
+    "withdrawHint": "Current value: {{value}} (as of {{date}}). This goes to the members as a proposal. Once it passes, the cashier records the money that came in. If the value is old, update it first: the part taken out is worked out from it.",
+    "withdrawAmount": "How much to take out",
+    "withdrawMin": "Take back at least this much (taka)",
+    "withdrawTooMuch": "That is the whole value or more: choose \"Withdraw everything\" instead.",
+    "withdrawLeft": "Left with the shop after this: {{value}}",
+    "withdrawPartTitle": "{{name}}: withdraw {{amount}}",
+    "withdrawAllTitle": "{{name}}: withdraw everything",
+    "withdrawals": "Withdrawals",
+    "withdrawalAll": "Everything",
+    "withdrawalWaiting": "Waiting: {{status}}",
+    "withdrawalDone": "Received {{amount}} on {{date}}",
+    "gainOnWithdrawal": "profit {{amount}}",
+    "lossOnWithdrawal": "loss {{amount}}",
+    "withdrawMinHint": "This is the lowest the members agree to take back for all the gold. If the shop pays less, it cannot be done. The current value ({{value}}) is filled in; lower it a little if the members allow room to bargain."
   },
   "theme": {
     "toDark": "Switch to dark mode",
@@ -1229,7 +1281,146 @@
     "createRuleChange": "Create rule-change proposal",
     "validFrom": "Valid from",
     "empty": "No rules.",
-    "ruleChangeTitle": "Rule change"
+    "ruleChangeTitle": "Rule change",
+    "units": {
+      "dayOfMonth": "day {{n}} of each month",
+      "days": "{{n}} days",
+      "hours": "{{n}} hours",
+      "months": "{{n}} months",
+      "times": "{{n}} times",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "choices": {
+      "oldest_principal_then_fines": "Oldest dues first, then fines"
+    },
+    "pickRule": "Which rule do you want to change?",
+    "currentValue": "Now: {{value}}",
+    "valueTaka": "New amount (taka)",
+    "valueNumber": "New number",
+    "technicalKey": "System name",
+    "names": {
+      "monthly_due_per_share_paisa": "Monthly due per share",
+      "start_boost_per_share_paisa": "One-time starting due per share",
+      "due_day": "Last day to pay dues",
+      "dues_generation_day": "Day dues are created",
+      "reminder_start_day": "Reminders start",
+      "reminder_end_day": "Reminders stop",
+      "reminder_time": "Reminder time",
+      "fine_day": "Day fines are charged",
+      "fine_per_share_paisa": "Late fine per share",
+      "warning_after_months": "Unpaid months before a warning",
+      "suspension_after_consecutive_unpaid_months": "Unpaid months before suspension",
+      "final_notice_days": "Final notice period",
+      "auto_suspend": "Suspend automatically",
+      "push_to_sms_fallback_hours": "SMS if a notification is unread",
+      "default_vote_duration_hours": "Voting time",
+      "proposal_execution_window_days": "Time to carry out a passed proposal",
+      "payment_pending_alert_hours": "Pending payment alert",
+      "rent_grace_days": "Rent grace period",
+      "valuation_max_age_days": "How old an asset valuation may be",
+      "exit_fee_paisa": "Exit fee",
+      "early_exit_service_charge_percent": "Early exit service charge",
+      "allocation_order": "Where a payment goes first",
+      "fund_term_start": "Fund term starts",
+      "fund_term_end": "Fund term ends",
+      "feasibility_threshold_paisa": "Feasibility report needed above",
+      "big_financial_threshold_paisa": "Large spending limit",
+      "absence_fine_paisa": "Meeting absence fine",
+      "absence_fine_after_consecutive": "Absences before a fine",
+      "meeting_window_start_day": "Monthly meeting window opens",
+      "meeting_window_end_day": "Monthly meeting window closes",
+      "inactive_after_months_no_contact": "Inactive after no contact",
+      "inactive_wait_days_after_letter": "Wait after the letter",
+      "compliance_interest_free": "Interest-free investing",
+      "max_devices_per_member": "Devices per member (no longer used)",
+      "max_devices_privileged": "Devices per office-holder",
+      "reinstatement_charges_fines": "Fines on reinstatement"
+    },
+    "hints": {
+      "monthly_due_per_share_paisa": "What each share pays every month.",
+      "start_boost_per_share_paisa": "The one-time due carried over from the old sheet; not charged monthly.",
+      "due_day": "The month’s dues must be paid by this day.",
+      "dues_generation_day": "On this day everyone’s dues for the new month are created.",
+      "reminder_start_day": "From this day, members with unpaid dues get reminders.",
+      "reminder_end_day": "Reminders stop after this day.",
+      "reminder_time": "The time of day reminders are sent.",
+      "fine_day": "If dues are still unpaid on this day, a fine is charged.",
+      "fine_per_share_paisa": "The fine for each share when dues are late.",
+      "warning_after_months": "A member is warned after this many unpaid months in a row.",
+      "suspension_after_consecutive_unpaid_months": "Membership is suspended after this many unpaid months in a row.",
+      "final_notice_days": "How long to wait after the final notice before suspending.",
+      "auto_suspend": "Whether the system suspends a member on its own when the conditions are met.",
+      "push_to_sms_fallback_hours": "If an app notification is not opened within this time, an SMS is sent.",
+      "default_vote_duration_hours": "How long a proposal is open for voting by default.",
+      "proposal_execution_window_days": "A passed proposal must be carried out within this many days.",
+      "payment_pending_alert_hours": "The cashier is alerted when a payment waits this long unchecked.",
+      "rent_grace_days": "The cashier is alerted when rent is this many days late.",
+      "valuation_max_age_days": "Valuations older than this are flagged as out of date.",
+      "exit_fee_paisa": "The amount taken from a leaving member’s settlement.",
+      "early_exit_service_charge_percent": "The share of the settlement taken when a member leaves before the term ends.",
+      "allocation_order": "Which outstanding amounts a member’s payment pays off first.",
+      "fund_term_start": "The day the fund began.",
+      "fund_term_end": "The day the fund’s term ends.",
+      "feasibility_threshold_paisa": "Investments above this amount need a feasibility report.",
+      "big_financial_threshold_paisa": "Decisions above this amount need a larger vote.",
+      "absence_fine_paisa": "The fine for missing meetings in a row.",
+      "absence_fine_after_consecutive": "A fine is charged after missing this many meetings in a row.",
+      "meeting_window_start_day": "The monthly meeting can be held from this day.",
+      "meeting_window_end_day": "The monthly meeting must be held by this day.",
+      "inactive_after_months_no_contact": "A member who cannot be reached for this long is sent a letter.",
+      "inactive_wait_days_after_letter": "How long to wait after the letter is sent.",
+      "compliance_interest_free": "The fund only invests in interest-free (halal) ways.",
+      "max_devices_per_member": "Members can now sign in from any device with their ID and PIN.",
+      "max_devices_privileged": "How many devices a cashier or admin may use.",
+      "reinstatement_charges_fines": "Whether a reinstated member also pays fines for the months missed."
+    },
+    "sectionsNav": "Rule sections",
+    "upcoming": "From {{date}}: {{value}}",
+    "menu": "{{name}}: more",
+    "proposeChange": "Propose a change",
+    "seeHistory": "See earlier values",
+    "readClause": "Read clause {{clause}} of the constitution",
+    "howItWorks": "This does not change the rule directly. It creates a proposal; if members pass it, the new value applies from the date you choose and the old value stays in the history.",
+    "groups": {
+      "dues": {
+        "title": "Monthly dues",
+        "sub": "How much, when they are created, when they are due, when reminders go"
+      },
+      "fines": {
+        "title": "Late payment, fines and suspension",
+        "sub": "What happens when dues are unpaid"
+      },
+      "meetings": {
+        "title": "Monthly meeting",
+        "sub": "When it is held and what happens if you miss it"
+      },
+      "votes": {
+        "title": "Votes and proposals",
+        "sub": "How long votes run, what counts as a big decision"
+      },
+      "investment": {
+        "title": "Investment and assets",
+        "sub": "Where money may be invested, looking after assets"
+      },
+      "membership": {
+        "title": "Membership and fund term",
+        "sub": "Leaving, losing contact, how long the fund runs"
+      },
+      "system": {
+        "title": "App and notifications",
+        "sub": "Alerts and device rules"
+      },
+      "other": {
+        "title": "Other",
+        "sub": "Remaining rules"
+      }
+    },
+    "newRule": {
+      "title": "Can a new kind of rule be added?",
+      "body1": "This page only changes the value of rules that already exist (for example dues from ৳5,000 to ৳6,000). Each rule has app logic behind it, such as \"charge fines on the 21st\", so a brand-new rule added by name alone would not be followed by the app.",
+      "body2": "For a new rule: first agree it with the members through a general or constitution-amendment vote, then have a developer add it to the app. It then appears here and can be changed from here."
+    }
   },
   "charityPage": {
     "title": "Charity & expenses",
@@ -1689,6 +1880,69 @@
     "system": {
       "allOk": "Everything is working",
       "attention": "Something needs attention"
+    }
+  },
+  "meetings": {
+    "title": "Meetings",
+    "subtitle": "Set the time of the monthly meeting, and record who came afterwards.",
+    "new": "New meeting",
+    "upcoming": "Upcoming",
+    "noUpcoming": "No meeting is planned.",
+    "past": "Past meetings",
+    "noPast": "No meeting has been held yet.",
+    "draftTitle": "This month’s meeting",
+    "draftHint": "No time yet. Add the time and link.",
+    "setTime": "Set the time",
+    "change": "Change",
+    "cancel": "Cancel meeting",
+    "markAttendance": "Mark attendance",
+    "attendanceLater": "You can mark attendance here once the meeting has started.",
+    "counts": "{{present}} present · {{absent}} absent",
+    "status": {
+      "draft": "No time yet",
+      "scheduled": "Scheduled",
+      "held": "Held",
+      "cancelled": "Cancelled"
+    },
+    "rulesTitle": "Meeting rules",
+    "ruleWindow": "The monthly meeting is held between {{from}} and {{to}}.",
+    "ruleDraft": "Five days before, the system creates this month’s meeting; you only add the time and link.",
+    "ruleReminders": "Everyone is reminded a day before and an hour before.",
+    "ruleFine": "Missing {{times}} in a row without leave costs {{amount}}; the money goes to charity.",
+    "ruleExcused": "An absence with leave (\"on leave\") is never fined.",
+    "newTitle": "New meeting",
+    "editTitle": "Meeting time and link",
+    "time": "Time",
+    "link": "Meeting link (Google Meet, Zoom, ...)",
+    "notes": "Agenda (optional)",
+    "notesPlaceholder": "For example: land proposal, yearly accounts",
+    "remindNote": "Once saved, members get a notification a day before and an hour before.",
+    "cancelTitle": "Cancel the meeting?",
+    "cancelBody": "No reminders will go out and this meeting cannot be reopened. Create a new one if needed.",
+    "cancelReason": "Reason (optional)",
+    "attendanceTitle": "Attendance",
+    "attendanceHint": "Everyone starts as \"present\"; change only those who did not come.",
+    "attendance": {
+      "present": "Present",
+      "absent_excused": "On leave",
+      "absent_unexcused": "Absent"
+    },
+    "reasonPlaceholder": "Reason (optional)",
+    "summary": "{{present}} present, {{excused}} on leave, {{unexcused}} absent without leave.",
+    "finalWarning": "Saving closes this meeting and the attendance cannot be changed. Anyone who has now missed several meetings in a row without leave is fined right away under the rules. A mistake needs a fine-waiver proposal.",
+    "saveFinal": "Yes, save",
+    "fined": "Fined {{amount}}",
+    "wasCancelled": "This meeting was cancelled.",
+    "nextMeeting": "Next meeting",
+    "join": "Join",
+    "clock": "{{time}} ({{part}})",
+    "dayPart": {
+      "dawn": "dawn",
+      "morning": "morning",
+      "noon": "midday",
+      "afternoon": "afternoon",
+      "evening": "evening",
+      "night": "night"
     }
   }
 }

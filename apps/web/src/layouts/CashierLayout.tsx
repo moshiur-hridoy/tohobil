@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../lib/auth';
 import { OwnerConflictBanner } from '../components/OwnerConflictBanner';
-import { AppIcon } from '../components/Logo';
+import { Wordmark } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { useHiddenNav } from '../lib/navPrefs';
 
@@ -14,6 +14,7 @@ export const ADMIN_NAV = [
   ['/admin/ledger', 'admin.nav.ledger'],
   ['/admin/members', 'admin.nav.members'],
   ['/admin/proposals', 'admin.nav.proposals'],
+  ['/admin/meetings', 'admin.nav.meetings'],
   ['/admin/assets', 'admin.nav.assets'],
   ['/admin/rent', 'admin.nav.rent'],
   ['/admin/obligations', 'admin.nav.obligations'],
@@ -35,6 +36,7 @@ const ADMIN_NAV_META: Record<AdminRoute, { icon: string }> = {
   '/admin/ledger': { icon: 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11' },
   '/admin/members': { icon: 'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 5a3.5 3.5 0 0 1 0 6.5M18 14.5c2 .7 3.5 2.4 3.5 5.5' },
   '/admin/proposals': { icon: 'M4 4h16v16H4zM9 12l2 2 4-4' },
+  '/admin/meetings': { icon: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M8 14h3' },
   '/admin/assets': { icon: 'M12 3l9 5-9 5-9-5zM3 13l9 5 9-5' },
   '/admin/rent': { icon: 'M3 21h18M5 21V10l7-4 7 4v11M9 21v-6h6v6' },
   '/admin/obligations': { icon: 'M4 7h16v12H4zM4 11h16M8 15h3' },
@@ -58,7 +60,7 @@ const NAV_GROUPS: { titleKey: string; routes: AdminRoute[] }[] = [
   },
   {
     titleKey: 'admin.nav.group.membersAndDecisions',
-    routes: ['/admin/members', '/admin/proposals', '/admin/notifications', '/admin/rules', '/admin/reports', '/admin/charity'],
+    routes: ['/admin/members', '/admin/proposals', '/admin/meetings', '/admin/notifications', '/admin/rules', '/admin/reports', '/admin/charity'],
   },
   {
     titleKey: 'admin.nav.group.administration',
@@ -102,10 +104,9 @@ export function CashierLayout() {
       {/* Sidebar (desktop, 1024px and above) */}
       <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r border-border bg-card lg:flex">
         <div className="flex flex-col gap-4 p-4">
-          <div className="flex items-center gap-3 px-1">
-            <AppIcon size={36} className="rounded-[11px]" />
-            <h1 className="text-lg font-bold tracking-tight">{t('app.shortName')}</h1>
-          </div>
+          <h1 className="px-1 pt-1">
+            <Wordmark className="h-auto w-32" title={t('app.shortName')} />
+          </h1>
           <ProfileCard />
         </div>
 

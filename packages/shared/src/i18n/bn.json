@@ -1264,7 +1264,15 @@
     "tabCharity": "দান",
     "tabExpenses": "খরচ",
     "tabs": "দান না খরচ",
-    "expensesAllTime": "শুরু থেকে এ পর্যন্ত"
+    "expensesAllTime": "শুরু থেকে এ পর্যন্ত",
+    "totalFund": "মোট তহবিল",
+    "totalExpenses": "মোট খরচ",
+    "totalDonated": "মোট দান",
+    "inHand": "হাতে আছে",
+    "allTime": "শুরু থেকে এ পর্যন্ত",
+    "totalFundSub": "জরিমানা ও ব্যাংক মুনাফা",
+    "totalExpensesSub": "বারাকাহর নিজের খরচ",
+    "inHandSub": "দান তহবিলে"
   },
   "settingsPage": {
     "title": "সেটিংস",

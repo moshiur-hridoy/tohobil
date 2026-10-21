@@ -203,7 +203,8 @@ export async function listFundExpenses(db: Db): Promise<{ total_paisa: string; i
 }
 
 export interface CharityStatementResult {
-  year: string;
+  /** `null`: the whole history. */
+  year: string | null;
   opening_paisa: string;
   receipts_paisa: string;
   disbursements_paisa: string;
@@ -213,20 +214,21 @@ export interface CharityStatementResult {
 
 /**
  * Aggregated charity receipts and disbursements for a calendar year with opening and closing
- * CHARITY_PAYABLE balance (spec 18.2) and each movement behind them.
+ * CHARITY_PAYABLE balance (spec 18.2) and each movement behind them. Without a year it covers the
+ * whole history, so the opening balance is zero.
  */
-export async function charityStatement(db: Db, year: string): Promise<CharityStatementResult> {
-  const from = `${year}-01-01`;
-  const to = `${year}-12-31`;
+export async function charityStatement(db: Db, year?: string): Promise<CharityStatementResult> {
+  const from = year ? `${year}-01-01` : '0001-01-01';
+  const to = year ? `${year}-12-31` : '9999-12-31';
   const [opening, receipts, disbursements, entries] = await Promise.all([
-    charityOpeningBalance(db, year),
+    year ? charityOpeningBalance(db, year) : Promise.resolve(0n),
     charityReceipts(db, from, to),
     charityDisbursements(db, from, to),
     charityEntries(db, from, to),
   ]);
   const closing = opening + receipts - disbursements;
   return {
-    year,
+    year: year ?? null,
     opening_paisa: opening.toString(),
     receipts_paisa: receipts.toString(),
     disbursements_paisa: disbursements.toString(),

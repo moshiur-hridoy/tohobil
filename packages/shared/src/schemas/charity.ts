@@ -12,7 +12,8 @@ export const charityQuerySchema = z.object({
 export type CharityQuery = z.infer<typeof charityQuerySchema>;
 
 export const charityStatementQuerySchema = z.object({
-  year: z.string().regex(/^\d{4}$/, 'Expected a four-digit year'),
+  /** Omitted: the whole history, from the first entry to today. */
+  year: z.string().regex(/^\d{4}$/, 'Expected a four-digit year').optional(),
 });
 
 export type CharityStatementQuery = z.infer<typeof charityStatementQuerySchema>;

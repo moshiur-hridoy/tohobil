@@ -207,6 +207,12 @@ describe('charity donations', () => {
     expect(st.entries[1]).toMatchObject({ direction: 'in', kind: 'bank_profit', member_code: null });
     // The SMS charge is the fund's cost, not charity money.
     expect(st.closing_paisa).toBe('23900');
+    // Without a year: the whole history, which ends where the latest year ends.
+    const all = await charityStatement(db!.app);
+    expect(all).toMatchObject({ year: null, opening_paisa: '0' });
+    expect(all.closing_paisa).toBe((await charityStatement(db!.app, '2026')).closing_paisa);
+    expect(all.entries.length).toBeGreaterThan(st.entries.length);
+
     const expenses = await listFundExpenses(db!.app);
     expect(expenses.total_paisa).toBe('34500');
     expect(expenses.items).toEqual([

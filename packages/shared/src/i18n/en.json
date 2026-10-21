@@ -1264,7 +1264,15 @@
     "tabCharity": "Charity",
     "tabExpenses": "Expenses",
     "tabs": "Charity or expenses",
-    "expensesAllTime": "Since the start"
+    "expensesAllTime": "Since the start",
+    "totalFund": "Total fund",
+    "totalExpenses": "Total expenses",
+    "totalDonated": "Total donated",
+    "inHand": "In hand",
+    "allTime": "Since the start",
+    "totalFundSub": "Fines and bank profit",
+    "totalExpensesSub": "Barakah's own costs",
+    "inHandSub": "In the charity fund"
   },
   "settingsPage": {
     "title": "Settings",

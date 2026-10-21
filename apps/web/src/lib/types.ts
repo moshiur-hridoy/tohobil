@@ -427,7 +427,8 @@ export interface FundExpenseEntry {
 }
 
 export interface CharityStatement {
-  year: string;
+  /** `null`: the whole history. */
+  year: string | null;
   opening_paisa: string;
   receipts_paisa: string;
   disbursements_paisa: string;

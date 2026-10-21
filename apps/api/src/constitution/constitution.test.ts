@@ -65,6 +65,18 @@ describe('constitution', () => {
     expect(detail.clauses[0]!.clause_no).toBe('3.1');
   });
 
+  dbIt('clauses come back in reading order (2.1 before 10.1), not text order', async () => {
+    const version = await seedConstitutionVersion(db!.admin, 'order-test', null, '2026-01-01', null, null, [
+      { clause_no: '10.1', title: 'Disputes' },
+      { clause_no: '2.10', title: 'Tenth' },
+      { clause_no: '2.2', title: 'Fine' },
+      { clause_no: '1.1', title: 'Nature' },
+      { clause_no: '0', title: 'Oath' },
+    ]);
+    const detail = await getConstitutionVersion(db!.admin, version.version_id);
+    expect(detail.clauses.map((c) => c.clause_no)).toEqual(['0', '1.1', '2.2', '2.10', '10.1']);
+  });
+
   dbIt('search returns clauses whose title, summary or body match', async () => {
     const version = await seedConstitutionVersion(
       db!.admin,

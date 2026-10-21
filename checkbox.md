@@ -154,7 +154,7 @@ Work through `docs/TEST-GUIDE.md` first (testing), then `docs/GO-LIVE.md` (launc
 - [ ] Owner decisions list (Doc.md 18.12) resolved at the group meeting
 - [ ] A Bengali speaker reviews `docs/BENGALI-REVIEW.md`
 - [ ] Real app icons replacing placeholders
-- [ ] Constitution PDF and clauses loaded as version 1; real history imported and checked against the sheet
+- [ ] Constitution loaded as version 1 (`private/constitution_v1.bn.md` is ready: 37 clauses + the oath; run `pnpm constitution:load --commit` on the server); real history imported and checked against the sheet
 - [ ] Backups running on the real server and a restore test green (`docs/RUNBOOK.md`)
 - [ ] Production deploy (manual, per `docs/RUNBOOK.md`); never from a dev session
 - [ ] (optional) Android app: native project, keystore backed up (`docs/ANDROID.md`, `docs/RECOVERY-KIT.md`)

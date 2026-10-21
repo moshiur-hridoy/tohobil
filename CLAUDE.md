@@ -25,6 +25,7 @@ pnpm migrate            # needs MIGRATOR_DATABASE_URL (see .env.example)
 pnpm seed               # fictional fixture; refuses non-local databases
 pnpm dev                # API on :3000, web on :5173 (proxies /api)
 pnpm dues:generate      # dues for the current period (or `2026-11`); idempotent, until the Phase 2 scheduler
+pnpm constitution:load  # list the clauses of private/constitution_v1.bn.md; add --commit to load it as version 1 (once, never deletable)
 
 # Run tests (DB tests use Testcontainers, which needs Docker;
 # or point TEST_DATABASE_URL at any Postgres superuser connection).

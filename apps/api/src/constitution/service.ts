@@ -112,7 +112,7 @@ export async function getConstitutionVersion(
     db.query<ClauseRow>(
       `SELECT id, clause_no, title, summary, body
        FROM constitution_clauses WHERE version_id = $1
-       ORDER BY clause_no`,
+       ORDER BY CASE WHEN clause_no ~ '^[0-9]+([.][0-9]+)*$' THEN string_to_array(clause_no, '.')::int[] END NULLS LAST, clause_no`,
       [id],
     ),
     memberId
@@ -140,7 +140,7 @@ export async function searchClauses(
      FROM constitution_clauses
      WHERE version_id = $1
        AND (title ILIKE $2 OR summary ILIKE $2 OR body ILIKE $2)
-     ORDER BY clause_no`,
+     ORDER BY CASE WHEN clause_no ~ '^[0-9]+([.][0-9]+)*$' THEN string_to_array(clause_no, '.')::int[] END NULLS LAST, clause_no`,
     [versionId, pattern],
   );
   return { items: res.rows };

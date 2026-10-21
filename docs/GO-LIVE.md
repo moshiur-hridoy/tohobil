@@ -23,7 +23,7 @@ Go through this before real members use the app with real money. Everything unde
 - [ ] **A Bengali speaker has read `docs/BENGALI-REVIEW.md`** and the wording fixes were made in `packages/shared/src/i18n/bn.json`.
 - [ ] **A real dry run:** follow `docs/TEST-GUIDE.md` start to finish on the production-like server with fictional members, then wipe it.
 - [ ] **Import the real history** with the legacy importer (`pnpm import:convert && pnpm import:load && pnpm import:verify`) and check the totals against the Google Sheet before anyone pays through the app.
-- [ ] **Seed the constitution** (the private PDF and its clauses) as version 1 through a `constitution_amendment` proposal, so members can read and acknowledge it.
+- [ ] **Load the constitution** as version 1 from `private/constitution_v1.bn.md` (copied word for word from the group's Notion page, git-ignored): check the list with `pnpm constitution:load`, then load it with `pnpm constitution:load --commit` on the server. It is loaded clause by clause, so members can search it and every rule links to its clause. Later changes go through a `constitution_amendment` proposal; a loaded version can never be deleted.
 - [ ] **Real SMS and push credentials** are set on the server only (`SMS_PROVIDER=http`, FCM file), never on a development machine.
 - [ ] **Production deploy** is done by following `docs/RUNBOOK.md`, never from a development session.
 

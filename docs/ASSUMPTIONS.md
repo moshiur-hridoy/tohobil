@@ -116,3 +116,5 @@ These require group resolution. Until resolved, the stated default is used and a
 11. Wind-up procedure: default `wind_up` proposal, share basis.
 12. Absence fine per member or per share: default per member.
 13. Final-notice period length: default 7 days.
+14. Property title wording (7.1): "not in one person's name" but "registered in the name of the main member" (মূল সদস্যের নামেই). Read as: in the names of the original members together, with the share split of 7.2. The app records `legal_owner_name` and `ownership_split` either way.
+15. Fine wording (2.2 vs 2.3(ক)): 2.2 charges 500 BDT **per share** (its example: 5 shares = 2,500), while 2.3(ক) speaks of "the 500 BDT extra". Default: per share, as 2.2 and its example say.

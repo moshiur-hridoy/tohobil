@@ -41,30 +41,32 @@ If you forget a PIN: as M01, press **Issue PIN** again. (If you forget M01's own
 Tick each line when it behaves as described. "Cashier" means signed in as M01, "Auditor" as M07, "Member" as M02 or similar.
 
 ### Paying and confirming money (Phase 1)
-- [ ] **Member:** Pay → press "I have sent money", enter an amount, bKash, a TrxID like `ABC123`, today's date, send. It shows as *under verification*.
-- [ ] **Cashier:** Admin → Payments shows it. Open it, check the amount, **Confirm** (asks for the authenticator code the first time). It becomes *confirmed*.
+- [x] **Member:** Pay → press "I have sent money", enter an amount, bKash, a TrxID like `ABC123`, today's date, send. It shows as *under verification*.
+- [x] **Cashier:** Admin → Payments shows it. Open it, check the amount, **Confirm** (asks for the authenticator code the first time). It becomes *confirmed*.
 - [ ] **Member:** the payment is now confirmed and the month's due is paid (or part-paid).
 - [ ] **Cashier:** try the same TrxID again as another member: it is refused (duplicate).
-- [ ] **Cashier:** Admin → Matrix shows every member's month at a glance; **export CSV** downloads a file.
-- [ ] **Member:** Menu → Ledger lists every entry. Press "Object" on one; **Auditor** sees it under objections and can resolve it.
+- [x] **Cashier:** Admin → Matrix shows every member's month at a glance; **export CSV** downloads a file.
+- [x] **Member:** Menu → Ledger lists every entry. Press "Object" on one; **Auditor** sees it under objections and can resolve it.
 
 ### Fines and reminders (Phase 2)
-- [ ] **Cashier:** Admin → Notifications: lists who cannot be reached by push, with a "Send reminder" button (once per 6 hours per member), and the log of what was sent.
-- [ ] **Member:** Menu → Notices shows messages sent to you (a confirmed payment creates one).
+- [x] **Cashier:** Admin → Notifications: lists who cannot be reached by push, with a "Send reminder" button (once per 6 hours per member), and the log of what was sent.
+- [x] **Member:** Menu → Notices shows messages sent to you (a confirmed payment creates one).
 
 ### Votes and decisions (Phase 3)
-- [ ] **Cashier:** Admin → Proposals → New proposal. Choose "General", write a decision, submit. Open it for voting (closing time at least 1 hour away).
-- [ ] **Members:** Votes → open the proposal → Yes / No / Abstain. You can change your vote until it closes.
-- [ ] **Cashier:** when enough members agree, "Close early", then **Execute**. Status becomes *executed*.
+- [x] **Cashier:** Admin → Proposals → New proposal. Choose "General", write a decision, submit. Open it for voting (closing time at least 1 hour away).
+- [x] **Members:** Votes → open the proposal → Yes / No / Abstain. You can change your vote until it closes.
+- [x] **Cashier:** when enough members agree, "Close early", then **Execute**. Status becomes *executed*.
+
 - [ ] **Constitution:** Menu → Constitution shows the current version, clause search, and "I have read it". (A version only appears after a `constitution_amendment` proposal is executed with a PDF.)
-- [ ] **Suspension:** Admin → Members → "Create suspension" for a member, vote, execute. That member can still sign in but cannot pay or vote (read-only).
+
+- [ not need now ] **Suspension:** Admin → Members → "Create suspension" for a member, vote, execute. That member can still sign in but cannot pay or vote (read-only).
 
 ### Assets, rent and levies (Phase 4)
 - [ ] **Cashier:** Admin → Proposals → New → "Investment purchase" (for example gold). Tick every compliance box, attach any PDF as the feasibility file, set a maximum amount. Try opening it with one box unticked: it is refused. Tick all, vote, execute with the real cost: the asset appears under **Admin → Assets** and the cash goes down.
 - [ ] **Cashier:** Admin → Proposals → "Valuation update" for that asset, vote, execute: the **value per share** on the Assets screen changes.
-- [ ] **Land in stages:** purchase "Land": it shows *Being acquired*. Use **Pay instalment**, **Attach document** (type "Deed") and **Complete**. It is refused until the deed is attached and the ownership split covers every share.
-- [ ] **Rent:** Admin → Rent: add a rent stream, press "Generate this month", then **Receive rent**.
-- [ ] **Levy:** propose "Levy (asset cost)", vote, execute. Each member gets a levy due. A member pays it from **Pay** (choose "Levy"). Admin → Obligations shows the money held for the registrar; **Hand to the registrar** pays it out. The fund's value per share does not change.
+- [not need now ] **Land in stages:** purchase "Land": it shows *Being acquired*. Use **Pay instalment**, **Attach document** (type "Deed") and **Complete**. It is refused until the deed is attached and the ownership split covers every share.
+- [ not need now] **Rent:** Admin → Rent: add a rent stream, press "Generate this month", then **Receive rent**.
+- [ not need now] **Levy:** propose "Levy (asset cost)", vote, execute. Each member gets a levy due. A member pays it from **Pay** (choose "Levy"). Admin → Obligations shows the money held for the registrar; **Hand to the registrar** pays it out. The fund's value per share does not change.
 
 ### Month end, reports and safety (Phase 5)
 - [ ] **Cashier:** Admin → Reconcile: pick last month, type what is really in each of the four accounts, submit. A wrong number needs a note.

@@ -19,6 +19,7 @@ await build({
     'cli/activation-code': 'src/cli/activation-code.ts',
     'cli/generate-dues': 'src/cli/generate-dues.ts',
     'cli/import-sheet': 'src/cli/import-sheet.ts',
+    'cli/set-role': 'src/cli/set-role.ts',
   },
   outdir: 'dist',
   bundle: true,

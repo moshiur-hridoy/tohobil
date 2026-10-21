@@ -89,11 +89,14 @@ Check:
 
 ## 7. First cashier account
 
-The database starts empty, so there is no member yet. Members arrive with the legacy sheet import, (below). Once member `M01` exists, the first cashier gets in with a one-time activation code made on the server: Portainer, **Containers**, the `api` container, **Console**, command `/bin/sh`, then
+The database starts empty, so there is no member yet. Members arrive with the legacy sheet import, (below). Once member `M01` exists, give them the cashier role and then a one-time activation code, both made on the server: Portainer, **Containers**, the `api` container, **Console**, command `/bin/sh`, then
 
 ```
+node dist/cli/set-role.js M01 cashier     # the import makes everyone a plain member
 node dist/cli/activation-code.js M01
 ```
+
+The auditor is a different member: `node dist/cli/set-role.js M07 auditor` (one active cashier and one active auditor are allowed, never the same person).
 
 Hand the printed code over in person. Do not seed fictional data in production: the seed refuses a non-local database.
 

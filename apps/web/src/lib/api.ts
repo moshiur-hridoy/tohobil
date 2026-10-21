@@ -63,6 +63,8 @@ async function toError(res: Response): Promise<ApiError> {
     request_id?: string;
     [k: string]: unknown;
   } | null;
+  // A 5xx without a problem body comes from the proxy, not the API: the API is down or unreachable.
+  if (!problem && res.status >= 500) return new ApiError(res.status, 'server.unreachable', res.statusText);
   const { code, title, request_id, ...rest } = problem ?? {};
   return new ApiError(res.status, code ?? 'request.invalid', title ?? res.statusText, request_id, rest);
 }

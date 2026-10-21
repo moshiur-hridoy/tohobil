@@ -707,20 +707,20 @@ const PAYMENT_SELECT = `
   p.purpose, p.trx_id, p.paid_at, p.status, p.source, p.for_periods, p.proof_file_id,
   (p.raw_sms IS NOT NULL) AS has_raw_sms, p.note, p.reject_reason, p.unallocated_paisa,
   p.submitted_at, p.confirmed_at, cm.code AS confirmed_by_code,
-  ${tsKey('p.submitted_at')} AS submitted_key
+  ${tsKey('p.paid_at')} AS sort_key
   FROM payments p
   JOIN members m ON m.id = p.member_id
   LEFT JOIN users cu ON cu.id = p.confirmed_by
   LEFT JOIN members cm ON cm.id = cu.member_id`;
 
-type PaymentRow = Record<string, unknown> & { id: string; member_id: string; submitted_key: string };
+type PaymentRow = Record<string, unknown> & { id: string; member_id: string; sort_key: string };
 
 /**
  * Everyone sees who paid how much, by which method and the status (transparency); the TrxID, note,
  * rejection reason and proof belong to the payer, the cashier and the auditor (spec 7).
  */
 function shapePayment(row: PaymentRow, viewer: AuthUser): Record<string, unknown> {
-  const { submitted_key: _key, ...rest } = row;
+  const { sort_key: _key, ...rest } = row;
   const detail = isPrivileged(viewer) || viewer.member_id === row.member_id;
   return {
     ...rest,
@@ -734,18 +734,21 @@ function shapePayment(row: PaymentRow, viewer: AuthUser): Record<string, unknown
   };
 }
 
-/** `GET /payments?status&member_id&cursor&limit`, newest submission first. */
+/**
+ * `GET /payments?status&member_id&cursor&limit`, most recently paid first. By payment date, not
+ * submission: imported history is all submitted at once, and a late submission belongs where it was paid.
+ */
 export async function listPayments(
   deps: PaymentDeps,
   viewer: AuthUser,
   q: PaymentsQuery,
 ): Promise<{ items: unknown[]; next_cursor: string | null }> {
-  const cursor = decodeCursor(q.cursor, 2); // [submitted_at, id]
+  const cursor = decodeCursor(q.cursor, 2); // [paid_at, id]
   const res = await deps.pool.query(
     `SELECT ${PAYMENT_SELECT}
      WHERE ($1::text IS NULL OR p.status = $1) AND ($2::uuid IS NULL OR p.member_id = $2)
-       AND ($3::timestamptz IS NULL OR (p.submitted_at, p.id) < ($3::timestamptz, $4::uuid))
-     ORDER BY p.submitted_at DESC, p.id DESC
+       AND ($3::timestamptz IS NULL OR (p.paid_at, p.id) < ($3::timestamptz, $4::uuid))
+     ORDER BY p.paid_at DESC, p.id DESC
      LIMIT $5`,
     [q.status ?? null, q.member_id ?? null, cursor?.[0] ?? null, cursor?.[1] ?? null, q.limit + 1],
   );
@@ -754,7 +757,7 @@ export async function listPayments(
   const last = page[page.length - 1];
   return {
     items: page.map((r) => shapePayment(r, viewer)),
-    next_cursor: rows.length > q.limit && last ? encodeCursor([last.submitted_key, last.id]) : null,
+    next_cursor: rows.length > q.limit && last ? encodeCursor([last.sort_key, last.id]) : null,
   };
 }
 

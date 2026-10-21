@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ListSkeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
@@ -100,6 +100,8 @@ function kindMeta(kind: NoticeKind): { icon: JSX.Element; borderClass: string; c
 export function NoticesPage() {
   const { t } = useTranslation();
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [filter, setFilter] = useState<'unread' | 'all'>('unread');
 
   const inbox = useQuery({
@@ -120,6 +122,14 @@ export function NoticesPage() {
       <header className="flex items-center gap-2 px-3 py-2">
         <Link
           to="/home"
+          onClick={(e) => {
+            // Opened from both the home bell and the menu: go back to whichever it was.
+            // 'default' is the first page of the session (e.g. opened from a push), so fall back to /home.
+            if (location.key !== 'default') {
+              e.preventDefault();
+              void navigate(-1);
+            }
+          }}
           aria-label={t('common.back', { defaultValue: 'ফিরে যান' })}
           className="grid h-11 w-11 place-items-center rounded-[14px] border border-border bg-card text-foreground"
         >

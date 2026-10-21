@@ -7,7 +7,8 @@ export function errorMessage(t: TFunction, err: unknown): { message: string; req
     if (err.code === 'network') return { message: t('errors.network') };
     const key = `errors.${err.code}`;
     if (err.code !== 'request.invalid' && t(key, { defaultValue: '' }) !== '') {
-      return { message: t(key) };
+      // A server fault keeps its reference number so it can be found in the logs.
+      return { message: t(key), ...(err.status >= 500 && err.requestId ? { requestId: err.requestId } : {}) };
     }
     return { message: t('errors.generic'), ...(err.requestId ? { requestId: err.requestId } : {}) };
   }

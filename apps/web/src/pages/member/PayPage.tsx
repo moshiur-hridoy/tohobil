@@ -1,8 +1,8 @@
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS, type PaymentMethod } from '@barakah/shared';
-import { Icon, PageHeader } from '../../components/ui';
+import { PageHeader } from '../../components/ui';
 import { ConfirmSheet, SheetRow } from '../../components/ConfirmSheet';
 import { CopyButton } from '../../components/CopyButton';
 import { ListSkeleton } from '../../components/Skeleton';
@@ -12,6 +12,7 @@ import { StatusPill } from '../../components/StatusPill';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { dayToIso, fmtDate, fmtInstant, fmtPeriod, todayDhaka } from '../../lib/dates';
+import { formatCount } from '../../lib/format';
 import { taka } from '../../lib/money';
 import type { DueRow, FineRow, Page, PaymentDetail, PaymentInstructions, PaymentRow } from '../../lib/types';
 
@@ -37,107 +38,58 @@ export function PayPage() {
   const openDues = (dues.data?.items ?? []).filter((d) => BigInt(d.outstanding_paisa) > 0n).sort((a, b) => a.due_date.localeCompare(b.due_date));
   const openFines = (fines.data?.items ?? []).filter((f) => BigInt(f.outstanding_paisa) > 0n && f.status !== 'waived');
 
-  // A month's fine is shown (and paid) together with that month's due.
-  const fineOfPeriod = (period: string): bigint =>
-    openFines.filter((f) => f.period === period).reduce((sum, f) => sum + BigInt(f.outstanding_paisa), 0n);
-  const firstDueOfPeriod = (d: DueRow): boolean => d.kind !== 'levy' && openDues.find((x) => x.kind !== 'levy' && x.period === d.period) === d;
-
   return (
     <PullToRefresh onRefresh={refresh}>
       <PageHeader title={t('payment.title')} subtitle={t('pay.subtitle')} />
       <div className="flex flex-col gap-3 px-4 pb-4 pt-2">
-
-        <section className="rounded-[20px] border border-border bg-card p-4" aria-labelledby="pay-owed">
-          <h3 id="pay-owed" className="mb-2 text-base font-bold">{t('pay.duesAndFines')}</h3>
-          {dues.error ? (
-            <LoadError error={dues.error} onRetry={() => void dues.refetch()} />
-          ) : !dues.data || !fines.data ? (
-            <ListSkeleton rows={2} />
-          ) : openDues.length + openFines.length === 0 ? (
-            <p className="text-muted">{t('pay.noDues')}</p>
-          ) : (
-            <ul className="divide-y divide-border">
-              {openDues.map((d) => {
-                const fine = firstDueOfPeriod(d) ? fineOfPeriod(d.period) : 0n;
-                return (
-                  <li key={d.id} className="flex items-center justify-between gap-3 py-2">
-                    <span>
-                      {t(`pay.dueKind.${d.kind}`)} · {fmtPeriod(d.period)}
-                      <span className="block text-sm text-muted">{t('pay.dueDate', { date: fmtDate(d.due_date) })}</span>
-                      {fine > 0n && <span className="block text-sm font-semibold text-bad">{t('pay.fineLabel')}: {taka(fine)}</span>}
-                    </span>
-                    <span className="text-right">
-                      <span className="block text-lg font-bold">{taka(d.outstanding_paisa)}</span>
-                      <StatusPill status={d.under_verification ? 'pending' : d.status} />
-                    </span>
-                  </li>
-                );
-              })}
-              {openFines.filter((f) => !f.period || !openDues.some((d) => d.kind !== 'levy' && d.period === f.period)).map((f) => (
-                <li key={f.id} className="flex items-center justify-between gap-3 py-2">
-                  <span>{t('pay.fineLabel')}{f.period ? ` · ${fmtPeriod(f.period)}` : ''}</span>
-                  <span className="font-semibold text-bad">{taka(f.outstanding_paisa)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <HowToPay />
-        <SendMoneyForm openDues={openDues} openFines={openFines} onSent={() => void refresh()} />
+        {dues.error ? (
+          <LoadError error={dues.error} onRetry={() => void dues.refetch()} />
+        ) : fines.error ? (
+          <LoadError error={fines.error} onRetry={() => void fines.refetch()} />
+        ) : !dues.data || !fines.data ? (
+          <div className="rounded-[20px] border border-border bg-card p-4"><ListSkeleton rows={3} /></div>
+        ) : (
+          // Mounted once the dues are in, so the default ticks see them. Not re-keyed on refresh: coming
+          // back from the bKash app refetches, and that must not wipe what the member has typed.
+          <SendMoneyForm openDues={openDues} openFines={openFines} onSent={() => void refresh()} />
+        )}
         <History memberId={me?.member_id} />
       </div>
     </PullToRefresh>
   );
 }
 
-function HowToPay() {
-  const { t } = useTranslation();
-  const q = useQuery({ queryKey: ['payment-instructions'], queryFn: () => api<PaymentInstructions>('/settings/payment-instructions'), staleTime: 5 * 60_000 });
-  const rows = (['bkash', 'nagad', 'bank'] as const).filter((k) => q.data?.[k]);
+/** A numbered step: the page reads top to bottom as "what, how, then the details". */
+function Step({ n, title, hint, children }: { n: number; title: string; hint?: string; children: ReactNode }) {
   return (
-    <details className="group rounded-[20px] border border-border bg-card p-4">
-      <summary className="flex cursor-pointer list-none items-center justify-between text-base font-bold [&::-webkit-details-marker]:hidden">
-        {t('pay.howToPay')}
-        <span className="transition-transform group-open:rotate-180"><Icon d="M6 9l6 6 6-6" size={20} sw={2} /></span>
-      </summary>
-      <div className="mt-2.5">
-      {q.error ? (
-        <LoadError error={q.error} />
-      ) : q.data && rows.length === 0 ? (
-        <p className="text-muted">{t('pay.noInstructions')}</p>
-      ) : (
-        <ul className="space-y-2">
-          {rows.map((k) => (
-            <li key={k} className="flex items-center gap-3 rounded-[14px] bg-background px-3 py-2.5">
-              <span className="min-w-0 flex-1">
-                <span className="block text-xs text-muted">{PAYMENT_METHOD_LABELS[k].bn}</span>
-                <span className="select-all break-all text-[1.0625rem] font-bold tracking-wide">{q.data?.[k]}</span>
-              </span>
-              <CopyButton text={q.data?.[k] ?? ''} />
-            </li>
-          ))}
-        </ul>
-      )}
-      <p className="mt-2.5 text-xs leading-relaxed text-ink2">{t('pay.afterSendHint')}</p>
+    <section className="rounded-[20px] border border-border bg-card p-4" aria-labelledby={`pay-step-${n}`}>
+      <div className="mb-3 flex items-start gap-3">
+        <span aria-hidden="true" className="grid h-7 w-7 flex-none place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground">{formatCount(n)}</span>
+        <div className="min-w-0">
+          <h2 id={`pay-step-${n}`} className="text-base font-bold leading-7">{title}</h2>
+          {hint && <p className="text-[0.8125rem] leading-snug text-muted">{hint}</p>}
+        </div>
       </div>
-    </details>
+      {children}
+    </section>
   );
 }
 
 /**
  * The member never types an amount: they tick what they are paying for and the total is worked out
  * from the dues, so a mistyped figure (or one that includes the bKash charge) cannot unbalance the books.
+ * Months are paid oldest first: ticking a month ticks every earlier one, unticking it unticks the later ones.
  */
 function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; openFines: FineRow[]; onSent: () => void }) {
   const { t } = useTranslation();
   const { me } = useAuth();
-  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const today = todayDhaka();
+  const currentPeriod = today.slice(0, 7);
+  const [purpose, setPurpose] = useState<'dues' | 'levy'>('dues');
   const [method, setMethod] = useState<PaymentMethod>('bkash');
   const [trx, setTrx] = useState('');
   const [digits, setDigits] = useState('');
-  const [date, setDate] = useState(todayDhaka());
-  const [purpose, setPurpose] = useState<'dues' | 'levy'>('dues');
+  const [date, setDate] = useState(today);
   const [file, setFile] = useState<File | null>(null);
   const [invalid, setInvalid] = useState<string | null>(null);
   const [sheet, setSheet] = useState(false);
@@ -145,39 +97,66 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
   // One key per attempt, so a retry after a dropped connection can never create a second payment.
   const attemptKey = useRef(crypto.randomUUID());
 
+  const instructions = useQuery({ queryKey: ['payment-instructions'], queryFn: () => api<PaymentInstructions>('/settings/payment-instructions'), staleTime: 5 * 60_000 });
+
   const hasLevy = openDues.some((d) => d.kind === 'levy');
   const dues = openDues.filter((d) => (purpose === 'levy' ? d.kind === 'levy' : d.kind !== 'levy'));
   const fines = purpose === 'dues' ? openFines : [];
-  const key = (kind: 'd' | 'f', id: string) => `${kind}:${id}`;
-  const toggle = (k: string) =>
+
+  // One row per month (a month can hold a monthly due and a start boost); a month's fine goes with it.
+  const months = [...new Set(dues.map((d) => d.period))].sort().map((period) => {
+    const list = dues.filter((d) => d.period === period);
+    const fine = fines.filter((f) => f.period === period).reduce((sum, f) => sum + BigInt(f.outstanding_paisa), 0n);
+    const principal = list.reduce((sum, d) => sum + BigInt(d.outstanding_paisa), 0n);
+    const dueDate = list.map((d) => d.due_date).sort()[0] ?? `${period}-01`;
+    return {
+      period,
+      list,
+      fine,
+      principal,
+      dueDate,
+      // A payment for it is already with the cashier: shown, but not offered again.
+      verifying: list.some((d) => d.under_verification),
+      status: list.some((d) => d.status === 'overdue') ? 'overdue' : list.some((d) => d.status === 'partial') ? 'partial' : 'unpaid',
+    };
+  });
+  const payable = months.filter((m) => !m.verifying);
+  const looseFines = fines.filter((f) => !f.period || !months.some((m) => m.period === f.period));
+
+  // Ticked by default: everything already due, so the usual case needs no decision at all.
+  const [picked, setPicked] = useState<Set<string>>(
+    () => new Set([...payable.filter((m) => m.dueDate <= today).map((m) => m.period), ...looseFines.map((f) => f.id)]),
+  );
+  const toggleMonth = (period: string) =>
     setPicked((prev) => {
       const next = new Set(prev);
-      if (next.has(k)) next.delete(k);
-      else next.add(k);
+      const on = !prev.has(period);
+      for (const m of payable) {
+        if (on && m.period <= period) next.add(m.period);
+        if (!on && m.period >= period) next.delete(m.period);
+      }
+      return next;
+    });
+  const toggleFine = (id: string) =>
+    setPicked((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
 
-  // A month's fine is paid together with that month: ticking the month adds its fine to the total.
-  const duePeriods = new Set(dues.map((d) => d.period));
-  const fineFor = (period: string): bigint =>
-    fines.filter((f) => f.period === period).reduce((sum, f) => sum + BigInt(f.outstanding_paisa), 0n);
-  const looseFines = fines.filter((f) => !f.period || !duePeriods.has(f.period));
-
-  const chosenDues = dues.filter((d) => picked.has(key('d', d.id)));
-  const chosenPeriods = [...new Set(chosenDues.map((d) => d.period))];
-  const chosenLoose = looseFines.filter((f) => picked.has(key('f', f.id)));
-  const total =
-    chosenDues.reduce((sum, d) => sum + BigInt(d.outstanding_paisa), 0n) +
-    chosenPeriods.reduce((sum, p) => sum + fineFor(p), 0n) +
-    chosenLoose.reduce((sum, f) => sum + BigInt(f.outstanding_paisa), 0n);
-  const fineTotal = chosenPeriods.reduce((sum, p) => sum + fineFor(p), 0n) + chosenLoose.reduce((sum, f) => sum + BigInt(f.outstanding_paisa), 0n);
-  const periods = chosenPeriods;
+  const chosen = payable.filter((m) => picked.has(m.period));
+  const chosenLoose = looseFines.filter((f) => picked.has(f.id));
+  const fineTotal = chosen.reduce((sum, m) => sum + m.fine, 0n) + chosenLoose.reduce((sum, f) => sum + BigInt(f.outstanding_paisa), 0n);
+  const total = chosen.reduce((sum, m) => sum + m.principal, 0n) + fineTotal;
+  const periods = chosen.map((m) => m.period);
 
   // Bengali digits are accepted and turned into 0-9; exactly four are kept as the sender's identity.
   const senderDigits = /^\d{4}$/.test(toAscii(digits.trim())) ? toAscii(digits.trim()) : '';
   const paisa = total > 0n ? total.toString() : null;
   const trxNeeded = NEEDS_TRX.includes(method);
   const readOnly = !!me?.read_only;
+  const account = method === 'bkash' || method === 'nagad' || method === 'bank' ? instructions.data?.[method] : undefined;
 
   const review = () => {
     setDone(false);
@@ -225,117 +204,155 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
   const label = 'text-[0.8125rem] text-ink2';
 
   return (
-    <section className="rounded-[20px] border border-border bg-card p-4" aria-labelledby="pay-send">
-      <h3 id="pay-send" className="mb-3 text-base font-bold">{t('pay.iSentMoney')}</h3>
-      <form
-        className="space-y-3.5"
-        onSubmit={(e) => {
-          e.preventDefault();
-          review();
-        }}
-      >
+    <form
+      className="flex flex-col gap-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        review();
+      }}
+    >
+      <Step n={1} title={t('pay.step1')} hint={payable.length > 1 ? t('pay.step1Hint') : undefined}>
         {hasLevy && (
-          <label className="block">
-            <span className={label}>{t('pay.purposeLabel')}</span>
-            <select className={field} value={purpose} onChange={(e) => { setPurpose(e.target.value as 'dues' | 'levy'); setPicked(new Set()); }}>
-              <option value="dues">{t('pay.purposeDues')}</option>
-              <option value="levy">{t('pay.purposeLevy')}</option>
-            </select>
-          </label>
-        )}
-
-        <fieldset>
-          <legend className={label}>{t('pay.whichMonths')}</legend>
-          <ul className="mt-1.5 space-y-2">
-            {dues.map((d) => {
-              const fine = d.kind === 'levy' || dues.find((x) => x.period === d.period) !== d ? 0n : fineFor(d.period);
-              return (
-                <PickRow
-                  key={d.id}
-                  checked={picked.has(key('d', d.id))}
-                  onToggle={() => toggle(key('d', d.id))}
-                  title={`${t(`pay.dueKind.${d.kind}`)} · ${fmtPeriod(d.period)}`}
-                  amount={taka(BigInt(d.outstanding_paisa) + fine)}
-                  detail={fine > 0n ? t('pay.withFine', { due: taka(d.outstanding_paisa), fine: taka(fine) }) : undefined}
-                />
-              );
-            })}
-            {looseFines.map((f) => (
-              <PickRow
-                key={f.id}
-                checked={picked.has(key('f', f.id))}
-                onToggle={() => toggle(key('f', f.id))}
-                title={`${t('pay.fineLabel')}${f.period ? ` · ${fmtPeriod(f.period)}` : ''}`}
-                amount={taka(f.outstanding_paisa)}
-              />
-            ))}
-          </ul>
-        </fieldset>
-
-        <div className="rounded-2xl bg-primary-soft p-4" aria-live="polite">
-          <p className="text-[0.8125rem] text-ink2">{t('pay.payableTotal')}</p>
-          <p data-testid="pay-total" className="text-[1.75rem] font-bold leading-tight text-primary">{taka(total)}</p>
-          {fineTotal > 0n && (
-            <p className="mt-1 text-sm font-semibold text-bad">{t('pay.totalIncludesFine', { fine: taka(fineTotal), due: taka(total - fineTotal) })}</p>
-          )}
-        </div>
-
-        <div role="radiogroup" aria-label={t('payment.method')}>
-          <span className={label}>{t('payment.method')}</span>
-          <div className="mt-1.5 grid grid-cols-[repeat(auto-fit,minmax(4.5rem,1fr))] gap-2">
-            {PAYMENT_METHODS.map((m) => (
+          <div role="radiogroup" aria-label={t('pay.purposeLabel')} className="mb-3 flex rounded-2xl border border-border bg-background p-1">
+            {(['dues', 'levy'] as const).map((p) => (
               <button
-                key={m}
+                key={p}
                 type="button"
                 role="radio"
-                aria-checked={method === m}
-                onClick={() => setMethod(m)}
-                className={`h-12 rounded-[14px] border-[1.5px] text-sm ${method === m ? 'border-primary bg-primary-soft font-bold text-primary' : 'border-border bg-card text-ink2'}`}
+                aria-checked={purpose === p}
+                onClick={() => { setPurpose(p); setPicked(new Set()); }}
+                className={`flex-1 rounded-xl py-2 text-sm font-bold ${purpose === p ? 'bg-primary-soft text-primary' : 'text-muted'}`}
               >
-                {PAYMENT_METHOD_LABELS[m].bn}
+                {t(p === 'dues' ? 'pay.purposeDues' : 'pay.purposeLevy')}
               </button>
             ))}
           </div>
-        </div>
-
-        {trxNeeded && (
-          <label className="block">
-            <span className={label}>{t(method === 'bank' ? 'pay.senderDigitsBank' : 'pay.senderDigitsPhone')}</span>
-            <input className={field} inputMode="numeric" maxLength={8} value={digits} onChange={(e) => setDigits(e.target.value)} autoComplete="off" aria-describedby="digits-hint" />
-            <span id="digits-hint" className="text-sm text-muted">{t('pay.senderDigitsHint')}</span>
-          </label>
         )}
 
-        <label className="block">
-          <span className={label}>{t('payment.trxId')} ({t('common.optional')})</span>
-          <input className={field} value={trx} onChange={(e) => setTrx(e.target.value)} autoCapitalize="characters" autoComplete="off" disabled={!trxNeeded} />
-          <span className="text-sm text-muted">{trxNeeded ? t('pay.trxHintOptional') : t('pay.trxNotNeeded')}</span>
-        </label>
+        {months.length + looseFines.length === 0 ? (
+          <p className="rounded-2xl bg-ok-bg p-4 text-center font-semibold text-ok">{t('pay.noDues')}</p>
+        ) : (
+          <fieldset>
+            <legend className="sr-only">{t('pay.step1')}</legend>
+            <ul className="space-y-2">
+              {months.map((m) => {
+                const kinds = [...new Set(m.list.map((d) => d.kind))].filter((k) => k !== 'monthly');
+                return (
+                  <PickRow
+                    key={m.period}
+                    checked={!m.verifying && picked.has(m.period)}
+                    disabled={m.verifying}
+                    onToggle={() => toggleMonth(m.period)}
+                    title={`${fmtPeriod(m.period)}${kinds.length ? ` · ${kinds.map((k) => t(`pay.dueKind.${k}`)).join(', ')}` : ''}`}
+                    sub={m.fine > 0n ? t('pay.withFine', { due: taka(m.principal), fine: taka(m.fine) }) : t('pay.dueDate', { date: fmtDate(m.dueDate) })}
+                    subBad={m.fine > 0n}
+                    amount={taka(m.principal + m.fine)}
+                    status={m.verifying ? 'pending' : m.period > currentPeriod ? 'advance' : m.status}
+                  />
+                );
+              })}
+              {looseFines.map((f) => (
+                <PickRow
+                  key={f.id}
+                  checked={picked.has(f.id)}
+                  onToggle={() => toggleFine(f.id)}
+                  title={`${t('pay.fineLabel')}${f.period ? ` · ${fmtPeriod(f.period)}` : ''}`}
+                  amount={taka(f.outstanding_paisa)}
+                  status="overdue"
+                />
+              ))}
+            </ul>
+          </fieldset>
+        )}
 
-        <label className="block">
-          <span className={label}>{t('payment.date')}</span>
-          <input className={field} type="date" value={date} max={todayDhaka()} onChange={(e) => setDate(e.target.value)} />
-        </label>
+        <div className="mt-3 flex items-end justify-between gap-3 rounded-2xl bg-primary-soft px-4 py-3" aria-live="polite">
+          <div>
+            <p className="text-[0.8125rem] text-ink2">{t('pay.payableTotal')}</p>
+            {fineTotal > 0n && <p className="text-xs font-semibold text-bad">{t('pay.includesFine', { fine: taka(fineTotal) })}</p>}
+          </div>
+          <p data-testid="pay-total" className="text-[1.75rem] font-bold leading-tight text-primary">{taka(total)}</p>
+        </div>
+      </Step>
 
-        <div>
-          <span className={label}>{t('pay.screenshotLabel')}</span>
-          <input type="file" aria-label={t('pay.screenshotLabel')} accept="image/jpeg,image/png,image/webp,application/pdf" className="mt-1.5 block w-full rounded-[14px] border-[1.5px] border-dashed border-input p-3 text-sm" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-          {file && (
-            <p className="mt-1 text-sm">
-              {t('pay.screenshotAttached', { name: file.name })}{' '}
-              <button type="button" className="underline" onClick={() => setFile(null)}>{t('pay.removeFile')}</button>
-            </p>
+      <Step n={2} title={t('pay.step2')} hint={total > 0n ? t('pay.step2Hint', { amount: taka(total) }) : undefined}>
+        <div role="radiogroup" aria-label={t('payment.method')} className="grid grid-cols-3 gap-2">
+          {PAYMENT_METHODS.map((m) => (
+            <button
+              key={m}
+              type="button"
+              role="radio"
+              aria-checked={method === m}
+              onClick={() => setMethod(m)}
+              className={`h-12 rounded-[14px] border-[1.5px] text-sm ${method === m ? 'border-primary bg-primary-soft font-bold text-primary' : 'border-border bg-card text-ink2'}`}
+            >
+              {PAYMENT_METHOD_LABELS[m].bn}
+            </button>
+          ))}
+        </div>
+        <div className="mt-3">
+          {!trxNeeded ? (
+            <p className="rounded-[14px] bg-background px-3 py-3 text-sm text-ink2">{t(method === 'cash' ? 'pay.cashHint' : 'pay.otherHint')}</p>
+          ) : instructions.error ? (
+            <LoadError error={instructions.error} />
+          ) : !instructions.data ? (
+            <ListSkeleton rows={1} />
+          ) : account ? (
+            <div className="flex items-center gap-3 rounded-[14px] bg-background px-3 py-2.5">
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs text-muted">{t('pay.sendTo', { method: PAYMENT_METHOD_LABELS[method].bn })}</span>
+                <span className="select-all break-all text-[1.0625rem] font-bold tracking-wide">{account}</span>
+              </span>
+              <CopyButton text={account} />
+            </div>
+          ) : (
+            <p className="rounded-[14px] bg-background px-3 py-3 text-sm text-muted">{t('pay.noInstructions')}</p>
           )}
         </div>
+      </Step>
 
-        {invalid && <p role="alert" className="text-bad">{invalid}</p>}
-        {done && <p role="status" className="text-ok">{t('pay.sent')}</p>}
+      <Step n={3} title={t('pay.step3')} hint={t('pay.step3Hint')}>
+        <div className="space-y-3.5">
+          {trxNeeded && (
+            <>
+              <label className="block">
+                <span className={label}>{t('payment.trxId')}</span>
+                <input className={field} value={trx} onChange={(e) => setTrx(e.target.value)} autoCapitalize="characters" autoComplete="off" />
+                <span className="text-sm text-muted">{t('pay.trxHintOptional')}</span>
+              </label>
+              <label className="block">
+                <span className={label}>{t(method === 'bank' ? 'pay.senderDigitsBank' : 'pay.senderDigitsPhone')}</span>
+                <input className={field} inputMode="numeric" maxLength={8} value={digits} onChange={(e) => setDigits(e.target.value)} autoComplete="off" aria-describedby="digits-hint" />
+                <span id="digits-hint" className="text-sm text-muted">{t('pay.senderDigitsHint')}</span>
+              </label>
+            </>
+          )}
 
-        <button type="submit" disabled={readOnly} className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-[1.0625rem] font-bold text-primary-foreground disabled:opacity-50">
-          {t('pay.send')}
-        </button>
-        {readOnly && <p className="text-warn">{t('errors.auth.read_only')}</p>}
-      </form>
+          <label className="block">
+            <span className={label}>{t('pay.sentOn')}</span>
+            <input className={field} type="date" value={date} max={todayDhaka()} onChange={(e) => setDate(e.target.value)} />
+          </label>
+
+          <div>
+            <span className={label}>{t('pay.screenshotLabel')}</span>
+            <input type="file" aria-label={t('pay.screenshotLabel')} accept="image/jpeg,image/png,image/webp,application/pdf" className="mt-1.5 block w-full rounded-[14px] border-[1.5px] border-dashed border-input p-3 text-sm" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            {file && (
+              <p className="mt-1 text-sm">
+                {t('pay.screenshotAttached', { name: file.name })}{' '}
+                <button type="button" className="underline" onClick={() => setFile(null)}>{t('pay.removeFile')}</button>
+              </p>
+            )}
+          </div>
+        </div>
+      </Step>
+
+      {invalid && <p role="alert" className="px-1 text-bad">{invalid}</p>}
+      {done && <p role="status" className="rounded-2xl bg-ok-bg p-3 text-ok">{t('pay.sent')}</p>}
+
+      <button type="submit" disabled={readOnly} className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-[1.0625rem] font-bold text-primary-foreground disabled:opacity-50">
+        {t('pay.send')}
+        {total > 0n && <span>· {taka(total)}</span>}
+      </button>
+      {readOnly && <p className="text-warn">{t('errors.auth.read_only')}</p>}
 
       <ConfirmSheet open={sheet} onClose={() => setSheet(false)} title={t('pay.reviewTitle')} confirmLabel={t('pay.send')} onConfirm={send}>
         <SheetRow label={t('payment.amount')} value={paisa ? taka(paisa) : ''} strong />
@@ -346,22 +363,34 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
         {periods.length > 0 && <SheetRow label={t('payment.period')} value={periods.map(fmtPeriod).join(', ')} />}
         <p className="pt-2 text-muted">{t('pay.reviewBody')}</p>
       </ConfirmSheet>
-    </section>
+    </form>
   );
 }
 
 const toAscii = (v: string): string => v.replace(/[০-৯]/g, (c) => String(c.charCodeAt(0) - 0x09e6));
 
-function PickRow({ checked, onToggle, title, amount, detail }: { checked: boolean; onToggle: () => void; title: string; amount: string; detail?: string | undefined }) {
+function PickRow({ checked, disabled, onToggle, title, sub, subBad, amount, status }: {
+  checked: boolean;
+  disabled?: boolean;
+  onToggle: () => void;
+  title: string;
+  sub?: string;
+  subBad?: boolean;
+  amount: string;
+  status: string;
+}) {
   return (
     <li>
-      <label className={`flex min-h-14 cursor-pointer items-center gap-3 rounded-[14px] border-[1.5px] px-3.5 py-2 ${checked ? 'border-primary bg-primary-soft' : 'border-border bg-card'}`}>
-        <input type="checkbox" checked={checked} onChange={onToggle} className="h-5 w-5 shrink-0 accent-[var(--primary)]" />
+      <label className={`flex min-h-16 items-center gap-3 rounded-[14px] border-[1.5px] px-3.5 py-2.5 ${disabled ? 'cursor-not-allowed border-border bg-card opacity-60' : checked ? 'cursor-pointer border-primary bg-primary-soft' : 'cursor-pointer border-border bg-card'}`}>
+        <input type="checkbox" checked={checked} disabled={disabled} onChange={onToggle} className="h-5 w-5 shrink-0 accent-[var(--primary)]" />
         <span className="min-w-0 flex-1">
-          <span className="block text-[0.9375rem] font-medium">{title}</span>
-          {detail && <span className="block text-xs font-semibold text-bad">{detail}</span>}
+          <span className="block text-[0.9375rem] font-semibold">{title}</span>
+          {sub && <span className={`block text-xs ${subBad ? 'font-semibold text-bad' : 'text-muted'}`}>{sub}</span>}
         </span>
-        <span className="text-base font-bold">{amount}</span>
+        <span className="flex flex-col items-end gap-1">
+          <span className="text-base font-bold">{amount}</span>
+          <StatusPill status={status} />
+        </span>
       </label>
     </li>
   );

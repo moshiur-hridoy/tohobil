@@ -116,7 +116,17 @@ export function LoginPage() {
       <PinPad value={pin} onChange={(v) => { setPin(v); setError(null); }} onComplete={(p) => void submit(p)} disabled={busy} invalid={!!error} />
       <FieldError message={error?.message ?? null} requestId={error?.requestId} />
       {forgot ? (
-        <p className="rounded-xl bg-soft px-3 py-2.5 text-[0.8125rem] leading-normal text-ink2">{t('auth.forgotPinBody')}</p>
+        <div className="flex flex-col gap-1">
+          <p className="rounded-xl bg-soft px-3 py-2.5 text-[0.8125rem] leading-normal text-ink2">{t('auth.forgotPinBody')}</p>
+          {/* A cashier-issued activation code is the other way back in (ASSUMPTIONS 80). */}
+          <button
+            type="button"
+            className="mx-auto min-h-11 text-sm font-semibold text-primary hover:underline"
+            onClick={() => navigate(`/activate?ref=${encodeURIComponent(activeRef)}`)}
+          >
+            {t('auth.haveActivationCode')}
+          </button>
+        </div>
       ) : (
         <button type="button" className="mx-auto min-h-11 text-sm text-muted underline-offset-4 hover:text-foreground hover:underline" onClick={() => setForgot(true)}>
           {t('auth.forgotPin')}

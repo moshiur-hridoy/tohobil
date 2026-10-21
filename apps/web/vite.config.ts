@@ -10,7 +10,7 @@ export default defineConfig({
     VitePWA({
       // `prompt`: a new service worker waits until the user taps "reload" in <UpdatePrompt/>.
       registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'offline.html'],
+      includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon.png', 'offline.html'],
       manifest: {
         id: '/',
         name: 'বারাকাহ ফান্ড',
@@ -21,7 +21,7 @@ export default defineConfig({
         scope: '/',
         start_url: '/',
         display: 'standalone',
-        theme_color: '#1a5c3a',
+        theme_color: '#aff900',
         background_color: '#ffffff',
         icons: [
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },

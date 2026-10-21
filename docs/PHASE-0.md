@@ -33,5 +33,5 @@ DB tests need Docker (Testcontainers) or `TEST_DATABASE_URL` pointing at any Pos
 - Playwright e2e is not configured yet (first scenario arrives with Phase 1).
 - The reference design (`design/Barakah_Fund_UI.html/.pdf`) and `docs/UI-NOTES.md` named in Doc.md 19.6 are not in the repository.
 - The Android native project (`apps/web/android`) has not been generated and the release script is untested (`docs/ANDROID.md`).
-- App icons are placeholders (`apps/web/scripts/generate-placeholder-icons.mjs`).
+- App icons are generated from `apps/web/public/icon.svg` by `apps/web/scripts/generate-icons.mjs`.
 - `docs/GO-LIVE.md` lists launch blockers; most items belong to Phases 5 and 6.

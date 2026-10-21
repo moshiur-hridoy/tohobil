@@ -503,7 +503,14 @@
     "signInTitle": "Sign in",
     "continue": "Continue",
     "notYou": "Use a different member ID",
-    "forgotPinBody": "If you forgot your PIN, ask the cashier for a new one."
+    "forgotPinBody": "If you forgot your PIN, ask the cashier for a new one.",
+    "brandTagline": "The members' own savings fund",
+    "trustLedger": "The ledger can never be edited or deleted",
+    "trustOpen": "Every member can see where every taka goes",
+    "trustPin": "Only you know your PIN",
+    "signInHint": "Enter your member ID, for example M01",
+    "signingInAs": "Signing in as member {{ref}}",
+    "change": "Change"
   },
   "menu": {
     "placeholder": "Profile, settings and more.",
@@ -648,6 +655,56 @@
     "newestFirst": "Newest first",
     "oldestFirst": "Oldest first"
   },
+  "holding": {
+    "back": "All assets",
+    "subtitle": "{{n}} purchases",
+    "addEntry": "New purchase",
+    "updateValue": "Update value",
+    "invested": "Total invested",
+    "value": "Current value",
+    "profit": "Profit / loss",
+    "valuedOn": "As of {{date}}",
+    "neverValued": "No value entered yet: counted at cost",
+    "date": "Date",
+    "amount": "Amount",
+    "account": "Paid from",
+    "remark": "Remark",
+    "papers": "Papers",
+    "noPapers": "No papers",
+    "addPaper": "Add paper",
+    "complete": "Mark complete",
+    "imported": "Brought in from the old sheet",
+    "history": "Value history",
+    "addEntryHint": "A new gold purchase goes to the members as a proposal. Once it passes and the cashier executes it, it appears here as a new line.",
+    "newValue": "Total value now (what the shop says)",
+    "asOf": "As of",
+    "basis": "Where this comes from (for example the shop statement)",
+    "resultProfit": "Profit / loss at this value",
+    "valueHint": "Current value: {{value}}. This goes to the members as a proposal; once it passes it counts. It is split over the purchases in proportion to what each cost.",
+    "valueProposalTitle": "{{name}}: value update",
+    "doc": {
+      "receipt": "Receipt",
+      "deed": "Deed",
+      "other": "Paper",
+      "contract": "Contract"
+    },
+    "contract": "Contract and terms",
+    "editTerms": "Edit terms",
+    "contractDate": "Contract date",
+    "rate": "Profit / loss rate (%)",
+    "periodMonths": "Settled every (months)",
+    "everyMonths": "{{n}} months",
+    "sharingPolicy": "How profit and loss are shared among the members",
+    "contractNote": "Other contract terms",
+    "contractPapers": "Contract papers",
+    "partnerName": "Shop name",
+    "looseHint": "{{n}} earlier purchases of this kind belong to no shop yet. Bring them under this one?",
+    "adopt": "Bring under this shop"
+  },
+  "theme": {
+    "toDark": "Switch to dark mode",
+    "toLight": "Switch to light mode"
+  },
   "membersPage": {
     "title": "Members and shares",
     "shares": "Shares",
@@ -688,20 +745,68 @@
     "noMatches": "No clauses matched."
   },
   "adminDash": {
-    "expectedThisMonth": "This month expected",
-    "collectedOf": "{{collected}} of {{expected}}",
-    "openObjections": "Open objections",
-    "openApprovals": "Reversal requests waiting",
-    "backupLater": "Backup status arrives with the operations phase.",
-    "overdueList": "Overdue members",
-    "noOverdue": "Nobody is overdue.",
-    "todo": "To do",
-    "pendingList": "Payments waiting for you",
-    "netAssetsHint": "Cash and assets at cost minus money owed to others (interim, before valuations)",
-    "ledgerOk": "Ledger chain intact",
-    "ledgerBad": "Ledger chain problem",
+    "today": "Today, {{date}}",
+    "netAssetsHint": "Cash and assets at cost, less what is owed to others (interim, before valuation)",
+    "cashAndBank": "Cash and bank",
+    "assetsAtCost": "Assets (at cost)",
+    "owedToOthers": "Owed to others",
+    "membersShares": "Active members",
+    "membersSharesValue": "{{members}} · {{shares}} shares",
+    "ledgerAlert": "The ledger chain has a problem. Do not change any entry; open System status.",
+    "trendTitle": "Collection trend",
+    "trendSub": "{{from}} – {{to}} · monthly dues",
+    "legendPaid": "Collected",
+    "legendDue": "Expected",
+    "trendTotal": "Collected {{paid}} of {{due}} expected in this period",
+    "trendEmpty": "No months to show yet.",
+    "trendBar": "{{month}}: collected {{paid}}, expected {{due}}",
+    "collectedThisMonth": "Collected this month",
+    "pctOfTarget": "{{pct}}% · target {{target}}",
+    "noDuesYet": "This month's dues are not generated yet",
+    "overdueMembers": "Members in arrears",
+    "people": "{{n}}",
+    "totalOutstanding": "{{amount}} outstanding in total",
+    "allUpToDate": "Everyone is up to date",
+    "pendingVerify": "Awaiting verification",
+    "countItems": "{{n}}",
+    "oldestPending": "Oldest: {{name}} · {{amount}}",
+    "allVerified": "Every payment is verified",
     "charityBalance": "Charity money held",
-    "ledgerCount": "{{n}} entries checked"
+    "charityHint": "From fines and interest · not fund assets",
+    "membersTitle": "Members this month",
+    "membersSub": "{{period}} · {{paid}} of {{total}} paid",
+    "filterAll": "All",
+    "filterOverdue": "In arrears",
+    "filterPending": "Verifying",
+    "filterPaid": "Paid",
+    "filterLabel": "Filter members",
+    "colMember": "Member",
+    "colDue": "Due",
+    "colPaid": "Paid",
+    "colStatus": "Status",
+    "owesTotal": "Behind by {{amount}}",
+    "filterEmpty": "Nobody in this group.",
+    "moreMembers": "{{n}} more · open the matrix",
+    "openMatrix": "Open the full matrix",
+    "todo": "Today's tasks",
+    "taskPayments": "{{n}} payments to verify",
+    "taskPaymentsSub": "Oldest submitted {{date}}",
+    "taskApprovals": "{{n}} cancellation requests waiting",
+    "taskApprovalsSub": "Needs a second person's approval",
+    "taskObjections": "{{n}} open objections",
+    "taskObjectionsSub": "Members questioning ledger entries",
+    "taskVoteSub": "Voting closes {{date}}",
+    "taskVoteSubCount": "Closes {{date}} · {{voted}} of {{eligible}} voted",
+    "tasksDone": "All caught up",
+    "tasksDoneSub": "No payments, approvals, objections or votes waiting.",
+    "safetyTitle": "Safety and backups",
+    "lastBackup": "Last backup",
+    "restoreTest": "Restore test",
+    "todayWord": "Today",
+    "daysAgo": "{{n}} days ago",
+    "ledgerEntries": "{{n}} entries intact",
+    "ledgerBroken": "Problem found",
+    "safetyMore": "Open System status"
   },
   "matrixPage": {
     "title": "Matrix",
@@ -717,7 +822,35 @@
     "legend": "Legend",
     "range": "Months",
     "empty": "No dues in this range.",
-    "outstanding": "Outstanding"
+    "outstanding": "Outstanding",
+    "subtitle": "Member × month · hover or tap a cell for details",
+    "last6": "6 months",
+    "last12": "12 months",
+    "thisYear": "This year",
+    "statOnTime": "Paid on time",
+    "statOfCells": "of {{n}} cells",
+    "statLate": "Paid with fine",
+    "statFined": "{{n}} with a fine",
+    "statOverdue": "Overdue cells",
+    "statOverdueSum": "{{amount}} in total",
+    "statPending": "Being verified",
+    "statPendingSub": "waiting for the cashier",
+    "legendPaid": "Paid on time",
+    "legendLate": "Paid late, with fine",
+    "legendPartial": "Partly paid",
+    "legendUnpaid": "Not paid yet, still on time",
+    "legendOverdue": "Overdue",
+    "legendPending": "Payment being verified",
+    "legendFine": "A fine was charged",
+    "fineUnpaid": "Fine owed",
+    "totalOwed": "Total owed",
+    "plusFine": "+ fine {{amount}}",
+    "legendAmount": "Amount in a red or yellow cell: total owed (fine included)",
+    "paidOn": "Paid on",
+    "legendAdvance": "Paid in advance",
+    "ahead": "{{n}} months ahead",
+    "aheadTitle": "Has already paid for the coming months",
+    "legendNone": "Nothing due this month"
   },
   "paymentsPage": {
     "title": "Payments",
@@ -1047,6 +1180,9 @@
     "created": "Created: {{date}}"
   },
   "membersAdmin": {
+    "more": "More actions",
+    "ownership": "Share ownership",
+    "shareRegister": "Share register (registered name and nominee)",
     "title": "Members",
     "currentPeriodDue": "Current period due",
     "statusHistory": "Status history",
@@ -1115,7 +1251,9 @@
     "saved": "Saved.",
     "changed": "Changed",
     "zakat": "Zakat notice date",
-    "zakatHint": "Pick a date before Ramadan. On that day every member gets the zakat information notice. The system gives figures only, never a zakat calculation."
+    "zakatHint": "Pick a date before Ramadan. On that day every member gets the zakat information notice. The system gives figures only, never a zakat calculation.",
+    "sidePanel": "Side panel",
+    "sidePanelHint": "Untick what you do not need for now. It is only hidden from the menu on this device; the page and its data stay as they are. Dashboard and Settings are always shown."
   },
   "ownerConflict": {
     "title": "Owner decision conflict: {{count}} unresolved.",
@@ -1192,7 +1330,19 @@
       "pay": "Pay instalment",
       "complete": "Complete acquisition",
       "document": "Attach document"
-    }
+    },
+    "tabAssets": "Assets",
+    "tabInvestments": "Investments",
+    "addPartnerTitle": "Add a shop to invest with",
+    "partnerHint": "The shop the fund buys through, for example a jeweller. Its contract terms and every purchase live on its own page.",
+    "partnerName": "Shop name",
+    "addPartner": "Add shop",
+    "noPartners": "No investment shop yet.",
+    "looseHint": "Write the shop's name (for example Minar Jewellers): every purchase here moves under it.",
+    "claimLoose": "Create shop and move all",
+    "noShopYet": "Shop not named yet",
+    "statInvested": "Investment",
+    "statInvestedSub": "{{shops}} shops · {{assets}} own assets"
   },
   "rentAdmin": {
     "title": "Rent",
@@ -1283,7 +1433,8 @@
     "nominee_name": "Nominee name",
     "nominee_relation": "Nominee relation",
     "clause_ref": "Clause",
-    "items": "Items"
+    "items": "Items",
+    "partner_id": "Shop (investment partner)"
   },
   "proposalOptions": {
     "receive": "Receive (member lends to the fund)",
@@ -1423,5 +1574,92 @@
     "year": "Year",
     "statement": "Statement (PDF)",
     "zakat": "Zakat information (PDF)"
+  },
+  "adminUi": {
+    "sub": {
+      "payments": "Check what members sent, record cash, and read bank messages",
+      "ledger": "Every entry in order, with its hash. Nothing is ever edited or deleted.",
+      "proposals": "Spending, investments and rule changes are all decided by vote",
+      "assets": "What the fund owns, and what it is buying",
+      "rent": "Rent streams, and what tenants have paid",
+      "obligations": "Money held for others, and what the fund still owes",
+      "notifications": "Who can be reached, and what the system has sent",
+      "reconcile": "Count the money each month; the auditor approves and locks it",
+      "reports": "Every download is written to the audit log",
+      "rules": "The rules in force today, with their history. A change needs a vote.",
+      "charity": "Fines and other money that is not the fund's, and where it went",
+      "settings": "Fund name, payment details and the zakat notice",
+      "system": "Backups, the ledger check and the server"
+    },
+    "members": {
+      "sub": "{{members}} members · {{shares}} shares",
+      "statActive": "Active members",
+      "statShares": "Total shares",
+      "statCapital": "Paid-in capital",
+      "statArrears": "Members in arrears",
+      "statArrearsSub": "Total {{amount}}",
+      "search": "Search by name or ID",
+      "filterLabel": "Show members",
+      "filterArrears": "In arrears",
+      "noMatch": "No member matches.",
+      "thisMonth": "This month",
+      "pick": "Pick a member to see their details.",
+      "actions": "Actions"
+    },
+    "payments": {
+      "pick": "Pick a payment to check it.",
+      "check": "Check this payment",
+      "for": "For",
+      "statusLabel": "Show payments"
+    },
+    "proposals": {
+      "statOpen": "Voting now",
+      "statDraft": "Drafts",
+      "statToExecute": "Passed, not yet carried out",
+      "statTotal": "All proposals",
+      "needsAction": "Needs you",
+      "nothingWaiting": "Nothing is waiting for you."
+    },
+    "assets": {
+      "statCount": "Assets",
+      "addTitle": "Note an idea",
+      "staleValuations": "{{n}} valuation(s) are out of date"
+    },
+    "rent": {
+      "statExpected": "Expected this month",
+      "statReceived": "Received",
+      "statRemaining": "Still to receive",
+      "statStreams": "Rent streams",
+      "addTitle": "New rent stream"
+    },
+    "obligations": {
+      "statLevyHeld": "Levy held",
+      "statLevyOutstanding": "Levy not yet collected",
+      "statInstalments": "Instalments left",
+      "statNext": "Next instalment",
+      "remittances": "Handed over"
+    },
+    "notifications": {
+      "statUnreachable": "Not reachable by push",
+      "statShown": "Messages shown"
+    },
+    "reconcile": {
+      "statCounted": "Accounts counted",
+      "statDifference": "Total difference",
+      "statLocked": "Months locked",
+      "statAudit": "Annual audit",
+      "steps": "Steps"
+    },
+    "rules": {
+      "since": "since {{date}}",
+      "earlier": "Earlier values"
+    },
+    "settings": {
+      "unsaved": "You have changes that are not saved yet."
+    },
+    "system": {
+      "allOk": "Everything is working",
+      "attention": "Something needs attention"
+    }
   }
 }

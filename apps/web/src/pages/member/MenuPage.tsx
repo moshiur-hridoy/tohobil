@@ -7,6 +7,7 @@ import { LoadError } from '../../components/StateViews';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { downloadFile } from '../../lib/download';
+import { ThemeToggle } from '../../components/ThemeToggle';
 
 const CARD = 'rounded-[20px] border border-border bg-card p-4';
 
@@ -60,6 +61,7 @@ export function MenuPage() {
               {me.member_code} · {me.roles.map((r) => t(`roles.${r}`)).join(', ')}
             </p>
           </div>
+          <ThemeToggle />
           <button
             type="button"
             onClick={() => void logout().then(() => navigate('/login', { replace: true }))}
@@ -144,7 +146,7 @@ function MyStatements() {
       <p className="mb-3 text-sm text-muted">{t('menuReports.hint')}</p>
       <label className="block text-sm text-muted">
         {t('menuReports.year')}
-        <input type="number" className="mt-1 h-11 w-28 rounded-xl border-[1.5px] border-input bg-background px-2" value={year} onChange={(e) => setYear(e.target.value)} />
+        <input type="number" className="field mt-1 w-28" value={year} onChange={(e) => setYear(e.target.value)} />
       </label>
       <div className="mt-3 flex flex-wrap gap-2">
         <button type="button" onClick={() => void get(`/reports/statement?period=${year}`, `statement-${year}.pdf`)} className="h-11 rounded-xl bg-primary px-4 font-medium text-primary-foreground">{t('menuReports.statement')}</button>

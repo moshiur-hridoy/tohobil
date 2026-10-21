@@ -74,7 +74,7 @@ export function TotpPage() {
             autoComplete="one-time-code"
             aria-label={t('totp.code')}
             placeholder="••••••"
-            className="h-14 rounded-2xl border border-input bg-background px-4 text-center text-2xl tracking-[0.4em]"
+            className="field field-lg text-center text-2xl tracking-[0.4em]"
           />
           <FieldError message={error?.message ?? null} requestId={error?.requestId} />
           <button

@@ -1,8 +1,10 @@
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ACCOUNT_CODES } from '@barakah/shared';
+import { ACCOUNT_CODES, NAV_CASH_ACCOUNTS } from '@barakah/shared';
+import { AdminHeader, BTN_SECONDARY, Card, ICONS, StatGrid, StatTile } from '../../components/admin';
 import { ConfirmSheet } from '../../components/ConfirmSheet';
+import { Icon } from '../../components/ui';
 import { ListSkeleton } from '../../components/Skeleton';
 import { PullToRefresh } from '../../components/PullToRefresh';
 import { Empty, LoadError } from '../../components/StateViews';
@@ -26,7 +28,7 @@ interface Verify {
  * badge. Members get cards and an "Object" button; the cashier and auditor get a dense table with
  * running balances and a CSV export.
  */
-export function LedgerView({ variant }: { variant: 'member' | 'admin' }) {
+export function LedgerView({ variant, children }: { variant: 'member' | 'admin'; children?: ReactNode }) {
   const { t } = useTranslation();
   const { me } = useAuth();
   const qc = useQueryClient();
@@ -96,19 +98,159 @@ export function LedgerView({ variant }: { variant: 'member' | 'admin' }) {
     void qc.invalidateQueries({ queryKey: ['objections'] });
   };
 
-  const field = 'h-11 rounded-md border border-input bg-background px-2';
+  const field = 'field';
+
+  if (variant === 'admin') {
+    const cash = accounts.data?.items.filter((a) => (NAV_CASH_ACCOUNTS as readonly string[]).includes(a.code)) ?? [];
+    return (
+      <div className="mx-auto max-w-[1400px] space-y-5">
+        <AdminHeader
+          title={t('ledgerPage.title')}
+          subtitle={t('adminUi.sub.ledger')}
+          actions={
+            <>
+              <button type="button" className={BTN_SECONDARY} onClick={() => void verify.refetch()} disabled={verify.isFetching}>
+                <Icon d={ICONS.shield} size={18} />
+                {t('ledgerPage.verify')}
+              </button>
+              <button type="button" className={BTN_SECONDARY} onClick={exportCsv} disabled={rows.length === 0}>
+                <Icon d={ICONS.download} size={18} />
+                {t('ledgerPage.exportCsv')}
+              </button>
+            </>
+          }
+        />
+
+        {/* the four money accounts; a tile filters the ledger to that account */}
+        <StatGrid>
+          {(cash.length > 0 ? cash : NAV_CASH_ACCOUNTS.map((code) => ({ code, natural_balance_paisa: null }))).map((a) => (
+            <StatTile
+              key={a.code}
+              tone={account === a.code ? 'bg-primary text-primary-foreground' : 'bg-primary-soft text-primary'}
+              icon={ICONS.wallet}
+              label={t(`cashAccount.${a.code}`, { defaultValue: a.code })}
+              value={a.natural_balance_paisa === null ? null : taka(a.natural_balance_paisa)}
+              pressed={account === a.code}
+              onClick={() => setAccount(account === a.code ? '' : a.code)}
+            />
+          ))}
+        </StatGrid>
+
+        {verify.data && (
+          <p role="status" className={`rounded-xl px-4 py-2.5 text-sm font-medium ${verify.data.ok ? 'bg-ok-bg text-ok' : 'bg-bad-bg text-bad'}`}>
+            {verify.data.ok ? t('ledgerPage.verifyOk', { n: formatCount(verify.data.count), seq: localDigits(verify.data.last_seq ?? '-') }) : t('ledgerPage.verifyBad', { n: formatCount(verify.data.issues_total) })}
+          </p>
+        )}
+        {verify.error && <LoadError error={verify.error} />}
+        {notice && <p role="status" className="text-ok">{notice}</p>}
+
+
+        {children}
+
+        <Card className="p-5">
+            <section aria-label={t('ledgerPage.filters')} className="grid grid-cols-2 gap-2 lg:grid-cols-5">
+              <select aria-label={t('ledgerPage.account')} className={field} value={account} onChange={(e) => setAccount(e.target.value)}>
+                <option value="">{t('ledgerPage.anyAccount')}</option>
+                {ACCOUNT_CODES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <select aria-label={t('ledgerPage.memberFilter')} className={field} value={memberId} onChange={(e) => setMemberId(e.target.value)}>
+                <option value="">{t('ledgerPage.anyMember')}</option>
+                {members.data?.items.map((m) => (
+                  <option key={m.id} value={m.id}>{m.code} {m.full_name}</option>
+                ))}
+              </select>
+              <input aria-label={t('common.from')} type="date" className={field} value={from} onChange={(e) => setFrom(e.target.value)} />
+              <input aria-label={t('common.to')} type="date" className={field} value={to} onChange={(e) => setTo(e.target.value)} />
+              <select aria-label={t('ledgerPage.date')} className={`${field} col-span-2 lg:col-span-1`} value={order} onChange={(e) => setOrder(e.target.value as 'asc' | 'desc')}>
+                <option value="desc">{t('ledgerPage.newestFirst')}</option>
+                <option value="asc">{t('ledgerPage.oldestFirst')}</option>
+              </select>
+            </section>
+          {account && !running && <p className="mt-2 text-xs text-muted">{t('ledgerPage.runningHint')}</p>}
+        </Card>
+
+        {q.error ? (
+          <LoadError error={q.error} onRetry={() => void q.refetch()} />
+        ) : !q.data ? (
+          <ListSkeleton rows={5} />
+        ) : rows.length === 0 ? (
+          <Empty text={t('ledgerPage.empty')} />
+        ) : (
+          <Card className="overflow-x-auto">
+            <table className="w-full min-w-[56rem] border-separate border-spacing-0 text-left text-sm">
+              <thead>
+                <tr className="text-xs font-semibold text-muted">
+                  <th className="border-b border-border px-4 py-3">#</th>
+                  <th className="border-b border-border px-3 py-3">{t('ledgerPage.date')}</th>
+                  <th className="border-b border-border px-3 py-3">{t('ledger.debit')} → {t('ledger.credit')}</th>
+                  <th className="border-b border-border px-3 py-3 text-right">{t('ledger.amount')}</th>
+                  {running && <th className="border-b border-border px-3 py-3 text-right">{t('ledgerPage.runningBalance')}</th>}
+                  <th className="border-b border-border px-3 py-3">{t('common.member')}</th>
+                  <th className="border-b border-border px-3 py-3">{t('ledger.memo')}</th>
+                  <th className="border-b border-border px-4 py-3">{t('ledgerPage.hash')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.seq} className={`align-top transition-colors hover:bg-hover ${r.open_objections > 0 ? 'bg-bad-bg' : ''}`}>
+                    <td className="border-b border-border px-4 py-2.5 text-muted tabular-nums">{localDigits(r.seq)}</td>
+                    <td className="whitespace-nowrap border-b border-border px-3 py-2.5">{fmtDate(r.entry_date)}</td>
+                    <td className="whitespace-nowrap border-b border-border px-3 py-2.5 font-mono text-xs">
+                      {r.debit_account}<span className="px-1 text-muted">→</span>{r.credit_account}
+                    </td>
+                    <td className="whitespace-nowrap border-b border-border px-3 py-2.5 text-right font-semibold tabular-nums">{taka(r.amount_paisa)}</td>
+                    {running && <td className="whitespace-nowrap border-b border-border px-3 py-2.5 text-right tabular-nums text-ink2">{taka(running.get(r.seq) ?? 0n)}</td>}
+                    <td className="border-b border-border px-3 py-2.5">{r.member_code ?? ''}</td>
+                    <td className="border-b border-border px-3 py-2.5">
+                      {r.memo}
+                      <Flags r={r} />
+                    </td>
+                    <td className="border-b border-border px-4 py-2.5 font-mono text-xs text-muted" title={r.hash}>{r.hash.slice(0, 10)}…</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        )}
+
+        {q.hasNextPage && (
+          <button type="button" disabled={q.isFetchingNextPage} onClick={() => void q.fetchNextPage()} className={`${BTN_SECONDARY} w-full`}>
+            {t('common.loadMore')}
+          </button>
+        )}
+
+      <ConfirmSheet
+        open={!!objectTo}
+        onClose={() => setObjectTo(null)}
+        title={t('ledgerPage.objectTitle', { seq: localDigits(objectTo?.seq ?? '') })}
+        confirmLabel={t('common.submit')}
+        canConfirm={objectText.trim().length >= 3}
+        onConfirm={submitObjection}
+      >
+        {objectTo && <EntryBody r={objectTo} />}
+        <p className="text-muted">{t('ledgerPage.objectBody')}</p>
+        <textarea
+          aria-label={t('ledgerPage.objectPlaceholder')}
+          placeholder={t('ledgerPage.objectPlaceholder')}
+          className="field min-h-24 w-full"
+          maxLength={1000}
+          value={objectText}
+          onChange={(e) => setObjectText(e.target.value)}
+        />
+      </ConfirmSheet>
+      </div>
+    );
+  }
 
   return (
     <PullToRefresh onRefresh={refresh}>
-      <div className={variant === 'member' ? 'space-y-3 p-4' : 'space-y-4'}>
-        {variant === 'member' ? (
-          <header>
-            <h2 className="text-2xl font-bold">{t('ledgerPage.title')}</h2>
-            <p className="text-muted">{t('ledgerPage.subtitle')}</p>
-          </header>
-        ) : (
-          <h1 className="text-2xl font-semibold">{t('ledgerPage.title')}</h1>
-        )}
+      <div className="space-y-3 p-4">
+        <header>
+          <h2 className="text-2xl font-bold">{t('ledgerPage.title')}</h2>
+          <p className="text-muted">{t('ledgerPage.subtitle')}</p>
+        </header>
 
         <section aria-label={t('ledgerPage.filters')} className="grid grid-cols-2 gap-2 lg:grid-cols-6">
           <select aria-label={t('ledgerPage.account')} className={field} value={account} onChange={(e) => setAccount(e.target.value)}>
@@ -133,11 +275,6 @@ export function LedgerView({ variant }: { variant: 'member' | 'admin' }) {
             <button type="button" className="h-11 flex-1 rounded-md border border-border px-2" onClick={() => void verify.refetch()} disabled={verify.isFetching}>
               {t('ledgerPage.verify')}
             </button>
-            {variant === 'admin' && (
-              <button type="button" className="h-11 flex-1 rounded-md border border-border px-2" onClick={exportCsv}>
-                {t('ledgerPage.exportCsv')}
-              </button>
-            )}
           </div>
         </section>
 
@@ -148,7 +285,6 @@ export function LedgerView({ variant }: { variant: 'member' | 'admin' }) {
         )}
         {verify.error && <LoadError error={verify.error} />}
         {notice && <p role="status" className="text-ok">{notice}</p>}
-        {variant === 'admin' && account && !running && <p className="text-sm text-muted">{t('ledgerPage.runningHint')}</p>}
 
         {q.error ? (
           <LoadError error={q.error} onRetry={() => void q.refetch()} />
@@ -156,7 +292,7 @@ export function LedgerView({ variant }: { variant: 'member' | 'admin' }) {
           <ListSkeleton rows={5} />
         ) : rows.length === 0 ? (
           <Empty text={t('ledgerPage.empty')} />
-        ) : variant === 'member' ? (
+        ) : (
           <ul className="space-y-2">
             {rows.map((r) => (
               <li key={r.seq} className="rounded-[18px] border border-border bg-card p-3.5">
@@ -169,42 +305,6 @@ export function LedgerView({ variant }: { variant: 'member' | 'admin' }) {
               </li>
             ))}
           </ul>
-        ) : (
-          <div className="overflow-x-auto rounded-[18px] border border-border bg-card shadow-card">
-            <table className="w-full min-w-[56rem] text-left text-sm">
-              <thead className="border-b border-border text-muted">
-                <tr>
-                  <th className="p-2">#</th>
-                  <th className="p-2">{t('ledgerPage.date')}</th>
-                  <th className="p-2">{t('ledger.debit')}</th>
-                  <th className="p-2">{t('ledger.credit')}</th>
-                  <th className="p-2 text-right">{t('ledger.amount')}</th>
-                  {running && <th className="p-2 text-right">{t('ledgerPage.runningBalance')}</th>}
-                  <th className="p-2">{t('common.member')}</th>
-                  <th className="p-2">{t('ledger.memo')}</th>
-                  <th className="p-2">{t('ledgerPage.hash')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.seq} className="border-b border-border align-top last:border-0">
-                    <td className="p-2">{localDigits(r.seq)}</td>
-                    <td className="p-2 whitespace-nowrap">{fmtDate(r.entry_date)}</td>
-                    <td className="p-2">{r.debit_account}</td>
-                    <td className="p-2">{r.credit_account}</td>
-                    <td className="p-2 text-right font-medium">{taka(r.amount_paisa)}</td>
-                    {running && <td className="p-2 text-right">{taka(running.get(r.seq) ?? 0n)}</td>}
-                    <td className="p-2">{r.member_code ?? ''}</td>
-                    <td className="p-2">
-                      {r.memo}
-                      <Flags r={r} />
-                    </td>
-                    <td className="p-2 font-mono text-xs text-muted" title={r.hash}>{r.hash.slice(0, 10)}…</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         )}
 
         {q.hasNextPage && (
@@ -226,7 +326,7 @@ export function LedgerView({ variant }: { variant: 'member' | 'admin' }) {
           <textarea
             aria-label={t('ledgerPage.objectPlaceholder')}
             placeholder={t('ledgerPage.objectPlaceholder')}
-            className="min-h-24 w-full rounded-md border border-input bg-background p-2"
+            className="field min-h-24 w-full"
             maxLength={1000}
             value={objectText}
             onChange={(e) => setObjectText(e.target.value)}

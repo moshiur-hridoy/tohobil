@@ -95,7 +95,7 @@ export function ActivationPage() {
               autoCapitalize="characters"
               spellCheck={false}
               maxLength={3}
-              className="h-14 rounded-2xl border border-input bg-background px-4 text-center text-xl uppercase tracking-widest"
+              className="field field-lg text-center text-xl uppercase tracking-widest"
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
@@ -108,7 +108,7 @@ export function ActivationPage() {
               autoCapitalize="characters"
               spellCheck={false}
               maxLength={12}
-              className="h-14 rounded-2xl border border-input bg-background px-4 text-center text-xl uppercase tracking-[0.3em]"
+              className="field field-lg text-center text-xl uppercase tracking-[0.3em]"
             />
           </label>
           <FieldError message={error?.message ?? null} requestId={error?.requestId} />

@@ -23,3 +23,8 @@ export function paisaToDecimal(paisa: string | bigint): string {
   const abs = p < 0n ? -p : p;
   return `${p < 0n ? '-' : ''}${abs / 100n}.${String(abs % 100n).padStart(2, '0')}`;
 }
+
+/** What a member is behind on now: dues past their due date plus unpaid fines (বকেয়া). Dues generated
+ *  ahead of time that are not due yet are not arrears. */
+export const arrearsOf = (m: { overdue_paisa: string; outstanding_fines_paisa: string }): bigint =>
+  BigInt(m.overdue_paisa) + BigInt(m.outstanding_fines_paisa);

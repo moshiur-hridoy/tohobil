@@ -4,13 +4,17 @@ import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PAYMENT_METHOD_LABELS } from '@barakah/shared';
 import { AuthedImage } from '../../components/AuthedImage';
+import {
+  AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, BTN_SM, BTN_SM_PRIMARY, Card, CardHead, EmptyCard, ICONS, InfoRow, MemberBadge, Notice, Segmented, SplitLayout,
+} from '../../components/admin';
+import { Icon } from '../../components/ui';
 import { ConfirmSheet, SheetRow } from '../../components/ConfirmSheet';
 import { ListSkeleton } from '../../components/Skeleton';
-import { Empty, LoadError } from '../../components/StateViews';
+import { LoadError } from '../../components/StateViews';
 import { StatusPill } from '../../components/StatusPill';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
-import { fmtInstant } from '../../lib/dates';
+import { fmtInstant, fmtPeriod } from '../../lib/dates';
 import { formatCount } from '../../lib/format';
 import { taka } from '../../lib/money';
 import type { Page, PaymentDetail, PaymentRow, PaymentStatus } from '../../lib/types';
@@ -90,18 +94,48 @@ export function PaymentsPage() {
     await refreshAll();
   };
 
+  const statusOptions = (['pending', 'confirmed', 'rejected', 'reversed', 'all'] as const).map((v) => ({
+    value: v,
+    label: v === 'all' ? t('common.all') : t(`payment.status.${v}`),
+  }));
+  const pick = (i: number) => {
+    setCursorIdx(i);
+    setNotice(null);
+  };
+  const act = (kind: 'approve' | 'reject' | 'reverse', row: PaymentRow) => {
+    setReason('');
+    setNotice(null);
+    setAction({ kind, row });
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold tracking-tight">{t('paymentsPage.title')}</h1>
-        <div role="tablist" className="flex gap-1">
-          {(['queue', 'approvals'] as const).map((k) => (
-            <button key={k} role="tab" aria-selected={tab === k} type="button" onClick={() => setParams(k === 'queue' ? {} : { tab: k })} className={`h-11 rounded-md px-4 ${tab === k ? 'bg-primary-soft font-medium text-primary' : 'border border-border'}`}>
-              {t(`paymentsPage.${k}`)}
-            </button>
-          ))}
-        </div>
-      </div>
+    <AdminPage>
+      <AdminHeader
+        title={t('paymentsPage.title')}
+        subtitle={t('adminUi.sub.payments')}
+        actions={
+          <>
+            <Segmented
+              label={t('paymentsPage.title')}
+              value={tab}
+              options={(['queue', 'approvals'] as const).map((k) => ({ value: k, label: t(`paymentsPage.${k}`) }))}
+              onChange={(k) => setParams(k === 'queue' ? {} : { tab: k })}
+            />
+            {tab === 'queue' && isCashier && (
+              <button type="button" className={BTN_SECONDARY} onClick={() => { setNotice(null); setEntry({ prefill: null }); }}>
+                <Icon d={ICONS.plus} size={18} />
+                {t('paymentsPage.entryTitle')}
+              </button>
+            )}
+            {tab === 'queue' && isCashier && bulkRows.length > 0 && (
+              <button type="button" className={BTN_PRIMARY} onClick={() => { setNotice(null); setAction({ kind: 'bulk' }); }}>
+                <Icon d={ICONS.check} size={18} sw={2} />
+                {t('paymentsPage.bulkApprove', { n: formatCount(bulkRows.length) })}
+              </button>
+            )}
+          </>
+        }
+      />
 
       {tab === 'approvals' ? (
         <ApprovalsTab />
@@ -111,95 +145,61 @@ export function PaymentsPage() {
             <SmsPanel onResults={onResults} onCreate={(r) => setEntry({ prefill: { parsed: r.result, rawSms: r.text } })} />
           )}
 
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="text-sm text-muted">
-              {t('paymentsPage.filterStatus')}{' '}
-              <select className="h-11 rounded-md border border-input bg-background px-2 text-foreground" value={status} onChange={(e) => { setStatus(e.target.value as PaymentStatus | ''); setCursorIdx(0); }}>
-                <option value="">{t('common.all')}</option>
-                {(['pending', 'confirmed', 'rejected', 'reversed'] as const).map((s) => (
-                  <option key={s} value={s}>{t(`payment.status.${s}`)}</option>
-                ))}
-              </select>
-            </label>
-            {isCashier && (
-              <>
-                <button type="button" className="h-11 rounded-xl border border-border px-4" onClick={() => { setNotice(null); setEntry({ prefill: null }); }}>
-                  {t('paymentsPage.entryTitle')}
-                </button>
-                {bulkRows.length > 0 && (
-                  <button type="button" className="h-11 rounded-xl bg-primary px-4 font-medium text-primary-foreground" onClick={() => { setNotice(null); setAction({ kind: 'bulk' }); }}>
-                    {t('paymentsPage.bulkApprove', { n: formatCount(bulkRows.length) })}
+          <Notice text={notice} />
+
+          <SplitLayout
+            sideWidth="360px"
+            main={
+              <Card className="px-5 pb-3 pt-5 sm:px-6">
+                <CardHead
+                  title={t('paymentsPage.queue')}
+                  sub={isCashier ? <span className="hidden lg:inline">{t('paymentsPage.shortcuts')}</span> : undefined}
+                  action={
+                    <Segmented
+                      label={t('adminUi.payments.statusLabel')}
+                      value={status || 'all'}
+                      options={statusOptions}
+                      onChange={(v) => { setStatus(v === 'all' ? '' : v); setCursorIdx(0); }}
+                    />
+                  }
+                />
+                {q.error ? (
+                  <LoadError error={q.error} onRetry={() => void q.refetch()} />
+                ) : !q.data ? (
+                  <ListSkeleton rows={4} />
+                ) : rows.length === 0 ? (
+                  <EmptyCard text={t('paymentsPage.empty')} />
+                ) : (
+                  <ul>
+                    {rows.map((r, i) => (
+                      <QueueRow
+                        key={r.id}
+                        r={r}
+                        selected={r === selected}
+                        match={exact.has(r.id) ? 'exact' : possible.has(r.id) ? 'possible' : null}
+                        isCashier={isCashier}
+                        onPick={() => pick(i)}
+                        onAct={(kind) => act(kind, r)}
+                      />
+                    ))}
+                  </ul>
+                )}
+                {q.hasNextPage && (
+                  <button type="button" onClick={() => void q.fetchNextPage()} disabled={q.isFetchingNextPage} className={`${BTN_SECONDARY} mb-2 mt-3 w-full`}>
+                    {t('common.loadMore')}
                   </button>
                 )}
-                <span className="hidden text-sm text-muted lg:inline">{t('paymentsPage.shortcuts')}</span>
-              </>
-            )}
-          </div>
-
-          {notice && <p role="status" className="text-ok">{notice}</p>}
-
-          {q.error ? (
-            <LoadError error={q.error} onRetry={() => void q.refetch()} />
-          ) : !q.data ? (
-            <ListSkeleton rows={4} />
-          ) : rows.length === 0 ? (
-            <Empty text={t('paymentsPage.empty')} />
-          ) : (
-            <ul className="space-y-2">
-              {rows.map((r, i) => (
-                <li
-                  key={r.id}
-                  aria-current={r === selected}
-                  onClick={() => setCursorIdx(i)}
-                  className={`rounded-lg border bg-card p-3 ${r === selected ? 'border-primary ring-1 ring-ring' : 'border-border'}`}
-                >
-                  <div className="flex flex-wrap items-start gap-3">
-                    {r.proof_file_id ? (
-                      <AuthedImage fileId={r.proof_file_id} alt={t('paymentsPage.proof')} className="h-16 w-16" />
-                    ) : (
-                      <div className="flex h-16 w-16 items-center justify-center rounded-md bg-hover text-center text-xs text-muted">{t('paymentsPage.noProof')}</div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold">
-                        {r.member_code} {r.member_name} · {taka(r.amount_paisa)}
-                      </p>
-                      <p className="text-sm text-muted">
-                        {PAYMENT_METHOD_LABELS[r.method].bn} · {fmtInstant(r.paid_at)} · {t(`paymentsPage.${SOURCE_KEY[r.source]}`)}
-                        {r.trx_id && <> · <span className="select-all">{r.trx_id}</span></>}
-                      </p>
-                      {r.note && <p className="text-sm">{r.note}</p>}
-                      {r.reject_reason && <p className="text-sm text-bad">{r.reject_reason}</p>}
-                      {exact.has(r.id) && <p className="text-sm font-medium text-ok">✓ {t('paymentsPage.exactMatch')}</p>}
-                      {!exact.has(r.id) && possible.has(r.id) && <p className="text-sm font-medium text-warn">{t('paymentsPage.possibleMatch')}</p>}
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <StatusPill status={r.status} />
-                      {isCashier && r.status === 'pending' && (
-                        <div className="flex gap-2">
-                          <button type="button" className="h-10 rounded-xl bg-primary px-3 text-primary-foreground" onClick={() => { setNotice(null); setAction({ kind: 'approve', row: r }); }}>
-                            {t('paymentsPage.approve')}
-                          </button>
-                          <button type="button" className="h-10 rounded-xl border border-border px-3" onClick={() => { setReason(''); setNotice(null); setAction({ kind: 'reject', row: r }); }}>
-                            {t('paymentsPage.reject')}
-                          </button>
-                        </div>
-                      )}
-                      {isCashier && r.status === 'confirmed' && (
-                        <button type="button" className="h-10 rounded-xl border border-border px-3" onClick={() => { setReason(''); setNotice(null); setAction({ kind: 'reverse', row: r }); }}>
-                          {t('paymentsPage.reverse')}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-          {q.hasNextPage && (
-            <button type="button" onClick={() => void q.fetchNextPage()} disabled={q.isFetchingNextPage} className="h-11 w-full rounded-xl border border-border">
-              {t('common.loadMore')}
-            </button>
-          )}
+              </Card>
+            }
+            side={
+              <PaymentPanel
+                row={selected ?? null}
+                match={selected ? (exact.has(selected.id) ? 'exact' : possible.has(selected.id) ? 'possible' : null) : null}
+                isCashier={isCashier}
+                onAct={(kind) => selected && act(kind, selected)}
+              />
+            }
+          />
         </>
       )}
 
@@ -220,7 +220,7 @@ export function PaymentsPage() {
         }}
       >
         {action?.kind === 'reject' && <PaymentSummary row={action.row} />}
-        <textarea aria-label={t('paymentsPage.rejectReason')} placeholder={t('paymentsPage.rejectReason')} className="min-h-20 w-full rounded-md border border-input bg-background p-2" maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} />
+        <textarea aria-label={t('paymentsPage.rejectReason')} placeholder={t('paymentsPage.rejectReason')} className="field min-h-20 w-full" maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} />
       </ConfirmSheet>
 
       <ConfirmSheet
@@ -238,11 +238,152 @@ export function PaymentsPage() {
       >
         {action?.kind === 'reverse' && <PaymentSummary row={action.row} />}
         <p className="text-muted">{t('paymentsPage.reverseBody')}</p>
-        <textarea aria-label={t('common.reason')} placeholder={t('common.reason')} className="min-h-20 w-full rounded-md border border-input bg-background p-2" maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} />
+        <textarea aria-label={t('common.reason')} placeholder={t('common.reason')} className="field min-h-20 w-full" maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} />
       </ConfirmSheet>
 
       <EntrySheet open={!!entry} onClose={() => setEntry(null)} prefill={entry?.prefill ?? null} onDone={() => setNotice(t('paymentsPage.entered'))} />
-    </div>
+    </AdminPage>
+  );
+}
+
+type Match = 'exact' | 'possible' | null;
+
+function MatchLine({ match }: { match: Match }) {
+  const { t } = useTranslation();
+  if (match === 'exact') return <p className="text-xs font-semibold text-ok">✓ {t('paymentsPage.exactMatch')}</p>;
+  if (match === 'possible') return <p className="text-xs font-semibold text-warn">◔ {t('paymentsPage.possibleMatch')}</p>;
+  return null;
+}
+
+/**
+ * One payment in the queue. The row selects it for the side panel; below `xl` (no side panel next to
+ * the list) the row carries its own approve / reject / reverse buttons.
+ */
+function QueueRow({ r, selected, match, isCashier, onPick, onAct }: {
+  r: PaymentRow;
+  selected: boolean;
+  match: Match;
+  isCashier: boolean;
+  onPick: () => void;
+  onAct: (kind: 'approve' | 'reject' | 'reverse') => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <li
+      aria-current={selected}
+      onClick={onPick}
+      className={`-mx-2 flex cursor-pointer flex-wrap items-center gap-3 rounded-xl border-b border-border px-2 py-3 transition-colors last:border-b-0 ${selected ? 'bg-primary-soft' : 'hover:bg-hover'}`}
+    >
+      {/* the click bubbles to the row; the button makes the row reachable by keyboard */}
+      <button type="button" className="flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <MemberBadge code={r.member_code} />
+        <span className="min-w-0">
+          <span className="block truncate text-[0.9375rem] font-semibold">{r.member_name}</span>
+          <span className="block truncate text-xs text-muted">
+            {PAYMENT_METHOD_LABELS[r.method].bn} · {fmtInstant(r.paid_at)}
+            {r.trx_id && <> · <span className="font-mono">{r.trx_id}</span></>}
+          </span>
+          <MatchLine match={match} />
+        </span>
+      </button>
+      <span className="text-right">
+        <span className="block text-[0.9375rem] font-bold tabular-nums">{taka(r.amount_paisa)}</span>
+        <span className="block text-xs text-muted">{t(`paymentsPage.${SOURCE_KEY[r.source]}`)}</span>
+      </span>
+      <span className="w-[6.5rem] text-right"><StatusPill status={r.status} /></span>
+      {isCashier && (r.status === 'pending' || r.status === 'confirmed') && (
+        <div className="flex basis-full justify-end gap-2 xl:hidden" onClick={(e) => e.stopPropagation()}>
+          {r.status === 'pending' ? (
+            <>
+              <button type="button" className={BTN_SM_PRIMARY} onClick={() => onAct('approve')}>{t('paymentsPage.approve')}</button>
+              <button type="button" className={BTN_SM} onClick={() => onAct('reject')}>{t('paymentsPage.reject')}</button>
+            </>
+          ) : (
+            <button type="button" className={BTN_SM} onClick={() => onAct('reverse')}>{t('paymentsPage.reverse')}</button>
+          )}
+        </div>
+      )}
+    </li>
+  );
+}
+
+/** The selected payment: proof, details, what approving would do, and the decision buttons. */
+function PaymentPanel({ row, match, isCashier, onAct }: { row: PaymentRow | null; match: Match; isCashier: boolean; onAct: (kind: 'approve' | 'reject' | 'reverse') => void }) {
+  const { t } = useTranslation();
+  const detail = useQuery({
+    queryKey: ['payment', row?.id],
+    enabled: !!row && row.status === 'pending' && isCashier,
+    queryFn: () => api<PaymentDetail>(`/payments/${row?.id}`),
+  });
+  const preview = detail.data?.preview;
+
+  if (!row) {
+    return (
+      <Card className="hidden p-5 xl:block">
+        <EmptyCard text={t('adminUi.payments.pick')} icon={ICONS.wallet} />
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="hidden p-5 xl:block">
+      <div className="flex items-center gap-3">
+        <MemberBadge code={row.member_code} size="lg" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-lg font-bold">{row.member_name}</p>
+          <p className="text-[0.8125rem] text-muted">{row.status === 'pending' ? t('adminUi.payments.check') : t(`payment.status.${row.status}`)}</p>
+        </div>
+        <StatusPill status={row.status} />
+      </div>
+
+      <p className="mt-4 text-[2rem] font-bold leading-tight tabular-nums">{taka(row.amount_paisa)}</p>
+      <div className="mt-1"><MatchLine match={match} /></div>
+
+      <div className="mt-4">
+        {row.proof_file_id ? (
+          <AuthedImage fileId={row.proof_file_id} alt={t('paymentsPage.proof')} className="h-48 w-full rounded-xl bg-soft object-contain" />
+        ) : (
+          <div className="grid h-20 place-items-center rounded-xl border border-dashed border-border text-sm text-muted">{t('paymentsPage.noProof')}</div>
+        )}
+      </div>
+
+      <dl className="mt-4">
+        <InfoRow label={t('paymentsPage.method')} value={PAYMENT_METHOD_LABELS[row.method].bn} />
+        <InfoRow label={t('paymentsPage.trxId')} value={row.trx_id ? <span className="select-all font-mono">{row.trx_id}</span> : '—'} />
+        <InfoRow label={t('paymentsPage.paidAt')} value={fmtInstant(row.paid_at)} />
+        <InfoRow label={t('paymentsPage.source')} value={t(`paymentsPage.${SOURCE_KEY[row.source]}`)} />
+        {row.for_periods && row.for_periods.length > 0 && <InfoRow label={t('adminUi.payments.for')} value={row.for_periods.map(fmtPeriod).join(', ')} />}
+      </dl>
+      {row.note && <p className="mt-2 rounded-xl bg-soft px-3 py-2 text-sm">{row.note}</p>}
+      {row.reject_reason && <p className="mt-2 rounded-xl bg-bad-bg px-3 py-2 text-sm text-bad">{row.reject_reason}</p>}
+
+      {row.status === 'pending' && isCashier && (
+        <div className="mt-4 rounded-xl bg-soft p-3">
+          <p className="mb-1 text-xs font-semibold text-muted">{t('paymentsPage.approveEffect')}</p>
+          {detail.error ? (
+            <LoadError error={detail.error} />
+          ) : !preview ? (
+            <ListSkeleton rows={1} />
+          ) : (
+            <dl>
+              <InfoRow label={t('paymentsPage.toPrincipal')} value={taka(preview.principal_paisa)} />
+              <InfoRow label={t('paymentsPage.toFines')} value={taka(preview.fine_paisa)} />
+              <InfoRow label={t('paymentsPage.toCredit')} value={taka(preview.credit_paisa)} />
+            </dl>
+          )}
+        </div>
+      )}
+
+      {isCashier && row.status === 'pending' && (
+        <div className="mt-4 grid grid-cols-2 gap-2.5">
+          <button type="button" className={BTN_PRIMARY} onClick={() => onAct('approve')}>{t('paymentsPage.approve')}</button>
+          <button type="button" className={BTN_SECONDARY} onClick={() => onAct('reject')}>{t('paymentsPage.reject')}</button>
+        </div>
+      )}
+      {isCashier && row.status === 'confirmed' && (
+        <button type="button" className={`${BTN_SECONDARY} mt-4 w-full`} onClick={() => onAct('reverse')}>{t('paymentsPage.reverse')}</button>
+      )}
+    </Card>
   );
 }
 
@@ -281,7 +422,7 @@ function ApproveSheet({ action, onClose, onDone }: { action: Action; onClose: ()
       {detail.error && <LoadError error={detail.error} />}
       {!preview && !detail.error && <ListSkeleton rows={1} />}
       {preview && (
-        <div className="rounded-md bg-background p-3">
+        <div className="rounded-xl bg-soft p-3">
           <p className="mb-1 text-sm text-muted">{t('paymentsPage.approveEffect')}</p>
           <SheetRow label={t('paymentsPage.toPrincipal')} value={taka(preview.principal_paisa)} />
           <SheetRow label={t('paymentsPage.toFines')} value={taka(preview.fine_paisa)} />

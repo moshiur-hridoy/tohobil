@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EXPORT_ENTITIES } from '@barakah/shared';
 import { LoadError } from '../../components/StateViews';
+import { AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, Card, CardHead, FieldLabel, ICONS } from '../../components/admin';
+import { Icon } from '../../components/ui';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { todayDhaka } from '../../lib/dates';
@@ -30,58 +32,65 @@ export function ReportsPage() {
       setError(err);
     }
   };
-  const button = 'h-11 rounded-xl bg-primary px-4 text-primary-foreground';
-  const input = 'mt-1 h-11 w-full rounded-md border border-input bg-background px-2';
-
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">{t('reportsPage.title')}</h1>
+    <AdminPage>
+      <AdminHeader title={t('reportsPage.title')} subtitle={t('adminUi.sub.reports')} />
       {error != null && <LoadError error={error} />}
 
-      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
-        <h2 className="mb-3 font-semibold">{t('reportsPage.statement')}</h2>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <label className="text-sm text-muted">{t('common.member')}
-            <select className={input} value={memberId} onChange={(e) => setMemberId(e.target.value)}>
-              {members.data?.items.map((m) => <option key={m.id} value={m.id}>{m.code} {m.full_name}</option>)}
-            </select>
-          </label>
-          <label className="text-sm text-muted">{t('reportsPage.periodHint')}
-            <input className={input} value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="2026-11 / 2026" />
-          </label>
-          <div className="flex items-end gap-2">
-            <button type="button" className={button} onClick={() => void get(`/reports/statement?member_id=${memberId}&period=${period}`, `statement-${period}.pdf`)}>{t('reportsPage.statementButton')}</button>
-            <button type="button" className="h-11 rounded-xl border border-border px-4 hover:bg-hover" onClick={() => void get(`/reports/zakat-statement?member_id=${memberId}`, 'zakat-statement.pdf')}>{t('reportsPage.zakatButton')}</button>
+      <div className="grid items-start gap-5 lg:grid-cols-2 2xl:grid-cols-3">
+        <Card className="p-5">
+          <CardHead icon={ICONS.user} title={t('reportsPage.statement')} />
+          <div className="space-y-3">
+            <FieldLabel label={t('common.member')}>
+              <select className="field w-full" value={memberId} onChange={(e) => setMemberId(e.target.value)}>
+                {members.data?.items.map((m) => <option key={m.id} value={m.id}>{m.code} {m.full_name}</option>)}
+              </select>
+            </FieldLabel>
+            <FieldLabel label={t('reportsPage.periodHint')}>
+              <input className="field w-full" value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="2026-11 / 2026" />
+            </FieldLabel>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <button type="button" className={BTN_PRIMARY} onClick={() => void get(`/reports/statement?member_id=${memberId}&period=${period}`, `statement-${period}.pdf`)}>
+                <Icon d={ICONS.download} size={18} />
+                {t('reportsPage.statementButton')}
+              </button>
+              <button type="button" className={BTN_SECONDARY} onClick={() => void get(`/reports/zakat-statement?member_id=${memberId}`, 'zakat-statement.pdf')}>{t('reportsPage.zakatButton')}</button>
+            </div>
           </div>
-        </div>
-      </section>
+        </Card>
 
-      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
-        <h2 className="mb-3 font-semibold">{t('reportsPage.exports')}</h2>
-        <div className="grid gap-3 sm:grid-cols-4">
-          <label className="text-sm text-muted">{t('reportsPage.entity')}
-            <select className={input} value={entity} onChange={(e) => setEntity(e.target.value as typeof entity)}>
-              {EXPORT_ENTITIES.map((x) => <option key={x} value={x}>{t(`reportsPage.entities.${x}`)}</option>)}
-            </select>
-          </label>
-          <label className="text-sm text-muted">{t('common.from')}<input type="date" className={input} value={from} onChange={(e) => setFrom(e.target.value)} /></label>
-          <label className="text-sm text-muted">{t('common.to')}<input type="date" className={input} value={to} onChange={(e) => setTo(e.target.value)} /></label>
-          <div className="flex items-end">
-            <button type="button" className={button} onClick={() => void get(`/reports/export.csv?entity=${entity}${from ? `&from=${from}` : ''}${to ? `&to=${to}` : ''}`, `${entity}.csv`)}>{t('reportsPage.csvButton')}</button>
+        <Card className="p-5">
+          <CardHead icon={ICONS.grid} tone="bg-blue-bg text-blue" title={t('reportsPage.exports')} />
+          <div className="space-y-3">
+            <FieldLabel label={t('reportsPage.entity')}>
+              <select className="field w-full" value={entity} onChange={(e) => setEntity(e.target.value as typeof entity)}>
+                {EXPORT_ENTITIES.map((x) => <option key={x} value={x}>{t(`reportsPage.entities.${x}`)}</option>)}
+              </select>
+            </FieldLabel>
+            <div className="grid grid-cols-2 gap-3">
+              <FieldLabel label={t('common.from')}><input type="date" className="field w-full" value={from} onChange={(e) => setFrom(e.target.value)} /></FieldLabel>
+              <FieldLabel label={t('common.to')}><input type="date" className="field w-full" value={to} onChange={(e) => setTo(e.target.value)} /></FieldLabel>
+            </div>
+            <button type="button" className={`${BTN_PRIMARY} w-full`} onClick={() => void get(`/reports/export.csv?entity=${entity}${from ? `&from=${from}` : ''}${to ? `&to=${to}` : ''}`, `${entity}.csv`)}>
+              <Icon d={ICONS.download} size={18} />
+              {t('reportsPage.csvButton')}
+            </button>
           </div>
-        </div>
-      </section>
+        </Card>
 
-      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
-        <h2 className="mb-1 font-semibold">{t('reportsPage.annual')}</h2>
-        <p className="mb-3 text-sm text-muted">{t('reportsPage.annualHint')}</p>
-        <div className="flex items-end gap-3">
-          <label className="text-sm text-muted">{t('reconcile.year')}
-            <input type="number" className="mt-1 block h-11 w-28 rounded-md border border-input bg-background px-2" value={year} onChange={(e) => setYear(e.target.value)} />
-          </label>
-          <button type="button" className={button} onClick={() => void get(`/reports/annual?year=${year}`, `barakah-${year}.zip`)}>{t('reportsPage.zipButton')}</button>
-        </div>
-      </section>
-    </div>
+        <Card className="p-5">
+          <CardHead icon={ICONS.lock} tone="bg-warn-bg text-warn" title={t('reportsPage.annual')} sub={t('reportsPage.annualHint')} />
+          <div className="space-y-3">
+            <FieldLabel label={t('reconcile.year')}>
+              <input type="number" className="field w-full" value={year} onChange={(e) => setYear(e.target.value)} />
+            </FieldLabel>
+            <button type="button" className={`${BTN_PRIMARY} w-full`} onClick={() => void get(`/reports/annual?year=${year}`, `barakah-${year}.zip`)}>
+              <Icon d={ICONS.download} size={18} />
+              {t('reportsPage.zipButton')}
+            </button>
+          </div>
+        </Card>
+      </div>
+    </AdminPage>
   );
 }

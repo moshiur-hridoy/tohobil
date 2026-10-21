@@ -6,6 +6,7 @@ import { fmtInstant } from '../../../lib/dates';
 import { taka } from '../../../lib/money';
 import type { ParsedSms } from '../../../lib/types';
 import { LoadError } from '../../../components/StateViews';
+import { BTN_PRIMARY, BTN_SM, Card, CardHead, ICONS } from '../../../components/admin';
 
 export interface SmsResult {
   text: string;
@@ -40,59 +41,66 @@ export function SmsPanel({ onResults, onCreate }: { onResults: (r: SmsResult[]) 
   };
 
   return (
-    <section className="rounded-[18px] border border-border bg-card shadow-card p-4" aria-labelledby="sms-title">
-      <h2 id="sms-title" className="font-semibold">{t('paymentsPage.pasteSms')}</h2>
-      <p className="mb-2 text-sm text-muted">{t('paymentsPage.pasteHint')}</p>
-      <textarea
-        aria-label={t('paymentsPage.pasteSms')}
-        className="min-h-24 w-full rounded-md border border-input bg-background p-2 font-mono text-sm"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        maxLength={5000}
-      />
-      <button type="button" disabled={busy || !text.trim()} onClick={() => void parse()} className="mt-2 h-11 rounded-xl bg-primary px-4 font-medium text-primary-foreground disabled:opacity-50">
-        {busy ? t('common.working') : t('paymentsPage.parse')}
-      </button>
-      {error != null && <div className="mt-2"><LoadError error={error} /></div>}
-      {error == null && results.length > 0 && (
-        <ul className="mt-3 space-y-3">
-          {results.map((r, i) => (
-            <li key={i} className="rounded-xl border border-border p-3 text-sm">
-              {!r.result.parsed ? (
-                <p className="text-warn">{t('paymentsPage.notParsed')}</p>
-              ) : (
-                <>
-                  <p className="font-medium">
-                    {r.result.amount_paisa && taka(r.result.amount_paisa)} · {r.result.method && PAYMENT_METHOD_LABELS[r.result.method].bn}
-                    {r.result.trx_id && <> · {t('paymentsPage.trxId')} <span className="select-all">{r.result.trx_id}</span></>}
-                  </p>
-                  <p className="text-muted">
-                    {r.result.paid_at && <>{t('paymentsPage.paidAt')}: {fmtInstant(r.result.paid_at)} </>}
-                    {r.result.counterparty_phone && <>· {t('paymentsPage.counterparty')}: {r.result.counterparty_phone} </>}
-                    {r.result.balance_paisa && <>· {t('paymentsPage.balance')}: {taka(r.result.balance_paisa)}</>}
-                  </p>
-                  {r.result.matches.length === 0 ? (
-                    <p className="mt-1 text-muted">{t('paymentsPage.noMatch')}</p>
+    <Card className="p-5" aria-labelledby="sms-title">
+      <CardHead id="sms-title" icon={ICONS.message} tone="bg-blue-bg text-blue" title={t('paymentsPage.pasteSms')} sub={t('paymentsPage.pasteHint')} />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div>
+          <textarea
+            aria-label={t('paymentsPage.pasteSms')}
+            className="field min-h-28 w-full font-mono text-sm"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            maxLength={5000}
+          />
+          <button type="button" disabled={busy || !text.trim()} onClick={() => void parse()} className={`${BTN_PRIMARY} mt-2`}>
+            {busy ? t('common.working') : t('paymentsPage.parse')}
+          </button>
+        </div>
+        <div className="min-w-0">
+          {error != null && <LoadError error={error} />}
+          {error == null && results.length === 0 && (
+            <p className="grid h-full min-h-28 place-items-center rounded-xl border border-dashed border-border px-4 text-center text-sm text-muted">{t('paymentsPage.parsed')}</p>
+          )}
+          {error == null && results.length > 0 && (
+            <ul className="space-y-3">
+              {results.map((r, i) => (
+                <li key={i} className={`rounded-xl border p-3 text-sm ${!r.result.parsed ? 'border-warn bg-warn-bg' : r.result.matches.some((m) => m.exact) ? 'border-ok bg-ok-bg' : 'border-border'}`}>
+                  {!r.result.parsed ? (
+                    <p className="font-medium text-warn">{t('paymentsPage.notParsed')}</p>
                   ) : (
-                    <p className="mt-1">
-                      {t('paymentsPage.matches')}:{' '}
-                      {r.result.matches.map((m) => (
-                        <span key={m.payment_id} className={`mr-2 ${m.exact ? 'font-medium text-ok' : 'text-warn'}`}>
-                          {m.member_code} {m.exact ? t('paymentsPage.exactMatch') : t('paymentsPage.possibleMatch')}
-                        </span>
-                      ))}
-                    </p>
+                    <>
+                      <p className="font-semibold">
+                        {r.result.amount_paisa && taka(r.result.amount_paisa)} · {r.result.method && PAYMENT_METHOD_LABELS[r.result.method].bn}
+                        {r.result.trx_id && <> · {t('paymentsPage.trxId')} <span className="select-all font-mono">{r.result.trx_id}</span></>}
+                      </p>
+                      <p className="text-ink2">
+                        {r.result.paid_at && <>{t('paymentsPage.paidAt')}: {fmtInstant(r.result.paid_at)} </>}
+                        {r.result.counterparty_phone && <>· {t('paymentsPage.counterparty')}: {r.result.counterparty_phone} </>}
+                        {r.result.balance_paisa && <>· {t('paymentsPage.balance')}: {taka(r.result.balance_paisa)}</>}
+                      </p>
+                      {r.result.matches.length === 0 ? (
+                        <p className="mt-1 text-muted">{t('paymentsPage.noMatch')}</p>
+                      ) : (
+                        <p className="mt-1">
+                          {t('paymentsPage.matches')}:{' '}
+                          {r.result.matches.map((m) => (
+                            <span key={m.payment_id} className={`mr-2 ${m.exact ? 'font-semibold text-ok' : 'text-warn'}`}>
+                              {m.member_code} {m.exact ? t('paymentsPage.exactMatch') : t('paymentsPage.possibleMatch')}
+                            </span>
+                          ))}
+                        </p>
+                      )}
+                      <button type="button" onClick={() => onCreate(r)} className={`${BTN_SM} mt-2`}>
+                        {t('paymentsPage.createFromSms')}
+                      </button>
+                    </>
                   )}
-                  <button type="button" onClick={() => onCreate(r)} className="mt-2 h-10 rounded-xl border border-border px-3">
-                    {t('paymentsPage.createFromSms')}
-                  </button>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </Card>
   );
 }
-

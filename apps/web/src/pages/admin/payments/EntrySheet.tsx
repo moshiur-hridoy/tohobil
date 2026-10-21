@@ -63,7 +63,7 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
     onDone();
   };
 
-  const field = 'h-11 w-full rounded-md border border-input bg-background px-2';
+  const field = 'field w-full';
   return (
     <ConfirmSheet open={open} onClose={onClose} title={t('paymentsPage.entryTitle')} confirmLabel={t('paymentsPage.entryRecord')} canConfirm={valid} onConfirm={submit}>
       <label className="block text-sm text-muted">

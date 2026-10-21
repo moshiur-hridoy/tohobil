@@ -4,7 +4,7 @@ import { ListSkeleton } from '../../components/Skeleton';
 import { Empty, LoadError } from '../../components/StateViews';
 import { api } from '../../lib/api';
 import { formatCount } from '../../lib/format';
-import { taka } from '../../lib/money';
+import { arrearsOf, taka } from '../../lib/money';
 import type { MemberRow } from '../../lib/types';
 
 interface RegisterRow {
@@ -46,7 +46,7 @@ export function MembersPage() {
                 <div className="mt-1 flex flex-wrap gap-x-4 text-sm">
                   <span>{t('membersPage.shares')}: {formatCount(m.shares)}</span>
                   <span>{t('membersPage.capital')}: {taka(m.capital_paisa)}</span>
-                  <span>{t('membersPage.outstanding')}: {taka(BigInt(m.outstanding_principal_paisa) + BigInt(m.outstanding_fines_paisa))}</span>
+                  <span>{t('membersPage.outstanding')}: {taka(arrearsOf(m))}</span>
                 </div>
                 {mine.length > 0 && (
                   <details className="mt-2 text-sm">

@@ -147,7 +147,7 @@ export function NoticesPage() {
           >
             {t('notices.unreadTab', { defaultValue: 'অপঠিত' })}
             {unreadCount > 0 && (
-              <span className="grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-bad px-1.5 text-[0.6875rem] font-bold text-white">
+              <span className="grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-bad px-1.5 text-[0.6875rem] font-bold text-on-bad">
                 {unreadCount}
               </span>
             )}

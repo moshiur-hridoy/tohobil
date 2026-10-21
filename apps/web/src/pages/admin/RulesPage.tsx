@@ -2,10 +2,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import * as Dialog from '@radix-ui/react-dialog';
 import { ConfirmSheet } from '../../components/ConfirmSheet';
 import { ListSkeleton } from '../../components/Skeleton';
-import { Empty, LoadError } from '../../components/StateViews';
+import { LoadError } from '../../components/StateViews';
+import { AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, Card, EmptyCard, ICONS } from '../../components/admin';
+import { Chip, Icon } from '../../components/ui';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtDate, todayDhaka } from '../../lib/dates';
@@ -29,59 +30,85 @@ export function RulesPage() {
     return acc;
   }, {});
 
+  const today = todayDhaka();
+
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-3xl font-bold tracking-tight">{t('rulesPage.title')}</h1>
-        {isCashier && (
-          <button type="button" className="h-11 rounded-xl bg-primary px-3 text-primary-foreground" onClick={() => setCreateOpen(true)}>
+    <AdminPage>
+      <AdminHeader
+        title={t('rulesPage.title')}
+        subtitle={t('adminUi.sub.rules')}
+        actions={isCashier && (
+          <button type="button" className={BTN_PRIMARY} onClick={() => setCreateOpen(true)}>
+            <Icon d={ICONS.plus} size={18} sw={2} />
             {t('rulesPage.createRuleChange')}
           </button>
         )}
-      </div>
+      />
 
       {rules.error ? (
         <LoadError error={rules.error} onRetry={() => void rules.refetch()} />
       ) : !rules.data ? (
         <ListSkeleton rows={4} />
       ) : rules.data.items.length === 0 ? (
-        <Empty text={t('rulesPage.empty')} />
+        <Card className="p-5"><EmptyCard text={t('rulesPage.empty')} icon={ICONS.sliders} /></Card>
       ) : (
-        <div className="space-y-4">
-          {Object.entries(grouped ?? {}).map(([key, versions]) => (
-            <section key={key} className="rounded-[18px] border border-border bg-card shadow-card p-3">
-              <h2 className="mb-2 font-semibold">{key}</h2>
-              <ul className="divide-y divide-border text-sm">
-                {versions.slice(0, 3).map((r) => (
-                  <li key={`${key}-${r.valid_from}`} className="flex justify-between py-2">
-                    <div>
-                      <span className="font-mono">{renderValue(r.value)}</span>
-                      {r.clause_ref && (
-                        <span className="ml-2 text-muted">
-                          {t('rulesPage.clause')}:{' '}
-                          <Link to={`/menu/constitution?clause=${encodeURIComponent(r.clause_ref)}`} className="text-primary underline">
-                            {r.clause_ref}
+        <div className="grid items-start gap-3.5 md:grid-cols-2 2xl:grid-cols-3">
+          {Object.entries(grouped ?? {}).map(([key, versions]) => {
+            const sorted = [...versions].sort((x, y) => y.valid_from.localeCompare(x.valid_from));
+            // in force today: the newest version that has started; a later one is a scheduled change
+            const current = sorted.find((r) => r.valid_from <= today) ?? sorted[sorted.length - 1]!;
+            const upcoming = sorted.filter((r) => r.valid_from > today);
+            const earlier = sorted.filter((r) => r.valid_from < current.valid_from);
+            return (
+              <Card key={key} className="flex flex-col p-[18px]">
+                <div className="flex items-start gap-3">
+                  <Chip tone="bg-primary-soft text-primary" d={ICONS.sliders} size={32} iconSize={18} />
+                  <div className="min-w-0 flex-1">
+                    <h2 className="break-all font-mono text-[0.8125rem] font-semibold text-ink2">{key}</h2>
+                    <p className="mt-1 break-words font-mono text-xl font-bold">{renderValue(current.value)}</p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {t('adminUi.rules.since', { date: fmtDate(current.valid_from) })}
+                      {current.clause_ref && (
+                        <>
+                          {' · '}{t('rulesPage.clause')}{' '}
+                          <Link to={`/menu/constitution?clause=${encodeURIComponent(current.clause_ref)}`} className="font-semibold text-primary hover:underline">
+                            {current.clause_ref}
                           </Link>
-                        </span>
+                        </>
                       )}
-                    </div>
-                    <div className="text-muted">{fmtDate(r.valid_from)}</div>
-                  </li>
+                    </p>
+                  </div>
+                </div>
+                {upcoming.map((r) => (
+                  <p key={r.valid_from} className="mt-3 rounded-xl bg-warn-bg px-3 py-2 text-xs text-warn">
+                    <span className="font-mono font-semibold">{renderValue(r.value)}</span> · {fmtDate(r.valid_from)}
+                  </p>
                 ))}
-              </ul>
-              {versions.length > 3 && (
-                <button type="button" className="mt-1 text-sm text-primary underline" onClick={() => setSelected(versions[0]!)}>
-                  {t('rulesPage.history')}
+                {earlier.length > 0 && (
+                  <div className="mt-3 border-t border-border pt-2">
+                    <p className="text-xs font-semibold text-muted">{t('adminUi.rules.earlier')}</p>
+                    <ul className="mt-1 text-xs">
+                      {earlier.slice(0, 2).map((r) => (
+                        <li key={r.valid_from} className="flex justify-between gap-2 py-0.5">
+                          <span className="truncate font-mono text-ink2">{renderValue(r.value)}</span>
+                          <span className="shrink-0 text-muted">{fmtDate(r.valid_from)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <button type="button" className="mt-3 self-start text-[0.8125rem] font-semibold text-primary hover:underline" onClick={() => setSelected(current)}>
+                  {t('rulesPage.history')} ›
                 </button>
-              )}
-            </section>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       )}
 
       <CreateRuleChange open={createOpen} onClose={() => setCreateOpen(false)} />
       <RuleHistoryDialog ruleKey={selected?.key ?? null} onClose={() => setSelected(null)} />
-    </div>
+    </AdminPage>
   );
 }
 
@@ -101,25 +128,18 @@ function RuleHistoryDialog({ ruleKey, onClose }: { ruleKey: string | null; onClo
   });
 
   return (
-    <Dialog.Root open={!!ruleKey} onOpenChange={(o) => !o && onClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
-        <Dialog.Content aria-describedby={undefined} className="fixed left-1/2 top-1/2 z-50 w-[min(32rem,92vw)] max-h-[90vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border border-border bg-card p-4 shadow-lg">
-          <Dialog.Title className="mb-3 text-lg font-semibold">{t('rulesPage.history')}: {ruleKey}</Dialog.Title>
-          {q.error ? <LoadError error={q.error} /> : !q.data ? <ListSkeleton rows={4} /> : (
-            <ul className="divide-y divide-border text-sm">
-              {q.data.items.map((r) => (
-                <li key={r.valid_from} className="flex justify-between py-2">
-                  <span className="font-mono">{renderValue(r.value)}</span>
-                  <span className="text-muted">{fmtDate(r.valid_from)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-          <Dialog.Close className="mt-4 h-11 w-full rounded-xl border border-border">{t('common.close')}</Dialog.Close>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <AdminDialog open={!!ruleKey} onClose={onClose} title={<>{t('rulesPage.history')}: <span className="font-mono">{ruleKey}</span></>}>
+      {q.error ? <LoadError error={q.error} /> : !q.data ? <ListSkeleton rows={4} /> : (
+        <ul className="text-sm">
+          {q.data.items.map((r) => (
+            <li key={r.valid_from} className="flex justify-between gap-3 border-t border-border py-2.5 first:border-t-0">
+              <span className="break-all font-mono">{renderValue(r.value)}</span>
+              <span className="shrink-0 text-muted">{fmtDate(r.valid_from)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </AdminDialog>
   );
 }
 
@@ -167,19 +187,19 @@ function CreateRuleChange({ open, onClose }: { open: boolean; onClose: () => voi
     >
       <label className="block text-sm text-muted">
         {t('rulesPage.key')}
-        <input className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={key} onChange={(e) => setKey(e.target.value)} />
+        <input className="field mt-1 w-full" value={key} onChange={(e) => setKey(e.target.value)} />
       </label>
       <label className="mt-2 block text-sm text-muted">
         {t('rulesPage.value')}
-        <textarea className="mt-1 min-h-20 w-full rounded-md border border-input bg-background p-2" value={value} onChange={(e) => setValue(e.target.value)} />
+        <textarea className="field mt-1 min-h-20 w-full" value={value} onChange={(e) => setValue(e.target.value)} />
       </label>
       <label className="mt-2 block text-sm text-muted">
         {t('rulesPage.validFrom')}
-        <input type="date" className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={validFrom} onChange={(e) => setValidFrom(e.target.value)} />
+        <input type="date" className="field mt-1 w-full" value={validFrom} onChange={(e) => setValidFrom(e.target.value)} />
       </label>
       <label className="mt-2 block text-sm text-muted">
         {t('proposal.clauseRef')}
-        <input className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={clause} onChange={(e) => setClause(e.target.value)} />
+        <input className="field mt-1 w-full" value={clause} onChange={(e) => setClause(e.target.value)} />
       </label>
       {error != null && <p className="text-bad">{error instanceof ApiError ? error.message : String(error)}</p>}
     </ConfirmSheet>

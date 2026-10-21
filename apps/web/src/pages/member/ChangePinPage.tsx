@@ -35,7 +35,7 @@ export function ChangePinPage() {
         maxLength={6}
         value={value}
         onChange={(e) => set(e.target.value.replace(/\D/g, ''))}
-        className="mt-1 h-12 w-full rounded-md border border-input bg-background px-3 text-lg tracking-widest"
+        className="field field-lg mt-1 w-full text-lg tracking-widest"
       />
     </label>
   );

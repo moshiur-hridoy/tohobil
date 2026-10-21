@@ -13,7 +13,10 @@ export interface MemberRow {
   phone: string | null;
   shares: number;
   capital_paisa: string;
+  /** Every unpaid due, including ones generated ahead that are not due yet. */
   outstanding_principal_paisa: string;
+  /** Unpaid dues past their due date: arrears (বকেয়া). */
+  overdue_paisa: string;
   outstanding_fines_paisa: string;
   overdue_count: number;
   current_period: string;
@@ -119,6 +122,10 @@ export interface MatrixCell {
   fine_paisa: string;
   fine_paid_paisa: string;
   pending: boolean;
+  /** Asia/Dhaka date of the latest payment to this month's dues. */
+  paid_on: string | null;
+  /** Paid in full before the month began, without a fine. */
+  advance: boolean;
 }
 
 export interface MatrixResponse {
@@ -205,6 +212,57 @@ export interface AssetRow {
   legal_owner_name: string | null;
   latest_value_paisa: string | null;
   latest_value_as_of: string | null;
+  /** The shop this purchase belongs to, when it was bought through one. */
+  partner_id?: string | null;
+}
+
+/** A shop the fund invests with, and what the contract says. */
+export interface PartnerRow {
+  id: string;
+  kind: AssetRow['kind'];
+  name: string;
+  contract_date: string | null;
+  rate_percent: number | null;
+  period_months: number | null;
+  sharing_policy: string | null;
+  contract_note: string | null;
+}
+
+export interface HoldingEntry {
+  seq: string;
+  asset_id: string;
+  entry_date: string;
+  amount_paisa: string;
+  account: string;
+  memo: string | null;
+  ref_type: string | null;
+  reversed: boolean;
+}
+
+export interface HoldingDocument {
+  id: string;
+  entity_type: 'asset' | 'partner';
+  entity_id: string;
+  file_id: string;
+  doc_type: string | null;
+  title: string | null;
+  mime: string;
+}
+
+export interface HoldingValuation {
+  id: string;
+  asset_id: string;
+  value_paisa: string;
+  as_of: string;
+  basis: string | null;
+}
+
+export interface HoldingResponse {
+  partner: PartnerRow;
+  assets: AssetRow[];
+  entries: HoldingEntry[];
+  documents: HoldingDocument[];
+  valuations: HoldingValuation[];
 }
 
 export interface NavResponse {

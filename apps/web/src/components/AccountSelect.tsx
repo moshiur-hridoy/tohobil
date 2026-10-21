@@ -10,7 +10,7 @@ export function AccountSelect({ value, onChange }: { value: CashAccount; onChang
     <label className="block text-sm text-muted">
       {t('payment.method')}
       <select
-        className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2"
+        className="field mt-1 w-full"
         value={value}
         onChange={(e) => onChange(e.target.value as CashAccount)}
       >

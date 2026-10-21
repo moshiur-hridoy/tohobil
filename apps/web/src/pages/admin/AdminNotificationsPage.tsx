@@ -2,7 +2,9 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListSkeleton } from '../../components/Skeleton';
-import { Empty, LoadError } from '../../components/StateViews';
+import { LoadError } from '../../components/StateViews';
+import { AdminHeader, AdminPage, BTN_SECONDARY, BTN_SM, Card, CardHead, EmptyCard, ICONS, MemberBadge, SplitLayout } from '../../components/admin';
+import { formatCount } from '../../lib/format';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtInstant } from '../../lib/dates';
@@ -69,99 +71,116 @@ export function AdminNotificationsPage() {
 
   const rows = log.data?.pages.flatMap((p) => p.items) ?? [];
 
-  return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">{t('adminNotifications.title')}</h1>
+  const STATUS_TONE: Record<AdminNotification['status'], string> = {
+    queued: 'bg-soft text-ink2',
+    sent: 'bg-ok-bg text-ok',
+    failed: 'bg-bad-bg text-bad',
+    skipped: 'bg-warn-bg text-warn',
+  };
 
-      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
-        <h2 className="mb-1 font-semibold">{t('adminNotifications.unreachable')}</h2>
-        <p className="mb-3 text-sm text-muted">{t('adminNotifications.unreachableHint')}</p>
-        {unreachable.error ? (
-          <LoadError error={unreachable.error} onRetry={() => void unreachable.refetch()} />
-        ) : !unreachable.data ? (
-          <ListSkeleton rows={3} />
-        ) : unreachable.data.length === 0 ? (
-          <Empty text={t('adminNotifications.allReachable')} />
-        ) : (
-          <ul className="divide-y divide-border text-sm">
-            {unreachable.data.map((u) => (
-              <li key={u.member_id} className="flex flex-wrap items-center justify-between gap-3 py-2">
-                <span>
-                  <span className="font-medium">{u.code} · {u.full_name}</span>
-                  <span className="ml-2 text-muted">{t(`adminNotifications.reason.${u.reason}`)}</span>
-                </span>
-                {isCashier && (
-                  <button
-                    type="button"
-                    disabled={nudge.isPending}
-                    onClick={() => nudge.mutate(u.member_id)}
-                    className="h-9 rounded-xl border border-border px-3 text-xs hover:bg-hover disabled:opacity-50"
-                  >
-                    {nudged === u.member_id && nudge.isSuccess ? t('adminNotifications.nudged') : t('adminNotifications.nudge')}
+  return (
+    <AdminPage>
+      <AdminHeader title={t('adminNotifications.title')} subtitle={t('adminUi.sub.notifications')} />
+
+      <SplitLayout
+        main={
+          <Card className="px-5 pb-3 pt-5 sm:px-6">
+            <CardHead
+              icon={ICONS.bell}
+              title={t('adminNotifications.log')}
+              action={
+                <select aria-label={t('adminNotifications.template')} className="field" value={template} onChange={(e) => setTemplate(e.target.value)}>
+                  <option value="">{t('adminNotifications.template')}: {t('adminNotifications.allTemplates')}</option>
+                  {TEMPLATES.map((x) => (
+                    <option key={x} value={x}>{x}</option>
+                  ))}
+                </select>
+              }
+            />
+            {log.error ? (
+              <LoadError error={log.error} onRetry={() => void log.refetch()} />
+            ) : !log.data ? (
+              <ListSkeleton rows={5} />
+            ) : rows.length === 0 ? (
+              <EmptyCard text={t('common.noData')} icon={ICONS.bell} />
+            ) : (
+              <>
+                <div className="-mx-2 overflow-x-auto">
+                  <table className="w-full min-w-max border-separate border-spacing-0 text-sm">
+                    <thead>
+                      <tr className="text-left text-xs font-semibold text-muted">
+                        <th className="border-b border-border px-2 py-2.5">{t('adminNotifications.when')}</th>
+                        <th className="border-b border-border px-2 py-2.5">{t('adminNotifications.member')}</th>
+                        <th className="border-b border-border px-2 py-2.5">{t('adminNotifications.template')}</th>
+                        <th className="border-b border-border px-2 py-2.5">{t('adminNotifications.channel')}</th>
+                        <th className="border-b border-border px-2 py-2.5">{t('common.status')}</th>
+                        <th className="border-b border-border px-2 py-2.5">{t('adminNotifications.opened')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((n) => (
+                        <tr key={n.id} className="transition-colors hover:bg-hover">
+                          <td className="whitespace-nowrap border-b border-border px-2 py-2.5 text-ink2">{fmtInstant(n.scheduled_for)}</td>
+                          <td className="border-b border-border px-2 py-2.5 font-semibold">{code(n.member_id)}</td>
+                          <td className="border-b border-border px-2 py-2.5 font-mono text-xs">{n.template}</td>
+                          <td className="border-b border-border px-2 py-2.5 uppercase text-ink2">{n.channel}</td>
+                          <td className="border-b border-border px-2 py-2.5" title={n.error ?? undefined}>
+                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[n.status]}`}>{t(`adminNotifications.status.${n.status}`)}</span>
+                          </td>
+                          <td className="whitespace-nowrap border-b border-border px-2 py-2.5 text-ink2">{n.opened_at ? fmtInstant(n.opened_at) : '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {log.hasNextPage && (
+                  <button type="button" disabled={log.isFetchingNextPage} onClick={() => void log.fetchNextPage()} className={`${BTN_SECONDARY} mb-2 mt-3 w-full`}>
+                    {t('common.loadMore')}
                   </button>
                 )}
-              </li>
-            ))}
-          </ul>
-        )}
-        {nudge.error && <div className="mt-3"><LoadError error={nudge.error} /></div>}
-      </section>
-
-      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-semibold">{t('adminNotifications.log')}</h2>
-          <label className="text-sm text-muted">
-            {t('adminNotifications.template')}
-            <select className="ml-2 h-11 rounded-md border border-input bg-background px-2" value={template} onChange={(e) => setTemplate(e.target.value)}>
-              <option value="">{t('adminNotifications.allTemplates')}</option>
-              {TEMPLATES.map((x) => (
-                <option key={x} value={x}>{x}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-        {log.error ? (
-          <LoadError error={log.error} onRetry={() => void log.refetch()} />
-        ) : !log.data ? (
-          <ListSkeleton rows={5} />
-        ) : rows.length === 0 ? (
-          <Empty text={t('common.noData')} />
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-max border-collapse text-sm">
-                <thead className="text-muted">
-                  <tr>
-                    <th className="p-2 text-left">{t('adminNotifications.when')}</th>
-                    <th className="p-2 text-left">{t('adminNotifications.member')}</th>
-                    <th className="p-2 text-left">{t('adminNotifications.template')}</th>
-                    <th className="p-2 text-left">{t('adminNotifications.channel')}</th>
-                    <th className="p-2 text-left">{t('common.status')}</th>
-                    <th className="p-2 text-left">{t('adminNotifications.opened')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {rows.map((n) => (
-                    <tr key={n.id}>
-                      <td className="p-2 whitespace-nowrap">{fmtInstant(n.scheduled_for)}</td>
-                      <td className="p-2">{code(n.member_id)}</td>
-                      <td className="p-2">{n.template}</td>
-                      <td className="p-2">{n.channel}</td>
-                      <td className="p-2" title={n.error ?? undefined}>{t(`adminNotifications.status.${n.status}`)}</td>
-                      <td className="p-2">{n.opened_at ? fmtInstant(n.opened_at) : '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {log.hasNextPage && (
-              <button type="button" disabled={log.isFetchingNextPage} onClick={() => void log.fetchNextPage()} className="mt-3 h-11 w-full rounded-xl border border-border">
-                {t('common.loadMore')}
-              </button>
+              </>
             )}
-          </>
-        )}
-      </section>
-    </div>
+          </Card>
+        }
+        side={
+          <Card className="px-5 pb-3 pt-5">
+            <CardHead
+              icon={ICONS.alert}
+              tone="bg-warn-bg text-warn"
+              title={t('adminNotifications.unreachable')}
+              sub={t('adminNotifications.unreachableHint')}
+              action={unreachable.data && unreachable.data.length > 0 ? (
+                <span className="rounded-full bg-warn-bg px-2.5 py-0.5 text-xs font-bold text-warn tabular-nums">{formatCount(unreachable.data.length)}</span>
+              ) : undefined}
+            />
+            {unreachable.error ? (
+              <LoadError error={unreachable.error} onRetry={() => void unreachable.refetch()} />
+            ) : !unreachable.data ? (
+              <ListSkeleton rows={3} />
+            ) : unreachable.data.length === 0 ? (
+              <EmptyCard text={t('adminNotifications.allReachable')} />
+            ) : (
+              <ul>
+                {unreachable.data.map((u) => (
+                  <li key={u.member_id} className="flex items-center gap-3 border-t border-border py-2.5 first:border-t-0">
+                    <MemberBadge code={u.code} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold">{u.full_name}</p>
+                      <p className="truncate text-xs text-muted">{t(`adminNotifications.reason.${u.reason}`)}</p>
+                    </div>
+                    {isCashier && (
+                      <button type="button" disabled={nudge.isPending} onClick={() => nudge.mutate(u.member_id)} className={BTN_SM}>
+                        {nudged === u.member_id && nudge.isSuccess ? `✓ ${t('adminNotifications.nudged')}` : t('adminNotifications.nudge')}
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {nudge.error && <div className="mt-3"><LoadError error={nudge.error} /></div>}
+          </Card>
+        }
+      />
+    </AdminPage>
   );
 }

@@ -4,10 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { AccountSelect, type CashAccount } from '../../components/AccountSelect';
 import { ConfirmSheet } from '../../components/ConfirmSheet';
 import { ListSkeleton } from '../../components/Skeleton';
-import { Empty, LoadError } from '../../components/StateViews';
+import { LoadError } from '../../components/StateViews';
+import { StatusPill } from '../../components/StatusPill';
+import { AdminHeader, AdminPage, BTN_SM, BTN_SM_PRIMARY, Card, CardHead, EmptyCard, ICONS, StatGrid, StatTile } from '../../components/admin';
+import { formatCount } from '../../lib/format';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
-import { fmtDate } from '../../lib/dates';
+import { fmtDate, fmtPeriod } from '../../lib/dates';
 import { parseAmountInput, taka } from '../../lib/money';
 
 interface Levy {
@@ -47,82 +50,115 @@ export function ObligationsPage() {
     void qc.invalidateQueries({ queryKey: ['nav'] });
   };
 
+  const levyOutstanding = levy.data?.levies.reduce((n, l) => n + BigInt(l.outstanding_paisa), 0n) ?? 0n;
+  const unpaid = financing.data?.items.flatMap((f) => f.instalments.filter((i) => !i.paid_at).map((i) => ({ ...i, asset: f.asset_name }))) ?? [];
+  const next = [...unpaid].sort((x, y) => x.due_on.localeCompare(y.due_on))[0];
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">{t('obligations.title')}</h1>
+    <AdminPage>
+      <AdminHeader title={t('obligations.title')} subtitle={t('adminUi.sub.obligations')} />
 
-      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="font-semibold">{t('obligations.levy')}</h2>
-            <p className="text-sm text-muted">{t('obligations.levyHint')}</p>
-          </div>
-          {levy.data && (
-            <div className="text-right">
-              <div className="text-sm text-muted">{t('obligations.held')}</div>
-              <div className="text-lg font-semibold">{taka(levy.data.held_paisa)}</div>
-              {isCashier && BigInt(levy.data.held_paisa) > 0n && (
-                <button type="button" onClick={() => setRemit(true)} className="mt-1 h-9 rounded-xl border border-border px-3 text-xs hover:bg-hover">{t('obligations.remit')}</button>
-              )}
-            </div>
+      <StatGrid>
+        <StatTile tone="bg-blue-bg text-blue" icon={ICONS.shield} label={t('adminUi.obligations.statLevyHeld')} value={levy.data ? taka(levy.data.held_paisa) : null} />
+        <StatTile tone="bg-warn-bg text-warn" icon={ICONS.clock} label={t('adminUi.obligations.statLevyOutstanding')} value={levy.data ? taka(levyOutstanding) : null} />
+        <StatTile tone="bg-primary-soft text-primary" icon={ICONS.layers} label={t('adminUi.obligations.statInstalments')} value={financing.data ? formatCount(unpaid.length) : null}
+          sub={financing.data && unpaid.length > 0 ? taka(unpaid.reduce((n, i) => n + BigInt(i.amount_paisa), 0n)) : undefined} />
+        <StatTile tone="bg-bad-bg text-bad" icon={ICONS.alert} label={t('adminUi.obligations.statNext')}
+          value={financing.data ? (next ? fmtDate(next.due_on) : '—') : null}
+          sub={next ? `${next.asset} · ${taka(next.amount_paisa)}` : undefined} />
+      </StatGrid>
+
+      <div className="grid items-start gap-5 xl:grid-cols-2">
+        <Card className="px-5 pb-3 pt-5 sm:px-6">
+          <CardHead
+            icon={ICONS.shield}
+            tone="bg-blue-bg text-blue"
+            title={t('obligations.levy')}
+            sub={t('obligations.levyHint')}
+            action={isCashier && levy.data && BigInt(levy.data.held_paisa) > 0n ? (
+              <button type="button" onClick={() => setRemit(true)} className={BTN_SM_PRIMARY}>{t('obligations.remit')}</button>
+            ) : undefined}
+          />
+          {levy.error ? (
+            <LoadError error={levy.error} onRetry={() => void levy.refetch()} />
+          ) : !levy.data ? (
+            <ListSkeleton rows={2} />
+          ) : levy.data.levies.length === 0 ? (
+            <EmptyCard text={t('obligations.noLevy')} />
+          ) : (
+            <ul>
+              {levy.data.levies.map((l) => (
+                <li key={l.period} className="flex flex-wrap items-center justify-between gap-2 border-b border-border py-2.5 text-sm last:border-b-0">
+                  <span>
+                    <span className="font-semibold">{fmtPeriod(l.period)}</span>
+                    <span className="ml-2 text-muted">{t('obligations.members', { count: l.members })}</span>
+                  </span>
+                  <span className="tabular-nums">
+                    <span className={BigInt(l.outstanding_paisa) > 0n ? 'font-semibold text-warn' : 'text-muted'}>{taka(l.outstanding_paisa)}</span>
+                    <span className="text-muted"> / {taka(l.total_paisa)} {t('obligations.outstanding')}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
           )}
-        </div>
-        {levy.error ? (
-          <LoadError error={levy.error} onRetry={() => void levy.refetch()} />
-        ) : !levy.data ? (
-          <ListSkeleton rows={2} />
-        ) : levy.data.levies.length === 0 ? (
-          <Empty text={t('obligations.noLevy')} />
-        ) : (
-          <ul className="divide-y divide-border text-sm">
-            {levy.data.levies.map((l) => (
-              <li key={l.period} className="flex flex-wrap justify-between gap-2 py-2">
-                <span>{l.period} · {t('obligations.members', { count: l.members })}</span>
-                <span>{t('obligations.outstanding')} {taka(l.outstanding_paisa)} / {taka(l.total_paisa)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-        {levy.data && levy.data.remittances.length > 0 && (
-          <ul className="mt-3 divide-y divide-border text-sm text-muted">
-            {levy.data.remittances.map((r) => (
-              <li key={r.seq} className="flex justify-between gap-2 py-1"><span>{fmtDate(r.entry_date)} · {r.memo}</span><span>{taka(r.amount_paisa)}</span></li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
-        <h2 className="mb-1 font-semibold">{t('obligations.financing')}</h2>
-        <p className="mb-3 text-sm text-muted">{t('obligations.financingHint')}</p>
-        {financing.error ? (
-          <LoadError error={financing.error} onRetry={() => void financing.refetch()} />
-        ) : !financing.data ? (
-          <ListSkeleton rows={2} />
-        ) : financing.data.items.length === 0 ? (
-          <Empty text={t('obligations.noFinancing')} />
-        ) : (
-          financing.data.items.map((f) => (
-            <div key={f.id} className="mb-4">
-              <div className="font-medium">{f.asset_name} · {f.counterparty} · {taka(f.total_paisa)}</div>
-              <ul className="divide-y divide-border text-sm">
-                {f.instalments.map((i) => (
-                  <li key={i.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                    <span>{fmtDate(i.due_on)} · {taka(i.amount_paisa)}</span>
-                    {i.paid_at ? (
-                      <span className="text-ok">{t('obligations.paid')}</span>
-                    ) : (
-                      isCashier && (
-                        <button type="button" onClick={() => setPaying({ id: i.id, label: `${fmtDate(i.due_on)} · ${taka(i.amount_paisa)}` })} className="h-9 rounded-xl border border-border px-3 text-xs hover:bg-hover">{t('obligations.payInstalment')}</button>
-                      )
-                    )}
+          {levy.data && levy.data.remittances.length > 0 && (
+            <>
+              <p className="mb-1 mt-4 text-xs font-semibold text-muted">{t('adminUi.obligations.remittances')}</p>
+              <ul className="text-sm">
+                {levy.data.remittances.map((r) => (
+                  <li key={r.seq} className="flex justify-between gap-2 border-t border-border py-2">
+                    <span className="min-w-0 truncate"><span className="text-muted">{fmtDate(r.entry_date)}</span> · {r.memo}</span>
+                    <span className="shrink-0 font-semibold tabular-nums">{taka(r.amount_paisa)}</span>
                   </li>
                 ))}
               </ul>
+            </>
+          )}
+        </Card>
+
+        <Card className="px-5 pb-3 pt-5 sm:px-6">
+          <CardHead icon={ICONS.home} title={t('obligations.financing')} sub={t('obligations.financingHint')} />
+          {financing.error ? (
+            <LoadError error={financing.error} onRetry={() => void financing.refetch()} />
+          ) : !financing.data ? (
+            <ListSkeleton rows={2} />
+          ) : financing.data.items.length === 0 ? (
+            <EmptyCard text={t('obligations.noFinancing')} />
+          ) : (
+            <div className="space-y-4 pb-2">
+              {financing.data.items.map((f) => {
+                const paid = f.instalments.filter((i) => i.paid_at).length;
+                return (
+                  <div key={f.id} className="rounded-xl border border-border p-3.5">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <p className="font-semibold">{f.asset_name}</p>
+                      <p className="font-bold tabular-nums">{taka(f.total_paisa)}</p>
+                    </div>
+                    <p className="text-xs text-muted">{f.counterparty} · {formatCount(paid)}/{formatCount(f.instalments.length)}</p>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-soft">
+                      <div className="h-full rounded-full bg-primary" style={{ width: `${f.instalments.length ? Math.round((paid * 100) / f.instalments.length) : 0}%` }} />
+                    </div>
+                    <ul className="mt-2 text-sm">
+                      {f.instalments.map((i) => (
+                        <li key={i.id} className="flex flex-wrap items-center justify-between gap-2 border-t border-border py-2 first:border-t-0">
+                          <span className="tabular-nums">{fmtDate(i.due_on)} · <b>{taka(i.amount_paisa)}</b></span>
+                          {i.paid_at ? (
+                            <StatusPill status="paid" label={t('obligations.paid')} />
+                          ) : (
+                            isCashier && (
+                              <button type="button" onClick={() => setPaying({ id: i.id, label: `${fmtDate(i.due_on)} · ${taka(i.amount_paisa)}` })} className={BTN_SM}>{t('obligations.payInstalment')}</button>
+                            )
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
             </div>
-          ))
-        )}
-      </section>
+          )}
+        </Card>
+      </div>
 
       <ConfirmSheet
         open={remit}
@@ -139,14 +175,14 @@ export function ObligationsPage() {
         }}
       >
         <label className="block text-sm text-muted">{t('common.amount')}
-          <input className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          <input className="field mt-1 w-full" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
         </label>
         <AccountSelect value={account} onChange={setAccount} />
         <label className="block text-sm text-muted">{t('obligations.payee')}
-          <input className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={payee} onChange={(e) => setPayee(e.target.value)} />
+          <input className="field mt-1 w-full" value={payee} onChange={(e) => setPayee(e.target.value)} />
         </label>
         <label className="block text-sm text-muted">{t('assetsAdmin.note')}
-          <textarea className="mt-1 min-h-16 w-full rounded-md border border-input bg-background p-2" value={note} onChange={(e) => setNote(e.target.value)} />
+          <textarea className="field mt-1 min-h-16 w-full" value={note} onChange={(e) => setNote(e.target.value)} />
         </label>
       </ConfirmSheet>
 
@@ -164,6 +200,6 @@ export function ObligationsPage() {
         {paying && <p className="text-muted">{paying.label}</p>}
         <AccountSelect value={payAccount} onChange={setPayAccount} />
       </ConfirmSheet>
-    </div>
+    </AdminPage>
   );
 }

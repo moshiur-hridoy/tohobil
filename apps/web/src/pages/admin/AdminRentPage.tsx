@@ -4,10 +4,16 @@ import { useTranslation } from 'react-i18next';
 import { PAYMENT_METHODS, type PaymentMethod } from '@barakah/shared';
 import { ConfirmSheet } from '../../components/ConfirmSheet';
 import { ListSkeleton } from '../../components/Skeleton';
-import { Empty, LoadError } from '../../components/StateViews';
+import { LoadError } from '../../components/StateViews';
+import { StatusPill } from '../../components/StatusPill';
+import {
+  AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, BTN_SM_PRIMARY, Card, CardHead, EmptyCard, FieldLabel, ICONS, SplitLayout, StatGrid, StatTile,
+} from '../../components/admin';
+import { Icon } from '../../components/ui';
+import { formatCount } from '../../lib/format';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
-import { fmtDate, todayDhaka } from '../../lib/dates';
+import { fmtDate, fmtPeriod, todayDhaka } from '../../lib/dates';
 import { parseAmountInput, taka } from '../../lib/money';
 
 interface Stream {
@@ -86,79 +92,128 @@ export function AdminRentPage() {
 
   const remaining = (e: Expected) => BigInt(e.amount_paisa) - BigInt(e.received_paisa);
 
+  const items = expected.data?.items ?? [];
+  const totalExpected = items.reduce((n, e) => n + BigInt(e.amount_paisa), 0n);
+  const totalReceived = items.reduce((n, e) => n + BigInt(e.received_paisa), 0n);
+  const pct = (part: bigint, whole: bigint) => (whole > 0n ? Number((part * 100n) / whole) : 0);
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">{t('rentAdmin.title')}</h1>
+    <AdminPage>
+      <AdminHeader
+        title={t('rentAdmin.title')}
+        subtitle={t('adminUi.sub.rent')}
+        actions={
+          <>
+            <input type="month" aria-label={t('rentAdmin.period')} className="field w-[10.5rem]" value={period} onChange={(e) => e.target.value && setPeriod(e.target.value)} />
+            {isCashier && (
+              <button type="button" onClick={() => void generate()} className={BTN_SECONDARY}>
+                <Icon d={ICONS.plus} size={18} />
+                {t('rentAdmin.generate')}
+              </button>
+            )}
+          </>
+        }
+      />
 
-      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
-        <h2 className="mb-3 font-semibold">{t('rentAdmin.streams')}</h2>
-        {streams.error ? (
-          <LoadError error={streams.error} onRetry={() => void streams.refetch()} />
-        ) : !streams.data ? (
-          <ListSkeleton rows={2} />
-        ) : streams.data.items.length === 0 ? (
-          <Empty text={t('rentAdmin.noStreams')} />
-        ) : (
-          <ul className="divide-y divide-border text-sm">
-            {streams.data.items.map((s) => (
-              <li key={s.id} className="flex flex-wrap justify-between gap-2 py-2">
-                <span>
-                  <span className="font-medium">{s.name}</span>
-                  {s.tenant_name && <span className="ml-2 text-muted">{s.tenant_name}</span>}
-                  {s.asset_name && <span className="ml-2 text-muted">· {s.asset_name}</span>}
-                </span>
-                <span>{taka(s.monthly_amount_paisa)} · {t('rentAdmin.dueDay', { day: s.due_day })}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-        {isCashier && (
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            <input aria-label={t('rentAdmin.name')} placeholder={t('rentAdmin.name')} className="h-11 rounded-md border border-input bg-background px-2" value={name} onChange={(e) => setName(e.target.value)} />
-            <input aria-label={t('rentAdmin.tenant')} placeholder={t('rentAdmin.tenant')} className="h-11 rounded-md border border-input bg-background px-2" value={tenant} onChange={(e) => setTenant(e.target.value)} />
-            <input aria-label={t('rentAdmin.monthly')} placeholder={t('rentAdmin.monthly')} inputMode="decimal" className="h-11 rounded-md border border-input bg-background px-2" value={monthly} onChange={(e) => setMonthly(e.target.value)} />
-            <input aria-label={t('rentAdmin.dueDayLabel')} type="number" min={1} max={28} className="h-11 rounded-md border border-input bg-background px-2" value={dueDay} onChange={(e) => setDueDay(e.target.value)} />
-            <input aria-label={t('rentAdmin.activeFrom')} type="date" className="h-11 rounded-md border border-input bg-background px-2" value={from} onChange={(e) => setFrom(e.target.value)} />
-            <button type="button" disabled={!name.trim() || parseAmountInput(monthly) === null} onClick={() => void addStream()} className="h-11 rounded-xl bg-primary px-4 text-primary-foreground disabled:opacity-50 sm:col-span-2 lg:col-span-5">
-              {t('rentAdmin.addStream')}
-            </button>
-          </div>
-        )}
-      </section>
+      <StatGrid>
+        <StatTile tone="bg-blue-bg text-blue" icon={ICONS.home} label={t('adminUi.rent.statExpected')} value={expected.data ? taka(totalExpected) : null} sub={fmtPeriod(period)} />
+        <StatTile tone="bg-ok-bg text-ok" icon={ICONS.check} label={t('adminUi.rent.statReceived')} value={expected.data ? taka(totalReceived) : null}
+          sub={expected.data && totalExpected > 0n ? `${formatCount(pct(totalReceived, totalExpected))}%` : undefined} />
+        <StatTile tone="bg-warn-bg text-warn" icon={ICONS.clock} label={t('adminUi.rent.statRemaining')} value={expected.data ? taka(totalExpected - totalReceived) : null}
+          valueClass={totalExpected - totalReceived > 0n ? 'text-warn' : ''} />
+        <StatTile tone="bg-primary-soft text-primary" icon={ICONS.layers} label={t('adminUi.rent.statStreams')} value={streams.data ? formatCount(streams.data.items.length) : null} />
+      </StatGrid>
 
-      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-semibold">{t('rentAdmin.expected')}</h2>
-          <div className="flex items-center gap-2">
-            <input type="month" aria-label={t('rentAdmin.period')} className="h-11 rounded-md border border-input bg-background px-2" value={period} onChange={(e) => setPeriod(e.target.value)} />
-            {isCashier && <button type="button" onClick={() => void generate()} className="h-11 rounded-xl border border-border px-3 text-sm hover:bg-hover">{t('rentAdmin.generate')}</button>}
-          </div>
-        </div>
-        {expected.error ? (
-          <LoadError error={expected.error} onRetry={() => void expected.refetch()} />
-        ) : !expected.data ? (
-          <ListSkeleton rows={2} />
-        ) : expected.data.items.length === 0 ? (
-          <Empty text={t('rentAdmin.noExpected')} />
-        ) : (
-          <ul className="divide-y divide-border text-sm">
-            {expected.data.items.map((e) => (
-              <li key={e.id} className="flex flex-wrap items-center justify-between gap-3 py-2" data-testid="rent-expected">
-                <span>
-                  <span className="font-medium">{e.stream_name}</span>
-                  <span className="ml-2 text-muted">{t('rentAdmin.due')} {fmtDate(e.due_date)}</span>
-                </span>
-                <span className="flex items-center gap-3">
-                  <span>{taka(e.received_paisa)} / {taka(e.amount_paisa)}</span>
-                  {isCashier && remaining(e) > 0n && (
-                    <button type="button" onClick={() => { setReceiving(e); setAmount(''); }} className="h-9 rounded-xl border border-border px-3 text-xs hover:bg-hover">{t('rentAdmin.receive')}</button>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <SplitLayout
+        main={
+          <Card className="px-5 pb-3 pt-5 sm:px-6">
+            <CardHead title={t('rentAdmin.expected')} sub={fmtPeriod(period)} />
+            {expected.error ? (
+              <LoadError error={expected.error} onRetry={() => void expected.refetch()} />
+            ) : !expected.data ? (
+              <ListSkeleton rows={2} />
+            ) : items.length === 0 ? (
+              <EmptyCard text={t('rentAdmin.noExpected')} icon={ICONS.home} />
+            ) : (
+              <ul>
+                {items.map((e) => {
+                  const left = remaining(e);
+                  const p = Math.min(pct(BigInt(e.received_paisa), BigInt(e.amount_paisa)), 100);
+                  return (
+                    <li key={e.id} className="flex flex-wrap items-center gap-3 border-b border-border py-3 last:border-b-0" data-testid="rent-expected">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold">{e.stream_name}</p>
+                        <p className="text-xs text-muted">
+                          {e.tenant_name ? `${e.tenant_name} · ` : ''}{t('rentAdmin.due')} {fmtDate(e.due_date)}
+                        </p>
+                      </div>
+                      <div className="w-40 min-w-0">
+                        <p className="text-right text-[0.8125rem] tabular-nums"><b>{taka(e.received_paisa)}</b> <span className="text-muted">/ {taka(e.amount_paisa)}</span></p>
+                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-soft">
+                          <div className={`h-full rounded-full ${left > 0n ? 'bg-warn' : 'bg-primary'}`} style={{ width: `${p}%` }} />
+                        </div>
+                      </div>
+                      <div className="w-24 text-right">
+                        {isCashier && left > 0n ? (
+                          <button type="button" onClick={() => { setReceiving(e); setAmount(''); }} className={BTN_SM_PRIMARY}>{t('rentAdmin.receive')}</button>
+                        ) : (
+                          <StatusPill status={left > 0n ? 'unpaid' : 'paid'} />
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Card>
+        }
+        side={
+          <>
+            <Card className="px-5 pb-3 pt-5">
+              <CardHead icon={ICONS.home} tone="bg-blue-bg text-blue" title={t('rentAdmin.streams')} />
+              {streams.error ? (
+                <LoadError error={streams.error} onRetry={() => void streams.refetch()} />
+              ) : !streams.data ? (
+                <ListSkeleton rows={2} />
+              ) : streams.data.items.length === 0 ? (
+                <p className="py-3 text-sm text-muted">{t('rentAdmin.noStreams')}</p>
+              ) : (
+                <ul>
+                  {streams.data.items.map((st) => (
+                    <li key={st.id} className="border-t border-border py-2.5 first:border-t-0">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="truncate font-semibold">{st.name}</span>
+                        <span className="shrink-0 font-bold tabular-nums">{taka(st.monthly_amount_paisa)}</span>
+                      </div>
+                      <p className="text-xs text-muted">
+                        {[st.tenant_name, st.asset_name, t('rentAdmin.dueDay', { day: st.due_day })].filter(Boolean).join(' · ')}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+
+            {isCashier && (
+              <Card className="p-5">
+                <CardHead icon={ICONS.plus} title={t('adminUi.rent.addTitle')} />
+                <div className="space-y-3">
+                  <FieldLabel label={t('rentAdmin.name')}><input className="field w-full" value={name} onChange={(e) => setName(e.target.value)} /></FieldLabel>
+                  <FieldLabel label={t('rentAdmin.tenant')}><input className="field w-full" value={tenant} onChange={(e) => setTenant(e.target.value)} /></FieldLabel>
+                  <div className="grid grid-cols-2 gap-3">
+                    <FieldLabel label={t('rentAdmin.monthly')}><input inputMode="decimal" className="field w-full" value={monthly} onChange={(e) => setMonthly(e.target.value)} /></FieldLabel>
+                    <FieldLabel label={t('rentAdmin.dueDayLabel')}><input type="number" min={1} max={28} className="field w-full" value={dueDay} onChange={(e) => setDueDay(e.target.value)} /></FieldLabel>
+                  </div>
+                  <FieldLabel label={t('rentAdmin.activeFrom')}><input type="date" className="field w-full" value={from} onChange={(e) => setFrom(e.target.value)} /></FieldLabel>
+                  <button type="button" disabled={!name.trim() || parseAmountInput(monthly) === null} onClick={() => void addStream()} className={`${BTN_PRIMARY} w-full`}>
+                    {t('rentAdmin.addStream')}
+                  </button>
+                </div>
+              </Card>
+            )}
+          </>
+        }
+      />
 
       <ConfirmSheet
         open={receiving !== null}
@@ -171,19 +226,19 @@ export function AdminRentPage() {
         {receiving && <p className="text-muted">{receiving.stream_name} · {receiving.period} · {t('rentAdmin.remaining')} {taka(remaining(receiving))}</p>}
         <label className="block text-sm text-muted">
           {t('common.amount')}
-          <input className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          <input className="field mt-1 w-full" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
         </label>
         <label className="block text-sm text-muted">
           {t('payment.method')}
-          <select className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
+          <select className="field mt-1 w-full" value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
             {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{t(`payment.methods.${m}`)}</option>)}
           </select>
         </label>
         <label className="block text-sm text-muted">
           {t('common.date')}
-          <input type="date" className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={paidAt} onChange={(e) => setPaidAt(e.target.value)} />
+          <input type="date" className="field mt-1 w-full" value={paidAt} onChange={(e) => setPaidAt(e.target.value)} />
         </label>
       </ConfirmSheet>
-    </div>
+    </AdminPage>
   );
 }

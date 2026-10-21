@@ -6,6 +6,7 @@ import { ListSkeleton } from '../../components/Skeleton';
 import { Empty, LoadError } from '../../components/StateViews';
 import { api, apiBlob } from '../../lib/api';
 import { fmtDate } from '../../lib/dates';
+import { localDigits } from '../../lib/format';
 
 interface Clause {
   id: string;
@@ -56,10 +57,15 @@ export function ConstitutionPage() {
     enabled: versionId !== null,
   });
 
-  // A rule's clause link (/menu/constitution?clause=2.4) opens that clause in the shown version.
+  // A rule's clause link (/menu/constitution?clause=2.4) opens that clause in the shown version; a link
+  // to a whole article (?clause=8) opens the article's first clause (8.1).
   useEffect(() => {
-    const hit = detail.data?.clauses.find((c) => c.clause_no === wantedClause);
-    if (hit) setOpen(hit.id);
+    if (!wantedClause) return;
+    const clauses = detail.data?.clauses ?? [];
+    const hit = clauses.find((c) => c.clause_no === wantedClause) ?? clauses.find((c) => c.clause_no.startsWith(`${wantedClause}.`));
+    if (!hit) return;
+    setOpen(hit.id);
+    document.getElementById(`clause-${hit.clause_no}`)?.scrollIntoView({ block: 'center' });
   }, [detail.data, wantedClause]);
 
   const search = useQuery({
@@ -185,7 +191,7 @@ export function ConstitutionPage() {
                         className="flex min-h-[54px] w-full items-center gap-3 text-left"
                       >
                         <span className="grid h-11 min-w-11 flex-none place-items-center rounded-[13px] bg-primary-soft px-2 text-sm font-bold text-primary">
-                          {c.clause_no}
+                          {localDigits(c.clause_no)}
                         </span>
                         <span className="flex-1">
                           <span className="block text-base font-semibold">{c.title ?? c.clause_no}</span>

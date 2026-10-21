@@ -30,6 +30,7 @@ import { VoteDetailPage } from './pages/member/VoteDetailPage';
 import { ReconcilePage } from './pages/admin/ReconcilePage';
 import { ReportsPage } from './pages/admin/ReportsPage';
 import { AdminAssetsPage } from './pages/admin/AdminAssetsPage';
+import { AdminHoldingPage } from './pages/admin/AdminHoldingPage';
 import { AdminRentPage } from './pages/admin/AdminRentPage';
 import { ObligationsPage } from './pages/admin/ObligationsPage';
 import { AdminNotificationsPage } from './pages/admin/AdminNotificationsPage';
@@ -96,6 +97,7 @@ export function App() {
           <Route path="/admin/settings" element={<SettingsPage />} />
           <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
           <Route path="/admin/assets" element={<AdminAssetsPage />} />
+          <Route path="/admin/assets/investment/:id" element={<AdminHoldingPage />} />
           <Route path="/admin/reconcile" element={<ReconcilePage />} />
           <Route path="/admin/reports" element={<ReportsPage />} />
           <Route path="/admin/rent" element={<AdminRentPage />} />

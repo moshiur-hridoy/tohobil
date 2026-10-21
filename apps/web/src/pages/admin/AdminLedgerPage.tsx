@@ -3,11 +3,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmSheet, SheetRow } from '../../components/ConfirmSheet';
 import { ListSkeleton } from '../../components/Skeleton';
-import { Empty, LoadError } from '../../components/StateViews';
+import { LoadError } from '../../components/StateViews';
+import { BTN_SECONDARY, BTN_SM, BTN_SM_PRIMARY, Card, CardHead, ICONS, MemberBadge, Notice } from '../../components/admin';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtDate } from '../../lib/dates';
-import { localDigits } from '../../lib/format';
+import { formatCount, localDigits } from '../../lib/format';
 import { taka } from '../../lib/money';
 import type { ObjectionRow, Page } from '../../lib/types';
 import { LedgerView } from '../shared/LedgerView';
@@ -15,10 +16,9 @@ import { LedgerView } from '../shared/LedgerView';
 /** Cashier and auditor ledger: the full table plus the open objections the auditor answers. */
 export function AdminLedgerPage() {
   return (
-    <div className="space-y-8">
-      <LedgerView variant="admin" />
+    <LedgerView variant="admin">
       <ObjectionsPanel />
-    </div>
+    </LedgerView>
   );
 }
 
@@ -39,34 +39,50 @@ function ObjectionsPanel() {
   });
   const rows = q.data?.pages.flatMap((p) => p.items) ?? [];
 
+  // Nothing open is the normal state: the panel only takes space when there is something to answer.
+  if (q.data && rows.length === 0 && !notice) return null;
+
   return (
-    <section aria-labelledby="objections-title" className="space-y-3">
-      <h2 id="objections-title" className="text-xl font-semibold">{t('adminLedger.objections')}</h2>
-      {notice && <p role="status" className="text-ok">{notice}</p>}
+    <Card aria-labelledby="objections-title" className="border-bad px-5 pb-3 pt-5 sm:px-6">
+      <CardHead
+        id="objections-title"
+        icon={ICONS.flag}
+        tone="bg-bad-bg text-bad"
+        title={t('adminLedger.objections')}
+        action={q.data && rows.length > 0 ? <span className="rounded-full bg-bad-bg px-2.5 py-0.5 text-xs font-bold text-bad tabular-nums">{formatCount(rows.length)}{q.hasNextPage ? '+' : ''}</span> : undefined}
+      />
+      <Notice text={notice} className="mb-3" />
       {q.error ? (
         <LoadError error={q.error} onRetry={() => void q.refetch()} />
       ) : !q.data ? (
         <ListSkeleton rows={2} />
       ) : rows.length === 0 ? (
-        <Empty text={t('adminLedger.noObjections')} />
+        <p className="py-3 text-sm text-muted">{t('adminLedger.noObjections')}</p>
       ) : (
-        <ul className="space-y-2">
+        <ul>
           {rows.map((o) => (
-            <li key={o.id} className="rounded-[18px] border border-border bg-card shadow-card p-3">
-              <p className="font-medium">
-                {t('adminLedger.entry', { seq: localDigits(o.ledger_seq) })} · {taka(o.entry_amount_paisa)} · {o.entry_debit} → {o.entry_credit}
-              </p>
-              <p className="text-sm text-muted">{o.member_code} {o.member_name} · {fmtDate(o.created_at.slice(0, 10))}</p>
-              <p className="mt-1">{o.text}</p>
+            <li key={o.id} className="flex flex-wrap items-start gap-3 border-b border-border py-3 last:border-b-0">
+              <MemberBadge code={o.member_code} />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">
+                  {t('adminLedger.entry', { seq: localDigits(o.ledger_seq) })} · {taka(o.entry_amount_paisa)}
+                  <span className="ml-2 font-mono text-xs font-normal text-muted">{o.entry_debit} → {o.entry_credit}</span>
+                </p>
+                <p className="text-xs text-muted">{o.member_name} · {fmtDate(o.created_at.slice(0, 10))}</p>
+                <p className="mt-1 text-sm">{o.text}</p>
+              </div>
               {isAuditor && (
-                <div className="mt-2 flex gap-2">
-                  <button type="button" className="h-11 rounded-xl bg-primary px-4 font-medium text-primary-foreground" onClick={() => { setNotice(null); setAnswer(''); setTarget({ row: o, status: 'resolved' }); }}>{t('adminLedger.resolve')}</button>
-                  <button type="button" className="h-11 rounded-xl border border-border px-4" onClick={() => { setNotice(null); setAnswer(''); setTarget({ row: o, status: 'dismissed' }); }}>{t('adminLedger.dismiss')}</button>
+                <div className="flex gap-2">
+                  <button type="button" className={BTN_SM_PRIMARY} onClick={() => { setNotice(null); setAnswer(''); setTarget({ row: o, status: 'resolved' }); }}>{t('adminLedger.resolve')}</button>
+                  <button type="button" className={BTN_SM} onClick={() => { setNotice(null); setAnswer(''); setTarget({ row: o, status: 'dismissed' }); }}>{t('adminLedger.dismiss')}</button>
                 </div>
               )}
             </li>
           ))}
         </ul>
+      )}
+      {q.hasNextPage && (
+        <button type="button" disabled={q.isFetchingNextPage} onClick={() => void q.fetchNextPage()} className={`${BTN_SECONDARY} mb-2 mt-3 w-full`}>{t('common.loadMore')}</button>
       )}
 
       <ConfirmSheet
@@ -88,8 +104,8 @@ function ObjectionsPanel() {
             <p className="text-muted">{target.row.text}</p>
           </>
         )}
-        <textarea aria-label={t('adminLedger.answer')} placeholder={t('adminLedger.answer')} className="min-h-24 w-full rounded-md border border-input bg-background p-2" maxLength={1000} value={answer} onChange={(e) => setAnswer(e.target.value)} />
+        <textarea aria-label={t('adminLedger.answer')} placeholder={t('adminLedger.answer')} className="field min-h-24 w-full" maxLength={1000} value={answer} onChange={(e) => setAnswer(e.target.value)} />
       </ConfirmSheet>
-    </section>
+    </Card>
   );
 }

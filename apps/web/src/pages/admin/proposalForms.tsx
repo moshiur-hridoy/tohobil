@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { COMPLIANCE_CHECKLIST_FIELDS, type ProposalType } from '@barakah/shared';
 import { api, ApiError } from '../../lib/api';
 import { parseAmountInput } from '../../lib/money';
-import type { AssetRow, MemberRow } from '../../lib/types';
+import type { AssetRow, MemberRow, PartnerRow } from '../../lib/types';
 
 /**
  * What each kind of proposal asks for, in the order it is asked. The keys are the payload keys the
@@ -11,7 +11,7 @@ import type { AssetRow, MemberRow } from '../../lib/types';
  */
 type Kind =
   | 'text' | 'textarea' | 'money' | 'int' | 'decimal' | 'date' | 'json'
-  | 'member' | 'asset' | 'file' | { select: readonly string[] };
+  | 'member' | 'asset' | 'partner' | 'file' | { select: readonly string[] };
 
 export interface Field {
   key: string;
@@ -51,6 +51,7 @@ export const PROPOSAL_FORMS: Partial<Record<ProposalType, Field[]>> = {
     { key: 'unit', kind: { select: ['vori', 'gram'] }, optional: true },
     { key: 'source_account', kind: SOURCE },
     { key: 'notes', kind: 'text', optional: true },
+    { key: 'partner_id', kind: 'partner', optional: true },
     { key: 'feasibility_file_id', kind: 'file', optional: true },
   ],
   asset_sale: [
@@ -195,7 +196,7 @@ export async function buildPayload(type: ProposalType, form: FormState): Promise
   return { payload: out, ...(subject ? { subject } : {}) };
 }
 
-const inputClass = 'mt-1 h-11 w-full rounded-md border border-input bg-background px-2';
+const inputClass = 'field mt-1 w-full';
 
 /** The fields for one proposal type. Pure input: the owner of `form` decides when to submit. */
 export function ProposalFields({ type, form, onChange }: { type: ProposalType; form: FormState; onChange: (next: FormState) => void }) {
@@ -205,6 +206,9 @@ export function ProposalFields({ type, form, onChange }: { type: ProposalType; f
   const needsAssets = fields.some((f) => f.kind === 'asset') || type === 'wind_up';
   const members = useQuery({ queryKey: ['members'], queryFn: () => api<{ items: MemberRow[] }>('/members'), enabled: needsMembers });
   const assets = useQuery({ queryKey: ['assets-admin'], queryFn: () => api<{ items: AssetRow[] }>('/assets?limit=100'), enabled: needsAssets });
+
+  const needsPartners = fields.some((f) => f.kind === 'partner');
+  const partners = useQuery({ queryKey: ['partners'], queryFn: () => api<{ items: PartnerRow[] }>('/partners'), enabled: needsPartners });
 
   const set = (key: string, value: string) => onChange({ ...form, values: { ...form.values, [key]: value } });
   const label = (key: string, optional?: boolean) => `${t(`proposalFields.${key}`)}${optional ? ` (${t('proposalFields.optional')})` : ''}`;
@@ -216,7 +220,7 @@ export function ProposalFields({ type, form, onChange }: { type: ProposalType; f
         <label key={f.key} className="block text-sm text-muted">
           {label(f.key, f.optional)}
           {f.kind === 'textarea' ? (
-            <textarea className="mt-1 min-h-20 w-full rounded-md border border-input bg-background p-2" value={form.values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)} />
+            <textarea className="field mt-1 min-h-20 w-full" value={form.values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)} />
           ) : f.kind === 'file' ? (
             <input type="file" accept="image/*,application/pdf" className="mt-1 block" onChange={(e) => onChange({ ...form, files: { ...form.files, [f.key]: e.target.files?.[0] ?? null } })} />
           ) : f.kind === 'member' ? (
@@ -228,6 +232,11 @@ export function ProposalFields({ type, form, onChange }: { type: ProposalType; f
             <select className={inputClass} value={form.values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}>
               <option value="">{t('proposalFields.chooseAsset')}</option>
               {activeAssets.map((a) => <option key={a.id} value={a.id}>{a.name} ({t(`assetsAdmin.status.${a.status}`)})</option>)}
+            </select>
+          ) : f.kind === 'partner' ? (
+            <select className={inputClass} value={form.values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}>
+              <option value="">—</option>
+              {partners.data?.items.filter((p) => !form.values['kind'] || p.kind === form.values['kind']).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           ) : typeof f.kind === 'object' ? (
             <select className={inputClass} value={form.values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}>
@@ -263,8 +272,8 @@ export function ProposalFields({ type, form, onChange }: { type: ProposalType; f
           <legend className="px-1 text-sm font-medium">{t('proposalFields.instalments')}</legend>
           {form.instalments.map((row, i) => (
             <div key={i} className="mb-2 flex gap-2">
-              <input type="date" aria-label={t('proposalFields.due_on')} className="h-11 flex-1 rounded-md border border-input bg-background px-2" value={row.due_on} onChange={(e) => onChange({ ...form, instalments: form.instalments.map((r, j) => (j === i ? { ...r, due_on: e.target.value } : r)) })} />
-              <input aria-label={t('common.amount')} placeholder={t('common.amount')} inputMode="decimal" className="h-11 flex-1 rounded-md border border-input bg-background px-2" value={row.amount} onChange={(e) => onChange({ ...form, instalments: form.instalments.map((r, j) => (j === i ? { ...r, amount: e.target.value } : r)) })} />
+              <input type="date" aria-label={t('proposalFields.due_on')} className="field flex-1" value={row.due_on} onChange={(e) => onChange({ ...form, instalments: form.instalments.map((r, j) => (j === i ? { ...r, due_on: e.target.value } : r)) })} />
+              <input aria-label={t('common.amount')} placeholder={t('common.amount')} inputMode="decimal" className="field flex-1" value={row.amount} onChange={(e) => onChange({ ...form, instalments: form.instalments.map((r, j) => (j === i ? { ...r, amount: e.target.value } : r)) })} />
             </div>
           ))}
           <button type="button" className="h-9 rounded-xl border border-border px-3 text-sm" onClick={() => onChange({ ...form, instalments: [...form.instalments, { due_on: '', amount: '' }] })}>

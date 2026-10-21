@@ -1,7 +1,10 @@
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../lib/auth';
 import { OwnerConflictBanner } from '../components/OwnerConflictBanner';
+import { AppIcon } from '../components/Logo';
+import { ThemeToggle } from '../components/ThemeToggle';
+import { useHiddenNav } from '../lib/navPrefs';
 
 /** [route, i18n key]: one source for the desktop sidebar and the stacked mobile nav. */
 export const ADMIN_NAV = [
@@ -64,6 +67,7 @@ const NAV_GROUPS: { titleKey: string; routes: AdminRoute[] }[] = [
 ];
 
 const TOTP_ICON = 'M6 11V8a6 6 0 0 1 12 0v3M5 11h14v10H5z';
+const LOGOUT_ICON = 'M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11';
 
 /** Links that live outside /admin (the authenticator setup page is shared with the member side). */
 function ExtraLink({ to, label, icon, compact = false }: { to: string; label: string; icon: string; compact?: boolean }) {
@@ -91,28 +95,27 @@ function labelForRoute(to: AdminRoute): string {
 
 export function CashierLayout() {
   const { t } = useTranslation();
+  const [hidden] = useHiddenNav();
 
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
       {/* Sidebar (desktop, 1024px and above) */}
-      <aside className="hidden w-64 flex-col border-r border-border bg-card lg:flex">
+      <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r border-border bg-card lg:flex">
         <div className="flex flex-col gap-4 p-4">
           <div className="flex items-center gap-3 px-1">
-            <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <AppLogo className="h-5 w-5" />
-            </div>
+            <AppIcon size={36} className="rounded-[11px]" />
             <h1 className="text-lg font-bold tracking-tight">{t('app.shortName')}</h1>
           </div>
           <ProfileCard />
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-2 pb-4">
-          {NAV_GROUPS.map((group) => (
+          {NAV_GROUPS.filter((group) => group.routes.some((to) => !hidden.has(to))).map((group) => (
             <div key={group.titleKey}>
               <div className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wider text-muted">
                 {t(group.titleKey)}
               </div>
-              {group.routes.map((to) => (
+              {group.routes.filter((to) => !hidden.has(to)).map((to) => (
                 <SidebarLink
                   key={to}
                   to={to}
@@ -127,11 +130,15 @@ export function CashierLayout() {
             <ExtraLink to="/totp" label={t('totp.title')} icon={TOTP_ICON} />
           </div>
         </nav>
+        <div className="flex items-center gap-1 border-t border-border p-2">
+          <LogoutButton />
+          <ThemeToggle />
+        </div>
       </aside>
 
       {/* Stacked mobile layout: the cashier must be able to confirm a payment from a phone */}
       <nav className="flex gap-1 overflow-x-auto border-b border-border bg-card p-2 lg:hidden">
-        {ADMIN_NAV.map(([to, key]) => (
+        {ADMIN_NAV.filter(([to]) => !hidden.has(to)).map(([to, key]) => (
           <SidebarLink
             key={to}
             to={to}
@@ -141,6 +148,8 @@ export function CashierLayout() {
           />
         ))}
         <ExtraLink to="/totp" label={t('totp.title')} icon={TOTP_ICON} compact />
+        <LogoutButton compact />
+        <ThemeToggle />
       </nav>
 
       <main className="flex-1">
@@ -153,20 +162,22 @@ export function CashierLayout() {
   );
 }
 
-function AppLogo({ className }: { className?: string }) {
+/** Ends the session on this device (same as the member menu), then back to the sign-in screen. */
+function LogoutButton({ compact = false }: { compact?: boolean }) {
+  const { t } = useTranslation();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.9"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
+    <button
+      type="button"
+      onClick={() => void logout().then(() => navigate('/login', { replace: true }))}
+      className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-bad transition-colors hover:bg-bad-bg ${compact ? 'whitespace-nowrap' : 'min-w-0 flex-1'}`}
     >
-      <path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5" />
-    </svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d={LOGOUT_ICON} />
+      </svg>
+      <span>{t('menu.logout')}</span>
+    </button>
   );
 }
 

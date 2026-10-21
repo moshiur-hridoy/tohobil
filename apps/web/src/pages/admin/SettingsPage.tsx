@@ -3,8 +3,12 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmSheet, SheetRow } from '../../components/ConfirmSheet';
 import { LoadError } from '../../components/StateViews';
+import { AdminHeader, AdminPage, BTN_PRIMARY, Card, CardHead, FieldLabel, ICONS, Notice } from '../../components/admin';
+import { Icon } from '../../components/ui';
 import { api } from '../../lib/api';
 import type { PaymentInstructions } from '../../lib/types';
+import { ADMIN_NAV } from '../../layouts/CashierLayout';
+import { ALWAYS_SHOWN, useHiddenNav } from '../../lib/navPrefs';
 
 interface SettingsResponse {
   payment_instructions?: PaymentInstructions;
@@ -73,46 +77,53 @@ export function SettingsPage() {
   if (settings.error) return <LoadError error={settings.error} onRetry={() => void settings.refetch()} />;
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-3xl font-bold tracking-tight">{t('settingsPage.title')}</h1>
+    <AdminPage>
+      <AdminHeader
+        title={t('settingsPage.title')}
+        subtitle={t('adminUi.sub.settings')}
+        actions={
+          <>
+            {changed && <span className="text-sm font-medium text-warn">{t('adminUi.settings.unsaved')}</span>}
+            <button type="button" disabled={!changed || save.isPending} onClick={() => setSheet(true)} className={BTN_PRIMARY}>
+              <Icon d={ICONS.check} size={18} sw={2} />
+              {save.isPending ? t('common.working') : t('common.save')}
+            </button>
+          </>
+        }
+      />
+      <Notice text={saved ? t('settingsPage.saved') : null} />
 
-      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
-        <h2 className="mb-3 font-semibold">{t('settingsPage.general')}</h2>
-        <label className="block text-sm text-muted">
-          {t('settingsPage.fundName')}
-          <input className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={fundName} onChange={(e) => setFundName(e.target.value)} />
-        </label>
-      </section>
+      <div className="grid items-start gap-5 xl:grid-cols-2">
+        <div className="space-y-5">
+          <Card className="p-5">
+            <CardHead icon={ICONS.sliders} title={t('settingsPage.general')} />
+            <FieldLabel label={t('settingsPage.fundName')}>
+              <input className="field w-full" value={fundName} onChange={(e) => setFundName(e.target.value)} />
+            </FieldLabel>
+          </Card>
 
-      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
-        <h2 className="mb-3 font-semibold">{t('settingsPage.paymentInstructions')}</h2>
-        <div className="space-y-3">
-          <label className="block text-sm text-muted">
-            {t('payment.methods.bkash')}
-            <input className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={bkash} onChange={(e) => setBkash(e.target.value)} />
-          </label>
-          <label className="block text-sm text-muted">
-            {t('payment.methods.nagad')}
-            <input className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={nagad} onChange={(e) => setNagad(e.target.value)} />
-          </label>
-          <label className="block text-sm text-muted">
-            {t('payment.methods.bank')}
-            <textarea className="mt-1 min-h-20 w-full rounded-md border border-input bg-background p-2" value={bank} onChange={(e) => setBank(e.target.value)} />
-          </label>
+          <Card className="p-5">
+            <CardHead icon={ICONS.clock} tone="bg-warn-bg text-warn" title={t('settingsPage.zakat')} sub={t('settingsPage.zakatHint')} />
+            <input type="date" aria-label={t('settingsPage.zakat')} className="field" value={zakatDate} onChange={(e) => setZakatDate(e.target.value)} />
+          </Card>
         </div>
-      </section>
 
-      <section className="rounded-[18px] border border-border bg-card shadow-card p-4">
-        <h2 className="mb-1 font-semibold">{t('settingsPage.zakat')}</h2>
-        <p className="mb-3 text-sm text-muted">{t('settingsPage.zakatHint')}</p>
-        <input type="date" aria-label={t('settingsPage.zakat')} className="h-11 rounded-md border border-input bg-background px-2" value={zakatDate} onChange={(e) => setZakatDate(e.target.value)} />
-      </section>
+        <SidePanelCard />
 
-      <div className="flex items-center gap-3">
-        <button type="button" disabled={!changed || save.isPending} onClick={() => setSheet(true)} className="h-12 rounded-xl bg-primary px-4 text-primary-foreground disabled:opacity-50">
-          {save.isPending ? t('common.working') : t('common.save')}
-        </button>
-        {saved && <p className="text-ok">{t('settingsPage.saved')}</p>}
+        <Card className="p-5">
+          <CardHead icon={ICONS.wallet} tone="bg-blue-bg text-blue" title={t('settingsPage.paymentInstructions')} />
+          <div className="space-y-3">
+            <FieldLabel label={t('payment.methods.bkash')}>
+              <input className="field w-full" value={bkash} onChange={(e) => setBkash(e.target.value)} />
+            </FieldLabel>
+            <FieldLabel label={t('payment.methods.nagad')}>
+              <input className="field w-full" value={nagad} onChange={(e) => setNagad(e.target.value)} />
+            </FieldLabel>
+            <FieldLabel label={t('payment.methods.bank')}>
+              <textarea className="field min-h-24 w-full" value={bank} onChange={(e) => setBank(e.target.value)} />
+            </FieldLabel>
+          </div>
+        </Card>
       </div>
 
       <ConfirmSheet
@@ -130,6 +141,27 @@ export function SettingsPage() {
         )}
         {save.error && <p className="text-bad">{t('errors.generic')}</p>}
       </ConfirmSheet>
-    </div>
+    </AdminPage>
+  );
+}
+
+/** Which side-panel links to show. Kept on this device and applied at once; it needs no save. */
+function SidePanelCard() {
+  const { t } = useTranslation();
+  const [hidden, setHidden] = useHiddenNav();
+  return (
+    <Card className="p-5">
+      <CardHead icon={ICONS.grid} tone="bg-soft text-ink2" title={t('settingsPage.sidePanel')} sub={t('settingsPage.sidePanelHint')} />
+      <ul className="grid gap-1 sm:grid-cols-2">
+        {ADMIN_NAV.filter(([to]) => !ALWAYS_SHOWN.includes(to)).map(([to, key]) => (
+          <li key={to}>
+            <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-2 text-sm hover:bg-hover">
+              <input type="checkbox" className="h-4 w-4" checked={!hidden.has(to)} onChange={(e) => setHidden(to, !e.target.checked)} />
+              <span className={hidden.has(to) ? 'text-muted line-through' : ''}>{t(key)}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }

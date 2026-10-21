@@ -221,7 +221,7 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
     onSent();
   };
 
-  const field = 'mt-1.5 h-[52px] w-full rounded-[14px] border-[1.5px] border-input bg-card px-3.5 text-base';
+  const field = 'field field-lg mt-1.5 w-full';
   const label = 'text-[0.8125rem] text-ink2';
 
   return (

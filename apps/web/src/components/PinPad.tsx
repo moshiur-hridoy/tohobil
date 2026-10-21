@@ -1,7 +1,5 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toBengaliDigits } from '@barakah/shared';
-import { getDigits } from '../lib/format';
 
 const PIN_LENGTH = 6;
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'back'] as const;
@@ -15,10 +13,9 @@ interface PinPadProps {
   invalid?: boolean;
 }
 
-/** Six dots and a numeric keypad. Also accepts a hardware keyboard on desktop. */
+/** Six dots and a numeric keypad (keys always show 0-9, whatever the language). Also accepts a hardware keyboard on desktop. */
 export function PinPad({ value, onChange, onComplete, disabled, invalid }: PinPadProps) {
   const { t } = useTranslation();
-  const show = (d: string) => (getDigits() === 'bn' ? toBengaliDigits(d) : d);
 
   const press = (digit: string) => {
     if (disabled || value.length >= PIN_LENGTH) return;
@@ -42,18 +39,18 @@ export function PinPad({ value, onChange, onComplete, disabled, invalid }: PinPa
       <div
         role="img"
         aria-label={t('auth.pinEntered', { count: value.length })}
-        className="flex gap-3"
+        className={`flex gap-3.5 ${invalid ? 'motion-safe:animate-shake' : ''}`}
       >
         {Array.from({ length: PIN_LENGTH }, (_, i) => (
           <span
             key={i}
-            className={`h-4 w-4 rounded-full border-2 ${
-              invalid ? 'border-bad' : 'border-primary'
-            } ${i < value.length ? (invalid ? 'bg-bad' : 'bg-primary') : 'bg-transparent'}`}
+            className={`h-3.5 w-3.5 rounded-full border-2 transition-all duration-150 ${
+              invalid ? 'border-bad' : i < value.length ? 'border-primary' : 'border-input'
+            } ${i < value.length ? (invalid ? 'scale-110 bg-bad' : 'scale-110 bg-primary') : 'bg-transparent'}`}
           />
         ))}
       </div>
-      <div className="grid w-full max-w-[18rem] grid-cols-3 gap-3">
+      <div className="grid w-full max-w-[19rem] grid-cols-3 gap-2.5">
         {KEYS.map((k, i) =>
           k === '' ? (
             <span key={i} />
@@ -63,10 +60,12 @@ export function PinPad({ value, onChange, onComplete, disabled, invalid }: PinPa
               type="button"
               disabled={disabled}
               onClick={() => (k === 'back' ? back() : press(k))}
-              aria-label={k === 'back' ? t('auth.pinDelete') : show(k)}
-              className="h-16 rounded-2xl border border-border bg-background text-2xl font-semibold active:bg-hover disabled:opacity-50"
+              aria-label={k === 'back' ? t('auth.pinDelete') : k}
+              className={`h-[3.75rem] rounded-2xl text-2xl font-semibold outline-none transition-[background-color,transform] duration-100 focus-visible:ring-2 focus-visible:ring-ring active:scale-95 disabled:opacity-50 ${
+                k === 'back' ? 'text-muted hover:bg-soft' : 'bg-soft hover:bg-hover active:bg-primary-soft'
+              }`}
             >
-              {k === 'back' ? '⌫' : show(k)}
+              {k === 'back' ? '⌫' : k}
             </button>
           ),
         )}

@@ -125,7 +125,7 @@ function TabItem({ to, label, icon, badge = 0 }: { to: string; label: string; ic
               <span
                 role="status"
                 aria-label={t('votes.openCount', { count: badge })}
-                className="absolute -right-0.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-bad px-1 text-[0.6875rem] font-bold leading-none text-white"
+                className="absolute -right-0.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-bad px-1 text-[0.6875rem] font-bold leading-none text-on-bad"
               >
                 {badge}
               </span>

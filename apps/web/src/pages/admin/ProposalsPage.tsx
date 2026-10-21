@@ -1,16 +1,20 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import * as Dialog from '@radix-ui/react-dialog';
 import { PROPOSAL_STATUSES, PROPOSAL_TYPES, COMPLIANCE_CHECKLIST_FIELDS, type ProposalType } from '@barakah/shared';
-import { ConfirmSheet, SheetRow } from '../../components/ConfirmSheet';
-import { ListSkeleton } from '../../components/Skeleton';
-import { Empty, LoadError } from '../../components/StateViews';
+import {
+  AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, BTN_SM, BTN_SM_PRIMARY, Card, CardHead, EmptyCard, ICONS, InfoRow, MemberBadge, SplitLayout, StatGrid, StatTile,
+} from '../../components/admin';
+import { ConfirmSheet } from '../../components/ConfirmSheet';
+import { ListSkeleton, Skeleton } from '../../components/Skeleton';
+import { LoadError } from '../../components/StateViews';
+import { Icon } from '../../components/ui';
 import { StatusPill } from '../../components/StatusPill';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useCountdown } from '../../lib/countdown';
 import { fmtInstant } from '../../lib/dates';
+import { formatCount } from '../../lib/format';
 import { parseAmountInput, taka } from '../../lib/money';
 import type { ProposalDetail } from '../../lib/types';
 import { FORM_TYPES, ProposalFields, buildPayload, emptyForm, type FormState } from './proposalForms';
@@ -44,125 +48,173 @@ export function ProposalsPage() {
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
-  const [detailId, setDetailId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
   const [createType, setCreateType] = useState<ProposalType>('general');
+  const panel = useRef<HTMLDivElement>(null);
 
   const privileged = me?.roles.some((r) => r === 'cashier' || r === 'auditor') ?? false;
 
-  const proposals = useQuery<{ items: ProposalListRow[]; next_cursor: string | null }>({
-    queryKey: ['proposals', 'admin', statusFilter, typeFilter],
+  const list = (status: string, type: string) => ({
+    queryKey: ['proposals', 'admin', status, type],
     queryFn: () =>
-      api<{ items: ProposalListRow[]; next_cursor: string | null }>(
-        `/proposals?limit=200${statusFilter ? `&status=${statusFilter}` : ''}${typeFilter ? `&type=${typeFilter}` : ''}`,
-      ),
+      api<{ items: ProposalListRow[]; next_cursor: string | null }>(`/proposals?limit=200${status ? `&status=${status}` : ''}${type ? `&type=${type}` : ''}`),
   });
+  const proposals = useQuery(list(statusFilter, typeFilter));
+  // the tiles count everything, whatever the list below is filtered to (same cache entry when unfiltered)
+  const everything = useQuery(list('', ''));
+  const all = everything.data?.items ?? [];
+  const count = (status: string) => (everything.data ? formatCount(all.filter((p) => p.status === status).length) : null);
+
+  const rows = proposals.data?.items ?? [];
+  const selected = rows.find((p) => p.id === selectedId) ?? rows[0] ?? null;
 
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ['proposals'] });
+    void qc.invalidateQueries({ queryKey: ['proposal'] });
   };
+  const choose = (id: string) => {
+    setSelectedId(id);
+    if (!window.matchMedia('(min-width: 1280px)').matches) panel.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  const toggleStatus = (status: string) => setStatusFilter((s) => (s === status ? '' : status));
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-3xl font-bold tracking-tight">{t('proposalsPage.title')}</h1>
-        <span className="text-sm text-muted">{t('proposalsPage.count', { count: proposals.data?.items.length ?? 0 })}</span>
-      </div>
+    <AdminPage>
+      <AdminHeader
+        title={t('proposalsPage.title')}
+        subtitle={t('adminUi.sub.proposals')}
+        actions={
+          <button type="button" className={BTN_PRIMARY} onClick={() => setCreateOpen(true)}>
+            <Icon d={ICONS.plus} size={18} sw={2} />
+            {t('proposalsPage.newProposal')}
+          </button>
+        }
+      />
 
-      <CreateProposalForm type={createType} onTypeChange={setCreateType} onCreated={refresh} />
+      <StatGrid>
+        <StatTile tone="bg-warn-bg text-warn" icon={ICONS.vote} label={t('adminUi.proposals.statOpen')} value={count('open')} pressed={statusFilter === 'open'} onClick={() => toggleStatus('open')} />
+        <StatTile tone="bg-primary-soft text-primary" icon={ICONS.check} label={t('adminUi.proposals.statToExecute')} value={count('approved')} pressed={statusFilter === 'approved'} onClick={() => toggleStatus('approved')} />
+        <StatTile tone="bg-soft text-ink2" icon={ICONS.doc} label={t('adminUi.proposals.statDraft')} value={count('draft')} pressed={statusFilter === 'draft'} onClick={() => toggleStatus('draft')} />
+        <StatTile tone="bg-blue-bg text-blue" icon={ICONS.layers} label={t('adminUi.proposals.statTotal')} value={everything.data ? formatCount(all.length) : null} pressed={!statusFilter && !typeFilter} onClick={() => { setStatusFilter(''); setTypeFilter(''); }} />
+      </StatGrid>
 
-      <div className="flex flex-wrap items-end gap-2">
-        <label className="text-sm text-muted">
-          {t('common.status')}
-          <select className="ml-2 h-11 rounded-md border border-input bg-background px-2" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="">{t('common.all')}</option>
-            {PROPOSAL_STATUSES.map((s) => (
-              <option key={s} value={s}>{t(`status.proposal.${s}`)}</option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm text-muted">
-          {t('proposalsPage.type')}
-          <select className="ml-2 h-11 rounded-md border border-input bg-background px-2" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-            <option value="">{t('common.all')}</option>
-            {PROPOSAL_TYPES.map((s) => (
-              <option key={s} value={s}>{t(`proposalType.${s}`)}</option>
-            ))}
-          </select>
-        </label>
-        <div className="flex-1" />
-      </div>
+      <SplitLayout
+        sideWidth="400px"
+        main={
+          <Card className="px-5 pb-3 pt-5 sm:px-6">
+            <CardHead
+              title={t('proposalsPage.title')}
+              sub={proposals.data ? t('proposalsPage.count', { count: rows.length }) : undefined}
+              action={
+                <>
+                  <select aria-label={t('common.status')} className="field" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                    <option value="">{t('common.status')}: {t('common.all')}</option>
+                    {PROPOSAL_STATUSES.map((st) => (
+                      <option key={st} value={st}>{t(`status.proposal.${st}`)}</option>
+                    ))}
+                  </select>
+                  <select aria-label={t('proposalsPage.type')} className="field" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+                    <option value="">{t('proposalsPage.type')}: {t('common.all')}</option>
+                    {PROPOSAL_TYPES.map((ty) => (
+                      <option key={ty} value={ty}>{t(`proposalType.${ty}`)}</option>
+                    ))}
+                  </select>
+                </>
+              }
+            />
+            {proposals.error ? (
+              <LoadError error={proposals.error} onRetry={() => void proposals.refetch()} />
+            ) : !proposals.data ? (
+              <ListSkeleton rows={4} />
+            ) : rows.length === 0 ? (
+              <EmptyCard text={t('proposalsPage.empty')} icon={ICONS.vote} />
+            ) : (
+              <ul>
+                {rows.map((p) => (
+                  <ProposalItem key={p.id} p={p} privileged={privileged} selected={selected?.id === p.id} onSelect={() => choose(p.id)} onRefresh={refresh} />
+                ))}
+              </ul>
+            )}
+          </Card>
+        }
+        side={
+          <div ref={panel} className="scroll-mt-4">
+            <ProposalPanel id={selected?.id ?? null} loading={!proposals.data} />
+          </div>
+        }
+      />
 
-      {proposals.error ? (
-        <LoadError error={proposals.error} onRetry={() => void proposals.refetch()} />
-      ) : !proposals.data ? (
-        <ListSkeleton rows={4} />
-      ) : proposals.data.items.length === 0 ? (
-        <Empty text={t('proposalsPage.empty')} />
-      ) : (
-        <ul className="space-y-2">
-          {proposals.data.items.map((p) => (
-            <ProposalItem key={p.id} p={p} privileged={privileged} onOpenDetail={() => setDetailId(p.id)} onRefresh={refresh} />
-          ))}
-        </ul>
-      )}
-
-      <ProposalDetailDialog id={detailId} onClose={() => setDetailId(null)} />
-    </div>
+      <AdminDialog open={createOpen} onClose={() => setCreateOpen(false)} title={t('proposalsPage.newProposal')} wide>
+        <CreateProposalForm type={createType} onTypeChange={setCreateType} onCreated={() => { setCreateOpen(false); refresh(); }} onCancel={() => setCreateOpen(false)} />
+      </AdminDialog>
+    </AdminPage>
   );
 }
+
+const STATUS_DOT: Record<string, string> = {
+  draft: 'bg-muted',
+  open: 'bg-warn',
+  approved: 'bg-primary',
+  executed: 'bg-ok',
+  rejected: 'bg-bad',
+  lapsed: 'bg-muted',
+  cancelled: 'bg-muted',
+};
 
 function ProposalItem({
   p,
   privileged,
-  onOpenDetail,
+  selected,
+  onSelect,
   onRefresh,
 }: {
   p: ProposalListRow;
   privileged: boolean;
-  onOpenDetail: () => void;
+  selected: boolean;
+  onSelect: () => void;
   onRefresh: () => void;
 }) {
   const { t } = useTranslation();
   const remaining = useCountdown(p.closes_at);
+  const tally = p.ballots_hidden
+    ? t('votes.needToPass', { need: p.basis === 'share' ? p.threshold_weight : p.threshold })
+    : p.basis === 'share' ? `${p.counts.yes_weight}/${p.threshold_weight}` : `${p.counts.yes}/${p.threshold}`;
 
   return (
-    <li data-testid="proposal-row" className="rounded-[18px] border border-border bg-card shadow-card p-3">
+    <li
+      data-testid="proposal-row"
+      aria-current={selected}
+      className={`-mx-2 rounded-xl border-b border-border px-2 py-3 transition-colors last:border-b-0 ${selected ? 'bg-primary-soft' : 'hover:bg-hover'}`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <button type="button" className="text-left font-semibold hover:text-primary" onClick={onOpenDetail}>
-            {p.title}
-          </button>
-          <p className="text-sm text-muted">
-            {t(`proposalType.${p.type}`)} · {t('proposalsPage.created', { date: fmtInstant(p.created_at) })}
-          </p>
-        </div>
-        <span className="shrink-0">
-          <StatusPill status={p.status === 'open' ? 'pending' : p.status} label={t(`status.proposal.${p.status}`)} />
-        </span>
+        <button type="button" className="flex min-w-0 flex-1 items-start gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={onSelect}>
+          <span aria-hidden="true" className={`mt-2 h-2.5 w-2.5 shrink-0 rounded-full ${STATUS_DOT[p.status] ?? 'bg-muted'}`} />
+          <span className="min-w-0">
+            <span className="block font-semibold">{p.title}</span>
+            <span className="block text-xs text-muted">
+              {t(`proposalType.${p.type}`)} · {t('proposalsPage.created', { date: fmtInstant(p.created_at) })}
+            </span>
+          </span>
+        </button>
+        <StatusPill status={p.status === 'open' ? 'pending' : p.status} label={t(`status.proposal.${p.status}`)} />
       </div>
 
-      <div className="mt-2 flex flex-wrap gap-4 text-sm">
-        <span>
-          {t('proposal.threshold')}: {p.ballots_hidden ? t('votes.needToPass', { need: p.basis === 'share' ? p.threshold_weight : p.threshold }) : p.basis === 'share' ? `${p.counts.yes_weight}/${p.threshold_weight}` : `${p.counts.yes}/${p.threshold}`}
-        </span>
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 pl-[1.375rem] text-[0.8125rem] text-ink2">
+        <span>{t('proposal.threshold')}: <b className="tabular-nums">{tally}</b></span>
         {p.voted_count !== undefined && (
           <span data-testid="turnout">{t('proposal.turnout', { voted: p.voted_count, total: p.eligible_count })}</span>
         )}
-        <span>
-          {t('votes.deadline')}: {p.closes_at ? (remaining ?? fmtInstant(p.closes_at)) : t('common.none')}
-        </span>
-        {p.amount_paisa && <span>{t('common.amount')}: {taka(p.amount_paisa)}</span>}
+        {p.closes_at && <span>{t('votes.deadline')}: {remaining ?? fmtInstant(p.closes_at)}</span>}
+        {p.amount_paisa && <span>{t('common.amount')}: <b className="tabular-nums">{taka(p.amount_paisa)}</b></span>}
       </div>
 
-      {privileged && (
-        <div className="mt-3 flex flex-wrap gap-2">
+      {privileged && (p.status === 'draft' || p.status === 'open' || p.status === 'approved') && (
+        <div className="mt-2.5 flex flex-wrap items-center gap-2 pl-[1.375rem]">
           {p.status === 'draft' && <OpenButton id={p.id} onDone={onRefresh} />}
           {p.status === 'draft' && <CancelButton id={p.id} onDone={onRefresh} />}
           {p.status === 'open' && <CloseEarlyButton id={p.id} onDone={onRefresh} canClose={p.can_close_early === true} />}
           {p.status === 'approved' && <ExecuteButton id={p.id} type={p.type} onDone={onRefresh} />}
-          <button type="button" className="h-10 rounded-xl border border-border px-3" onClick={onOpenDetail}>
-            {t('common.details')}
-          </button>
         </div>
       )}
     </li>
@@ -180,7 +232,7 @@ function OpenButton({ id, onDone }: { id: string; onDone: () => void }) {
 
   return (
     <>
-      <button type="button" className="h-10 rounded-xl bg-primary px-3 text-primary-foreground" onClick={() => setOpen(true)}>
+      <button type="button" className={BTN_SM_PRIMARY} onClick={() => setOpen(true)}>
         {t('proposal.open')}
       </button>
       <ConfirmSheet
@@ -197,7 +249,7 @@ function OpenButton({ id, onDone }: { id: string; onDone: () => void }) {
         <p className="text-muted">{t('proposal.openBody')}</p>
         <label className="block text-sm text-muted">
           {t('proposal.closesAt')}
-          <input type="datetime-local" className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={closesAt} onChange={(e) => setClosesAt(e.target.value)} />
+          <input type="datetime-local" className="field mt-1 w-full" value={closesAt} onChange={(e) => setClosesAt(e.target.value)} />
         </label>
       </ConfirmSheet>
     </>
@@ -213,7 +265,7 @@ function CloseEarlyButton({ id, onDone, canClose }: { id: string; onDone: () => 
         type="button"
         disabled={!canClose}
         title={canClose ? undefined : t('proposal.closeEarlyDisabled')}
-        className="h-10 rounded-xl border border-border px-3 disabled:cursor-not-allowed disabled:opacity-50"
+        className={BTN_SM}
         onClick={() => setOpen(true)}
       >
         {t('proposal.closeEarly')}
@@ -242,7 +294,7 @@ function CancelButton({ id, onDone }: { id: string; onDone: () => void }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button type="button" className="h-10 rounded-xl border border-border px-3" onClick={() => setOpen(true)}>
+      <button type="button" className={BTN_SM} onClick={() => setOpen(true)}>
         {t('common.cancel')}
       </button>
       <ConfirmSheet
@@ -272,7 +324,7 @@ function ExecuteButton({ id, type, onDone }: { id: string; type: ProposalType; o
 
   return (
     <>
-      <button type="button" data-testid="execute-proposal" className="h-10 rounded-xl bg-primary px-3 text-primary-foreground" onClick={() => setOpen(true)}>
+      <button type="button" data-testid="execute-proposal" className={BTN_SM_PRIMARY} onClick={() => setOpen(true)}>
         {t('proposal.execute')}
       </button>
       <ConfirmSheet
@@ -299,11 +351,11 @@ function ExecuteButton({ id, type, onDone }: { id: string; type: ProposalType; o
           <>
             <label className="block text-sm text-muted">
               {t('common.amount')}
-              <input className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
+              <input className="field mt-1 w-full" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
             </label>
             <label className="block text-sm text-muted">
               {t('payment.method')}
-              <select className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={account} onChange={(e) => setAccount(e.target.value as typeof account)}>
+              <select className="field mt-1 w-full" value={account} onChange={(e) => setAccount(e.target.value as typeof account)}>
                 <option value="CASH">{t('payment.methods.cash')}</option>
                 <option value="BANK">{t('payment.methods.bank')}</option>
                 <option value="BKASH">{t('payment.methods.bkash')}</option>
@@ -317,26 +369,33 @@ function ExecuteButton({ id, type, onDone }: { id: string; type: ProposalType; o
   );
 }
 
-function CreateProposalForm({
+export function CreateProposalForm({
   type,
   onTypeChange,
   onCreated,
+  onCancel,
+  initialValues,
+  lockType = false,
 }: {
   type: ProposalType;
   onTypeChange: (t: ProposalType) => void;
   onCreated: () => void;
+  onCancel: () => void;
+  /** Fields filled in before the user types anything (the gold page starts a purchase as gold). */
+  initialValues?: Record<string, string>;
+  /** Hide the type chooser: the caller already decided what is being proposed. */
+  lockType?: boolean;
 }) {
   const { t } = useTranslation();
-  const qc = useQueryClient();
-  const [expanded, setExpanded] = useState(false);
   const [title, setTitle] = useState('');
   const [clauseRef, setClauseRef] = useState('');
-  const [form, setForm] = useState<FormState>(emptyForm);
+  const fresh = (): FormState => ({ ...emptyForm(), values: { ...initialValues } });
+  const [form, setForm] = useState<FormState>(fresh);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
   const changeType = (next: ProposalType) => {
-    setForm(emptyForm());
+    setForm(fresh());
     setError(null);
     onTypeChange(next);
   };
@@ -358,9 +417,7 @@ function CreateProposalForm({
       });
       setTitle('');
       setClauseRef('');
-      setForm(emptyForm());
-      setExpanded(false);
-      void qc.invalidateQueries({ queryKey: ['proposals'] });
+      setForm(fresh());
       onCreated();
     } catch (err) {
       setError(err);
@@ -370,93 +427,101 @@ function CreateProposalForm({
   };
 
   return (
-    <div className="rounded-[18px] border border-border bg-card shadow-card p-3">
-      {!expanded ? (
-        <button type="button" className="h-10 rounded-xl bg-primary px-3 text-primary-foreground" onClick={() => setExpanded(true)}>
-          {t('proposalsPage.newProposal')}
-        </button>
-      ) : (
-        <form
-          className="space-y-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void submit();
-          }}
-        >
-          <h3 className="font-semibold">{t('proposalsPage.newProposal')}</h3>
-          <label className="block text-sm text-muted">
-            {t('proposalsPage.type')}
-            <select className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={type} onChange={(e) => changeType(e.target.value as ProposalType)}>
-              {CREATE_TYPES.map((s) => (
-                <option key={s} value={s}>{t(`proposalType.${s}`)}</option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm text-muted">
-            {t('proposal.title')}
-            <input className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={title} onChange={(e) => setTitle(e.target.value)} />
-          </label>
-          <ProposalFields type={type} form={form} onChange={setForm} />
-          <label className="block text-sm text-muted">
-            {t('proposal.clauseRef')}
-            <input className="mt-1 h-11 w-full rounded-md border border-input bg-background px-2" value={clauseRef} onChange={(e) => setClauseRef(e.target.value)} />
-          </label>
-          {error != null && <p role="alert" className="text-bad">{proposalErrorText(error, t)}</p>}
-          <div className="flex gap-2">
-            <button type="submit" disabled={busy} className="h-10 rounded-xl bg-primary px-3 text-primary-foreground disabled:opacity-50">{busy ? t('common.working') : t('common.submit')}</button>
-            <button type="button" className="h-10 rounded-xl border border-border px-3" onClick={() => setExpanded(false)}>{t('common.cancel')}</button>
-          </div>
-        </form>
-      )}
-    </div>
+    <form
+      className="space-y-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void submit();
+      }}
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
+        {!lockType && <label className="block text-sm text-muted">
+          {t('proposalsPage.type')}
+          <select className="field mt-1 w-full" value={type} onChange={(e) => changeType(e.target.value as ProposalType)}>
+            {CREATE_TYPES.map((s) => (
+              <option key={s} value={s}>{t(`proposalType.${s}`)}</option>
+            ))}
+          </select>
+        </label>}
+        <label className="block text-sm text-muted">
+          {t('proposal.clauseRef')}
+          <input className="field mt-1 w-full" value={clauseRef} onChange={(e) => setClauseRef(e.target.value)} />
+        </label>
+      </div>
+      <label className="block text-sm text-muted">
+        {t('proposal.title')}
+        <input className="field mt-1 w-full" value={title} onChange={(e) => setTitle(e.target.value)} />
+      </label>
+      <ProposalFields type={type} form={form} onChange={setForm} />
+      {error != null && <p role="alert" className="rounded-xl bg-bad-bg px-3 py-2 text-sm text-bad">{proposalErrorText(error, t)}</p>}
+      <div className="flex gap-2.5 pt-1">
+        <button type="submit" disabled={busy} className={`${BTN_PRIMARY} flex-1`}>{busy ? t('common.working') : t('common.submit')}</button>
+        <button type="button" className={`${BTN_SECONDARY} flex-1`} onClick={onCancel}>{t('common.cancel')}</button>
+      </div>
+    </form>
   );
 }
 
-function ProposalDetailDialog({ id, onClose }: { id: string | null; onClose: () => void }) {
+/** The chosen proposal in full: what it does, the checklist, and who has voted. */
+function ProposalPanel({ id, loading }: { id: string | null; loading: boolean }) {
   const { t } = useTranslation();
   const proposal = useQuery({ queryKey: ['proposal', id], enabled: !!id, queryFn: () => api<ProposalDetail>(`/proposals/${id}`) });
+  const d = proposal.data;
 
+  if (!id) {
+    return <Card className="p-5">{loading ? <Skeleton className="h-64 w-full" /> : <EmptyCard text={t('proposalsPage.empty')} icon={ICONS.vote} />}</Card>;
+  }
+  if (proposal.error) return <Card className="p-5"><LoadError error={proposal.error} onRetry={() => void proposal.refetch()} /></Card>;
+  if (!d) return <Card className="p-5"><Skeleton className="h-64 w-full" /></Card>;
+
+  const voted = d.voters.filter((v) => d.votes.some((vote) => vote.member_id === v.member_id)).length;
   return (
-    <Dialog.Root open={!!id} onOpenChange={(o) => !o && onClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
-        <Dialog.Content aria-describedby={undefined} className="fixed left-1/2 top-1/2 z-50 w-[min(36rem,92vw)] max-h-[90vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border border-border bg-card p-4 shadow-lg">
-          {!proposal.data ? (
-            <Dialog.Title className="text-lg font-semibold"><div className="h-7 w-48 animate-pulse rounded bg-muted" /></Dialog.Title>
-          ) : (
-            <>
-              <Dialog.Title className="text-lg font-semibold">{proposal.data.title}</Dialog.Title>
-              <div className="mt-2 space-y-3 text-sm">
-                {proposal.data.description && <p>{proposal.data.description}</p>}
-                <div className="grid grid-cols-2 gap-2">
-                  <SheetRow label={t('common.status')} value={<StatusPill status={proposal.data.status === 'open' ? 'pending' : proposal.data.status} label={t(`status.proposal.${proposal.data.status}`)} />} />
-                  <SheetRow label={t('proposalsPage.type')} value={t(`proposalType.${proposal.data.type}`)} />
-                  {proposal.data.subject && <SheetRow label={t('proposal.subject')} value={`${proposal.data.subject.code} ${proposal.data.subject.full_name}`} />}
-                  {proposal.data.clause_ref && <SheetRow label={t('proposal.clauseRef')} value={proposal.data.clause_ref} />}
-                  <SheetRow label={t('proposal.threshold')} value={proposal.data.ballots_hidden ? t('votes.hiddenUntilClose') : proposal.data.basis === 'share' ? `${proposal.data.counts.yes_weight}/${proposal.data.threshold_weight}` : `${proposal.data.counts.yes}/${proposal.data.threshold}`} />
-                </div>
-                <ComplianceChecklist type={proposal.data.type} payload={proposal.data.payload} />
-                <PayloadPreview payload={proposal.data.payload} />
-                {proposal.data.voted_count !== undefined && <p className="text-sm font-semibold">{t('proposal.turnout', { voted: proposal.data.voted_count, total: proposal.data.eligible_count })}</p>}
-                <h4 className="font-semibold">{t('proposal.voterList')}</h4>
-                <ul className="divide-y divide-border">
-                  {proposal.data.voters.map((v) => {
-                    const cast = proposal.data!.votes.find((vote) => vote.member_id === v.member_id);
-                    return (
-                      <li key={v.member_id} className="flex justify-between py-1">
-                        <span>{v.code} {v.full_name}{proposal.data!.basis === 'share' && <span className="text-muted"> · {v.weight}</span>}</span>
-                        {!proposal.data!.ballots_hidden && <span className="font-medium">{cast ? t(`votes.${cast.choice}`) : <span className="text-muted">{t('votes.notVoted')}</span>}</span>}
-                      </li>
-                    );
-                  })}
-                </ul>
-                <Dialog.Close className="mt-2 h-11 w-full rounded-xl border border-border">{t('common.close')}</Dialog.Close>
-              </div>
-            </>
-          )}
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <Card className="p-5">
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="text-lg font-bold leading-snug">{d.title}</h2>
+        <StatusPill status={d.status === 'open' ? 'pending' : d.status} label={t(`status.proposal.${d.status}`)} />
+      </div>
+      <p className="mt-0.5 text-[0.8125rem] text-muted">{t(`proposalType.${d.type}`)}</p>
+      {d.description && <p className="mt-3 text-sm">{d.description}</p>}
+
+      <dl className="mt-3">
+        {d.subject && <InfoRow label={t('proposal.subject')} value={`${d.subject.code} ${d.subject.full_name}`} />}
+        {d.clause_ref && <InfoRow label={t('proposal.clauseRef')} value={d.clause_ref} />}
+        <InfoRow
+          label={t('proposal.threshold')}
+          value={d.ballots_hidden ? t('votes.hiddenUntilClose') : d.basis === 'share' ? `${d.counts.yes_weight}/${d.threshold_weight}` : `${d.counts.yes}/${d.threshold}`}
+        />
+      </dl>
+      {d.voted_count !== undefined && <p className="mt-2 text-sm font-semibold">{t('proposal.turnout', { voted: d.voted_count, total: d.eligible_count })}</p>}
+
+      <div className="mt-3 space-y-3 text-sm">
+        <ComplianceChecklist type={d.type} payload={d.payload} />
+        <PayloadPreview payload={d.payload} />
+      </div>
+
+      <div className="mb-1 mt-4 flex items-center justify-between">
+        <h3 className="text-sm font-bold">{t('proposal.voterList')}</h3>
+        {!d.ballots_hidden && <span className="text-xs text-muted tabular-nums">{formatCount(voted)}/{formatCount(d.voters.length)}</span>}
+      </div>
+      <ul className="max-h-80 overflow-y-auto text-sm">
+        {d.voters.map((v) => {
+          const cast = d.votes.find((vote) => vote.member_id === v.member_id);
+          return (
+            <li key={v.member_id} className="flex items-center justify-between gap-2 border-t border-border py-2">
+              <span className="flex min-w-0 items-center gap-2">
+                <MemberBadge code={v.code} />
+                <span className="truncate">{v.full_name}{d.basis === 'share' && <span className="text-muted"> · {v.weight}</span>}</span>
+              </span>
+              {!d.ballots_hidden && (
+                <span className={`shrink-0 text-xs font-semibold ${cast ? (cast.choice === 'yes' ? 'text-ok' : cast.choice === 'no' ? 'text-bad' : 'text-ink2') : 'text-muted'}`}>
+                  {cast ? t(`votes.${cast.choice}`) : t('votes.notVoted')}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </Card>
   );
 }
 
@@ -466,7 +531,7 @@ function ComplianceChecklist({ type, payload }: { type: ProposalType; payload: R
   const compliance = (payload.compliance ?? {}) as Record<string, boolean>;
   const allTrue = COMPLIANCE_CHECKLIST_FIELDS.every((f) => compliance[f] === true);
   return (
-    <div className={`rounded-md border p-3 ${allTrue ? 'border-ok/30 bg-ok/10' : 'border-warn/30 bg-warn/10'}`}>
+    <div className={`rounded-xl p-3 ${allTrue ? 'bg-ok-bg' : 'bg-warn-bg'}`}>
       <p className="mb-1 font-medium">{t('proposalsPage.compliance')}</p>
       <ul className="space-y-1">
         {COMPLIANCE_CHECKLIST_FIELDS.map((f) => (
@@ -486,7 +551,7 @@ function PayloadPreview({ payload }: { payload: Record<string, unknown> }) {
   const entries = Object.entries(payload).filter(([k, v]) => v !== undefined && v !== null && k !== 'compliance');
   if (entries.length === 0) return null;
   return (
-    <div className="rounded-xl border border-border p-3">
+    <div className="rounded-xl bg-soft p-3">
       <p className="mb-1 font-medium">{t('proposal.payload')}</p>
       {entries.map(([k, v]) => (
         <div key={k} className="grid grid-cols-[9rem_1fr] gap-2 py-1">

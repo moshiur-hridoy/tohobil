@@ -57,15 +57,15 @@ export function HomePage() {
     <PullToRefresh onRefresh={refresh}>
       <div className="flex flex-col gap-3 px-4 pb-4 pt-1">
         {/* Outstanding hero card */}
-        <section className="relative overflow-hidden rounded-3xl bg-primary-deep p-5 text-white" aria-labelledby="home-outstanding">
+        <section className="relative overflow-hidden rounded-3xl bg-hero p-5 text-on-hero" aria-labelledby="home-outstanding">
           <svg aria-hidden="true" width="200" height="200" viewBox="0 0 200 200" className="absolute -right-[50px] -top-[60px] opacity-[0.14]">
-            <circle cx="100" cy="100" r="96" fill="none" stroke="#fff" strokeWidth="2" />
-            <circle cx="100" cy="100" r="66" fill="none" stroke="#fff" strokeWidth="2" />
-            <circle cx="100" cy="100" r="36" fill="none" stroke="#fff" strokeWidth="2" />
+            <circle cx="100" cy="100" r="96" fill="none" stroke="currentColor" strokeWidth="2" />
+            <circle cx="100" cy="100" r="66" fill="none" stroke="currentColor" strokeWidth="2" />
+            <circle cx="100" cy="100" r="36" fill="none" stroke="currentColor" strokeWidth="2" />
           </svg>
           <div className="relative">
             <h2 id="home-outstanding" className="flex items-center gap-2.5 text-sm font-normal">
-              <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-white/[0.16]">
+              <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-hero-icon">
                 <Icon d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M3 10h18 M16 14.5h2" size={18} />
               </span>
               {t('home.myOutstanding')}
@@ -79,8 +79,8 @@ export function HomePage() {
                   <p className="mt-2.5 text-sm">{t('home.outstandingNone')}</p>
                 ) : (
                   <div className="mt-2.5 flex flex-wrap gap-2 text-[0.8125rem]">
-                    <span className="rounded-full bg-white/[0.16] px-2.5 py-1">{t('home.fines')} {taka(fines)}</span>
-                    {nextDue && <span className="rounded-full bg-white/[0.16] px-2.5 py-1">{t('home.nextDueOn', { date: fmtDate(nextDue) })}</span>}
+                    <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.fines')} {taka(fines)}</span>
+                    {nextDue && <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.nextDueOn', { date: fmtDate(nextDue) })}</span>}
                   </div>
                 )}
                 {principal > 0n && fines > 0n && (
@@ -91,7 +91,7 @@ export function HomePage() {
                     <strong>{t('home.underVerification')}.</strong> {t('home.underVerificationHint')}
                   </p>
                 )}
-                <Link to="/pay" className="mt-[18px] flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-white text-[1.0625rem] font-bold text-primary">
+                <Link to="/pay" className="mt-[18px] flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-hero-action text-[1.0625rem] font-bold text-on-hero-action">
                   {t('home.payNow')}
                   <Icon d="M5 12h14 M13 6l6 6-6 6" size={20} sw={2} />
                 </Link>

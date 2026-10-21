@@ -249,11 +249,25 @@ export async function loadDataset(pool: pg.Pool, ds: Dataset, opts: LoadOptions)
 
       // ---- assets: DR INVESTMENTS_AT_COST, CR the paying account ----------------------------
       const assetIds = new Map<string, string>();
+      const partnerIds = new Map<string, string>();
       for (const a of ds.assets) {
+        let partnerId: string | null = null;
+        if (a.partner) {
+          partnerId = partnerIds.get(a.partner) ?? null;
+          if (!partnerId) {
+            const p = await tx.query(
+              `INSERT INTO investment_partners (kind, name) VALUES ($1,$2) RETURNING id`,
+              [a.kind, a.partner],
+            );
+            partnerId = (p.rows[0] as { id: string }).id;
+            partnerIds.set(a.partner, partnerId);
+            count('investment_partners');
+          }
+        }
         const ins = await tx.query(
-          `INSERT INTO assets (kind, name, acquired_on, cost_paisa, quantity, unit, status)
-           VALUES ($1,$2,$3,$4::bigint,$5::numeric,$6,$7) RETURNING id`,
-          [a.kind, a.name, a.acquired_on, a.cost_paisa.toString(), a.quantity, a.unit, a.status],
+          `INSERT INTO assets (kind, name, acquired_on, cost_paisa, quantity, unit, status, partner_id)
+           VALUES ($1,$2,$3,$4::bigint,$5::numeric,$6,$7,$8) RETURNING id`,
+          [a.kind, a.name, a.acquired_on, a.cost_paisa.toString(), a.quantity, a.unit, a.status, partnerId],
         );
         const id = (ins.rows[0] as { id: string }).id;
         assetIds.set(a.asset_key, id);
@@ -270,6 +284,7 @@ export async function loadDataset(pool: pg.Pool, ds: Dataset, opts: LoadOptions)
               memo: `Asset ${a.asset_key} ${a.name} (legacy import)`,
             }],
             actor,
+            { exactAccounts: true },
           );
         }
         count('assets');
@@ -298,7 +313,7 @@ export async function loadDataset(pool: pg.Pool, ds: Dataset, opts: LoadOptions)
                 ref_type: LEDGER_REF.import,
                 memo: `${e.memo} (legacy import)`,
               };
-        await postEntries(tx, [entry], actor);
+        await postEntries(tx, [entry], actor, { exactAccounts: true });
         count('misc_ledger');
       }
 
@@ -374,6 +389,7 @@ export async function loadDataset(pool: pg.Pool, ds: Dataset, opts: LoadOptions)
             finePaisa: plan.fine,
           }),
           actor,
+          { exactAccounts: true },
         );
         count('payments');
       }
@@ -424,6 +440,7 @@ export async function loadDataset(pool: pg.Pool, ds: Dataset, opts: LoadOptions)
             memo: `Opening adjustment ${o.account}: sheet ${o.actual_balance_paisa}, postings ${system}`,
           }],
           actor,
+          { exactAccounts: true },
         );
         count('opening_adjustments');
       }

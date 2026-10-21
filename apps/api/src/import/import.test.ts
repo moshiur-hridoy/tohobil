@@ -52,6 +52,14 @@ describe('sheet-to-csv (stage 1)', () => {
     expect(ds.misc_ledger.some((e) => /fine/i.test(e.memo) || /scratch/.test(e.memo))).toBe(false);
   });
 
+  it('a negative revenue labelled as charity is a payout from CHARITY_PAYABLE, not an ignored row', () => {
+    const { files, review } = convertSheet({
+      miscellaneous: 'Date,Description,Expense,Revenue\n26 May 2026,Sorboseba Bitoron,,"-৳8,000"\n',
+    });
+    expect(files.misc_ledger).toContain('2026-05-26,CHARITY_PAYABLE,BANK,800000,Sorboseba Bitoron');
+    expect(review.map((r) => r.what)).toEqual(['charity payout "Sorboseba Bitoron"']);
+  });
+
   it('a due date that disagrees with the 20th and a Dashboard flag that disagrees are listed', () => {
     const { review } = convertSheet(rawTabs());
     expect(review.find((r) => r.what === 'due date of February')).toMatchObject({ suggested: '2026-02-20' });

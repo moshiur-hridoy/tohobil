@@ -18,6 +18,7 @@ await build({
     healthcheck: 'src/healthcheck.ts',
     'cli/activation-code': 'src/cli/activation-code.ts',
     'cli/generate-dues': 'src/cli/generate-dues.ts',
+    'cli/import-sheet': 'src/cli/import-sheet.ts',
   },
   outdir: 'dist',
   bundle: true,

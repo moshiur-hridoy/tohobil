@@ -90,6 +90,8 @@ services:
       - files:/data/files
       - archives:/data/archives
       - backupstatus:/data/status:ro
+      # The legacy sheet CSVs for the one-off import (docs/DEPLOY-PORTAINER.md section 7); read-only.
+      - ${IMPORT_DIR:-/DATA/AppData/barakah/import}:/import:ro
     depends_on:
       migrate:
         condition: service_completed_successfully

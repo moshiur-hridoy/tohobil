@@ -337,7 +337,7 @@ export function convertSheet(tabs: RawTabs): ConvertResult {
       const kind = /gold/i.test(desc) ? 'gold' : 'other';
       if (kind === 'other') flag(file, rowNo, `kind of "${desc}"`, 'Not recognised as gold', 'other');
       const done = /^completed?$/i.test(cell(r, 3));
-      out.assets.push([key, kind, desc, date, amount.toString(), '', '', done ? 'held' : 'acquiring', 'BANK']);
+      out.assets.push([key, kind, desc, date, amount.toString(), '', '', done ? 'held' : 'acquiring', 'BANK', cell(r, 4)]);
       if (kind === 'gold') flag(file, rowNo, `quantity and unit of ${key}`, 'The sheet has neither; the asset is created without them', 'vori or gram');
       flag(file, rowNo, `source account of ${key}`, 'The sheet does not say which account paid; BANK was assumed', 'BANK');
     });
@@ -373,7 +373,11 @@ export function convertSheet(tabs: RawTabs): ConvertResult {
           add('DISTRIBUTIONS', 'BANK', -revenue, desc);
           return flag(file, rowNo, `distribution "${desc}"`, 'A negative revenue labelled as a distribution; booked as DISTRIBUTIONS paid from BANK', 'DISTRIBUTIONS');
         }
-        return flag(file, rowNo, `negative row "${desc}"`, 'A negative number that is not a distribution; ignored');
+        if (/charity|sadaqa|sodqa|bitoron/i.test(desc)) {
+          add('CHARITY_PAYABLE', 'BANK', -revenue, desc);
+          return flag(file, rowNo, `charity payout "${desc}"`, 'A negative revenue labelled as charity; booked as paid out of CHARITY_PAYABLE from BANK', 'CHARITY_PAYABLE');
+        }
+        return flag(file, rowNo, `negative row "${desc}"`, 'A negative number that is not a distribution or a charity payout; ignored');
       }
       if (/fine/i.test(desc)) return flag(file, rowNo, `row "${desc}"`, 'Fine totals are not imported; fines come from the payments', '');
       if (/interest/i.test(desc)) {

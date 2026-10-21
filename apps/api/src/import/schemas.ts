@@ -85,6 +85,8 @@ export const assetRow = z.object({
   unit: text.transform((v) => (v === '' ? null : v)).pipe(z.enum(['vori', 'gram']).nullable()),
   status: z.enum(['planned', 'acquiring', 'held', 'sold']),
   source_account: z.enum(['CASH', 'BANK', 'BKASH', 'NAGAD']),
+  /** The shop the fund invests with (for example Minar Jewellers); blank for the fund's own asset. */
+  partner: z.string().trim().default('').transform((v) => (v === '' ? null : v)),
 });
 
 /** What a shop reports a purchase is now worth (for example profit it kept in gold); not a cash entry. */
@@ -126,7 +128,7 @@ export const FILES = {
   fines: { file: 'fines.csv', schema: fineRow, columns: ['member_key', 'period', 'amount_paisa', 'status'] },
   payments: { file: 'payments.csv', schema: paymentRow, columns: ['payment_key', 'member_key', 'amount_paisa', 'method', 'trx_id', 'paid_at', 'note', 'raw_sms'] },
   allocations: { file: 'allocations.csv', schema: allocationRow, columns: ['payment_key', 'member_key', 'period', 'kind', 'amount_paisa'] },
-  assets: { file: 'assets.csv', schema: assetRow, columns: ['asset_key', 'kind', 'name', 'acquired_on', 'cost_paisa', 'quantity', 'unit', 'status', 'source_account'] },
+  assets: { file: 'assets.csv', schema: assetRow, columns: ['asset_key', 'kind', 'name', 'acquired_on', 'cost_paisa', 'quantity', 'unit', 'status', 'source_account', 'partner'] },
   valuations: { file: 'valuations.csv', schema: valuationRow, columns: ['asset_key', 'value_paisa', 'as_of', 'basis'] },
   misc_ledger: { file: 'misc_ledger.csv', schema: miscLedgerRow, columns: ['entry_date', 'debit_account', 'credit_account', 'amount_paisa', 'memo', 'member_key'] },
   opening_balances: { file: 'opening_balances.csv', schema: openingBalanceRow, columns: ['account', 'actual_balance_paisa', 'as_of'] },

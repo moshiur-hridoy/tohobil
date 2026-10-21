@@ -179,7 +179,7 @@ export const reinstatementExecutor: ExecutorSignature = async (db, proposal, _in
       const dueRes = await db.query(
         `INSERT INTO dues (member_id, period, kind, shares_snapshot, amount_paisa, due_date)
          VALUES ($1, $2, 'monthly', $3, $4::bigint, $5::date)
-         ON CONFLICT (member_id, period, kind) DO NOTHING
+         ON CONFLICT (member_id, period, kind) WHERE kind <> 'entry' DO NOTHING
          RETURNING id`,
         [memberId, fromPeriod, shares, amount.toString(), dueDate],
       );

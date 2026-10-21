@@ -27,6 +27,7 @@ import {
   type MemberDeps,
 } from '../members/service';
 import { reinstateMember } from '../members/status';
+import { currentEntryQuote, requoteEntry } from '../members/entry';
 import { addContactLogEntry, listContactLog } from '../members/contact';
 import { listSettlements, recordSettlementPayout } from '../members/settlement';
 
@@ -133,6 +134,23 @@ export function memberRoutes(deps: MemberRouteDeps, guards: Guards) {
           reinstateMember(tx, statusDeps(deps), req.params.id, null, user.id),
         );
         return { id: req.params.id, status: 'active' };
+      },
+    );
+
+    // A prospective member's entry quote (5.9), and a fresh one at today's price once it has lapsed.
+    app.get(
+      '/members/:id/entry-quote',
+      { preHandler: authenticate, schema: { params: idParams } },
+      async (req) => ({ quote: await currentEntryQuote(deps.pool, deps.clock, req.params.id) }),
+    );
+
+    app.post(
+      '/members/:id/entry-quote',
+      { preHandler: cashierStepUp, schema: { params: idParams } },
+      async (req) => {
+        const user = requireAuth(req);
+        const entryDeps = { ...statusDeps(deps), log: deps.log as Logger };
+        return { quote: await inTransaction(deps.pool, (tx) => requoteEntry(tx, entryDeps, user.id, req.params.id)) };
       },
     );
 

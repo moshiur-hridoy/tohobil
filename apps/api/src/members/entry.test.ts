@@ -8,7 +8,7 @@ import { createTestDb, type TestDb } from '../test/db-harness';
 import { seedFund, type Fund } from '../test/fund-fixture';
 import { cashierEntry } from '../payments/service';
 import { computeNav } from '../lib/nav';
-import { createEntryQuoteFromProposal, activateProspectiveMember, type EntryDeps } from './entry';
+import { createEntryQuoteFromProposal, activateProspectiveMember, currentEntryQuote, requoteEntry, type EntryDeps } from './entry';
 import { generateDues } from '../dues/service';
 
 describe('new member entry quote', () => {
@@ -191,5 +191,51 @@ describe('new member entry quote', () => {
     const first = await activateProspectiveMember(db!.app, deps, quote.member_id);
     const second = await activateProspectiveMember(db!.app, deps, quote.member_id);
     expect(first.user_id).toBe(second.user_id);
+  });
+
+  dbIt('a lapsed quote refuses payment until a new quote is made; money already paid counts', async () => {
+    const payDeps = () => ({ pool: db!.app, clock, log: deps.log, pushSender: deps.pushSender, smsProvider: deps.smsProvider });
+    const pay = (memberId: string, amount: bigint, trx: string) =>
+      cashierEntry(payDeps(), authUser('M01'), {
+        member_id: memberId, amount_paisa: amount, method: 'bank', purpose: 'entry', paid_at: clock.now().toISOString(), trx_id: trx,
+      }, { ip: '127.0.0.1' });
+
+    const proposalId = await newMemberProposal(db!.admin, { name: 'Late Member', phone: '+8801700000077', shares: 1 });
+    const quote = await createEntryQuoteFromProposal(db!.app, deps, proposalId);
+    const part = quote.price_paisa / 3n;
+    await pay(quote.member_id, part, 'ENTRYPART01'); // within the 7 days
+
+    // a quote cannot be replaced while it is still valid
+    await expect(requoteEntry(db!.app, deps, fund.users.M01, quote.member_id)).rejects.toMatchObject({ code: 'entry.quote_still_valid' });
+
+    clock.advance(8 * 24 * 60 * 60 * 1000);
+    expect((await currentEntryQuote(db!.app, clock, quote.member_id))?.expired).toBe(true);
+    await expect(pay(quote.member_id, quote.price_paisa - part, 'ENTRYLATE01')).rejects.toMatchObject({ code: 'entry.quote_expired' });
+
+    const navBefore = await computeNav(db!.app, clock.todayDhaka());
+    const fresh = await requoteEntry(db!.app, deps, fund.users.M01, quote.member_id);
+    expect(fresh.expired).toBe(false);
+    expect(fresh.paid_paisa).toBe(part.toString());
+    expect(BigInt(fresh.outstanding_paisa)).toBe(BigInt(fresh.price_paisa) - part);
+    // the member's own part payment is not priced into the share they are buying
+    const expected = ((navBefore.net_assets_paisa - part) * 2n + BigInt(navBefore.shares_outstanding)) / (2n * BigInt(navBefore.shares_outstanding));
+    expect(BigInt(fresh.price_paisa) - expected).toBeLessThanOrEqual(1n);
+
+    // the old due owes nothing more; only the new one is open
+    const open = await db!.admin.query(
+      `SELECT outstanding_paisa::text AS o FROM v_due_status WHERE member_id = $1 AND kind = 'entry' ORDER BY outstanding_paisa`,
+      [quote.member_id],
+    );
+    expect(open.rows.map((r) => (r as { o: string }).o)).toEqual(['0', fresh.outstanding_paisa]);
+
+    await pay(quote.member_id, BigInt(fresh.outstanding_paisa), 'ENTRYREST01');
+    const member = await one<{ status: string }>(db!.admin, `SELECT status FROM members WHERE id = $1`, [quote.member_id]);
+    expect(member.status).toBe('active');
+    const owed = await one<{ o: string }>(
+      db!.admin,
+      `SELECT COALESCE(SUM(outstanding_paisa), 0)::text AS o FROM v_due_status WHERE member_id = $1`,
+      [quote.member_id],
+    );
+    expect(owed.o).toBe('0');
   });
 });

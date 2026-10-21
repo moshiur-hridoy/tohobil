@@ -125,7 +125,7 @@ export async function generateDues(
            SELECT $1::uuid, $2::text, $3::text, $4::int, $5::bigint, $6::date
            WHERE $3::text <> 'start_boost'
               OR NOT EXISTS (SELECT 1 FROM dues WHERE member_id = $1::uuid AND kind = 'start_boost')
-           ON CONFLICT (member_id, period, kind) DO NOTHING
+           ON CONFLICT (member_id, period, kind) WHERE kind <> 'entry' DO NOTHING
            RETURNING id`,
           [m.id, period, kind, m.shares, amount.toString(), dueDate],
         );

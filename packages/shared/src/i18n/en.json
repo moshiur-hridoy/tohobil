@@ -426,6 +426,17 @@
       "wrong_status": "This meeting can no longer be changed (it was held or cancelled).",
       "not_started": "Attendance can be marked once the meeting has started.",
       "duplicate_member": "A member is listed twice."
+    },
+    "entry": {
+      "quote_expired": "The 7 days for this entry price have passed. Work out a new price first.",
+      "quote_still_valid": "The current price is still valid.",
+      "paid_covers_price": "What this person has paid already covers the new price. The members need to decide what to do.",
+      "quote_exists": "This person already has an entry price.",
+      "no_entry_due": "This person has no entry price.",
+      "not_prospective": "This person is not a new member waiting to join."
+    },
+    "nav": {
+      "stale_valuation": "The value of an asset is more than a year old. Update its value first (proposal: Valuation update)."
     }
   },
   "common": {
@@ -938,6 +949,16 @@
     "entryPaidAt": "Date paid",
     "entryRecord": "Record and confirm",
     "entryWarn": "This posts to the ledger immediately and the member is notified.",
+    "purposeEntry": "Entry price (new member)",
+    "prospective": "new member",
+    "noQuote": "This person has no entry price yet.",
+    "quotePrice": "Price for {{shares}} share(s)",
+    "quotePaid": "Already paid",
+    "quoteLeft": "Still to pay",
+    "quotePayBy": "Pay by",
+    "quoteExpired": "The 7 days for this price have passed. Work out a new price at today’s value; money already paid is taken off it.",
+    "requote": "Work out a new price",
+    "quoteDateLate": "This date is after the last day for this price.",
     "approve": "Approve",
     "reject": "Reject",
     "bulkApprove": "Approve {{n}} exact matches",

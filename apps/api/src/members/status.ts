@@ -356,7 +356,7 @@ async function generateCatchUpDueForMember(
   const insert = await db.query(
     `INSERT INTO dues (member_id, period, kind, shares_snapshot, amount_paisa, due_date)
      VALUES ($1::uuid, $2, 'monthly', $3, $4, $5)
-     ON CONFLICT (member_id, period, kind) DO NOTHING
+     ON CONFLICT (member_id, period, kind) WHERE kind <> 'entry' DO NOTHING
      RETURNING id`,
     [memberId, period, shares.shares, amount.toString(), dueDate],
   );

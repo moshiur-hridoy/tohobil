@@ -13,7 +13,7 @@ import {
   type ApprovalsQuery,
 } from '@barakah/shared';
 import type { AuthUser } from '../auth/service';
-import { activateProspectiveMember } from '../members/entry';
+import { activateProspectiveMember, assertEntryQuoteValid } from '../members/entry';
 import { LEDGER_REF, postEntries, reverseReference } from '../ledger/service';
 import { paymentPostings } from '../ledger/postings';
 import { audit } from '../lib/audit';
@@ -302,6 +302,8 @@ async function confirmInTx(
 
   // Two payments of one member must not be allocated against the same open dues at once.
   await tx.query(`SELECT id FROM members WHERE id = $1 FOR UPDATE`, [p.member_id]);
+  // Entry money must arrive within the quote's 7 days (5.9); after that the price is quoted again.
+  if (p.purpose === 'entry') await assertEntryQuoteValid(tx, p.member_id, toDhakaDate(new Date(p.paid_at)));
 
   const order = await ruleString(tx, 'allocation_order', deps.clock.todayDhaka());
   if (order !== 'oldest_principal_then_fines') {

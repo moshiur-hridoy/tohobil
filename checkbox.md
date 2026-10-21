@@ -148,6 +148,7 @@ Legend: `[x]` done, `[ ]` to do.
 
 ## Owner requests after Phase 6
 - [x] Special contribution (constitution 1.4 boosting, `docs/ASSUMPTIONS.md` 90): a unanimous proposal sets an amount per share and a due date; paid into capital from Pay; no fine, no warning; listed on Admin → Obligations
+- [x] New member entry from the app: the cashier entry sheet records an entry payment (and special contribution or levy cash); an entry quote lapses after 7 days and the cashier makes a new one at today's price (`docs/ASSUMPTIONS.md` 91)
 
 ---
 

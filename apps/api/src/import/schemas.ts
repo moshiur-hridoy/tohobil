@@ -87,6 +87,14 @@ export const assetRow = z.object({
   source_account: z.enum(['CASH', 'BANK', 'BKASH', 'NAGAD']),
 });
 
+/** What a shop reports a purchase is now worth (for example profit it kept in gold); not a cash entry. */
+export const valuationRow = z.object({
+  asset_key: z.string().trim().min(1),
+  value_paisa: paisaSchema,
+  as_of: dateSchema,
+  basis: text.transform((v) => (v === '' ? null : v)),
+});
+
 export const miscLedgerRow = z.object({
   entry_date: dateSchema,
   debit_account: z.string().regex(/^[A-Z_]+$/),
@@ -119,6 +127,7 @@ export const FILES = {
   payments: { file: 'payments.csv', schema: paymentRow, columns: ['payment_key', 'member_key', 'amount_paisa', 'method', 'trx_id', 'paid_at', 'note', 'raw_sms'] },
   allocations: { file: 'allocations.csv', schema: allocationRow, columns: ['payment_key', 'member_key', 'period', 'kind', 'amount_paisa'] },
   assets: { file: 'assets.csv', schema: assetRow, columns: ['asset_key', 'kind', 'name', 'acquired_on', 'cost_paisa', 'quantity', 'unit', 'status', 'source_account'] },
+  valuations: { file: 'valuations.csv', schema: valuationRow, columns: ['asset_key', 'value_paisa', 'as_of', 'basis'] },
   misc_ledger: { file: 'misc_ledger.csv', schema: miscLedgerRow, columns: ['entry_date', 'debit_account', 'credit_account', 'amount_paisa', 'memo', 'member_key'] },
   opening_balances: { file: 'opening_balances.csv', schema: openingBalanceRow, columns: ['account', 'actual_balance_paisa', 'as_of'] },
   expected_totals: { file: 'expected_totals.csv', schema: expectedTotalsRow, columns: ['member_key', 'principal_paid_paisa', 'fines_paid_paisa', 'principal_outstanding_paisa', 'fines_outstanding_paisa'] },
@@ -135,6 +144,7 @@ export type Dataset = {
   payments: z.infer<typeof paymentRow>[];
   allocations: z.infer<typeof allocationRow>[];
   assets: z.infer<typeof assetRow>[];
+  valuations: z.infer<typeof valuationRow>[];
   misc_ledger: z.infer<typeof miscLedgerRow>[];
   opening_balances: z.infer<typeof openingBalanceRow>[];
   expected_totals: z.infer<typeof expectedTotalsRow>[];

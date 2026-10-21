@@ -104,6 +104,8 @@ export function convertSheet(tabs: RawTabs): ConvertResult {
     payments: [],
     allocations: [],
     assets: [],
+    // the sheet records no valuations; the owner adds them by hand
+    valuations: [],
     misc_ledger: [],
     opening_balances: [],
     expected_totals: [],

@@ -248,4 +248,23 @@ describe('load and verify (stages 2 and 3, real Postgres)', () => {
     expect((await verifyImport(db.readonly, ds)).failures).toEqual([]);
     expect(await q(db, `SELECT 1 FROM payments WHERE unallocated_paisa <> 0`)).toEqual([]);
   });
+
+  it('valuations.csv records what a shop reports a purchase is worth, without moving cash', async (ctx) => {
+    const db = await fresh();
+    if (!db) return ctx.skip();
+    const ds = expectedDataset();
+    const without = await loadDataset(db.app, ds, { commit: false });
+
+    // profit the shop kept in gold: A01 is now worth 5,000 more than it cost
+    ds.valuations = [{ asset_key: 'A01', value_paisa: 3_500_000n, as_of: '2026-03-01', basis: 'Shop statement' }];
+    const report = await loadDataset(db.app, ds, { commit: true });
+    expect(report.counts['valuations']).toBe(1);
+    expect(report.ledger_entries).toBe(without.ledger_entries);
+    expect(await q(db, `SELECT v.value_paisa::text AS v, a.cost_paisa::text AS c FROM asset_valuations v JOIN assets a ON a.id = v.asset_id`))
+      .toEqual([{ v: '3500000', c: '3000000' }]);
+    expect((await verifyImport(db.readonly, ds)).failures).toEqual([]);
+
+    ds.valuations = [{ asset_key: 'A99', value_paisa: 1n, as_of: '2026-03-01', basis: null }];
+    await expect(loadDataset(db.app, ds, { commit: false })).rejects.toThrow(/unknown asset_key A99/);
+  });
 });

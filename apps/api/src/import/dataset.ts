@@ -15,8 +15,8 @@ export class ImportError extends Error {
   }
 }
 
-/** Files that may be absent: without them the default allocation applies (Doc.md 13). */
-const OPTIONAL: readonly NormalizedName[] = ['allocations'];
+/** Files that may be absent: without allocations the default allocation applies (Doc.md 13); without valuations every asset counts at cost. */
+const OPTIONAL: readonly NormalizedName[] = ['allocations', 'valuations'];
 
 /** Validate normalized CSV texts (keyed by file name, e.g. `members.csv`) into typed rows. */
 export function parseDataset(texts: Partial<Record<string, string>>): Dataset {

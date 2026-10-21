@@ -159,6 +159,10 @@ export function precheck(ds: Dataset): string[] {
   for (const a of ds.assets) {
     if (!a.acquired_on) problems.push(`assets: ${a.asset_key} has no acquired_on date to book its cost on`);
   }
+  const assetKeys = new Set(ds.assets.map((a) => a.asset_key));
+  for (const v of ds.valuations) {
+    if (!assetKeys.has(v.asset_key)) problems.push(`valuations: unknown asset_key ${v.asset_key}`);
+  }
   return problems;
 }
 
@@ -244,6 +248,7 @@ export async function loadDataset(pool: pg.Pool, ds: Dataset, opts: LoadOptions)
       }
 
       // ---- assets: DR INVESTMENTS_AT_COST, CR the paying account ----------------------------
+      const assetIds = new Map<string, string>();
       for (const a of ds.assets) {
         const ins = await tx.query(
           `INSERT INTO assets (kind, name, acquired_on, cost_paisa, quantity, unit, status)
@@ -251,6 +256,7 @@ export async function loadDataset(pool: pg.Pool, ds: Dataset, opts: LoadOptions)
           [a.kind, a.name, a.acquired_on, a.cost_paisa.toString(), a.quantity, a.unit, a.status],
         );
         const id = (ins.rows[0] as { id: string }).id;
+        assetIds.set(a.asset_key, id);
         if (a.cost_paisa > 0n) {
           await postEntries(
             tx,
@@ -267,6 +273,15 @@ export async function loadDataset(pool: pg.Pool, ds: Dataset, opts: LoadOptions)
           );
         }
         count('assets');
+      }
+
+      // ---- valuations: what the shop says a purchase is worth now; no cash moves -------------
+      for (const v of ds.valuations) {
+        await tx.query(
+          `INSERT INTO asset_valuations (asset_id, value_paisa, as_of, basis) VALUES ($1, $2::bigint, $3, $4)`,
+          [assetIds.get(v.asset_key), v.value_paisa.toString(), v.as_of, v.basis],
+        );
+        count('valuations');
       }
 
       // ---- miscellaneous entries ------------------------------------------------------------

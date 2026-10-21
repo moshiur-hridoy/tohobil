@@ -179,6 +179,8 @@ describe('GET /members', () => {
       expect(i['capital_paisa']).toMatch(/^-?\d+$/);
       expect(i['outstanding_principal_paisa']).toMatch(/^\d+$/);
       expect(i['outstanding_fines_paisa']).toMatch(/^\d+$/);
+      expect(i['overdue_paisa']).toMatch(/^\d+$/);
+      expect(BigInt(i['overdue_paisa'] as string)).toBeLessThanOrEqual(BigInt(i['outstanding_principal_paisa'] as string));
       expect(i['current_period']).toBe('2026-11');
     }
   });

@@ -73,6 +73,7 @@ export async function listMembers(
             shares_on(m.id, $1::date) AS shares,
             COALESCE(b.capital_paisa, 0) AS capital_paisa,
             COALESCE(du.outstanding_principal_paisa, 0) AS outstanding_principal_paisa,
+            COALESCE(du.overdue_paisa, 0) AS overdue_paisa,
             COALESCE(du.overdue_count, 0)::int AS overdue_count,
             COALESCE(fi.outstanding_fines_paisa, 0) AS outstanding_fines_paisa,
             cur.status AS current_period_status,
@@ -82,6 +83,7 @@ export async function listMembers(
      LEFT JOIN v_member_balances b ON b.member_id = m.id
      LEFT JOIN LATERAL (
        SELECT SUM(GREATEST(outstanding_paisa, 0)) AS outstanding_principal_paisa,
+              SUM(GREATEST(outstanding_paisa, 0)) FILTER (WHERE status = 'overdue') AS overdue_paisa,
               COUNT(*) FILTER (WHERE status = 'overdue') AS overdue_count
        FROM v_due_status WHERE member_id = m.id
      ) du ON true
@@ -105,6 +107,9 @@ export async function listMembers(
       shares: row['shares'],
       capital_paisa: paisaOut(row['capital_paisa']),
       outstanding_principal_paisa: paisaOut(row['outstanding_principal_paisa']),
+      // past the due date and unpaid: what the member is behind on now (outstanding_principal also
+      // counts dues generated ahead of time that are not due yet)
+      overdue_paisa: paisaOut(row['overdue_paisa']),
       outstanding_fines_paisa: paisaOut(row['outstanding_fines_paisa']),
       overdue_count: row['overdue_count'],
       current_period: today.slice(0, 7),

@@ -22,6 +22,9 @@ interface Cell {
   fine_paid: bigint;
   /** The member has a payment waiting for the cashier and this cell still owes something. */
   pending: boolean;
+  /** Asia/Dhaka date of the latest confirmed payment to this cell's dues. */
+  paid_on: string | null;
+  advance: boolean;
 }
 
 /** The worst status wins when a period has more than one due (monthly plus start boost). */
@@ -32,6 +35,11 @@ function combine(dues: Array<{ status: string; outstanding: bigint; allocated: b
   if (dues.some((d) => d.outstanding > 0n && d.status === 'overdue')) return 'overdue';
   if (dues.some((d) => d.allocated > 0n)) return 'partial';
   return 'unpaid';
+}
+
+function withFine(status: CellStatus, fine: bigint): CellStatus {
+  if (status !== 'paid' && status !== 'paid_late') return status;
+  return fine > 0n ? 'paid_late' : 'paid';
 }
 
 const str = (v: bigint): string => v.toString();
@@ -59,8 +67,18 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
   const [members, dues, fines, pending] = await Promise.all([
     deps.pool.query(`SELECT id, code, full_name, status FROM members ORDER BY code`),
     deps.pool.query(
-      `SELECT member_id, period, status, amount_paisa, allocated_paisa, outstanding_paisa
-       FROM v_due_status WHERE period >= $1 AND period <= $2`,
+      `SELECT v.member_id, v.period, v.status, v.amount_paisa, v.allocated_paisa, v.outstanding_paisa,
+              (SELECT to_char(MAX((p.paid_at AT TIME ZONE 'Asia/Dhaka')::date), 'YYYY-MM-DD')
+               FROM payment_allocations pa JOIN payments p ON p.id = pa.payment_id
+               WHERE pa.due_id = v.due_id AND pa.amount_paisa > 0 AND p.status = 'confirmed') AS paid_on,
+              -- Imported payments often carry a guessed date (the due date of the sheet row), and the
+              -- importer spreads a lump sum over later months, so only payments made in the app count
+              -- as "paid in advance" by date.
+              (SELECT to_char(MAX((p.paid_at AT TIME ZONE 'Asia/Dhaka')::date), 'YYYY-MM-DD')
+               FROM payment_allocations pa JOIN payments p ON p.id = pa.payment_id
+               WHERE pa.due_id = v.due_id AND pa.amount_paisa > 0 AND p.status = 'confirmed'
+                 AND p.source <> 'import') AS app_paid_on
+       FROM v_due_status v WHERE v.period >= $1 AND v.period <= $2`,
       [from, to],
     ),
     deps.pool.query(
@@ -76,7 +94,7 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
 
   const pendingMembers = new Set((pending.rows as Array<{ member_id: string }>).map((r) => r.member_id));
 
-  type DueRow = { member_id: string; period: string; status: string; amount_paisa: unknown; allocated_paisa: unknown; outstanding_paisa: unknown };
+  type DueRow = { member_id: string; period: string; status: string; amount_paisa: unknown; allocated_paisa: unknown; outstanding_paisa: unknown; paid_on: string | null; app_paid_on: string | null };
   const duesByCell = new Map<string, DueRow[]>();
   for (const r of dues.rows as DueRow[]) {
     const key = `${r.member_id}|${r.period}`;
@@ -106,6 +124,8 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
           outstanding: toBigInt(d.outstanding_paisa),
           allocated: toBigInt(d.allocated_paisa),
           amount: toBigInt(d.amount_paisa),
+          paid_on: d.paid_on,
+          app_paid_on: d.app_paid_on,
         }));
         if (list.length === 0) {
           cells[period] = null;
@@ -114,13 +134,25 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
         const due = list.reduce((a, d) => a + d.amount, 0n);
         const outstanding = list.reduce((a, d) => a + (d.outstanding > 0n ? d.outstanding : 0n), 0n);
         const fine = finesByCell.get(key) ?? { fine: 0n, paid: 0n };
+        // The date the cell was settled: the latest confirmed payment that went to its dues.
+        const latest = (pick: (d: (typeof list)[number]) => string | null) =>
+          list.reduce<string | null>((a, d) => { const v = pick(d); return v && (!a || v > a) ? v : a; }, null);
+        const paidOn = latest((d) => d.paid_on);
+        const appPaidOn = latest((d) => d.app_paid_on);
         const cell: Cell = {
-          status: combine(list),
+          // Like the legacy sheet: yellow means "paid, with a fine". A late payment without a
+          // fine stays green, and a fine on a due that is fully paid (imported history can show
+          // it as paid on time) is yellow.
+          status: withFine(combine(list), fine.fine),
           due,
           paid: due - outstanding,
           fine: fine.fine,
           fine_paid: fine.paid,
           pending: outstanding > 0n && pendingMembers.has(m.id),
+          paid_on: paidOn,
+          // Paid in full, without a fine, before the month began (or a month still to come is
+          // already paid): the member paid in advance.
+          advance: outstanding <= 0n && fine.fine === 0n && (period > current || (appPaidOn !== null && appPaidOn < `${period}-01`)),
         };
         cells[period] = cellOut(cell);
         totals.due += cell.due;
@@ -178,5 +210,7 @@ function cellOut(c: Cell) {
     fine_paisa: str(c.fine),
     fine_paid_paisa: str(c.fine_paid),
     pending: c.pending,
+    paid_on: c.paid_on,
+    advance: c.advance,
   };
 }

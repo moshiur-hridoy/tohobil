@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { COMPLIANCE_CHECKLIST_FIELDS, type ProposalType } from '@barakah/shared';
 import { api, ApiError } from '../../lib/api';
-import { parseAmountInput } from '../../lib/money';
+import { fmtDate } from '../../lib/dates';
+import { parseAmountInput, taka } from '../../lib/money';
 import type { AssetRow, MemberRow, PartnerRow } from '../../lib/types';
 
 /**
@@ -231,7 +232,7 @@ export function ProposalFields({ type, form, onChange }: { type: ProposalType; f
           ) : f.kind === 'asset' ? (
             <select className={inputClass} value={form.values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}>
               <option value="">{t('proposalFields.chooseAsset')}</option>
-              {activeAssets.map((a) => <option key={a.id} value={a.id}>{a.name} ({t(`assetsAdmin.status.${a.status}`)})</option>)}
+              {activeAssets.map((a) => <option key={a.id} value={a.id}>{[a.name, a.acquired_on ? fmtDate(a.acquired_on) : null, taka(a.cost_paisa)].filter(Boolean).join(' · ')} ({t(`assetsAdmin.status.${a.status}`)})</option>)}
             </select>
           ) : f.kind === 'partner' ? (
             <select className={inputClass} value={form.values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}>

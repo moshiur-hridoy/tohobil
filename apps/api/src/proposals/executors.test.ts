@@ -309,4 +309,64 @@ describe('proposal executors', () => {
     expect(snaps).toHaveLength(1);
     expect((snaps[0] as { kind: string }).kind).toBe('suspension');
   });
+
+  dbIt('withdraws part of a partner holding, then everything', async () => {
+    const partnerId = ((await q(`INSERT INTO investment_partners (kind, name) VALUES ('gold', 'Test Jewellers') RETURNING id`))[0] as { id: string }).id;
+    const asset = async (cost: number, day: string) =>
+      ((await q(
+        `INSERT INTO assets (kind, name, cost_paisa, status, acquired_on, partner_id) VALUES ('gold', 'Gold', $1, 'acquiring', $2, $3) RETURNING id`,
+        [cost, day, partnerId],
+      ))[0] as { id: string }).id;
+    const a = await asset(600000, '2026-01-10');
+    const b = await asset(400000, '2026-03-10');
+    await q(`INSERT INTO asset_valuations (asset_id, value_paisa, as_of) VALUES ($1, 800000, '2026-10-01')`, [a]);
+    const actor = await actorFor('M01');
+    const ctx: ClientCtx = { ip: '127.0.0.1', user: actor };
+    const run = (pid: string, amount: bigint) =>
+      executeProposal({ pool: db!.app, clock: createFakeClock(START) }, actor, pid, { actual_amount_paisa: amount, account: 'BANK' }, ctx);
+
+    // Worth 12,000 taka (8,000 valued + 4,000 at cost): taking all of it is not a part.
+    const tooMuch = await approvedProposal('asset_sale', { partner_id: partnerId, amount_paisa: '1200000' });
+    await expect(run(tooMuch, 1200000n)).rejects.toMatchObject({ code: 'partner.withdrawal_exceeds_value' });
+
+    // A quarter of the value comes out: a quarter of each cost is recovered, the rest is profit.
+    const bank = await balance('BANK');
+    const gain = await balance('ASSET_GAIN');
+    const invested = await balance('INVESTMENTS_AT_COST');
+    const part = await approvedProposal('asset_sale', { partner_id: partnerId, amount_paisa: '300000' });
+    await expect(run(part, 300001n)).rejects.toMatchObject({ code: 'proposal.amount_exceeds_approved' });
+    expect((await run(part, 300000n)).status).toBe('executed');
+    expect((await balance('BANK')) - bank).toBe(300000n);
+    expect((await balance('ASSET_GAIN')) - gain).toBe(50000n);
+    expect(invested - (await balance('INVESTMENTS_AT_COST'))).toBe(250000n);
+    const left = await q(
+      `SELECT a.id, a.status, a.cost_paisa::text AS cost,
+              (SELECT value_paisa::text FROM asset_valuations v WHERE v.asset_id = a.id ORDER BY as_of DESC, created_at DESC LIMIT 1) AS value
+       FROM assets a WHERE partner_id = $1 ORDER BY acquired_on`,
+      [partnerId],
+    );
+    expect(left).toEqual([
+      { id: a, status: 'acquiring', cost: '450000', value: '600000' },
+      { id: b, status: 'acquiring', cost: '300000', value: null },
+    ]);
+
+    // Everything else (9,000 taka worth, 7,500 cost) for at least 8,000: both purchases are sold.
+    const all = await approvedProposal('asset_sale', { partner_id: partnerId, min_price_paisa: '800000' });
+    await expect(run(all, 799999n)).rejects.toMatchObject({ code: 'proposal.price_below_min' });
+    expect((await run(all, 900000n)).status).toBe('executed');
+    expect((await balance('ASSET_GAIN')) - gain).toBe(200000n);
+    expect(invested - (await balance('INVESTMENTS_AT_COST'))).toBe(1000000n);
+    const sold = await q(`SELECT status, sale_price_paisa::text AS price FROM assets WHERE partner_id = $1 ORDER BY acquired_on`, [partnerId]);
+    expect(sold).toEqual([
+      { status: 'sold', price: '600000' },
+      { status: 'sold', price: '300000' },
+    ]);
+
+    const page = await app.inject({ method: 'GET', url: `/api/v1/partners/${partnerId}`, headers: { authorization: `Bearer ${s.M01.access_token}` } });
+    const withdrawals = (page.json() as { withdrawals: Array<{ status: string; withdrawn_paisa: string | null; everything: boolean }> }).withdrawals;
+    expect(withdrawals.filter((w) => w.status === 'executed').map((w) => [w.withdrawn_paisa, w.everything])).toEqual([
+      ['900000', true],
+      ['300000', false],
+    ]);
+  });
 });

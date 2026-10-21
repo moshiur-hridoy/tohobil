@@ -319,6 +319,8 @@ function ExecuteButton({ id, type, onDone }: { id: string; type: ProposalType; o
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const isCharity = type === 'charity_donation';
+  // These executors post the amount actually paid or received, to or from the chosen account.
+  const needsAmount = isCharity || type === 'expense' || type === 'investment_purchase' || type === 'asset_sale';
   const [amount, setAmount] = useState('');
   const [account, setAccount] = useState<'CASH' | 'BANK' | 'BKASH' | 'NAGAD'>('CASH');
 
@@ -332,10 +334,10 @@ function ExecuteButton({ id, type, onDone }: { id: string; type: ProposalType; o
         onClose={() => setOpen(false)}
         title={t('proposal.executeTitle')}
         confirmLabel={t('proposal.execute')}
-        canConfirm={!isCharity || parseAmountInput(amount) !== null}
+        canConfirm={!needsAmount || parseAmountInput(amount) !== null}
         onConfirm={async () => {
           const body: Record<string, unknown> = {};
-          if (isCharity) {
+          if (needsAmount) {
             const paisa = parseAmountInput(amount);
             if (!paisa) throw new ApiError(400, 'request.invalid', 'Amount required');
             body.actual_amount_paisa = paisa;
@@ -347,14 +349,14 @@ function ExecuteButton({ id, type, onDone }: { id: string; type: ProposalType; o
         }}
       >
         <p className="text-muted">{t('proposal.executeBody')}</p>
-        {isCharity && (
+        {needsAmount && (
           <>
             <label className="block text-sm text-muted">
-              {t('common.amount')}
+              {t(isCharity ? 'common.amount' : 'proposal.executeAmount')}
               <input className="field mt-1 w-full" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
             </label>
             <label className="block text-sm text-muted">
-              {t('payment.method')}
+              {isCharity ? t('payment.method') : t(type === 'asset_sale' ? 'proposal.executeAccountIn' : 'proposal.executeAccount')}
               <select className="field mt-1 w-full" value={account} onChange={(e) => setAccount(e.target.value as typeof account)}>
                 <option value="CASH">{t('payment.methods.cash')}</option>
                 <option value="BANK">{t('payment.methods.bank')}</option>

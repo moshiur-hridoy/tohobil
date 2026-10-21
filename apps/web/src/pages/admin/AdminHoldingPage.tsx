@@ -12,7 +12,7 @@ import { useAuth } from '../../lib/auth';
 import { fmtDate } from '../../lib/dates';
 import { formatCount } from '../../lib/format';
 import { holdingTotals, splitByCost } from '../../lib/holding';
-import { parseAmountInput, taka } from '../../lib/money';
+import { paisaToDecimal, parseAmountInput, taka } from '../../lib/money';
 import { todayDhaka } from '../../lib/dates';
 import type { AssetRow, HoldingDocument, HoldingEntry, HoldingResponse } from '../../lib/types';
 import { CreateProposalForm } from './ProposalsPage';
@@ -55,6 +55,9 @@ function HoldingView({ id }: { id: string }) {
   const [total, setTotal] = useState('');
   const [asOf, setAsOf] = useState(todayDhaka());
   const [basis, setBasis] = useState('');
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [everything, setEverything] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
 
   const q = useQuery({ queryKey: ['holding', id], queryFn: () => api<HoldingResponse>(`/partners/${id}`) });
   const kind = q.data?.partner.kind ?? 'gold';
@@ -113,7 +116,7 @@ function HoldingView({ id }: { id: string }) {
   if (q.error) return <AdminPage><LoadError error={q.error} onRetry={() => void q.refetch()} /></AdminPage>;
   if (!q.data) return <AdminPage><ListSkeleton rows={6} /></AdminPage>;
 
-  const { partner, assets, entries, documents, valuations } = q.data;
+  const { partner, assets, entries, documents, valuations, withdrawals } = q.data;
   const contractPapers = documents.filter((d) => d.entity_type === 'partner');
   const totals = holdingTotals(assets);
   const assetOf = new Map(assets.map((a) => [a.id, a]));
@@ -138,6 +141,24 @@ function HoldingView({ id }: { id: string }) {
     setBasis('');
   };
 
+  // A withdrawal is an asset sale of the shop: a part (`amount_paisa`) or everything (`min_price_paisa`).
+  const withdrawPaisa = parseAmountInput(withdrawAmount);
+  const withdrawTooMuch = !everything && withdrawPaisa !== null && BigInt(withdrawPaisa) >= totals.value;
+  const submitWithdraw = async () => {
+    if (withdrawPaisa === null || withdrawTooMuch) return;
+    const amount = BigInt(withdrawPaisa).toString();
+    await api('/proposals', {
+      method: 'POST',
+      body: {
+        type: 'asset_sale',
+        title: everything ? t('holding.withdrawAllTitle', { name: partner.name }) : t('holding.withdrawPartTitle', { name: partner.name, amount: taka(amount) }),
+        payload: { partner_id: partner.id, ...(everything ? { min_price_paisa: amount } : { amount_paisa: amount }) },
+      },
+    });
+    setWithdrawAmount('');
+    refresh();
+  };
+
   return (
     <AdminPage>
       <Link to="/admin/assets" className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-muted hover:text-foreground">
@@ -151,6 +172,9 @@ function HoldingView({ id }: { id: string }) {
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => setBuyOpen(true)} className={BTN_PRIMARY}>{t('holding.addEntry')}</button>
             <button type="button" onClick={() => setValueOpen(true)} className={BTN_SM_PRIMARY.replace('h-9', 'h-11')}>{t('holding.updateValue')}</button>
+            {totals.count > 0 && (
+              <button type="button" onClick={() => setWithdrawOpen(true)} className={BTN_SM_PRIMARY.replace('h-9', 'h-11')}>{t('holding.withdraw')}</button>
+            )}
           </div>
         )}
       />
@@ -261,6 +285,32 @@ function HoldingView({ id }: { id: string }) {
         </div>
       </Card>
 
+      {withdrawals.length > 0 && (
+        <Card className="p-5">
+          <h2 className="mb-2 text-base font-bold">{t('holding.withdrawals')}</h2>
+          <ul className="divide-y divide-border text-sm">
+            {withdrawals.map((w) => {
+              const gain = w.withdrawn_paisa && w.cost_paisa ? BigInt(w.withdrawn_paisa) - BigInt(w.cost_paisa) : null;
+              return (
+                <li key={w.proposal_id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                  <span>
+                    {w.everything ? t('holding.withdrawalAll') : taka(w.amount_paisa)}
+                    <span className="text-muted"> · {w.status === 'executed' && w.withdrawn_paisa
+                      ? t('holding.withdrawalDone', { amount: taka(w.withdrawn_paisa), date: w.executed_on ? fmtDate(w.executed_on) : '—' })
+                      : t('holding.withdrawalWaiting', { status: t(`status.proposal.${w.status}`) })}</span>
+                  </span>
+                  {gain !== null && gain !== 0n && (
+                    <span className={`text-xs font-semibold ${gain > 0n ? 'text-ok' : 'text-bad'}`}>
+                      {t(gain > 0n ? 'holding.gainOnWithdrawal' : 'holding.lossOnWithdrawal', { amount: taka(gain > 0n ? gain : -gain) })}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+      )}
+
       <Card className="p-5">
         <h2 className="mb-2 text-base font-bold">{t('holding.history')}</h2>
         {history.length === 0 ? <p className="text-sm text-muted">{t('holding.neverValued')}</p> : (
@@ -306,6 +356,33 @@ function HoldingView({ id }: { id: string }) {
         <Field label={t('holding.asOf')}><input type="date" className="field mt-1 w-full" value={asOf} max={todayDhaka()} onChange={(e) => setAsOf(e.target.value)} /></Field>
         <Field label={t('holding.basis')}><input className="field mt-1 w-full" value={basis} onChange={(e) => setBasis(e.target.value)} /></Field>
         {newTotal !== null && <p className="text-sm">{t('holding.resultProfit')}: <Profit paisa={BigInt(newTotal) - totals.invested} className="font-bold" /></p>}
+      </ConfirmSheet>
+
+      <ConfirmSheet
+        open={withdrawOpen}
+        onClose={() => setWithdrawOpen(false)}
+        title={t('holding.withdraw')}
+        confirmLabel={t('common.submit')}
+        canConfirm={withdrawPaisa !== null && !withdrawTooMuch}
+        onConfirm={submitWithdraw}
+      >
+        <p className="text-sm text-muted">{t('holding.withdrawHint', { value: taka(totals.value), date: totals.lastValued ? fmtDate(totals.lastValued) : '—' })}</p>
+        <div className="grid grid-cols-2 gap-2">
+          {([false, true] as const).map((all) => (
+            <button key={String(all)} type="button" onClick={() => { setEverything(all); setWithdrawAmount(all ? paisaToDecimal(totals.value) : ''); }} aria-pressed={everything === all}
+              className={(everything === all ? BTN_SM_PRIMARY : BTN_SM).replace('h-9', 'h-11')}>
+              {t(all ? 'holding.withdrawEverything' : 'holding.withdrawPart')}
+            </button>
+          ))}
+        </div>
+        <Field label={t(everything ? 'holding.withdrawMin' : 'holding.withdrawAmount')}>
+          <input className="field mt-1 w-full" inputMode="decimal" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} />
+        </Field>
+        {everything && <p className="text-sm text-muted">{t('holding.withdrawMinHint', { value: taka(totals.value) })}</p>}
+        {withdrawTooMuch && <p className="text-sm text-bad">{t('holding.withdrawTooMuch')}</p>}
+        {!everything && withdrawPaisa !== null && !withdrawTooMuch && (
+          <p className="text-sm">{t('holding.withdrawLeft', { value: taka(totals.value - BigInt(withdrawPaisa)) })}</p>
+        )}
       </ConfirmSheet>
 
       <ConfirmSheet

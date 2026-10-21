@@ -98,10 +98,25 @@ export const investmentPurchasePayloadSchema = z.object({
   partner_id: z.string().uuid().optional(),
 });
 
-export const assetSalePayloadSchema = z.object({
-  asset_id: z.string().uuid(),
-  min_price_paisa: paisaStringSchema,
-});
+/**
+ * Either one asset sold whole (`asset_id` + `min_price_paisa`), or money taken back from a shop the
+ * fund invests with (`partner_id`): everything it holds for at least `min_price_paisa`, or a part
+ * worth `amount_paisa` while the rest stays with the shop.
+ */
+export const assetSalePayloadSchema = z
+  .object({
+    asset_id: z.string().uuid().optional(),
+    partner_id: z.string().uuid().optional(),
+    min_price_paisa: paisaStringSchema.optional(),
+    amount_paisa: paisaStringSchema.optional(),
+  })
+  .superRefine((p, ctx) => {
+    const issue = (path: string, message: string) => ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message });
+    if (!p.asset_id === !p.partner_id) issue('asset_id', 'Give either an asset or a partner');
+    if (p.asset_id && (!p.min_price_paisa || p.amount_paisa)) issue('min_price_paisa', 'An asset sale needs a minimum price');
+    if (p.partner_id && !p.min_price_paisa === !p.amount_paisa) issue('amount_paisa', 'Give either an amount or a minimum price for everything');
+    if (p.amount_paisa !== undefined && BigInt(p.amount_paisa) <= 0n) issue('amount_paisa', 'The amount must be more than zero');
+  });
 
 export const valuationUpdatePayloadSchema = z.object({
   items: z

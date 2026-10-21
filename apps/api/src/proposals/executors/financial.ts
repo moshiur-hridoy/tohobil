@@ -202,10 +202,137 @@ export const investmentPurchaseExecutor: ExecutorSignature = async (db, proposal
   });
 };
 
-export const assetSaleExecutor: ExecutorSignature = async (db, proposal, input, actor, ctx, deps) => {
-  const payload = proposal.payload as { asset_id: string; min_price_paisa: string };
+/**
+ * Money that comes back for investments that cost `cost`: the cost leaves INVESTMENTS_AT_COST and the
+ * difference is a gain or a loss (5.6).
+ */
+function saleEntries(proposalId: string, today: string, source: string, cost: bigint, price: bigint, label: string) {
+  const entries: import('../../ledger/service').PostingInput[] = [];
+  if (price >= cost) {
+    if (cost > 0n) entries.push(proposalPosting(proposalId, today, source, 'INVESTMENTS_AT_COST', cost, `${label}: cost recovery`));
+    if (price > cost) entries.push(proposalPosting(proposalId, today, source, 'ASSET_GAIN', price - cost, `${label}: gain`));
+  } else {
+    entries.push(
+      proposalPosting(proposalId, today, source, 'INVESTMENTS_AT_COST', price, `${label}: proceeds`),
+      proposalPosting(proposalId, today, 'ASSET_LOSS', 'INVESTMENTS_AT_COST', cost - price, `${label}: loss`),
+    );
+  }
+  return entries;
+}
+
+/** Splits `total` over the rows in proportion to `weight`; the last row takes the rounding remainder. */
+function splitByWeight<T extends { weight: bigint }>(total: bigint, rows: T[]): Array<T & { part: bigint }> {
+  const sum = rows.reduce((a, r) => a + r.weight, 0n);
+  let given = 0n;
+  return rows.map((r, i) => {
+    const part = i === rows.length - 1 ? total - given : (total * r.weight) / sum;
+    given += part;
+    return { ...r, part };
+  });
+}
+
+/**
+ * Money taken back from a shop the fund invests with (owner request, ASSUMPTIONS 85). Each purchase
+ * counts at its latest value (cost if never valued), as on the shop's page.
+ *
+ * - Everything (`min_price_paisa`): every purchase is sold, the price spread over them by value.
+ * - A part (`amount_paisa`): the amount is taken from every purchase in proportion to its value. The
+ *   same share of each purchase's cost is recovered, so its cost goes down (as a staged payment raises
+ *   it) and, if it has a valuation, a new one for what is left is added. The rest stays with the shop.
+ */
+async function partnerWithdrawal(
+  db: import('../../lib/tx').Db,
+  proposal: import('../service').ProposalRow,
+  payload: { partner_id: string; min_price_paisa?: string; amount_paisa?: string },
+  input: import('@barakah/shared').ProposalExecute,
+  actor: import('../../auth/service').AuthUser,
+  ctx: import('../service').ClientCtx,
+  deps: import('../service').ProposalDeps,
+) {
   const price = requireAmount(input);
-  const minPrice = toBigInt(payload.min_price_paisa);
+  const partner = await db.query(`SELECT name FROM investment_partners WHERE id = $1`, [payload.partner_id]);
+  if (partner.rowCount === 0) throw notFound('partner.not_found', 'Investment partner not found');
+  const name = (partner.rows[0] as { name: string }).name;
+
+  const rows = (await db.query(
+    `SELECT a.id, a.cost_paisa::text AS cost_paisa,
+            (SELECT v.value_paisa::text FROM asset_valuations v WHERE v.asset_id = a.id
+             ORDER BY v.as_of DESC, v.created_at DESC LIMIT 1) AS value_paisa
+     FROM assets a
+     WHERE a.partner_id = $1 AND a.status IN ('held', 'acquiring')
+     ORDER BY a.acquired_on NULLS LAST, a.created_at, a.id
+     FOR UPDATE OF a`,
+    [payload.partner_id],
+  )).rows as Array<{ id: string; cost_paisa: string; value_paisa: string | null }>;
+  const held = rows
+    .map((r) => ({ id: r.id, cost: toBigInt(r.cost_paisa), valued: r.value_paisa !== null, weight: toBigInt(r.value_paisa ?? r.cost_paisa) }))
+    .filter((r) => r.weight > 0n);
+  if (held.length === 0) throw badRequest('partner.nothing_held', 'Nothing is held with this partner');
+  const value = held.reduce((a, r) => a + r.weight, 0n);
+  const today = deps.clock.todayDhaka();
+  const source = sourceAccount(input);
+
+  if (payload.amount_paisa === undefined) {
+    if (price < toBigInt(payload.min_price_paisa!)) {
+      throw badRequest('proposal.price_below_min', 'Sale price is below the approved minimum');
+    }
+    const cost = held.reduce((a, r) => a + r.cost, 0n);
+    const posted = await postEntries(db as import('pg').PoolClient, saleEntries(proposal.id, today, source, cost, price, `Withdrawal of everything from ${name}`), ledgerActor(actor, ctx));
+    for (const r of splitByWeight(price, held)) {
+      await db.query(
+        `UPDATE assets SET status = 'sold', sold_on = $2::date, sale_price_paisa = $3::bigint WHERE id = $1`,
+        [r.id, today, r.part.toString()],
+      );
+    }
+    return serialised({
+      partner_id: payload.partner_id,
+      withdrawn_paisa: price,
+      cost_paisa: cost,
+      value_before_paisa: value,
+      sold_asset_ids: held.map((r) => r.id),
+      ledger_seqs: posted.map((e) => e.seq.toString()),
+    });
+  }
+
+  if (price > toBigInt(payload.amount_paisa)) {
+    throw badRequest('proposal.amount_exceeds_approved', 'The amount is more than the approved withdrawal');
+  }
+  if (price >= value) {
+    throw badRequest('partner.withdrawal_exceeds_value', 'This takes everything the partner holds; withdraw everything instead');
+  }
+  const changes = splitByWeight(price, held).map((r) => {
+    const costOut = divRound(r.cost * r.part, r.weight);
+    return { asset_id: r.id, valued: r.valued, cost_before: r.cost, cost_after: r.cost - costOut, value_before: r.weight, value_after: r.weight - r.part };
+  });
+  const cost = changes.reduce((a, c) => a + c.cost_before - c.cost_after, 0n);
+  const posted = await postEntries(db as import('pg').PoolClient, saleEntries(proposal.id, today, source, cost, price, `Withdrawal from ${name}`), ledgerActor(actor, ctx));
+  for (const c of changes) {
+    await db.query(`UPDATE assets SET cost_paisa = $2::bigint WHERE id = $1`, [c.asset_id, c.cost_after.toString()]);
+    if (c.valued) {
+      await db.query(
+        `INSERT INTO asset_valuations (asset_id, value_paisa, as_of, basis, proposal_id) VALUES ($1, $2::bigint, $3::date, $4, $5)`,
+        [c.asset_id, c.value_after.toString(), today, 'withdrawal', proposal.id],
+      );
+    }
+  }
+  return serialised({
+    partner_id: payload.partner_id,
+    withdrawn_paisa: price,
+    cost_paisa: cost,
+    value_before_paisa: value,
+    value_after_paisa: value - price,
+    assets: changes,
+    ledger_seqs: posted.map((e) => e.seq.toString()),
+  });
+}
+
+export const assetSaleExecutor: ExecutorSignature = async (db, proposal, input, actor, ctx, deps) => {
+  const payload = proposal.payload as { asset_id?: string; partner_id?: string; min_price_paisa?: string; amount_paisa?: string };
+  if (payload.partner_id) {
+    return partnerWithdrawal(db, proposal, payload as typeof payload & { partner_id: string }, input, actor, ctx, deps);
+  }
+  const price = requireAmount(input);
+  const minPrice = toBigInt(payload.min_price_paisa!);
   if (price < minPrice) {
     throw badRequest('proposal.price_below_min', 'Sale price is below the approved minimum');
   }
@@ -220,19 +347,7 @@ export const assetSaleExecutor: ExecutorSignature = async (db, proposal, input, 
   const cost = toBigInt(asset.cost_paisa);
   const source = sourceAccount(input);
   const today = deps.clock.todayDhaka();
-  const entries: import('../../ledger/service').PostingInput[] = [];
-
-  if (price >= cost) {
-    entries.push(
-      proposalPosting(proposal.id, today, source, 'INVESTMENTS_AT_COST', cost, `Sale of ${asset.id}: cost recovery`),
-      proposalPosting(proposal.id, today, source, 'ASSET_GAIN', price - cost, `Sale of ${asset.id}: gain`),
-    );
-  } else {
-    entries.push(
-      proposalPosting(proposal.id, today, source, 'INVESTMENTS_AT_COST', price, `Sale of ${asset.id}: proceeds`),
-      proposalPosting(proposal.id, today, 'ASSET_LOSS', 'INVESTMENTS_AT_COST', cost - price, `Sale of ${asset.id}: loss`),
-    );
-  }
+  const entries = saleEntries(proposal.id, today, source, cost, price, `Sale of ${asset.id}`);
 
   const posted = await postEntries(db as import('pg').PoolClient, entries, ledgerActor(actor, ctx));
 

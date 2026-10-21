@@ -441,11 +441,26 @@ export async function getPartner(db: Db, id: string): Promise<Record<string, unk
      ORDER BY v.as_of DESC, v.created_at DESC`,
     [id],
   );
+  // Money taken back from the shop, and withdrawals still being voted on or waiting to be paid.
+  const withdrawals = await db.query(
+    `SELECT p.id AS proposal_id, p.status, p.title,
+            COALESCE(p.payload->>'amount_paisa', p.payload->>'min_price_paisa') AS amount_paisa,
+            (p.payload->>'amount_paisa') IS NULL AS everything,
+            p.result_ref->>'withdrawn_paisa' AS withdrawn_paisa,
+            p.result_ref->>'cost_paisa' AS cost_paisa,
+            (p.executed_at AT TIME ZONE 'Asia/Dhaka')::date::text AS executed_on
+     FROM proposals p
+     WHERE p.type = 'asset_sale' AND p.payload->>'partner_id' = $1::text
+       AND p.status IN ('draft', 'open', 'approved', 'executed')
+     ORDER BY p.created_at DESC`,
+    [id],
+  );
   return {
     partner,
     assets: assets.rows.map((r) => serializeBigints(r as Record<string, unknown>)),
     entries: entries.rows,
     documents: documents.rows,
     valuations: valuations.rows,
+    withdrawals: withdrawals.rows,
   };
 }

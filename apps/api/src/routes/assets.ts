@@ -8,6 +8,8 @@ import {
   assetPaymentSchema,
   assetUpdateSchema,
   documentAttachSchema,
+  partnerCreateSchema,
+  partnerUpdateSchema,
   uuidSchema,
 } from '@barakah/shared';
 import { requireAuth, type Guards } from '../auth/guards';
@@ -18,7 +20,12 @@ import {
   completeAcquisition,
   createAsset,
   getAsset,
+  adoptAssets,
+  createPartner,
+  getPartner,
   listAssets,
+  listPartners,
+  updatePartner,
   listDocuments,
   listValuations,
   payAssetInstalment,
@@ -103,6 +110,42 @@ export function assetRoutes(deps: AssetDeps, guards: Guards) {
       async (req, reply) => {
         const user = requireAuth(req);
         await attachDocument(deps, actorFrom(user, req), req.params.id, req.body);
+        return reply.status(204).send();
+      },
+    );
+
+    // Investment partners: a shop the fund invests with, its contract terms and everything bought there.
+    app.get('/partners', { preHandler: authenticate }, async () => ({ items: await listPartners(deps.pool) }));
+
+    app.post('/partners', { preHandler: cashier, schema: { body: partnerCreateSchema } }, async (req) => {
+      const id = await createPartner(deps, actorFrom(requireAuth(req), req), req.body);
+      const found = await getPartner(deps.pool, id);
+      if (!found) throw notFound('partner.not_found', 'Investment partner not found');
+      return found;
+    });
+
+    app.get('/partners/:id', { preHandler: authenticate, schema: { params: idParams } }, async (req) => {
+      const found = await getPartner(deps.pool, req.params.id);
+      if (!found) throw notFound('partner.not_found', 'Investment partner not found');
+      return found;
+    });
+
+    app.patch('/partners/:id', { preHandler: cashier, schema: { params: idParams, body: partnerUpdateSchema } }, async (req) => {
+      await updatePartner(deps, actorFrom(requireAuth(req), req), req.params.id, req.body);
+      const found = await getPartner(deps.pool, req.params.id);
+      if (!found) throw notFound('partner.not_found', 'Investment partner not found');
+      return found;
+    });
+
+    app.post('/partners/:id/adopt', { preHandler: cashier, schema: { params: idParams } }, async (req) =>
+      adoptAssets(deps, actorFrom(requireAuth(req), req), req.params.id),
+    );
+
+    app.post(
+      '/partners/:id/documents',
+      { preHandler: cashier, schema: { params: idParams, body: documentAttachSchema } },
+      async (req, reply) => {
+        await attachDocument(deps, actorFrom(requireAuth(req), req), req.params.id, req.body, 'partner');
         return reply.status(204).send();
       },
     );

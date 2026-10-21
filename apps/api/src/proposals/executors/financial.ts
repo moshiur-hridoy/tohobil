@@ -134,6 +134,7 @@ export const investmentPurchaseExecutor: ExecutorSignature = async (db, proposal
     notes?: string;
     compliance: Record<string, unknown>;
     feasibility_file_id?: string;
+    partner_id?: string;
   };
   const actual = requireAmount(input);
   const max = toBigInt(payload.max_amount_paisa);
@@ -143,11 +144,18 @@ export const investmentPurchaseExecutor: ExecutorSignature = async (db, proposal
 
   const status = payload.kind === 'land' || payload.kind === 'house' ? 'acquiring' : 'held';
   const today = deps.clock.todayDhaka();
+  if (payload.partner_id) {
+    const partner = await db.query(`SELECT kind FROM investment_partners WHERE id = $1`, [payload.partner_id]);
+    if (partner.rowCount === 0) throw notFound('partner.not_found', 'Investment partner not found');
+    if ((partner.rows[0] as { kind: string }).kind !== payload.kind) {
+      throw badRequest('partner.kind_mismatch', 'The purchase is of a different kind than this partner');
+    }
+  }
 
   const assetRes = await db.query(
     `INSERT INTO assets
-       (kind, name, description, cost_paisa, quantity, unit, status, acquired_on, proposal_id, feasibility_file_id, compliance)
-     VALUES ($1, $2, $3, $4::bigint, $5, $6, $7, $8::date, $9, $10, $11)
+       (kind, name, description, cost_paisa, quantity, unit, status, acquired_on, proposal_id, feasibility_file_id, compliance, partner_id)
+     VALUES ($1, $2, $3, $4::bigint, $5, $6, $7, $8::date, $9, $10, $11, $12)
      RETURNING id`,
     [
       payload.kind,
@@ -161,6 +169,7 @@ export const investmentPurchaseExecutor: ExecutorSignature = async (db, proposal
       proposal.id,
       payload.feasibility_file_id ?? null,
       JSON.stringify(payload.compliance),
+      payload.partner_id ?? null,
     ],
   );
   const assetId = (assetRes.rows[0] as { id: string }).id;

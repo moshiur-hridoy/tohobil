@@ -172,4 +172,44 @@ describe('assets, rent and NAV', () => {
     const assets = nav.assets as Array<{ name: string; valuation_paisa: string }>;
     expect(assets.some((a) => a.name === 'NAV House' && a.valuation_paisa === '100000000')).toBe(true);
   });
+  dbIt('a partner page lists every purchase with its ledger entry, papers, terms and valuations', async () => {
+    const created = await call('POST', '/partners', cashier.access_token, { kind: 'gold', name: 'Minar Jewellers', rate_percent: 2.5, period_months: 3, sharing_policy: 'By shares' });
+    expect(created.statusCode).toBe(200);
+    const partnerId = (created.json().partner as { id: string }).id;
+    expect((await call('POST', '/partners', cashier.access_token, { kind: 'gold', name: 'minar jewellers' })).statusCode).toBe(409);
+
+    const a = await db!.admin.query(
+      `INSERT INTO assets (kind, name, cost_paisa, status, acquired_on) VALUES ('gold', 'Gold', 0, 'acquiring', '2026-09-01') RETURNING id`,
+    );
+    const assetId = (a.rows[0] as { id: string }).id;
+    const pay = await call('POST', `/assets/${assetId}/payments`, cashier.access_token, { amount_paisa: '2500000', account: 'BANK', note: 'Cheque 0042 to the shop' });
+    expect(pay.statusCode).toBe(200);
+    await db!.admin.query(`INSERT INTO asset_valuations (asset_id, value_paisa, as_of) VALUES ($1, 2600000, '2026-10-01')`, [assetId]);
+
+    // not on the page until the partner adopts it
+    expect((await call('GET', `/partners/${partnerId}`, member.access_token)).json().assets).toHaveLength(0);
+    const adopt = await call('POST', `/partners/${partnerId}/adopt`, cashier.access_token);
+    expect(adopt.json().adopted).toBeGreaterThanOrEqual(1);
+
+    const file = await db!.admin.query(
+      `INSERT INTO files (sha256, mime, size_bytes, path, original_name, created_by)
+       VALUES ($1,'application/pdf',1024,$2,'contract.pdf',$3) RETURNING id`,
+      ['b'.repeat(64), `/data/files/${'b'.repeat(64)}.pdf`, fund.users.M01],
+    );
+    const fileId = (file.rows[0] as { id: string }).id;
+    expect((await call('POST', `/partners/${partnerId}/documents`, cashier.access_token, { file_id: fileId, doc_type: 'contract' })).statusCode).toBe(204);
+
+    const patched = await call('PATCH', `/partners/${partnerId}`, cashier.access_token, { name: 'Minar Jewellers Ltd', rate_percent: 3 });
+    expect(patched.statusCode).toBe(200);
+
+    const res = await call('GET', `/partners/${partnerId}`, member.access_token);
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { partner: Record<string, unknown>; assets: Array<{ id: string }>; entries: Array<Record<string, unknown>>; valuations: Array<Record<string, unknown>>; documents: Array<Record<string, unknown>> };
+    expect(body.partner).toMatchObject({ name: 'Minar Jewellers Ltd', rate_percent: 3, period_months: 3, sharing_policy: 'By shares' });
+    expect(body.assets.some((x) => x.id === assetId)).toBe(true);
+    expect(body.entries.find((e) => e.asset_id === assetId)).toMatchObject({ amount_paisa: '2500000', account: 'BANK', memo: 'Cheque 0042 to the shop', reversed: false });
+    expect(body.valuations.find((v) => v.asset_id === assetId)).toMatchObject({ value_paisa: '2600000', as_of: '2026-10-01' });
+    expect(body.documents.find((d) => d.entity_type === 'partner')).toMatchObject({ doc_type: 'contract' });
+    expect((await call('PATCH', `/partners/${partnerId}`, member.access_token, { name: 'x' })).statusCode).toBe(403);
+  });
 });

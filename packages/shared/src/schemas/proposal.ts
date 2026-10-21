@@ -94,6 +94,8 @@ export const investmentPurchasePayloadSchema = z.object({
   notes: z.string().optional(),
   compliance: complianceChecklistSchema,
   feasibility_file_id: z.string().uuid().optional(),
+  /** The shop this purchase is made with: the asset joins that partner's page. */
+  partner_id: z.string().uuid().optional(),
 });
 
 export const assetSalePayloadSchema = z.object({

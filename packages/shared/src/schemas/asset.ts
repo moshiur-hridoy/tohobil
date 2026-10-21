@@ -112,3 +112,18 @@ export type LevyRemit = z.infer<typeof levyRemitSchema>;
 /** Pay one instalment of a deferred purchase: DR DEFERRED_PURCHASE_PAYABLE, CR <account>. */
 export const financingPaySchema = z.object({ account: cashAccountSchema });
 export type FinancingPay = z.infer<typeof financingPaySchema>;
+
+/** A shop the fund invests with (for example a jeweller) and what the contract with it says. */
+const partnerFields = {
+  kind: z.enum(ASSET_KINDS),
+  name: z.string().trim().min(1).max(200),
+  contract_date: dateSchema.nullable().optional(),
+  rate_percent: z.number().min(0).max(1000).nullable().optional(),
+  period_months: z.number().int().min(1).max(120).nullable().optional(),
+  sharing_policy: z.string().trim().max(4000).nullable().optional(),
+  contract_note: z.string().trim().max(4000).nullable().optional(),
+};
+export const partnerCreateSchema = z.object(partnerFields).strict();
+export type PartnerCreate = z.infer<typeof partnerCreateSchema>;
+export const partnerUpdateSchema = z.object(partnerFields).omit({ kind: true }).partial().strict();
+export type PartnerUpdate = z.infer<typeof partnerUpdateSchema>;

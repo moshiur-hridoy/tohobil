@@ -1261,9 +1261,6 @@
       "MAINTENANCE": "Maintenance",
       "OTHER_EXPENSE": "Other expense"
     },
-    "tabCharity": "Charity",
-    "tabExpenses": "Expenses",
-    "tabs": "Charity or expenses",
     "expensesAllTime": "Since the start",
     "totalFund": "Total fund",
     "totalExpenses": "Total expenses",

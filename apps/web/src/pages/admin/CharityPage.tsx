@@ -1,9 +1,8 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListSkeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
-import { AdminHeader, AdminPage, Card, CardHead, EmptyCard, ICONS, MemberBadge, Segmented, StatGrid, StatTile } from '../../components/admin';
+import { AdminHeader, AdminPage, Card, CardHead, EmptyCard, ICONS, MemberBadge, SplitLayout, StatGrid, StatTile } from '../../components/admin';
 import { Chip } from '../../components/ui';
 import { localDigits } from '../../lib/format';
 import { api } from '../../lib/api';
@@ -35,7 +34,7 @@ function EntryRow({ e }: { e: CharityEntry }) {
 }
 
 /** The fund's own expenses (bank and SMS charges and the like), from the start, kept apart from charity. */
-function ExpensesTab({ query }: { query: UseQueryResult<FundExpenses> }) {
+function ExpensesCard({ query }: { query: UseQueryResult<FundExpenses> }) {
   const { t } = useTranslation();
   const ex = query.data;
   return (
@@ -65,7 +64,7 @@ function ExpensesTab({ query }: { query: UseQueryResult<FundExpenses> }) {
 }
 
 /** Every fine, bank profit and donation of the charity fund, from the start. */
-function CharityTab({ query }: { query: UseQueryResult<CharityStatement> }) {
+function CharityCard({ query }: { query: UseQueryResult<CharityStatement> }) {
   const { t } = useTranslation();
   const st = query.data;
   return (
@@ -88,7 +87,6 @@ function CharityTab({ query }: { query: UseQueryResult<CharityStatement> }) {
 
 export function CharityPage() {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<'charity' | 'expenses'>('charity');
 
   // Both from the start: the owner reads this page as "what came in, what went out, what is left".
   const statement = useQuery({
@@ -107,17 +105,6 @@ export function CharityPage() {
       <AdminHeader
         title={t('charityPage.title')}
         subtitle={t('adminUi.sub.charity')}
-        actions={
-          <Segmented
-            label={t('charityPage.tabs')}
-            value={tab}
-            options={[
-              { value: 'charity', label: t('charityPage.tabCharity') },
-              { value: 'expenses', label: t('charityPage.tabExpenses') },
-            ]}
-            onChange={setTab}
-          />
-        }
       />
 
       <StatGrid>
@@ -127,7 +114,7 @@ export function CharityPage() {
         <StatTile tone="bg-primary-soft text-primary" icon={ICONS.book} label={t('charityPage.inHand')} value={st ? taka(st.closing_paisa) : null} sub={t('charityPage.inHandSub')} />
       </StatGrid>
 
-      {tab === 'charity' ? <CharityTab query={statement} /> : <ExpensesTab query={expenses} />}
+      <SplitLayout main={<CharityCard query={statement} />} side={<ExpensesCard query={expenses} />} sideWidth="420px" />
     </AdminPage>
   );
 }

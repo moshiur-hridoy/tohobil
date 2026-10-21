@@ -165,6 +165,9 @@ export function VoteDetailPage() {
 
           <section className="rounded-[20px] border border-border bg-card p-4 shadow-card">
             <h3 className="mb-1 text-base font-bold">{t('proposal.voterList')}</h3>
+            <p className="mb-1 text-sm text-ink2">
+              {t('votes.turnout', { voted: proposal.data.voters.filter((v) => v.voted).length, total: proposal.data.voters.length })}
+            </p>
             {proposal.data.ballots_hidden && <p className="mb-1 text-xs text-muted">{t('votes.hiddenUntilClose')}</p>}
             <ul className="divide-y divide-border">
               {proposal.data.voters.map((v) => {
@@ -175,7 +178,10 @@ export function VoteDetailPage() {
                       {v.code} {v.full_name}
                       {proposal.data!.basis === 'share' && <span className="text-muted"> · {v.weight}</span>}
                     </span>
-                    {!proposal.data!.ballots_hidden && (
+                    {proposal.data!.ballots_hidden ? (
+                      // While the vote is open only whether they voted is shown, never their choice.
+                      v.voted ? <span className="font-medium text-ok">✓ {t('votes.hasVoted')}</span> : <span className="text-muted">{t('votes.notVoted')}</span>
+                    ) : (
                       <span className="font-medium">
                         {cast ? t(`votes.${cast.choice}`) : <span className="text-muted">{t('votes.notVoted')}</span>}
                       </span>

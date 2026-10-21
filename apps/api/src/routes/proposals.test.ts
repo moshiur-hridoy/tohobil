@@ -139,8 +139,13 @@ describe('proposals lifecycle', () => {
       counts: { yes: number; no: number; abstain: number };
       ballots_hidden: boolean;
       votes: Array<{ choice: string; member_id: string }>;
+      voters: Array<{ member_id: string; voted: boolean }>;
     };
     expect(detail.ballots_hidden).toBe(true);
+    // Everyone can see who has voted (never what) while the vote is open.
+    const votedIds = detail.voters.filter((v) => v.voted).map((v) => v.member_id).sort();
+    expect(votedIds).toEqual([fund.members.M02, fund.members.M03].sort());
+    expect(detail.voters.some((v) => !v.voted)).toBe(true);
     expect(detail.counts).toMatchObject({ yes: 0, no: 0, abstain: 0 });
     expect(detail.votes).toHaveLength(1);
     expect(detail.votes[0]!.choice).toBe('no');

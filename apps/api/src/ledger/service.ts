@@ -112,6 +112,9 @@ function validate(p: PostingInput): void {
   }
 }
 
+/** Cash, bKash and Nagad are one pool unless the fund tracks them separately. */
+const toPool = (account: string): string => (account === 'CASH' || account === 'BKASH' || account === 'NAGAD' ? 'BANK' : account);
+
 const periodLocked = (period: string) =>
   new AppError(409, 'ledger.period_locked', `Period ${period} is locked`);
 
@@ -123,9 +126,25 @@ export async function postEntries(
   tx: Db,
   entries: readonly PostingInput[],
   actor: LedgerActor,
+  opts: { exactAccounts?: boolean } = {},
 ): Promise<PostedEntry[]> {
   if (entries.length === 0) throw badRequest('ledger.nothing_to_post', 'No entries to post');
   entries.forEach(validate); // validate everything before touching the database
+
+  // Unless the rule `cash_tracking_by_method` is on, the fund is one pool and every posting to cash,
+  // bKash or Nagad lands on BANK (ASSUMPTIONS 96). A reversal keeps the account it reverses, and the
+  // legacy import keeps the sheet's own accounts.
+  if (!opts.exactAccounts) {
+    const rule = (await tx.query(
+      `SELECT value FROM rules WHERE key = 'cash_tracking_by_method' AND valid_from <= current_date
+       ORDER BY valid_from DESC LIMIT 1`,
+    )).rows[0] as { value: unknown } | undefined;
+    if (rule?.value !== true) {
+      entries = entries.map((p) =>
+        p.reverses_seq != null ? p : { ...p, debit: toPool(p.debit), credit: toPool(p.credit) },
+      );
+    }
+  }
 
   const posted: PostedEntry[] = [];
   for (const p of entries) {

@@ -1,5 +1,7 @@
+import { useQuery } from '@tanstack/react-query';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { OwnerConflictBanner } from '../components/OwnerConflictBanner';
 import { Wordmark } from '../components/Logo';
@@ -18,6 +20,7 @@ export const ADMIN_NAV = [
   ['/admin/assets', 'admin.nav.assets'],
   ['/admin/rent', 'admin.nav.rent'],
   ['/admin/obligations', 'admin.nav.obligations'],
+  ['/admin/settlements', 'admin.nav.settlements'],
   ['/admin/notifications', 'admin.nav.notifications'],
   ['/admin/reconcile', 'admin.nav.reconcile'],
   ['/admin/reports', 'admin.nav.reports'],
@@ -40,6 +43,7 @@ const ADMIN_NAV_META: Record<AdminRoute, { icon: string }> = {
   '/admin/assets': { icon: 'M12 3l9 5-9 5-9-5zM3 13l9 5 9-5' },
   '/admin/rent': { icon: 'M3 21h18M5 21V10l7-4 7 4v11M9 21v-6h6v6' },
   '/admin/obligations': { icon: 'M4 7h16v12H4zM4 11h16M8 15h3' },
+  '/admin/settlements': { icon: 'M12 3v18M7 8l5-5 5 5M5 21h14' },
   '/admin/notifications': { icon: 'M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15zM10 21h4' },
   '/admin/reconcile': { icon: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4' },
   '/admin/reports': { icon: 'M6 3h8l4 4v14H6zM14 3v4h4M9 13h6M9 17h6' },
@@ -56,7 +60,7 @@ const NAV_GROUPS: { titleKey: string; routes: AdminRoute[] }[] = [
   },
   {
     titleKey: 'admin.nav.group.accounts',
-    routes: ['/admin/payments', '/admin/ledger', '/admin/assets', '/admin/rent', '/admin/obligations', '/admin/reconcile'],
+    routes: ['/admin/payments', '/admin/ledger', '/admin/assets', '/admin/rent', '/admin/obligations', '/admin/settlements', '/admin/reconcile'],
   },
   {
     titleKey: 'admin.nav.group.membersAndDecisions',
@@ -98,6 +102,14 @@ function labelForRoute(to: AdminRoute): string {
 export function CashierLayout() {
   const { t } = useTranslation();
   const [hidden] = useHiddenNav();
+  // Votes still running, shown as a count beside "Proposals" so nobody has to open the page to find out.
+  const open = useQuery({
+    queryKey: ['proposals', 'open-count'],
+    queryFn: () => api<{ items: unknown[] }>('/proposals?status=open&limit=200'),
+    refetchInterval: 60_000,
+  });
+  const openVotes = open.data?.items.length ?? 0;
+  const badgeFor = (to: AdminRoute) => (to === '/admin/proposals' ? openVotes : 0);
 
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
@@ -122,6 +134,7 @@ export function CashierLayout() {
                   to={to}
                   label={t(labelForRoute(to))}
                   icon={ADMIN_NAV_META[to].icon}
+                  badge={badgeFor(to)}
                 />
               ))}
             </div>
@@ -145,6 +158,7 @@ export function CashierLayout() {
             to={to}
             label={t(key)}
             icon={ADMIN_NAV_META[to].icon}
+            badge={badgeFor(to)}
             compact
           />
         ))}
@@ -218,13 +232,16 @@ function SidebarLink({
   to,
   label,
   icon,
+  badge = 0,
   compact = false,
 }: {
   to: AdminRoute;
   label: string;
   icon: string;
+  badge?: number;
   compact?: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <NavLink
       to={to}
@@ -253,6 +270,15 @@ function SidebarLink({
         <path d={icon} />
       </svg>
       <span className={compact ? '' : 'flex-1'}>{label}</span>
+      {badge > 0 && (
+        <span
+          role="status"
+          aria-label={t('votes.openCount', { count: badge })}
+          className="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-bad px-1 text-[0.6875rem] font-bold leading-none text-on-bad"
+        >
+          {badge}
+        </span>
+      )}
     </NavLink>
   );
 }

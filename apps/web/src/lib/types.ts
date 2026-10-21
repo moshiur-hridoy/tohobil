@@ -325,6 +325,9 @@ export interface ProposalSummary {
   };
   /** True while the vote is open: others' votes and the running tally are hidden. */
   ballots_hidden: boolean;
+  /** The caller's own current ballot, and whether they may vote on this proposal at all. */
+  my_choice?: 'yes' | 'no' | 'abstain' | null;
+  can_vote?: boolean;
   /** How many have voted (never what); only sent to the cashier and the auditor. */
   voted_count?: number;
   /** Cashier and auditor only: the outcome is already certain, so an open vote may be closed early. */
@@ -343,6 +346,8 @@ export interface ProposalVoter {
   full_name: string;
   code: string;
   weight: number;
+  /** Has voted (never what): sent even while the ballots are hidden. */
+  voted: boolean;
 }
 
 export interface ProposalVote {
@@ -500,7 +505,8 @@ export interface SettlementView {
   exit_fee_paisa: string;
   net_paisa: string;
   taken_on: string;
-  payouts: Array<{ due_on: string; amount_paisa: string; paid_at: string | null }>;
+  /** `id` is null until the settlement is executed and the payout rows exist. */
+  payouts: Array<{ id: string | null; due_on: string; amount_paisa: string; paid_at: string | null }>;
 }
 
 export interface MeetingRow {

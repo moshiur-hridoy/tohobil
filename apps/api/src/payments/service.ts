@@ -205,12 +205,13 @@ async function openItems(
   db: Db,
   memberId: string,
   purpose: PaymentPurpose,
+  today: string,
 ): Promise<{ dues: Outstanding[]; fines: Outstanding[] }> {
   const dues = await db.query(
-    `SELECT due_id AS id, outstanding_paisa FROM v_due_status
+    `SELECT due_id AS id, outstanding_paisa, due_date > $3::date AS ahead FROM v_due_status
      WHERE member_id = $1 AND outstanding_paisa > 0 AND kind = ANY($2::text[])
      ORDER BY due_date, due_id`,
-    [memberId, PURPOSE_DUE_KINDS[purpose] ?? []],
+    [memberId, PURPOSE_DUE_KINDS[purpose] ?? [], today],
   );
   // Fines are paid together with ordinary dues only.
   const fines =
@@ -224,8 +225,8 @@ async function openItems(
         )
       : { rows: [] };
   const map = (r: unknown): Outstanding => {
-    const row = r as { id: string; outstanding_paisa: unknown };
-    return { id: row.id, outstanding: toBigInt(row.outstanding_paisa) };
+    const row = r as { id: string; outstanding_paisa: unknown; ahead?: boolean };
+    return { id: row.id, outstanding: toBigInt(row.outstanding_paisa), ...(row.ahead ? { ahead: true } : {}) };
   };
   return { dues: dues.rows.map(map), fines: fines.rows.map(map) };
 }
@@ -312,7 +313,7 @@ async function confirmInTx(
   }
 
   const amount = toBigInt(p.amount_paisa);
-  const plan = planFor(amount, manual, await openItems(tx, p.member_id, p.purpose));
+  const plan = planFor(amount, manual, await openItems(tx, p.member_id, p.purpose, deps.clock.todayDhaka()));
   const now = deps.clock.now();
 
   // The database only lets confirmed payments carry allocations, so mark it confirmed first.
@@ -812,7 +813,7 @@ export async function getPayment(
 
   out['preview'] = null;
   if (viewer.roles.includes('cashier') && row['status'] === 'pending') {
-    const items = await openItems(deps.pool, row.member_id, (row['purpose'] ?? 'dues') as PaymentPurpose);
+    const items = await openItems(deps.pool, row.member_id, (row['purpose'] ?? 'dues') as PaymentPurpose, deps.clock.todayDhaka());
     out['preview'] = planOut(planDefaultAllocation(toBigInt(row['amount_paisa']), items.dues, items.fines));
   }
   return out;

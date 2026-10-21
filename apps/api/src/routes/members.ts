@@ -10,6 +10,7 @@ import {
   uuidSchema,
   positivePaisaSchema,
   PAYMENT_METHODS,
+  SETTLEMENT_KINDS,
 } from '@barakah/shared';
 import { requireAuth, type Guards } from '../auth/guards';
 import { inTransaction } from '../lib/tx';
@@ -29,7 +30,7 @@ import {
 import { reinstateMember } from '../members/status';
 import { currentEntryQuote, requoteEntry } from '../members/entry';
 import { addContactLogEntry, listContactLog } from '../members/contact';
-import { listSettlements, recordSettlementPayout } from '../members/settlement';
+import { estimateSettlement, listSettlements, recordSettlementPayout } from '../members/settlement';
 
 const idParams = z.object({ id: uuidSchema });
 
@@ -161,6 +162,16 @@ export function memberRoutes(deps: MemberRouteDeps, guards: Guards) {
       trx_id: z.string().trim().max(100).optional(),
       note: z.string().trim().max(500).optional(),
     });
+
+    // The net a settlement of this kind would pay today, to suggest on the cashier's form. Saves nothing.
+    app.get(
+      '/members/:id/settlement-estimate',
+      {
+        preHandler: [authenticate, requireRole('cashier')],
+        schema: { params: idParams, querystring: z.object({ kind: z.enum(SETTLEMENT_KINDS) }) },
+      },
+      (req) => estimateSettlement(deps.pool, deps.clock, req.params.id, req.query.kind),
+    );
 
     app.get(
       '/settlements',

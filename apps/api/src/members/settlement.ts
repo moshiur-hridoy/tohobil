@@ -4,7 +4,8 @@ import { audit } from '../lib/audit';
 import { badRequest, conflict, notFound } from '../lib/errors';
 import { type Db } from '../lib/tx';
 import { toBigInt } from '../lib/money';
-import { ruleInt, rulePaisa } from '../lib/rules';
+import { accountBalance } from '../lib/nav';
+import { getRule, ruleInt, rulePaisa } from '../lib/rules';
 import { type LedgerActor, LEDGER_REF, postEntries } from '../ledger/service';
 import { notifyMember } from '../notifications/service';
 import type { PushSender } from '../notifications/providers/push';
@@ -70,29 +71,13 @@ function toPaisaBig(value: string | number | bigint | unknown): bigint {
 }
 
 /**
- * Compute a settlement quote per 18.6, freeze it as a member snapshot and a settlements row.
- *
- * - death_surrender and wind_up use NAV-based gross (shares * net_assets / shares_outstanding).
- * - early_exit uses paid-in capital, with a 10% service charge retained to EXIT_FEE_INCOME.
- * - compassionate_exit and inactive_return use paid-in capital with no service charge.
- *
- * The payout plan must sum to `net`; otherwise the quote is rejected.
+ * What a settlement of this kind would pay out today (18.6): the gross, what is held back, and the net.
+ * Reads only. Shared by the quote that is frozen into a settlement and by the cashier's estimate, so
+ * the amount suggested on the form is the amount the quote will later demand.
  */
-export async function computeSettlementQuote(
-  db: Db,
-  deps: SettlementDeps,
-  memberId: string,
-  input: SettlementQuoteInput,
-): Promise<SettlementQuote> {
-  const today = deps.clock.todayDhaka();
-  const member = (await db.query(
-    `SELECT id, code, full_name, status FROM members WHERE id = $1 FOR UPDATE`,
-    [memberId],
-  )).rows[0] as MemberShortRow | undefined;
-  if (!member) throw notFound('member.not_found', 'Member not found');
-
+export async function settlementFigures(db: Db, clock: Clock, memberId: string, kind: SettlementKind) {
+  const today = clock.todayDhaka();
   const fin = await computeMemberFinancials(db, memberId, today);
-  const { kind, payout_plan: plan } = input;
   const ruleAsOf = `${today.slice(0, 7)}-01`;
 
   let gross: bigint;
@@ -110,8 +95,57 @@ export async function computeSettlementQuote(
     exitFee = await rulePaisa(db, 'exit_fee_paisa', ruleAsOf).catch(() => 0n);
   }
 
-  const deductionsTotal = fin.outstandingPrincipal + fin.outstandingFines + exitFee;
-  const net = gross + fin.escrow - deductionsTotal;
+  // Only dues already past their date are owed; one generated ahead for a coming month is not.
+  const owed = (await db.query(
+    `SELECT COALESCE(SUM(GREATEST(outstanding_paisa, 0)), 0) AS p FROM v_due_status
+     WHERE member_id = $1 AND due_date <= $2::date`,
+    [memberId, today],
+  )).rows[0] as { p: string | number | bigint };
+  const principal = toBigInt(owed.p);
+
+  const deductionsTotal = principal + fin.outstandingFines + exitFee;
+  return { today, fin, gross, exitFee, principal, deductionsTotal, net: gross + fin.escrow - deductionsTotal };
+}
+
+/** The cashier's suggested net for the settlement form. Nothing is saved. */
+export async function estimateSettlement(db: Db, clock: Clock, memberId: string, kind: SettlementKind) {
+  const member = (await db.query(`SELECT 1 FROM members WHERE id = $1`, [memberId])).rows[0];
+  if (!member) throw notFound('member.not_found', 'Member not found');
+  const f = await settlementFigures(db, clock, memberId, kind);
+  return {
+    kind,
+    gross_paisa: f.gross.toString(),
+    escrow_paisa: f.fin.escrow.toString(),
+    principal_paisa: f.principal.toString(),
+    fines_paisa: f.fin.outstandingFines.toString(),
+    exit_fee_paisa: f.exitFee.toString(),
+    net_paisa: f.net.toString(),
+  };
+}
+
+/**
+ * Compute a settlement quote per 18.6, freeze it as a member snapshot and a settlements row.
+ *
+ * - death_surrender and wind_up use NAV-based gross (shares * net_assets / shares_outstanding).
+ * - early_exit uses paid-in capital, with a 10% service charge kept back and paid to the charity fund.
+ * - compassionate_exit and inactive_return use paid-in capital with no service charge.
+ *
+ * The payout plan must sum to `net`; otherwise the quote is rejected.
+ */
+export async function computeSettlementQuote(
+  db: Db,
+  deps: SettlementDeps,
+  memberId: string,
+  input: SettlementQuoteInput,
+): Promise<SettlementQuote> {
+  const member = (await db.query(
+    `SELECT id, code, full_name, status FROM members WHERE id = $1 FOR UPDATE`,
+    [memberId],
+  )).rows[0] as MemberShortRow | undefined;
+  if (!member) throw notFound('member.not_found', 'Member not found');
+
+  const { kind, payout_plan: plan } = input;
+  const { today, fin, gross, exitFee, principal, deductionsTotal, net } = await settlementFigures(db, deps.clock, memberId, kind);
 
   if (plan.length === 0) {
     throw badRequest('settlement.no_payout_plan', 'A payout plan is required');
@@ -133,7 +167,7 @@ export async function computeSettlementQuote(
     gross,
     escrow: fin.escrow,
     deductions: {
-      principal_paisa: fin.outstandingPrincipal,
+      principal_paisa: principal,
       fines_paisa: fin.outstandingFines,
       exit_fee_paisa: exitFee,
       total_paisa: deductionsTotal,
@@ -166,7 +200,7 @@ export async function computeSettlementQuote(
     gross,
     escrow: fin.escrow,
     deductions: {
-      principal: fin.outstandingPrincipal,
+      principal,
       fines: fin.outstandingFines,
       exit_fee: exitFee,
       total: deductionsTotal,
@@ -391,18 +425,35 @@ export async function recordSettlementPayout(
     );
   }
 
+  // By default the fund is one pool: the payout is posted against BANK and checked against cash, bank,
+  // bKash and Nagad together; the method only goes in the memo. With the rule `cash_tracking_by_method`
+  // on, it leaves the account the cashier paid from and that account must hold it (ASSUMPTIONS 96).
+  const perMethod = (await getRule(db, 'cash_tracking_by_method', today))?.value === true;
+  const account = perMethod ? methodAccount(input.method) : 'BANK';
+  const available = perMethod
+    ? await accountBalance(db, account)
+    : toPaisaBig(((await db.query(
+        `SELECT COALESCE(SUM(natural_balance_paisa), 0) AS p FROM v_account_balances WHERE code IN ('CASH','BANK','BKASH','NAGAD')`,
+      )).rows[0] as { p: string | number | bigint }).p);
+  if (amount > available) {
+    throw badRequest(
+      'settlement.insufficient_funds',
+      `The fund holds ${available}${perMethod ? ` in ${account}` : ' in cash and bank'}, which is less than the payout ${amount}`,
+    );
+  }
+
   await postEntries(
     db as pg.PoolClient,
     [
       {
         entry_date: today,
         debit: 'SETTLEMENT_PAYABLE',
-        credit: methodAccount(input.method),
+        credit: account,
         amount_paisa: amount,
         member_id: payout.member_id,
         ref_type: LEDGER_REF.settlementPayout,
         ref_id: payout.id,
-        memo: input.note ?? `Settlement payout ${today}`,
+        memo: input.note ?? `Settlement payout ${today} (via ${input.method}${input.trx_id ? `, ${input.trx_id}` : ''})`,
       },
     ],
     actor,
@@ -488,7 +539,7 @@ export interface SettlementView {
   exit_fee_paisa: string;
   net_paisa: string;
   taken_on: string;
-  payouts: Array<{ due_on: string; amount_paisa: string; paid_at: string | null }>;
+  payouts: Array<{ id: string | null; due_on: string; amount_paisa: string; paid_at: string | null }>;
 }
 
 /**
@@ -507,7 +558,7 @@ export async function listSettlements(
             s.net_paisa::text AS net_paisa, s.payout_plan,
             sn.taken_on::text AS taken_on, sn.gross_paisa::text AS gross_paisa,
             sn.escrow_paisa::text AS escrow_paisa, sn.deductions,
-            coalesce((SELECT jsonb_agg(jsonb_build_object('due_on', p.due_on::text,
+            coalesce((SELECT jsonb_agg(jsonb_build_object('id', p.id, 'due_on', p.due_on::text,
                         'amount_paisa', p.amount_paisa::text, 'paid_at', p.paid_at) ORDER BY p.due_on)
                       FROM settlement_payouts p WHERE p.settlement_id = s.id), '[]'::jsonb) AS payout_rows
      FROM settlements s
@@ -520,7 +571,7 @@ export async function listSettlements(
   return {
     items: res.rows.map((r) => {
       const ded = (r.deductions ?? {}) as Record<string, string | number>;
-      const rows = r.payout_rows as Array<{ due_on: string; amount_paisa: string; paid_at: string | null }>;
+      const rows = r.payout_rows as Array<{ id: string; due_on: string; amount_paisa: string; paid_at: string | null }>;
       const plan = r.payout_plan as Array<{ due_on: string; amount_paisa: string }>;
       return {
         id: r.id,
@@ -536,7 +587,7 @@ export async function listSettlements(
         exit_fee_paisa: String(ded.exit_fee_paisa ?? '0'),
         net_paisa: r.net_paisa,
         taken_on: r.taken_on,
-        payouts: rows.length > 0 ? rows : plan.map((p) => ({ ...p, paid_at: null })),
+        payouts: rows.length > 0 ? rows : plan.map((p) => ({ ...p, id: null, paid_at: null })),
       };
     }),
   };

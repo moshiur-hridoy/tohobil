@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Menu from '@radix-ui/react-dropdown-menu';
@@ -15,7 +15,7 @@ import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtDate, fmtInstant, todayDhaka } from '../../lib/dates';
 import { formatCount } from '../../lib/format';
-import { arrearsOf, parseAmountInput, taka } from '../../lib/money';
+import { arrearsOf, paisaToDecimal, parseAmountInput, taka } from '../../lib/money';
 import type { ContactLogItem, MemberRow, MemberStatusEvent } from '../../lib/types';
 
 type Kind = 'status' | 'suspension' | 'reinstatement' | 'settlement' | 'contact' | 'pin';
@@ -462,6 +462,20 @@ function SettlementDialog({ member, open, onClose }: { member: MemberRow; open: 
   const [dueDate, setDueDate] = useState(todayDhaka());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
+  // Once the cashier types their own figure, a changed kind no longer overwrites it.
+  const typed = useRef(false);
+
+  // What a settlement of this kind would pay today, worked out by the server from the member's books.
+  const estimate = useQuery({
+    queryKey: ['settlement-estimate', member.id, kind],
+    enabled: open,
+    queryFn: () => api<SettlementEstimate>(`/members/${member.id}/settlement-estimate?kind=${kind}`),
+  });
+  useEffect(() => {
+    if (!estimate.data || typed.current) return;
+    const net = BigInt(estimate.data.net_paisa);
+    setAmount(net > 0n ? paisaToDecimal(net) : '');
+  }, [estimate.data]);
 
   const submit = async () => {
     setBusy(true);
@@ -498,15 +512,16 @@ function SettlementDialog({ member, open, onClose }: { member: MemberRow; open: 
       <p className="mb-3 text-muted">{member.code} {member.full_name}</p>
       <label className="block text-sm text-muted">
         {t('membersAdmin.settlementKind')}
-        <select className="field mt-1 w-full" value={kind} onChange={(e) => setKind(e.target.value)}>
+        <select className="field mt-1 w-full" value={kind} onChange={(e) => { typed.current = false; setKind(e.target.value); }}>
           {SETTLEMENT_KINDS.map((k) => (
             <option key={k} value={k}>{t(`settlementKind.${k}`)}</option>
           ))}
         </select>
       </label>
+      {estimate.data && <SettlementBreakdown e={estimate.data} />}
       <label className="mt-2 block text-sm text-muted">
         {t('membersAdmin.settlementNetAmount')}
-        <input className="field mt-1 w-full" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
+        <input className="field mt-1 w-full" inputMode="decimal" value={amount} onChange={(e) => { typed.current = true; setAmount(e.target.value); }} />
       </label>
       <label className="mt-2 block text-sm text-muted">
         {t('membersAdmin.settlementDueDate')}
@@ -518,6 +533,45 @@ function SettlementDialog({ member, open, onClose }: { member: MemberRow; open: 
         <Dialog.Close className={`${BTN_SECONDARY} flex-1`}>{t('common.cancel')}</Dialog.Close>
       </div>
     </AdminDialog>
+  );
+}
+
+interface SettlementEstimate {
+  gross_paisa: string;
+  escrow_paisa: string;
+  principal_paisa: string;
+  fines_paisa: string;
+  exit_fee_paisa: string;
+  net_paisa: string;
+}
+
+/** How the suggested net is made up: what the member has paid in, less what is kept back or still owed. */
+function SettlementBreakdown({ e }: { e: SettlementEstimate }) {
+  const { t } = useTranslation();
+  const row = (label: string, paisa: string, sign: '+' | '−') =>
+    BigInt(paisa) === 0n ? null : (
+      <div className="flex justify-between gap-3">
+        <span className="text-muted">{label}</span>
+        <span className="tabular-nums">{sign}{taka(paisa)}</span>
+      </div>
+    );
+  const net = BigInt(e.net_paisa);
+  return (
+    <div className="mt-2 space-y-1 rounded-xl bg-background p-3 text-sm">
+      <div className="flex justify-between gap-3">
+        <span className="text-muted">{t('membersAdmin.estPaidIn')}</span>
+        <span className="tabular-nums">{taka(e.gross_paisa)}</span>
+      </div>
+      {row(t('membersAdmin.estEscrow'), e.escrow_paisa, '+')}
+      {row(t('membersAdmin.estExitFee'), e.exit_fee_paisa, '−')}
+      {row(t('membersAdmin.estDues'), e.principal_paisa, '−')}
+      {row(t('membersAdmin.estFines'), e.fines_paisa, '−')}
+      <div className="flex justify-between gap-3 border-t border-border pt-1 font-semibold">
+        <span>{t('membersAdmin.estNet')}</span>
+        <span className={`tabular-nums ${net > 0n ? '' : 'text-bad'}`}>{taka(net)}</span>
+      </div>
+      {net <= 0n && <p className="text-bad">{t('membersAdmin.estNothing')}</p>}
+    </div>
   );
 }
 

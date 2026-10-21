@@ -20,7 +20,7 @@ let fund: Fund;
 let actor: LedgerActor;
 
 beforeAll(async () => {
-  db = await createTestDb();
+  db = await createTestDb({ cashByMethod: true });
   if (!db) return;
   fund = await seedFund(db.admin);
   actor = { userId: fund.users.M01 };
@@ -559,4 +559,32 @@ describe('the application role cannot rewrite or delete financial records', () =
       await expect(d.app.query(`UPDATE dues SET amount_paisa = 1`)).rejects.toThrow(/append-only/);
     },
   );
+});
+
+describe('cash pool (rule cash_tracking_by_method off)', () => {
+  let pool: TestDb | null;
+  beforeAll(async () => {
+    pool = await createTestDb();
+  }, 120_000);
+  afterAll(async () => {
+    await pool?.close();
+  });
+
+  it('posts a bKash, Nagad or cash receipt to BANK, and keeps the account of a reversal', async (ctx) => {
+    if (!pool) return ctx.skip();
+    const poolFund = await seedFund(pool.admin);
+    const who: LedgerActor = { userId: poolFund.users.M01 };
+    const posted = await inTransaction(pool.app, (tx) =>
+      postEntries(tx, [entry({ debit: 'BKASH' }), entry({ debit: 'CASH' }), entry({ debit: 'NAGAD' })], who),
+    );
+    expect(posted.map((p) => p.debit_account)).toEqual(['BANK', 'BANK', 'BANK']);
+
+    // An entry that sits on BKASH from before (kept by the legacy import) is reversed on BKASH.
+    const [old] = await inTransaction(pool.app, (tx) =>
+      postEntries(tx, [entry({ debit: 'BKASH' })], who, { exactAccounts: true }),
+    );
+    expect(old!.debit_account).toBe('BKASH');
+    const rev = await inTransaction(pool.app, (tx) => reverseEntry(tx, old!.seq, { reason: 'entered by mistake', actor: who, clock }));
+    expect(rev.credit_account).toBe('BKASH');
+  });
 });

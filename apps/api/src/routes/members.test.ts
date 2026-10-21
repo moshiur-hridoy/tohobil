@@ -704,8 +704,14 @@ describe('GET /dues', () => {
     async () => {
       const { items } = await dues('?limit=200');
       const flagged = items.filter((i) => i['under_verification'] === true);
+      expect(flagged.length).toBeGreaterThan(0);
       expect(new Set(flagged.map((i) => i.member_id))).toEqual(new Set([m.M04]));
-      expect(flagged).toHaveLength(2);
+      // Only a month that is already due can be what the waiting payment is for; a month still to
+      // come is not flagged just because the member has some payment with the cashier.
+      const today = new Date(Date.now() + 6 * 3_600_000).toISOString().slice(0, 10);
+      const open = items.filter((i) => i.member_id === m.M04 && i['outstanding_paisa'] !== '0');
+      expect(open).toHaveLength(2);
+      for (const i of open) expect(i['under_verification']).toBe(i.due_date <= today);
       // A paid due is never "under verification", even for a member with a pending payment.
       expect(
         items.find((i) => i.member_id === m.M03 && i.period === '2026-10')?.['under_verification'],

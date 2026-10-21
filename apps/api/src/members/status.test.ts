@@ -8,7 +8,7 @@ import { seedFund, testEnv, type Fund } from '../test/fund-fixture';
 import type { PushResult, PushSender } from '../notifications/providers/push';
 import type { SmsProvider } from '../notifications/providers/sms';
 import { computeConsecutiveUnpaidMonths, computeMemberFinancials } from './status';
-import { computeSettlementQuote, executeSettlement } from './settlement';
+import { computeSettlementQuote, estimateSettlement, executeSettlement } from './settlement';
 
 interface PushCall {
   tokens: string[];
@@ -253,11 +253,12 @@ describe('settlement NAV invariant', () => {
       [m],
     );
 
-    // Create one unpaid due and fine for M02 to act as settlement deductions.
+    // Create one unpaid due and fine for M02 to act as settlement deductions. The due date is already
+    // past: a due that is not due yet is not deducted from a settlement.
     await db!.admin.query(`INSERT INTO periods (period) VALUES ('2026-11') ON CONFLICT DO NOTHING`);
     const dueRes = await db!.admin.query(
       `INSERT INTO dues (member_id, period, kind, shares_snapshot, amount_paisa, due_date)
-       VALUES ($1, '2026-11', 'monthly', 1, 3000, '2026-11-20')
+       VALUES ($1, '2026-11', 'monthly', 1, 3000, '2026-11-10')
        RETURNING id`,
       [m],
     );
@@ -329,5 +330,78 @@ describe('settlement NAV invariant', () => {
     const { divRound } = await import('@barakah/shared');
     const expected = navBefore + divRound(deductions, BigInt(sharesAfter));
     expect(Math.abs(Number(navAfter - expected))).toBeLessThanOrEqual(1);
+  });
+
+  test('the early-exit estimate keeps 10% of the paid-in money and skips a due that is not due yet', async () => {
+    const m = fund.members.M04;
+    await db!.admin.query(
+      `INSERT INTO ledger_entries (entry_date, debit_account, credit_account, amount_paisa, member_id, ref_type, ref_id)
+       VALUES ('2026-11-10', 'BANK', 'MEMBER_CAPITAL', 100000, $1, 'payment', gen_random_uuid())`,
+      [m],
+    );
+    // A due for December exists already, but its date (the clock says 15 November) has not come.
+    await db!.admin.query(`INSERT INTO periods (period) VALUES ('2026-12') ON CONFLICT DO NOTHING`);
+    await db!.admin.query(
+      `INSERT INTO dues (member_id, period, kind, shares_snapshot, amount_paisa, due_date)
+       VALUES ($1, '2026-12', 'monthly', 1, 7000, '2026-12-10')`,
+      [m],
+    );
+    const est = await estimateSettlement(db!.app, clock, m, 'early_exit');
+    expect(est.gross_paisa).toBe('100000');
+    expect(est.exit_fee_paisa).toBe('10000');
+    expect(est.principal_paisa).toBe('0');
+    expect(BigInt(est.net_paisa)).toBe(100000n - 10000n - BigInt(est.fines_paisa) + BigInt(est.escrow_paisa));
+    // Compassionate exit keeps nothing back.
+    expect((await estimateSettlement(db!.app, clock, m, 'compassionate_exit')).exit_fee_paisa).toBe('0');
+  });
+
+  test('executing an early-exit settlement pays the 10% charge and the unpaid fines to charity', async () => {
+    const m = fund.members.M07;
+    await db!.admin.query(
+      `INSERT INTO ledger_entries (entry_date, debit_account, credit_account, amount_paisa, member_id, ref_type, ref_id)
+       VALUES ('2026-11-10', 'BANK', 'MEMBER_CAPITAL', 100000, $1, 'payment', gen_random_uuid())`,
+      [m],
+    );
+    await db!.admin.query(`INSERT INTO periods (period) VALUES ('2026-11') ON CONFLICT DO NOTHING`);
+    const due = (await db!.admin.query(
+      `INSERT INTO dues (member_id, period, kind, shares_snapshot, amount_paisa, due_date)
+       VALUES ($1, '2026-11', 'monthly', 1, 3000, '2026-11-10') RETURNING id`,
+      [m],
+    )).rows[0] as { id: string };
+    await db!.admin.query(
+      `INSERT INTO fines (due_id, member_id, amount_paisa, kind, reason) VALUES ($1, $2, 1000, 'late_payment', 'test')`,
+      [due.id, m],
+    );
+    const proposalId = ((await db!.admin.query(
+      `INSERT INTO proposals (type, title, subject_member_id, payload, created_by, status)
+       VALUES ('settlement', 'Exit', $1, '{}', $2, 'approved') RETURNING id`,
+      [m, fund.users.M01],
+    )).rows[0] as { id: string }).id;
+
+    const est = await estimateSettlement(db!.app, clock, m, 'early_exit');
+    const charity = async () =>
+      BigInt(((await db!.admin.query(`SELECT natural_balance_paisa AS b FROM v_account_balances WHERE code = 'CHARITY_PAYABLE'`)).rows[0] as { b: string } | undefined)?.b ?? 0);
+    const before = await charity();
+
+    const { settlementExecutor } = await import('../proposals/executors/membership');
+    await inTransaction(db!.app, (tx) =>
+      settlementExecutor(
+        tx,
+        { id: proposalId, payload: { member_id: m, kind: 'early_exit', payout_plan: [{ due_on: '2026-11-15', amount_paisa: est.net_paisa }] } } as never,
+        {} as never,
+        { id: fund.users.M01, device_id: 'test' } as never,
+        { ip: '127.0.0.1' } as never,
+        { clock } as never,
+      ),
+    );
+
+    // The charge (10% of 100,000) and the 1,000 fine both reached the charity fund.
+    expect(est.exit_fee_paisa).toBe('10000');
+    expect((await charity()) - before).toBe(10000n + 1000n);
+    // The fine is closed, and nothing is booked to fund income for the exit.
+    const fine = (await db!.admin.query(`SELECT outstanding_paisa FROM v_fine_status WHERE member_id = $1`, [m])).rows as Array<{ outstanding_paisa: string }>;
+    expect(fine.every((f) => f.outstanding_paisa === '0')).toBe(true);
+    const income = await db!.admin.query(`SELECT 1 FROM ledger_entries WHERE ref_id = $1 AND credit_account = 'EXIT_FEE_INCOME'`, [proposalId]);
+    expect(income.rows).toHaveLength(0);
   });
 });

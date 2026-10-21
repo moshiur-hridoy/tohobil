@@ -42,7 +42,7 @@ async function enrolStepUp(session: TestSession): Promise<void> {
 
 describe('assets, rent and NAV', () => {
   beforeAll(async () => {
-    db = await createTestDb();
+    db = await createTestDb({ cashByMethod: true });
     if (!db) return;
     app = await buildApp({ env: testEnv, db: db.app, clock });
     fund = await seedFund(db.admin);

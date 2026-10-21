@@ -70,7 +70,8 @@ export function upMigrationSql(): string {
     .join('\n');
 }
 
-export async function createTestDb(): Promise<TestDb | null> {
+/** `cashByMethod` turns the rule `cash_tracking_by_method` on, so cash, bKash and Nagad keep their own accounts. */
+export async function createTestDb(opts: { cashByMethod?: boolean } = {}): Promise<TestDb | null> {
   serverPromise ??= startServer();
   const server = await serverPromise;
   if (!server) return null;
@@ -99,6 +100,9 @@ export async function createTestDb(): Promise<TestDb | null> {
   const adminUrl = withDatabase(server.adminUrl, dbName);
   const admin = new pg.Pool({ connectionString: adminUrl, max: 25 });
   await admin.query(upMigrationSql());
+  if (opts.cashByMethod) {
+    await admin.query(`INSERT INTO rules (key, value, valid_from) VALUES ('cash_tracking_by_method', 'true', '2026-01-02')`);
+  }
 
   const app = new pg.Pool({
     connectionString: withDatabase(server.adminUrl, dbName, 'barakah_app', 'barakah_app'),

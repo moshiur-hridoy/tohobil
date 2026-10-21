@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import QRCode from 'qrcode';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AuthShell, FieldError } from '../../components/AuthShell';
@@ -15,6 +16,8 @@ export function TotpPage() {
   const { me, refreshMe } = useAuth();
   const navigate = useNavigate();
   const [secret, setSecret] = useState<string | null>(null);
+  // Drawn in the browser: the key never leaves this device to a QR service.
+  const [qr, setQr] = useState<string | null>(null);
   const [code, setCode] = useState('');
   const [error, setError] = useState<{ message: string; requestId?: string } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -42,7 +45,11 @@ export function TotpPage() {
           <button
             type="button"
             disabled={busy}
-            onClick={() => void run(async () => setSecret((await api<{ secret: string }>('/auth/totp/enroll', { method: 'POST' })).secret))}
+            onClick={() => void run(async () => {
+              const r = await api<{ secret: string; otpauth_url: string }>('/auth/totp/enroll', { method: 'POST' });
+              setQr(await QRCode.toDataURL(r.otpauth_url, { margin: 2, width: 240 }));
+              setSecret(r.secret);
+            })}
             className="h-14 rounded-2xl bg-primary text-[1.0625rem] font-bold text-primary-foreground disabled:opacity-50"
           >
             {t('totp.startEnrol')}
@@ -51,6 +58,12 @@ export function TotpPage() {
       )}
       {secret && (
         <div className="rounded-2xl border border-border bg-background p-4">
+          {qr && (
+            <>
+              <p className="text-[0.8125rem] text-muted">{t('totp.qrHint')}</p>
+              <img src={qr} alt={t('totp.qrAlt')} width={240} height={240} className="mx-auto my-3 rounded-xl bg-white" />
+            </>
+          )}
           <p className="text-[0.8125rem] text-muted">{t('totp.secretHint')}</p>
           <p className="mt-2 select-all break-all text-center font-mono text-lg tracking-wider">{secret}</p>
         </div>

@@ -67,8 +67,8 @@ describe('GET /settlements', () => {
       net_paisa: '7000000',
     });
     expect(s.payouts).toEqual([
-      { due_on: '2027-02-15', amount_paisa: '3000000', paid_at: null },
-      { due_on: '2027-03-15', amount_paisa: '4000000', paid_at: null },
+      { id: null, due_on: '2027-02-15', amount_paisa: '3000000', paid_at: null },
+      { id: null, due_on: '2027-03-15', amount_paisa: '4000000', paid_at: null },
     ]);
   });
 

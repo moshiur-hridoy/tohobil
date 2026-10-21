@@ -91,10 +91,13 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
        WHERE f.waived_at IS NULL AND d.period >= $1 AND d.period <= $2`,
       [from, to],
     ),
-    deps.pool.query(`SELECT DISTINCT member_id FROM payments WHERE status = 'pending'`),
+    deps.pool.query(`SELECT member_id, for_periods FROM payments WHERE status = 'pending'`),
   ]);
 
-  const pendingMembers = new Set((pending.rows as Array<{ member_id: string }>).map((r) => r.member_id));
+  // A waiting payment marks the months it can be for: those already due, or the ones it names.
+  const waiting = pending.rows as Array<{ member_id: string; for_periods: string[] | null }>;
+  const isPending = (memberId: string, period: string) =>
+    waiting.some((w) => w.member_id === memberId && (period <= current || (w.for_periods ?? []).includes(period)));
 
   type DueRow = { member_id: string; period: string; status: string; amount_paisa: unknown; allocated_paisa: unknown; outstanding_paisa: unknown; paid_on: string | null; app_paid_on: string | null };
   const duesByCell = new Map<string, DueRow[]>();
@@ -150,7 +153,7 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
           paid: due - outstanding,
           fine: fine.fine,
           fine_paid: fine.paid,
-          pending: outstanding > 0n && pendingMembers.has(m.id),
+          pending: outstanding > 0n && isPending(m.id, period),
           paid_on: paidOn,
           // Paid in full, without a fine, before the month began (or a month still to come is
           // already paid): the member paid in advance.

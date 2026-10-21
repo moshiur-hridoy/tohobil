@@ -46,7 +46,7 @@ describe('GET /ledger', () => {
   };
 
   beforeAll(async () => {
-    db = await createTestDb();
+    db = await createTestDb({ cashByMethod: true });
     if (!db) return;
     app = await buildApp({ env: testEnv, db: db.app, clock });
     fund = await seedFund(db.admin);
@@ -283,7 +283,7 @@ describe('GET /ledger/verify detects tampering', () => {
   let token: string;
 
   beforeAll(async () => {
-    db = await createTestDb();
+    db = await createTestDb({ cashByMethod: true });
     if (!db) return;
     app = await buildApp({ env: testEnv, db: db.app, clock });
     fund = await seedFund(db.admin);

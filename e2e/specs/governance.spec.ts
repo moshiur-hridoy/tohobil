@@ -37,7 +37,7 @@ test('(4) member votes on a proposal', async ({ browser, request }) => {
   await page.goto('/votes');
   const card = page.getByTestId('proposal-card').filter({ hasText: title });
   await expect(card).toBeVisible();
-  await card.click();
+  await card.getByRole('link').click();
 
   const [voteResponse] = await Promise.all([
     page.waitForResponse((r) => r.url().includes(`/proposals/${created.id}/vote`) && r.request().method() === 'POST'),

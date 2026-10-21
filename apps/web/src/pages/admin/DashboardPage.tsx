@@ -12,9 +12,10 @@ import { StatusPill } from '../../components/StatusPill';
 import { api } from '../../lib/api';
 import { fmtDate, fmtInstant, fmtPeriod, todayDhaka } from '../../lib/dates';
 import { formatCount } from '../../lib/format';
-import { arrearsOf, taka } from '../../lib/money';
+import { useCashByMethod } from '../../lib/useCashByMethod';
+import { arrearsOf, negClass, taka } from '../../lib/money';
 import { charityBalance, interimNetAssets } from '../../lib/nav';
-import type { AccountBalance, ApprovalRow, MatrixCell, MatrixResponse, MemberRow, ObjectionRow, Page, PaymentRow, ProposalSummary } from '../../lib/types';
+import type { AccountBalance, ApprovalRow, MatrixCell, MatrixResponse, MemberRow, ObjectionRow, Page, PaymentRow, ProposalSummary, SettlementView } from '../../lib/types';
 
 const ALL = 200;
 const TREND_MONTHS = 6;
@@ -80,6 +81,7 @@ export function AdminDashboard() {
   const objections = useQuery({ queryKey: ['objections', 'open'], queryFn: () => api<Page<ObjectionRow>>(`/objections?status=open&limit=${ALL}`) });
   const votes = useQuery({ queryKey: ['proposals', 'dashboard', 'open'], queryFn: () => api<Page<ProposalSummary>>(`/proposals?status=open&limit=${ALL}`) });
   const verify = useQuery({ queryKey: ['ledger-verify'], queryFn: () => api<{ ok: boolean; count: number }>('/ledger/verify'), staleTime: 60_000 });
+  const settlements = useQuery({ queryKey: ['settlements'], queryFn: () => api<{ items: SettlementView[] }>('/settlements') });
   const system = useQuery({ queryKey: ['system-status'], queryFn: () => api<SystemStatus>('/system/status'), refetchInterval: 60_000 });
 
   const failed = [members, accounts, matrix, pending].find((q) => q.error);
@@ -136,7 +138,7 @@ export function AdminDashboard() {
       </div>
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-        <MemberStatus matrix={matrix.data} members={members.data?.items} period={period} />
+        <MemberStatus matrix={matrix.data} members={members.data?.items} period={period} settlements={settlements.data?.items} />
         <div className="space-y-5">
           <Tasks pending={pending.data} approvals={approvals.data} objections={objections.data} votes={votes.data} />
           <Safety system={system.data} systemFailed={!!system.error} verify={verify.data} today={today} />
@@ -149,13 +151,18 @@ export function AdminDashboard() {
 function NetAssetsHero({ accounts, members, matrix }: { accounts?: AccountBalance[]; members?: MemberRow[]; matrix?: MatrixResponse }) {
   const { t } = useTranslation();
   const active = members?.filter((m) => m.status === 'active');
-  const breakdown: Array<[string, string | null]> = [
-    [t('adminDash.cashAndBank'), accounts ? taka(balanceOf(accounts, NAV_CASH_ACCOUNTS)) : null],
-    [t('adminDash.assetsAtCost'), accounts ? taka(balanceOf(accounts, ['INVESTMENTS_AT_COST'])) : null],
-    [t('adminDash.owedToOthers'), accounts ? taka(balanceOf(accounts, NAV_DEDUCTION_ACCOUNTS)) : null],
+  const perMethod = useCashByMethod();
+  const cash = accounts ? balanceOf(accounts, NAV_CASH_ACCOUNTS) : null;
+  // Where the cash sits: one line per account, so a payment through bKash is seen leaving bKash.
+  const perAccount = accounts && perMethod ? NAV_CASH_ACCOUNTS.map((code) => [code, balanceOf(accounts, [code])] as const) : [];
+  const breakdown: Array<[string, string | null, string]> = [
+    [t('adminDash.cashAndBank'), cash === null ? null : taka(cash), negClass(cash)],
+    [t('adminDash.assetsAtCost'), accounts ? taka(balanceOf(accounts, ['INVESTMENTS_AT_COST'])) : null, ''],
+    [t('adminDash.owedToOthers'), accounts ? taka(balanceOf(accounts, NAV_DEDUCTION_ACCOUNTS)) : null, ''],
     [
       t('adminDash.membersShares'),
       active ? t('adminDash.membersSharesValue', { members: formatCount(active.length), shares: formatCount(active.reduce((s, m) => s + m.shares, 0)) }) : null,
+      '',
     ],
   ];
 
@@ -167,20 +174,30 @@ function NetAssetsHero({ accounts, members, matrix }: { accounts?: AccountBalanc
         <div className="min-w-0">
           <p className="text-sm font-semibold text-ink2">{t('admin.netAssets')}</p>
           {accounts ? (
-            <p className="mt-1.5 text-[2.75rem] font-bold leading-tight tracking-tight tabular-nums">{taka(interimNetAssets(accounts))}</p>
+            <p className={`mt-1.5 text-[2.75rem] font-bold leading-tight tracking-tight tabular-nums ${negClass(interimNetAssets(accounts))}`}>{taka(interimNetAssets(accounts))}</p>
           ) : (
             <Skeleton className="mt-2 h-12 w-64" />
           )}
           <p className="mt-2 text-sm text-muted">{t('adminDash.netAssetsHint')}</p>
           <div className="my-5 h-px bg-border" />
           <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
-            {breakdown.map(([label, value]) => (
+            {breakdown.map(([label, value, tone]) => (
               <div key={label} className="min-w-0">
                 <dt className="text-[0.8125rem] text-muted">{label}</dt>
-                {value === null ? <Skeleton className="mt-1 h-6 w-24" /> : <dd className="mt-0.5 truncate text-lg font-bold tabular-nums">{value}</dd>}
+                {value === null ? <Skeleton className="mt-1 h-6 w-24" /> : <dd className={`mt-0.5 truncate text-lg font-bold tabular-nums ${tone}`}>{value}</dd>}
               </div>
             ))}
           </dl>
+          {perAccount.length > 0 && (
+            <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-[0.8125rem]" data-testid="cash-by-account">
+              {perAccount.map(([code, value]) => (
+                <li key={code} className="flex justify-between gap-2">
+                  <span className="text-muted">{t(`cashAccount.${code}`)}</span>
+                  <span className={`font-semibold tabular-nums ${negClass(value)}`}>{taka(value)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <CollectionTrend matrix={matrix} />
       </div>
@@ -375,19 +392,22 @@ interface StatusRow {
   owes: bigint;
   /** This month's state, which the pill and the bar show. */
   month: 'overdue' | 'pending' | 'open' | 'paid';
+  /** Set while the member is being paid out and leaving: the row is greyed and the pill says so. */
+  settling: SettlementView['status'] | null;
 }
 
 /** Behind on payments first (largest first), then payments being verified, then open, then paid. */
-const rank = (r: StatusRow): number => (r.owes > 0n ? 0 : r.month === 'pending' ? 1 : r.month === 'paid' ? 3 : 2);
+const rank = (r: StatusRow): number => (r.settling ? 4 : r.owes > 0n ? 0 : r.month === 'pending' ? 1 : r.month === 'paid' ? 3 : 2);
 
 const inFilter = (r: StatusRow, f: Filter): boolean =>
-  f === 'all' || (f === 'overdue' ? r.owes > 0n : f === 'pending' ? r.month === 'pending' : r.month === 'paid');
+  f === 'all' || (!r.settling && (f === 'overdue' ? r.owes > 0n : f === 'pending' ? r.month === 'pending' : r.month === 'paid'));
 
-function MemberStatus({ matrix, members, period }: { matrix?: MatrixResponse; members?: MemberRow[]; period: string }) {
+function MemberStatus({ matrix, members, period, settlements }: { matrix?: MatrixResponse; members?: MemberRow[]; period: string; settlements?: SettlementView[] }) {
   const { t } = useTranslation();
   const [filter, setFilter] = useState<Filter>('all');
 
   const byId = new Map(members?.map((m) => [m.id, m]));
+  const settlingBy = new Map(settlements?.filter((s) => s.status !== 'completed').map((s) => [s.member_id, s.status]));
   const rows: StatusRow[] = (matrix?.members ?? [])
     .filter((m) => m.member_status === 'active' || m.cells[period])
     .map((m) => {
@@ -399,12 +419,12 @@ function MemberStatus({ matrix, members, period }: { matrix?: MatrixResponse; me
         : cell?.status === 'paid' || cell?.status === 'paid_late' ? 'paid'
         : cell?.status === 'overdue' ? 'overdue'
         : 'open';
-      return { id: m.member_id, code: m.member_code, name: m.member_name, cell, owes, month };
+      return { id: m.member_id, code: m.member_code, name: m.member_name, cell, owes, month, settling: settlingBy.get(m.member_id) ?? null };
     })
     .sort((a, b) => rank(a) - rank(b) || (b.owes > a.owes ? 1 : b.owes < a.owes ? -1 : 0) || a.code.localeCompare(b.code));
 
   const counts = Object.fromEntries(FILTERS.map(([f]) => [f, rows.filter((r) => inFilter(r, f)).length])) as Record<Filter, number>;
-  const paidCount = rows.filter((r) => r.month === 'paid').length;
+  const paidCount = rows.filter((r) => !r.settling && r.month === 'paid').length;
 
   return (
     <Card className="min-w-0 px-5 pb-3 pt-5 sm:px-6">
@@ -413,7 +433,7 @@ function MemberStatus({ matrix, members, period }: { matrix?: MatrixResponse; me
           <div>
             <h2 className="text-[1.0625rem] font-bold">{t('adminDash.membersTitle')}</h2>
             <p className="text-[0.8125rem] text-muted">
-              {matrix ? t('adminDash.membersSub', { period: fmtPeriod(period), paid: formatCount(paidCount), total: formatCount(counts.all) }) : fmtPeriod(period)}
+              {matrix ? t('adminDash.membersSub', { period: fmtPeriod(period), paid: formatCount(paidCount), total: formatCount(rows.filter((r) => !r.settling).length) }) : fmtPeriod(period)}
             </p>
           </div>
           <Tabs.List aria-label={t('adminDash.filterLabel')} className="flex gap-0.5 rounded-xl bg-soft p-1 text-[0.8125rem]">
@@ -468,13 +488,13 @@ function StatusTable({ rows }: { rows: StatusRow[] }) {
           const pct = Math.min(percent(paid, due), 100);
           const bar = r.month === 'pending' ? 'bg-warn' : r.month === 'overdue' ? 'bg-bad' : 'bg-primary';
           return (
-            <div role="row" key={r.id} className={`${COLS} flex min-h-[3.5rem] border-b border-border py-2 last:border-b-0`}>
+            <div role="row" key={r.id} className={`${COLS} flex min-h-[3.5rem] border-b border-border py-2 last:border-b-0 ${r.settling ? 'opacity-55' : ''}`}>
               <div role="cell" className="flex min-w-0 flex-1 items-center gap-3">
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-soft text-[0.6875rem] font-bold text-ink2">{r.code}</span>
                 <div className="min-w-0">
                   <p className="truncate text-[0.9375rem] font-semibold">{r.name}</p>
                   {r.cell && <p className="truncate text-xs text-muted tabular-nums sm:hidden">{taka(paid)} / {taka(due)}</p>}
-                  {r.owes > 0n && <p className="truncate text-xs text-bad">{t('adminDash.owesTotal', { amount: taka(r.owes) })}</p>}
+                  {r.owes > 0n && !r.settling && <p className="truncate text-xs text-bad">{t('adminDash.owesTotal', { amount: taka(r.owes) })}</p>}
                 </div>
               </div>
               <span role="cell" className="hidden text-[0.9375rem] tabular-nums sm:block">{r.cell ? taka(due) : '—'}</span>
@@ -487,7 +507,13 @@ function StatusTable({ rows }: { rows: StatusRow[] }) {
                 )}
               </div>
               <span role="cell" className="shrink-0">
-                <StatusPill status={r.month === 'pending' ? 'pending' : r.cell?.status ?? 'none'} />
+                {r.settling ? (
+                  <Link to="/admin/settlements" className="inline-flex min-h-8 items-center rounded-full bg-soft px-3 text-[0.8125rem] font-semibold text-ink2">
+                    {t(`settlement.status.${r.settling}`)}
+                  </Link>
+                ) : (
+                  <StatusPill status={r.month === 'pending' ? 'pending' : r.cell?.status ?? 'none'} />
+                )}
               </span>
             </div>
           );

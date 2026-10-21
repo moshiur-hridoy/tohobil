@@ -63,6 +63,8 @@ export default defineConfig({
     },
   },
   server: {
+    // Listen on the local network so a phone on the same Wi-Fi can open http://<this Mac's IP>:5173.
+    host: true,
     proxy: {
       '/api': {
         // Overridable so the e2e stack can run beside a normal `pnpm dev`.

@@ -9,11 +9,12 @@ import { ListSkeleton } from '../../components/Skeleton';
 import { PullToRefresh } from '../../components/PullToRefresh';
 import { Empty, LoadError } from '../../components/StateViews';
 import { api } from '../../lib/api';
+import { uuid } from '../../lib/uuid';
 import { useAuth } from '../../lib/auth';
 import { downloadCsv } from '../../lib/csv';
 import { fmtDate } from '../../lib/dates';
 import { formatCount, localDigits } from '../../lib/format';
-import { paisaToDecimal, taka } from '../../lib/money';
+import { paisaToDecimal, taka, negClass } from '../../lib/money';
 import type { AccountBalance, LedgerRow, MemberRow, Page } from '../../lib/types';
 
 interface Verify {
@@ -40,7 +41,7 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
   const [objectTo, setObjectTo] = useState<LedgerRow | null>(null);
   const [objectText, setObjectText] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
-  const attempt = useRef(crypto.randomUUID());
+  const attempt = useRef(uuid());
 
   const members = useQuery({ queryKey: ['members'], queryFn: () => api<{ items: MemberRow[] }>('/members') });
   const accounts = useQuery({ queryKey: ['balances'], queryFn: () => api<{ items: AccountBalance[] }>('/accounts/balances') });
@@ -130,6 +131,7 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
               icon={ICONS.wallet}
               label={t(`cashAccount.${a.code}`, { defaultValue: a.code })}
               value={a.natural_balance_paisa === null ? null : taka(a.natural_balance_paisa)}
+              valueClass={negClass(a.natural_balance_paisa)}
               pressed={account === a.code}
               onClick={() => setAccount(account === a.code ? '' : a.code)}
             />
@@ -298,7 +300,7 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
               <li key={r.seq} className="rounded-[18px] border border-border bg-card p-3.5">
                 <EntryBody r={r} />
                 {canObject && (
-                  <button type="button" onClick={() => { attempt.current = crypto.randomUUID(); setNotice(null); setObjectTo(r); }} className="mt-2 h-10 rounded-md border border-border px-3 text-sm">
+                  <button type="button" onClick={() => { attempt.current = uuid(); setNotice(null); setObjectTo(r); }} className="mt-2 h-10 rounded-md border border-border px-3 text-sm">
                     {t('ledgerPage.objectButton')}
                   </button>
                 )}

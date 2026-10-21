@@ -91,7 +91,7 @@ const addFine = async (memberId: string, dueId: string, amount: number): Promise
 
 describe('payments', () => {
   beforeAll(async () => {
-    db = await createTestDb();
+    db = await createTestDb({ cashByMethod: true });
     if (!db) return;
     app = await buildApp({ env: testEnv, db: db.app, clock });
     fund = await seedFund(db.admin);

@@ -68,6 +68,7 @@
     "instructionsPlaceholder": "Payment instructions will appear here."
   },
   "votes": {
+    "seeDetails": "See details",
     "hiddenUntilClose": "Nobody can see how others voted, or the running result, until voting closes.",
     "needToPass": "Needed to pass: {{need}}",
     "title": "Vote detail",
@@ -108,7 +109,9 @@
     "remainingHours": "{{hours}}h {{minutes}}m",
     "cannotVoteSubject": "You are the subject of this proposal and cannot vote.",
     "youVoted": "You voted: {{choice}}",
-    "notVoted": "Not voted"
+    "notVoted": "Not voted",
+    "hasVoted": "Voted",
+    "turnout": "{{voted}} of {{total}} have voted"
   },
   "assets": {
     "title": "Assets",
@@ -196,6 +199,7 @@
         "administration": "Administration"
       },
       "obligations": "Obligations",
+      "settlements": "Settlements",
       "meetings": "Meetings"
     }
   },
@@ -427,6 +431,13 @@
       "not_started": "Attendance can be marked once the meeting has started.",
       "duplicate_member": "A member is listed twice."
     },
+    "settlement": {
+      "shortfall": "The net amount is negative. Settle what is owed first or reduce the deductions.",
+      "payout_mismatch": "The payout plan total does not match today's net figure. Open the settlement form, use the suggested amount and make a new proposal.",
+      "payout_plan_mismatch": "The payout plan total does not match the net figure.",
+      "insufficient_funds": "The fund does not hold enough money to pay this. Add money first, or pay a smaller amount.",
+      "no_payout_plan": "A payout plan is required."
+    },
     "entry": {
       "quote_expired": "The 7 days for this entry price have passed. Work out a new price first.",
       "quote_still_valid": "The current price is still valid.",
@@ -578,6 +589,8 @@
     "enrolHint": "Important money actions need an authenticator app (Google Authenticator or similar). Set it up first.",
     "startEnrol": "Set up",
     "secretHint": "In the app choose “enter a setup key”, type this key, then enter the app's 6-digit code below.",
+    "qrHint": "Or scan this QR code with your authenticator app, then enter the 6-digit code from the app below.",
+    "qrAlt": "QR code to add the authenticator app",
     "code": "6-digit code",
     "verify": "Verify",
     "active": "Active for 12 hours",
@@ -654,6 +667,9 @@
     "send": "Send for checking",
     "sending": "Sending…",
     "sent": "Sent. The cashier will confirm it soon.",
+    "sentTitle": "Sent for checking",
+    "sentBody": "Your {{amount}} payment has been sent for checking. Please wait. You will see it here once the cashier confirms it.",
+    "sentOk": "OK",
     "history": "My payments",
     "noHistory": "No payments yet.",
     "receipt": "Receipt",
@@ -1243,6 +1259,14 @@
     "gross": "Gross entitlement",
     "escrow": "Held in escrow",
     "unpaidDues": "Unpaid dues",
+    "payNow": "Pay out",
+    "adminSubtitle": "Money still to be paid to members who are leaving",
+    "payAvailable": "Available in {{account}}",
+    "payShort": "This is more than the fund holds. Add money first or enter a smaller amount.",
+    "payHint": "Record the money you handed to the member. It leaves the fund and the amount owed to the member goes down.",
+    "payAmount": "Amount (taka)",
+    "payMethod": "Paid from",
+    "payTrx": "Transaction ID (optional)",
     "paid": "paid",
     "status": {
       "approved": "Approved",
@@ -1280,6 +1304,13 @@
     "chooseMember": "Choose a member",
     "settlementKind": "Settlement kind",
     "settlementNetAmount": "Net payable amount (৳)",
+    "estPaidIn": "Paid in",
+    "estEscrow": "Escrow",
+    "estExitFee": "Early-exit charge",
+    "estDues": "Dues owed",
+    "estFines": "Fines owed",
+    "estNet": "Net refund",
+    "estNothing": "Nothing to pay out. Check the figures.",
     "settlementDueDate": "Payable date",
     "noMembers": "No members.",
     "issuePin": "Issue PIN",
@@ -1342,6 +1373,7 @@
       "suspension_after_consecutive_unpaid_months": "Unpaid months before suspension",
       "final_notice_days": "Final notice period",
       "auto_suspend": "Suspend automatically",
+      "cash_tracking_by_method": "Track cash, bank, bKash and Nagad separately",
       "push_to_sms_fallback_hours": "SMS if a notification is unread",
       "default_vote_duration_hours": "Voting time",
       "proposal_execution_window_days": "Time to carry out a passed proposal",
@@ -1380,6 +1412,7 @@
       "suspension_after_consecutive_unpaid_months": "Membership is suspended after this many unpaid months in a row.",
       "final_notice_days": "How long to wait after the final notice before suspending.",
       "auto_suspend": "Whether the system suspends a member on its own when the conditions are met.",
+      "cash_tracking_by_method": "Off: the fund shows one cash-and-bank total and a payout to a member is taken from it. On: each account is shown on its own and a payout leaves the account it was paid from.",
       "push_to_sms_fallback_hours": "If an app notification is not opened within this time, an SMS is sent.",
       "default_vote_duration_hours": "How long a proposal is open for voting by default.",
       "proposal_execution_window_days": "A passed proposal must be carried out within this many days.",

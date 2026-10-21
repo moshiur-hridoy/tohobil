@@ -529,7 +529,8 @@ export async function cancelProposal(
 
 /**
  * Owner decision (overrides Doc.md 5.8 "votes are public"): while a vote is open nobody sees how others
- * voted or the running tally, only their own vote. The tally and the voter list appear once it closes.
+ * voted or the running tally, only their own vote. The tally and each choice appear once it closes.
+ * Who has voted (not what) is visible to every voter at all times, so nobody has to ask around (owner request).
  * Only the API output is masked; the stored counts still drive finalisation.
  */
 const ballotsHidden = (status: string): boolean => status === 'open';
@@ -557,7 +558,10 @@ export async function getProposal(
   const [proposal, voters, votes] = await Promise.all([
     deps.pool.query<ProposalRow>(`SELECT * FROM proposals WHERE id = $1`, [proposalId]),
     deps.pool.query(
-      `SELECT pv.member_id, m.full_name, m.code, pv.weight
+      `SELECT pv.member_id, m.full_name, m.code, pv.weight,
+              -- Whether they have voted, never what: shown to everyone even while the ballots are hidden.
+              EXISTS (SELECT 1 FROM votes v WHERE v.proposal_id = pv.proposal_id
+                        AND v.member_id = pv.member_id AND v.superseded_at IS NULL) AS voted
        FROM proposal_voters pv
        JOIN members m ON m.id = pv.member_id
        WHERE pv.proposal_id = $1
@@ -620,6 +624,8 @@ export async function getProposal(
 interface ProposalListRow extends ProposalRow {
   created_key: string;
   voted_count: number;
+  my_choice: string | null;
+  can_vote: boolean;
 }
 
 export async function listProposals(
@@ -634,7 +640,7 @@ export async function listProposals(
   } else {
     params.push(null, null);
   }
-  params.push(query.limit + 1);
+  params.push(query.limit + 1, user.member_id);
 
   const res = await deps.pool.query<ProposalListRow>(
     `SELECT id, type, title, status, subject_member_id, payload, basis, threshold_kind,
@@ -644,7 +650,12 @@ export async function listProposals(
             amount_paisa, ${tsKey('created_at')} AS created_key,
             (SELECT count(*)::int FROM votes v
                JOIN proposal_voters pv ON pv.proposal_id = v.proposal_id AND pv.member_id = v.member_id
-              WHERE v.proposal_id = proposals.id AND v.superseded_at IS NULL) AS voted_count
+              WHERE v.proposal_id = proposals.id AND v.superseded_at IS NULL) AS voted_count,
+            -- The caller's own ballot and whether they may vote, so the list can offer the buttons.
+            (SELECT v.choice FROM votes v
+              WHERE v.proposal_id = proposals.id AND v.member_id = $7 AND v.superseded_at IS NULL) AS my_choice,
+            (proposals.status = 'open' AND EXISTS (SELECT 1 FROM proposal_voters pv
+              WHERE pv.proposal_id = proposals.id AND pv.member_id = $7)) AS can_vote
      FROM proposals
      WHERE ($1::text IS NULL OR status = $1)
        AND ($2::text IS NULL OR type = $2)
@@ -672,6 +683,8 @@ export async function listProposals(
     threshold_weight: paisaOut(row.threshold_weight ?? 0),
     counts: maskedCounts(row),
     ballots_hidden: ballotsHidden(row.status),
+    my_choice: row.my_choice,
+    can_vote: row.can_vote,
     ...(seesTurnout(user) ? { voted_count: row.voted_count, can_close_early: row.status === 'open' && outcomeDecided(row) } : {}),
     opens_at: row.opens_at,
     closes_at: row.closes_at,

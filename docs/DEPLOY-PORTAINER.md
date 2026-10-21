@@ -63,9 +63,7 @@ Each file prints a line `Public key: age1...`. Put the **three public keys**, co
 - `cashier.key` goes to the cashier, `auditor.key` to the auditor (only they can open a backup). Keep a sealed paper copy of each with the auditor.
 - `automation.key` goes on the server (below). Delete the copy on your Mac after the recovery kit is filled.
 
-On the server, in ZimaOS **Files** create the folder `AppData/barakah` and upload `automation.key` into it, so its full path is `/DATA/AppData/barakah/automation.key` (the value already in `prod.env`). It must exist **as a file** before the stack starts, otherwise Docker makes a folder with that name and the backup fails.
 
-Backups themselves are written to `/DATA/AppData/barakah/backups`. ZimaOS's own automatic backup should copy that folder, and you can also copy it by hand to Google Drive. A backup copy on the same disk is not a safe copy; the off-site or Drive copy is what saves you if the disk dies.
 
 ## 5. Connect Portainer to the image registry
 
@@ -91,7 +89,7 @@ Check:
 
 ## 7. First cashier account
 
-The database starts empty, so there is no member yet. Members arrive with the legacy sheet import, which is planned for the rehearsal stage (see below). Once member `M01` exists, the first cashier gets in with a one-time activation code made on the server: Portainer, **Containers**, the `api` container, **Console**, command `/bin/sh`, then
+The database starts empty, so there is no member yet. Members arrive with the legacy sheet import, (below). Once member `M01` exists, the first cashier gets in with a one-time activation code made on the server: Portainer, **Containers**, the `api` container, **Console**, command `/bin/sh`, then
 
 ```
 node dist/cli/activation-code.js M01
@@ -99,7 +97,21 @@ node dist/cli/activation-code.js M01
 
 Hand the printed code over in person. Do not seed fictional data in production: the seed refuses a non-local database.
 
-> Open item: the importer (`pnpm import:load`) currently runs from a development machine and needs a database connection, but the production database is deliberately not reachable from outside the server. The import step for the server will be added before the rehearsal (a one-off container run from Portainer).
+### Loading the real sheet data (once)
+
+The test data on your Mac is not copied to the server. The real members and payments come from the legacy sheet, in three steps.
+
+1. **On your Mac:** put the sheet tabs as CSV in `import/raw/` and run `pnpm import:convert`. Open `import/review.csv` and settle every row in it. This makes the folder `import/normalized/` (12 CSV files).
+2. **Upload:** in ZimaOS **Files** create `AppData/barakah/import` and upload the 12 files from `import/normalized/` into it. Then update the stack (section 8) so the `api` container sees the folder; it is mounted read-only at `/import`.
+3. **Load, from the `api` container console** (Portainer, **Containers**, `api`, **Console**, `/bin/sh`):
+
+```
+node dist/cli/import-sheet.js load            # dry run: writes nothing, prints the report
+node dist/cli/import-sheet.js load --commit   # writes, once per database
+node dist/cli/import-sheet.js verify          # must print "Import verification passed."
+```
+
+Read the dry-run report first (counts, warnings, opening-balance adjustments). The commit runs in one transaction and refuses a second run. Afterwards delete the uploaded CSVs from the server (they hold phone numbers), and check the System screen: the daily ledger check must be green.
 
 ## 8. Updating later
 

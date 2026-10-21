@@ -1,8 +1,9 @@
+import * as Dialog from '@radix-ui/react-dialog';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS, type PaymentMethod } from '@barakah/shared';
-import { PageHeader } from '../../components/ui';
+import { Icon, PageHeader } from '../../components/ui';
 import { ConfirmSheet, SheetRow } from '../../components/ConfirmSheet';
 import { CopyButton } from '../../components/CopyButton';
 import { ListSkeleton } from '../../components/Skeleton';
@@ -10,6 +11,7 @@ import { PullToRefresh } from '../../components/PullToRefresh';
 import { Empty, LoadError } from '../../components/StateViews';
 import { StatusPill } from '../../components/StatusPill';
 import { api } from '../../lib/api';
+import { uuid } from '../../lib/uuid';
 import { useAuth } from '../../lib/auth';
 import { dayToIso, fmtDate, fmtInstant, fmtPeriod, todayDhaka } from '../../lib/dates';
 import { formatCount } from '../../lib/format';
@@ -98,9 +100,11 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
   const [file, setFile] = useState<File | null>(null);
   const [invalid, setInvalid] = useState<string | null>(null);
   const [sheet, setSheet] = useState(false);
+  // The amount just sent: while set, a confirmation card tells the member it is with the cashier.
+  const [sentAmount, setSentAmount] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   // One key per attempt, so a retry after a dropped connection can never create a second payment.
-  const attemptKey = useRef(crypto.randomUUID());
+  const attemptKey = useRef(uuid());
 
   const instructions = useQuery({ queryKey: ['payment-instructions'], queryFn: () => api<PaymentInstructions>('/settings/payment-instructions'), staleTime: 5 * 60_000 });
 
@@ -171,7 +175,7 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
     if (trxNeeded && !trx.trim() && !senderDigits) return setInvalid(t('errors.payment.trx_required'));
     if (digits.trim() && !senderDigits) return setInvalid(t('pay.senderDigitsInvalid'));
     setInvalid(null);
-    attemptKey.current = crypto.randomUUID();
+    attemptKey.current = uuid();
     setSheet(true);
   };
 
@@ -203,6 +207,8 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
     setPurpose('dues');
     setFile(null);
     setDone(true);
+    setSentAmount(taka(paisa as string));
+    window.scrollTo({ top: 0 });
     onSent();
   };
 
@@ -359,6 +365,18 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
         {total > 0n && <span>· {taka(total)}</span>}
       </button>
       {readOnly && <p className="text-warn">{t('errors.auth.read_only')}</p>}
+
+      <Dialog.Root open={sentAmount !== null} onOpenChange={(o) => !o && setSentAmount(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
+          <Dialog.Content aria-describedby="pay-sent-body" className="fixed left-1/2 top-1/2 z-50 w-[min(24rem,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-[24px] border border-border bg-card p-6 text-center shadow-lift">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-ok-bg text-ok"><Icon d="M5 12l5 5 9-10" size={28} sw={2.4} /></span>
+            <Dialog.Title className="mt-4 text-lg font-bold">{t('pay.sentTitle')}</Dialog.Title>
+            <p id="pay-sent-body" className="mt-2 text-ink2">{t('pay.sentBody', { amount: sentAmount ?? '' })}</p>
+            <Dialog.Close className="mt-5 h-12 w-full rounded-2xl bg-primary font-bold text-primary-foreground">{t('pay.sentOk')}</Dialog.Close>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
 
       <ConfirmSheet open={sheet} onClose={() => setSheet(false)} title={t('pay.reviewTitle')} confirmLabel={t('pay.send')} onConfirm={send}>
         <SheetRow label={t('payment.amount')} value={paisa ? taka(paisa) : ''} strong />

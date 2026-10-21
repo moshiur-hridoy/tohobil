@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ApiError, api, setAccessToken, setRefresher } from './api';
+import { uuid } from './uuid';
 
 export interface Me {
   id: string;
@@ -52,7 +53,7 @@ function write(key: string, value: string | null): void {
 function installId(): string {
   let id = read(KEYS.install);
   if (!id) {
-    id = crypto.randomUUID();
+    id = uuid();
     write(KEYS.install, id);
   }
   return id;

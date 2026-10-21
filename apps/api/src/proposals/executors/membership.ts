@@ -10,6 +10,7 @@ import {
 } from '../../lib/nav';
 import { ruleBool, ruleInt, rulePaisa } from '../../lib/rules';
 import { toBigInt } from '../../lib/money';
+import { settlementFigures } from '../../members/settlement';
 import type { ExecutorSignature } from './shared';
 import { ledgerActor, proposalPosting, serialised } from './shared';
 
@@ -233,25 +234,12 @@ export const settlementExecutor: ExecutorSignature = async (db, proposal, _input
   const shares = Number((sharesRes.rows[0] as { shares: number }).shares);
   const nav = await computeNav(db, today);
   const paidInCapital = await memberAccountBalance(db, 'MEMBER_CAPITAL', memberId);
-  const escrow = await memberEscrow(db, memberId);
-  const principal = await memberOutstandingPrincipal(db, memberId);
-  const fines = await memberOutstandingFines(db, memberId);
-
-  let gross: bigint;
-  let serviceFee = 0n;
-  if (payload.kind === 'early_exit') {
-    const pct = await ruleInt(db, 'early_exit_service_charge_percent', today);
-    serviceFee = divRound(paidInCapital * BigInt(pct), 100n);
-    gross = paidInCapital;
-  } else if (payload.kind === 'compassionate_exit' || payload.kind === 'inactive_return') {
-    gross = paidInCapital;
-  } else {
-    // death_surrender and wind_up use NAV-based gross.
-    gross = nav.shares_outstanding > 0 ? divRound(BigInt(shares) * nav.net_assets, BigInt(nav.shares_outstanding)) : 0n;
-  }
-
-  const deductions = principal + fines + serviceFee;
-  const net = gross + escrow - deductions;
+  // The same figures the cashier's form suggested and a frozen quote uses, so the three can never disagree.
+  const f = await settlementFigures(db, deps.clock, memberId, payload.kind);
+  const { gross, principal, deductionsTotal: deductions, net } = f;
+  const escrow = f.fin.escrow;
+  const fines = f.fin.outstandingFines;
+  const serviceFee = f.exitFee;
 
   if (net < 0n) {
     throw badRequest(
@@ -278,11 +266,35 @@ export const settlementExecutor: ExecutorSignature = async (db, proposal, _input
       proposalPosting(proposal.id, today, 'MEMBER_ESCROW', 'SETTLEMENT_PAYABLE', escrow, `Settlement escrow release`, memberId),
     );
   }
+  // The exit charge and the member's unpaid fines are kept back from the refund and go to the charity
+  // fund, not to fund income (owner decision, ASSUMPTIONS 94): fines are charity money, and so is a
+  // charge the owner does not want the fund to profit from.
+  if (serviceFee > 0n) {
+    ledgerEntries.push(
+      proposalPosting(proposal.id, today, 'MEMBER_CAPITAL', 'CHARITY_PAYABLE', serviceFee, `Settlement exit charge to charity (${payload.kind})`, memberId),
+    );
+  }
+  if (fines > 0n) {
+    ledgerEntries.push(
+      proposalPosting(proposal.id, today, 'MEMBER_CAPITAL', 'CHARITY_PAYABLE', fines, 'Settlement: unpaid fines paid to charity from capital', memberId),
+    );
+  }
 
   const ledgerSeqs: string[] = [];
   if (ledgerEntries.length > 0) {
     const posted = await postEntries(db as import('pg').PoolClient, ledgerEntries, ledgerActor(actor, ctx));
     ledgerSeqs.push(...posted.map((e) => e.seq.toString()));
+  }
+
+  if (fines > 0n) {
+    // The fines are settled out of the member's capital above; close them so they stop showing as owed.
+    // Marked through the settlement proposal, the way a waiver is, since there is no payment to allocate.
+    await db.query(
+      `UPDATE fines SET waived_by_proposal = $1, waived_at = now()
+       WHERE member_id = $2 AND waived_at IS NULL
+         AND id IN (SELECT fine_id FROM v_fine_status WHERE member_id = $2 AND outstanding_paisa > 0)`,
+      [proposal.id, memberId],
+    );
   }
 
   await db.query(

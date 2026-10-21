@@ -20,6 +20,20 @@ describe('planDefaultAllocation', () => {
     expect(p.credit).toBe(150_000n);
   });
 
+  it('pays a due that is not due yet only after the fines', () => {
+    // A member owes September (15,000) plus its fine (1,500) and the November due already exists.
+    const open = [{ id: 'sep', outstanding: 1_500_000n }, { id: 'nov', outstanding: 1_500_000n, ahead: true }];
+    const p = planDefaultAllocation(1_650_000n, open, [{ id: 'fine', outstanding: 150_000n }]);
+    expect(p.lines).toEqual([
+      { due_id: 'sep', amount: 1_500_000n },
+      { fine_id: 'fine', amount: 150_000n },
+    ]);
+    expect(p.credit).toBe(0n);
+    // Money beyond everything owed then pays the coming month.
+    const more = planDefaultAllocation(2_000_000n, open, [{ id: 'fine', outstanding: 150_000n }]);
+    expect(more.lines.at(-1)).toEqual({ due_id: 'nov', amount: 350_000n });
+  });
+
   it('a partial payment stops mid-due and touches no fine', () => {
     const p = planDefaultAllocation(300_000n, dues, fines);
     expect(p.lines).toEqual([{ due_id: 'd1', amount: 300_000n }]);

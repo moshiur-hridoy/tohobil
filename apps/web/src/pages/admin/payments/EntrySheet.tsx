@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS, type PaymentMethod } from '@barakah/shared';
 import { ConfirmSheet, SheetRow } from '../../../components/ConfirmSheet';
 import { api } from '../../../lib/api';
+import { uuid } from '../../../lib/uuid';
 import { errorMessage } from '../../../lib/errors';
 import { dayToIso, fmtDate, todayDhaka } from '../../../lib/dates';
 import { paisaToDecimal, parseAmountInput, taka } from '../../../lib/money';
@@ -50,11 +51,11 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
   const [purpose, setPurpose] = useState<Purpose>('dues');
   const [requoteError, setRequoteError] = useState<unknown>(null);
   const [requoting, setRequoting] = useState(false);
-  const key = useRef(crypto.randomUUID());
+  const key = useRef(uuid());
 
   useEffect(() => {
     if (!open) return;
-    key.current = crypto.randomUUID();
+    key.current = uuid();
     const p = prefill?.parsed;
     const byPhone = p?.counterparty_phone ? members.data?.items.find((m) => m.phone === p.counterparty_phone)?.id : undefined;
     const byMatch = p?.matches.find((m) => m.exact)?.member_id ?? p?.matches[0]?.member_id;

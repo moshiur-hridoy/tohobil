@@ -52,6 +52,7 @@ const KINDS: Record<string, RuleKind> = {
   max_devices_per_member: 'count',
   max_devices_privileged: 'count',
   auto_suspend: 'bool',
+  cash_tracking_by_method: 'bool',
   'compliance.interest_free': 'bool',
   reinstatement_charges_fines: 'bool',
   fund_term_start: 'date',
@@ -148,6 +149,6 @@ export const RULE_GROUPS: ReadonlyArray<{ id: string; icon: string; keys: readon
   {
     id: 'system',
     icon: 'M3 4h18v7H3zM3 13h18v7H3zM7 7.5h.01M7 16.5h.01',
-    keys: ['push_to_sms_fallback_hours', 'payment_pending_alert_hours', 'max_devices_per_member', 'max_devices_privileged'],
+    keys: ['push_to_sms_fallback_hours', 'payment_pending_alert_hours', 'max_devices_per_member', 'max_devices_privileged', 'cash_tracking_by_method'],
   },
 ];

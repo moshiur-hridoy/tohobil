@@ -13,6 +13,7 @@ export interface Page<T> {
  *
  * `under_verification` is true for a due that still has something to pay while its member has a
  * payment waiting for the cashier: the UI shows "under verification" instead of "unpaid" (spec 5.4).
+ * A month that is not due yet only counts when the waiting payment names it.
  *
  * Note: `overdue` is judged against the database's Asia/Dhaka date, not the injectable Clock.
  */
@@ -24,6 +25,7 @@ export async function listDues(db: Db, q: DuesQuery): Promise<Page<Record<string
             v.outstanding_paisa, v.due_date::text AS due_date, v.status,
             (v.outstanding_paisa > 0 AND EXISTS (
                SELECT 1 FROM payments p WHERE p.member_id = v.member_id AND p.status = 'pending'
+                 AND (v.due_date <= (now() AT TIME ZONE 'Asia/Dhaka')::date OR v.period = ANY(COALESCE(p.for_periods, '{}')))
              )) AS under_verification
      FROM v_due_status v
      JOIN members m ON m.id = v.member_id

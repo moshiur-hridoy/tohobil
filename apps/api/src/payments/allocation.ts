@@ -6,11 +6,16 @@ import { badRequest } from '../lib/errors';
  *
  * Default order `oldest_principal_then_fines`: dues by `due_date` (then id) first, then unwaived fines
  * by `created_at`. Whatever is left is the member's credit (still capital, spent on the next dues).
+ *
+ * A due whose date has not come yet (`ahead`) is not owed yet, so it is paid last, after the fines:
+ * money beyond what is owed clears the member's fines before it pays a coming month in advance.
  */
 
 export interface Outstanding {
   id: string;
   outstanding: bigint;
+  /** The due date is still in the future; paid only after everything already owed. */
+  ahead?: boolean;
 }
 
 export interface AllocationLine {
@@ -47,18 +52,17 @@ export function planDefaultAllocation(
 ): AllocationPlan {
   let left = amount;
   const lines: AllocationLine[] = [];
-  for (const d of dues) {
-    if (left === 0n) break;
-    const take = d.outstanding < left ? d.outstanding : left;
-    if (take > 0n) lines.push({ due_id: d.id, amount: take });
-    left -= take;
-  }
-  for (const f of fines) {
-    if (left === 0n) break;
-    const take = f.outstanding < left ? f.outstanding : left;
-    if (take > 0n) lines.push({ fine_id: f.id, amount: take });
-    left -= take;
-  }
+  const pay = (items: readonly Outstanding[], key: 'due_id' | 'fine_id') => {
+    for (const i of items) {
+      if (left === 0n) break;
+      const take = i.outstanding < left ? i.outstanding : left;
+      if (take > 0n) lines.push({ [key]: i.id, amount: take });
+      left -= take;
+    }
+  };
+  pay(dues.filter((d) => !d.ahead), 'due_id');
+  pay(fines, 'fine_id');
+  pay(dues.filter((d) => d.ahead), 'due_id');
   return summarize(amount, lines);
 }
 

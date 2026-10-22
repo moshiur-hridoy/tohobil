@@ -3,6 +3,7 @@ import {
   type Clock,
   type ProposalCreate,
   type ProposalExecute,
+  type ProposalCancel,
   type ProposalOpen,
   type ProposalsQuery,
   type Vote,
@@ -14,12 +15,14 @@ import {
 } from '@barakah/shared';
 import type { AuthUser } from '../auth/service';
 
+import { ensurePhoneFree } from '../members/entry';
 import { audit } from '../lib/audit';
 import { decodeCursor, encodeCursor, tsKey } from '../lib/cursor';
 import { badRequest, conflict, forbidden, notFound } from '../lib/errors';
 import { ruleInt } from '../lib/rules';
 import { inTransaction, type Db } from '../lib/tx';
 import { paisaOut } from '../lib/money';
+import { notifyMember, type NotificationDeps } from '../notifications/service';
 import { EXECUTORS } from './executors';
 
 export interface ProposalDeps {
@@ -170,6 +173,8 @@ export async function createProposal(
   return await inTransaction(deps.pool, async (db) => {
     await ensureMemberCanPropose(db, user.member_id);
     const subjectMemberId = await resolveSubjectMemberId(db, input.type, input.payload, input.subject_member_id);
+    // Caught before the vote rather than when the passed proposal is executed.
+    if (input.type === 'new_member') await ensurePhoneFree(db, String(input.payload.phone));
 
     const res = await db.query(
       `INSERT INTO proposals (type, title, description, subject_member_id, payload, amount_paisa, clause_ref, created_by)
@@ -259,6 +264,8 @@ export async function openProposal(
          WHERE m.status IN ('active', 'warning')
            AND (u.disabled_at IS NULL)
            AND m.id <> ALL($3)
+           -- someone with an approved settlement is leaving: they keep their status until paid out, but no longer vote
+           AND NOT EXISTS (SELECT 1 FROM settlements s WHERE s.member_id = m.id AND s.status <> 'completed')
          ON CONFLICT (proposal_id, member_id) DO NOTHING`,
         [proposalId, today, excludedSubject],
       );
@@ -271,6 +278,8 @@ export async function openProposal(
          WHERE m.status IN ('active', 'warning')
            AND (u.disabled_at IS NULL)
            AND m.id <> ALL($2)
+           -- someone with an approved settlement is leaving: they keep their status until paid out, but no longer vote
+           AND NOT EXISTS (SELECT 1 FROM settlements s WHERE s.member_id = m.id AND s.status <> 'completed')
          ON CONFLICT (proposal_id, member_id) DO NOTHING`,
         [proposalId, excludedSubject],
       );
@@ -504,16 +513,76 @@ export async function finalizeDueProposals(deps: ProposalDeps): Promise<void> {
   });
 }
 
+/**
+ * Cashier/auditor button: push a reminder to every eligible voter who has not voted yet (owner request).
+ * At most one reminder per member per proposal per day (the dedupe label carries the date), so a repeated
+ * tap does not spam anyone. Returns how many members were newly reminded.
+ */
+export async function remindNonVoters(
+  deps: ProposalDeps & { notifications: NotificationDeps },
+  user: AuthUser,
+  proposalId: string,
+  ctx: ClientCtx,
+): Promise<{ reminded: number }> {
+  return await inTransaction(deps.pool, async (db) => {
+    const proposal = await loadProposal(db, proposalId);
+    if (proposal.status !== 'open') {
+      throw conflict('proposal.not_open', 'Proposal is not open');
+    }
+    const pending = await db.query(
+      `SELECT pv.member_id FROM proposal_voters pv
+       WHERE pv.proposal_id = $1
+         AND NOT EXISTS (SELECT 1 FROM votes v WHERE v.proposal_id = pv.proposal_id
+                           AND v.member_id = pv.member_id AND v.superseded_at IS NULL)`,
+      [proposalId],
+    );
+    const today = deps.clock.todayDhaka();
+    let reminded = 0;
+    for (const row of pending.rows as Array<{ member_id: string }>) {
+      const ids = await notifyMember(deps.notifications, db, {
+        memberId: row.member_id,
+        template: 'vote_reminder',
+        vars: { title: proposal.title },
+        dedupeLabel: `${proposalId}:${today}`,
+      });
+      if (ids.length > 0) reminded++;
+    }
+    await audit(db, {
+      actor: user.id,
+      action: 'proposal.remind',
+      entityType: 'proposal',
+      entityId: proposalId,
+      after: { reminded },
+      ip: ctx.ip,
+      deviceId: user.device_id,
+    });
+    return { reminded };
+  });
+}
+
+/**
+ * Cancel a draft, or stop a running vote (owner request, ASSUMPTIONS 112): e.g. one opened under rules
+ * that have since changed. A running vote needs a reason. Ballots already cast stay as they are; the
+ * proposal simply never takes effect.
+ */
 export async function cancelProposal(
   deps: ProposalDeps,
   user: AuthUser,
   proposalId: string,
+  input: ProposalCancel,
   ctx: ClientCtx,
 ): Promise<void> {
   await inTransaction(deps.pool, async (db) => {
-    const proposal = await loadProposal(db, proposalId);
-    if (proposal.status !== 'draft') {
-      throw conflict('proposal.not_draft', 'Only draft proposals can be cancelled');
+    const proposal = (await db.query(`SELECT * FROM proposals WHERE id = $1 FOR UPDATE`, [proposalId])).rows[0] as
+      | ProposalRow
+      | undefined;
+    if (!proposal) throw notFound('proposal.not_found', 'Proposal not found');
+    if (proposal.status !== 'draft' && proposal.status !== 'open') {
+      throw conflict('proposal.not_cancellable', 'Only a draft or a running vote can be cancelled');
+    }
+    const reason = input?.reason;
+    if (proposal.status === 'open' && !reason) {
+      throw badRequest('proposal.cancel_reason_required', 'Give a reason to stop a running vote');
     }
     await db.query(`UPDATE proposals SET status = 'cancelled' WHERE id = $1`, [proposalId]);
     await audit(db, {
@@ -521,6 +590,8 @@ export async function cancelProposal(
       action: 'proposal.cancel',
       entityType: 'proposal',
       entityId: proposalId,
+      before: { status: proposal.status },
+      after: { status: 'cancelled', ...(reason ? { reason } : {}) },
       ip: ctx.ip,
       deviceId: user.device_id,
     });
@@ -613,7 +684,7 @@ export async function getProposal(
     created_at: row.created_at,
     created_by: row.created_by,
     clause_ref: row.clause_ref,
-    amount_paisa: row.amount_paisa,
+    amount_paisa: row.amount_paisa === null ? null : paisaOut(row.amount_paisa),
     voters: voters.rows,
     votes: ballotsHidden(row.status)
       ? votes.rows.filter((v) => v.member_id === user.member_id)
@@ -693,7 +764,7 @@ export async function listProposals(
     created_at: row.created_at,
     created_by: row.created_by,
     clause_ref: row.clause_ref,
-    amount_paisa: row.amount_paisa,
+    amount_paisa: row.amount_paisa === null ? null : paisaOut(row.amount_paisa),
   }));
 
   return { items, next_cursor: rows.length > query.limit && last ? encodeCursor([last.created_key, last.id]) : null };

@@ -40,7 +40,7 @@ export function LoginPage() {
             if (valid) setChosenRef(ref.trim().toUpperCase());
           }}
         >
-          <label className="flex flex-col gap-1.5 text-sm font-medium text-ink2">
+          <label className="field-label flex flex-col gap-1.5">
             {t('auth.memberRef')}
             <span className="relative">
               <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted">

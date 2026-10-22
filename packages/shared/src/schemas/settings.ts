@@ -1,11 +1,23 @@
 import { z } from 'zod';
+import { PAYMENT_METHODS } from '../enums';
 
 export const versionStringSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
 
+/** The methods a member can pick on the pay page when the cashier has not chosen any (docs/ASSUMPTIONS.md 97). */
+export const DEFAULT_MEMBER_PAYMENT_METHODS = ['bkash', 'bank', 'cash'] as const;
+
+/**
+ * How to pay the fund. A number may be left empty when its method is switched off. `bank` is the
+ * bank's name; the account number, account name and branch are separate so a member can copy each.
+ */
 export const paymentInstructionsValueSchema = z.object({
-  bkash: z.string().trim().min(1).max(80),
-  nagad: z.string().trim().min(1).max(80),
-  bank: z.string().trim().min(1).max(250),
+  bkash: z.string().trim().max(80),
+  nagad: z.string().trim().max(80),
+  bank: z.string().trim().max(250),
+  bank_account: z.string().trim().max(40).optional(),
+  bank_holder: z.string().trim().max(120).optional(),
+  bank_branch: z.string().trim().max(120).optional(),
+  methods: z.array(z.enum(PAYMENT_METHODS)).min(1).max(PAYMENT_METHODS.length).optional(),
 });
 
 export type PaymentInstructions = z.infer<typeof paymentInstructionsValueSchema>;

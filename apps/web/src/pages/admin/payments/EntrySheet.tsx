@@ -8,7 +8,8 @@ import { uuid } from '../../../lib/uuid';
 import { errorMessage } from '../../../lib/errors';
 import { dayToIso, fmtDate, todayDhaka } from '../../../lib/dates';
 import { paisaToDecimal, parseAmountInput, taka } from '../../../lib/money';
-import type { MemberRow, ParsedSms } from '../../../lib/types';
+import type { MemberRow, ParsedSms, PaymentInstructions } from '../../../lib/types';
+import { DateInput } from '../../../components/ui';
 
 type Purpose = 'dues' | 'special' | 'levy' | 'entry';
 const PURPOSE_LABEL: Record<Purpose, string> = {
@@ -46,6 +47,10 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
   const [memberId, setMemberId] = useState('');
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState<PaymentMethod>('cash');
+  // Same list the settings page gives members; a method that came in from a pasted SMS stays pickable.
+  const instructions = useQuery({ queryKey: ['payment-instructions'], queryFn: () => api<PaymentInstructions>('/settings/payment-instructions'), staleTime: 5 * 60_000 });
+  const enabled = instructions.data?.methods?.length ? instructions.data.methods : PAYMENT_METHODS;
+  const methodChoices = PAYMENT_METHODS.filter((m) => enabled.includes(m) || m === method);
   const [trx, setTrx] = useState('');
   const [date, setDate] = useState(todayDhaka());
   const [purpose, setPurpose] = useState<Purpose>('dues');
@@ -57,7 +62,7 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
     if (!open) return;
     key.current = uuid();
     const p = prefill?.parsed;
-    const byPhone = p?.counterparty_phone ? members.data?.items.find((m) => m.phone === p.counterparty_phone)?.id : undefined;
+    const byPhone = p?.counterparty_phone ? members.data?.items.find((m) => m.phone === p.counterparty_phone && m.status !== 'exited' && m.status !== 'deceased')?.id : undefined;
     const byMatch = p?.matches.find((m) => m.exact)?.member_id ?? p?.matches[0]?.member_id;
     setMemberId(byMatch ?? byPhone ?? '');
     setAmount(p?.amount_paisa ? paisaToDecimal(p.amount_paisa) : '');
@@ -131,7 +136,7 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
   const field = 'field w-full';
   return (
     <ConfirmSheet open={open} onClose={onClose} title={t('paymentsPage.entryTitle')} confirmLabel={t('paymentsPage.entryRecord')} canConfirm={valid} onConfirm={submit}>
-      <label className="block text-sm text-muted">
+      <label className="field-label">
         {t('paymentsPage.entryMember')}
         <select className={field} value={memberId} onChange={(e) => setMemberId(e.target.value)}>
           <option value="">{t('paymentsPage.entryChoose')}</option>
@@ -141,7 +146,7 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
         </select>
       </label>
       {purposes.length > 1 && (
-        <label className="block text-sm text-muted">
+        <label className="field-label">
           {t('pay.purposeLabel')}
           <select className={field} value={purpose} onChange={(e) => setPurpose(e.target.value as Purpose)}>
             {purposes.map((p) => (
@@ -175,25 +180,25 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
           )}
         </div>
       )}
-      <label className="block text-sm text-muted">
+      <label className="field-label">
         {t('payment.amount')} (৳)
         <input className={field} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
       </label>
-      <label className="block text-sm text-muted">
+      <label className="field-label">
         {t('payment.method')}
         <select className={field} value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
-          {PAYMENT_METHODS.map((m) => (
+          {methodChoices.map((m) => (
             <option key={m} value={m}>{PAYMENT_METHOD_LABELS[m].bn}</option>
           ))}
         </select>
       </label>
-      <label className="block text-sm text-muted">
+      <label className="field-label">
         {t('payment.trxId')}
         <input className={field} value={trx} onChange={(e) => setTrx(e.target.value)} autoComplete="off" />
       </label>
-      <label className="block text-sm text-muted">
+      <label className="field-label">
         {t('paymentsPage.entryPaidAt')}
-        <input className={field} type="date" max={todayDhaka()} value={date} onChange={(e) => setDate(e.target.value)} />
+        <DateInput className={field} max={todayDhaka()} value={date} onChange={(e) => setDate(e.target.value)} />
       </label>
       {valid && member && (
         <div className="rounded-md bg-background p-3">

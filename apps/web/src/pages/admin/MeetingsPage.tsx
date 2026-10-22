@@ -8,7 +8,7 @@ import {
   AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, BTN_SM, BTN_SM_PRIMARY, Card, CardHead, EmptyCard, FieldLabel, ICONS,
   MemberBadge, SplitLayout,
 } from '../../components/admin';
-import { Chip, Icon } from '../../components/ui';
+import { Chip, Icon, DateInput } from '../../components/ui';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtClock, fmtDate, todayDhaka } from '../../lib/dates';
@@ -254,7 +254,7 @@ function ScheduleDialog({ meeting, defaultDay, onClose }: { meeting: MeetingRow 
     <AdminDialog open onClose={onClose} title={meeting ? t('meetings.editTitle') : t('meetings.newTitle')}>
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
-          <FieldLabel label={t('common.date')}><input type="date" className="field w-full" value={date} onChange={(e) => setDate(e.target.value)} /></FieldLabel>
+          <FieldLabel label={t('common.date')}><DateInput className="field w-full" value={date} onChange={(e) => setDate(e.target.value)} /></FieldLabel>
           <FieldLabel label={t('meetings.time')}><input type="time" className="field w-full" value={time} onChange={(e) => setTime(e.target.value)} /></FieldLabel>
         </div>
         <FieldLabel label={t('meetings.link')}>
@@ -291,7 +291,7 @@ function CancelSheet({ meeting, onClose }: { meeting: MeetingRow | null; onClose
       }}
     >
       <p className="text-sm text-ink2">{t('meetings.cancelBody')}</p>
-      <label className="mt-2 block text-sm text-muted">
+      <label className="field-label mt-2">
         {t('meetings.cancelReason')}
         <input className="field mt-1 w-full" value={reason} onChange={(e) => setReason(e.target.value)} />
       </label>

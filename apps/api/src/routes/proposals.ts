@@ -1,8 +1,10 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type pg from 'pg';
+import type { Logger } from 'pino';
 import { z } from 'zod';
 import {
+  proposalCancelSchema,
   proposalCreateSchema,
   proposalExecuteSchema,
   proposalOpenSchema,
@@ -21,13 +23,20 @@ import {
   getProposal,
   listProposals,
   openProposal,
+  remindNonVoters,
   voteOnProposal,
   type ProposalDeps,
 } from '../proposals/service';
+import { createLogger } from '../lib/logger';
+import type { PushSender } from '../notifications/providers/push';
+import type { SmsProvider } from '../notifications/providers/sms';
 
 export interface ProposalRouteDeps {
   pool: pg.Pool;
   clock: Clock;
+  pushSender: PushSender;
+  smsProvider: SmsProvider;
+  log?: Logger;
 }
 
 interface ClientCtx {
@@ -41,6 +50,13 @@ function ctx(req: FastifyRequest): ClientCtx {
 
 export function proposalRoutes(deps: ProposalRouteDeps, guards: Guards) {
   const serviceDeps: ProposalDeps = { pool: deps.pool, clock: deps.clock };
+  const notifications = {
+    pool: deps.pool,
+    clock: deps.clock,
+    log: deps.log ?? createLogger('silent'),
+    pushSender: deps.pushSender,
+    smsProvider: deps.smsProvider,
+  };
 
   return async function register(instance: FastifyInstance): Promise<void> {
     const app = instance.withTypeProvider<ZodTypeProvider>();
@@ -79,9 +95,15 @@ export function proposalRoutes(deps: ProposalRouteDeps, guards: Guards) {
     );
 
     app.post(
-      '/proposals/:id/cancel',
+      '/proposals/:id/remind',
       { preHandler: privileged, schema: { params: z.object({ id: uuidSchema }) } },
-      (req) => cancelProposal(serviceDeps, requireAuth(req), req.params.id, ctx(req)),
+      (req) => remindNonVoters({ ...serviceDeps, notifications }, requireAuth(req), req.params.id, ctx(req)),
+    );
+
+    app.post(
+      '/proposals/:id/cancel',
+      { preHandler: privileged, schema: { params: z.object({ id: uuidSchema }), body: proposalCancelSchema } },
+      (req) => cancelProposal(serviceDeps, requireAuth(req), req.params.id, req.body, ctx(req)),
     );
 
     app.post(

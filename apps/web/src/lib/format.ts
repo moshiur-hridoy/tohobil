@@ -1,3 +1,4 @@
+import { isPrivate, mask } from './privacy';
 import { formatBDT, toBengaliDigits, type DigitSystem } from '@barakah/shared';
 
 const DIGITS_KEY = 'barakah.digits';
@@ -24,7 +25,8 @@ export function setDigits(digits: DigitSystem): void {
 
 /** "৳৫,০০০" or "৳5,000": money always goes through formatBDT (lakh/crore grouping, no floats). */
 export function formatTaka(paisa: bigint, digits: DigitSystem = getDigits()): string {
-  return '৳' + formatBDT(paisa, { digits });
+  const text = formatBDT(paisa, { digits });
+  return isPrivate() ? mask(text) : '৳' + text;
 }
 
 /** A plain count ("৩" or "3") in the user's numerals. */

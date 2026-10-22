@@ -8,6 +8,7 @@ import { PullToRefresh } from '../../components/PullToRefresh';
 import { LoadError } from '../../components/StateViews';
 import { Chip, Icon } from '../../components/ui';
 import { StatusPill } from '../../components/StatusPill';
+import { Avatar } from '../../components/MemberPhoto';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtClock, fmtDate, fmtPeriod, todayDhaka } from '../../lib/dates';
@@ -66,7 +67,7 @@ export function HomePage() {
     <PullToRefresh onRefresh={refresh}>
       <div className="flex flex-col gap-3 px-4 pb-4 pt-1">
         {/* Outstanding hero card */}
-        <section className="relative overflow-hidden rounded-3xl bg-hero p-5 text-on-hero" aria-labelledby="home-outstanding">
+        <section className={`relative overflow-hidden rounded-3xl bg-hero p-5 text-on-hero ${owed > 0n ? 'hero-alert' : ''}`} aria-labelledby="home-outstanding">
           <svg aria-hidden="true" width="200" height="200" viewBox="0 0 200 200" className="absolute -right-[50px] -top-[60px] opacity-[0.14]">
             <circle cx="100" cy="100" r="96" fill="none" stroke="currentColor" strokeWidth="2" />
             <circle cx="100" cy="100" r="66" fill="none" stroke="currentColor" strokeWidth="2" />
@@ -216,30 +217,34 @@ function EveryoneStanding({ members }: { members?: MemberRow[] }) {
 
   return (
     <section className="overflow-hidden rounded-[18px] border border-border bg-card" aria-labelledby="home-everyone">
-      <div className="flex items-center gap-3 px-4 pb-3 pt-3.5">
+      <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
         <Chip tone="bg-primary-soft text-primary" d="M16 20v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1 M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7 M20 20v-1a4 4 0 0 0-3-3.8 M16 4.2a3.5 3.5 0 0 1 0 6.6" />
-        <h2 id="home-everyone" className="flex-1 text-base font-bold">{t('home.everyoneInMonth')}</h2>
-        {matrix.data && rows.length > 0 && <span className="text-sm font-bold text-primary">{paidCount}/{rows.length}</span>}
+        <h2 id="home-everyone" className="min-w-0 flex-1 text-base font-bold">{t('home.everyoneInMonth')}</h2>
+        {matrix.data && rows.length > 0 && (
+          <span className="flex flex-none items-center gap-2">
+            <span aria-hidden="true" className="h-2 w-24 overflow-hidden rounded-full bg-border">
+              <span className="block h-full bg-primary" style={{ width: `${(paidCount / rows.length) * 100}%` }} />
+            </span>
+            <span className="text-sm font-bold text-primary">{paidCount}/{rows.length}</span>
+          </span>
+        )}
       </div>
 
       {/* Month switcher: from the fund's first month up to December of this year */}
-      <div className="mx-4 mb-3 flex items-center gap-2">
+      <div className="flex items-center gap-2 border-b border-border px-4 py-3">
         {arrow('M15 5l-7 7 7 7', t('home.prevMonth'), addMonths(period, -1), !matrix.data || period <= first)}
         <p className="flex-1 text-center text-[0.9375rem] font-bold" aria-live="polite">{fmtPeriod(period)}</p>
         {arrow('M9 5l7 7-7 7', t('home.nextMonth'), addMonths(period, 1), period >= last)}
       </div>
 
       {matrix.error ? (
-        <div className="px-4 pb-4"><LoadError error={matrix.error} onRetry={() => void matrix.refetch()} /></div>
+        <div className="p-4"><LoadError error={matrix.error} onRetry={() => void matrix.refetch()} /></div>
       ) : !matrix.data ? (
-        <div className="px-4 pb-4"><ListSkeleton rows={4} /></div>
+        <div className="p-4"><ListSkeleton rows={4} /></div>
       ) : rows.length === 0 ? (
-        <p className="px-4 pb-5 pt-2 text-center text-sm text-muted">{t(period > current ? 'home.duesNotYetCreated' : 'home.noDuesInMonth')}</p>
+        <p className="px-4 py-5 text-center text-sm text-muted">{t(period > current ? 'home.duesNotYetCreated' : 'home.noDuesInMonth')}</p>
       ) : (
         <>
-          <div className="mx-4 mb-2 h-1.5 overflow-hidden rounded-full bg-border">
-            <div className="h-full bg-primary" style={{ width: `${(paidCount / rows.length) * 100}%` }} />
-          </div>
           <ul>
             {rows.map((m, i) => {
               const cell = m.cells[period];
@@ -247,10 +252,8 @@ function EveryoneStanding({ members }: { members?: MemberRow[] }) {
               const owed = owedById.get(m.member_id);
               const settled = cell?.status === 'paid' || cell?.status === 'paid_late';
               return (
-                <li key={m.member_id} className={`flex min-h-[58px] items-center gap-3 border-t border-border px-4 py-2 ${isMe ? 'bg-primary-soft' : ''}`}>
-                  <span className={`grid h-[34px] w-[34px] flex-none place-items-center rounded-full text-sm font-bold ${isMe ? 'bg-primary text-primary-foreground' : AVATAR[i % AVATAR.length]}`}>
-                    {m.member_name.trim().charAt(0)}
-                  </span>
+                <li key={m.member_id} className={`flex min-h-[58px] items-center gap-3 border-border px-4 py-2 ${i ? 'border-t' : ''} ${isMe ? 'bg-primary-soft' : ''}`}>
+                  <Avatar fileId={m.member_photo_file_id} fallback={m.member_name.trim().charAt(0)} className={`h-[34px] w-[34px] text-sm font-bold ${isMe ? 'bg-primary text-primary-foreground' : AVATAR[i % AVATAR.length]}`} />
                   <div className="min-w-0 flex-1">
                     <div className={`truncate text-[0.9375rem] ${isMe ? 'font-bold' : 'font-medium'}`}>{m.member_name}</div>
                     {owed !== undefined && (

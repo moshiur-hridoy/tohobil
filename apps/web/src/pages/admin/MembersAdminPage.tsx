@@ -1,16 +1,18 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Menu from '@radix-ui/react-dropdown-menu';
 import { SETTLEMENT_KINDS } from '@barakah/shared';
 import {
-  AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, Card, EmptyCard, ICONS, InfoRow, MemberBadge, Segmented, SplitLayout, StatGrid, StatTile,
+  AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, Card, EmptyCard, ICONS, InfoRow, Segmented, SplitLayout, StatGrid, StatTile,
 } from '../../components/admin';
 import { ListSkeleton, Skeleton } from '../../components/Skeleton';
 import { Empty, LoadError } from '../../components/StateViews';
-import { Icon } from '../../components/ui';
+import { Icon, DateInput } from '../../components/ui';
 import { StatusPill } from '../../components/StatusPill';
+import { Avatar, PhotoSheet } from '../../components/MemberPhoto';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtDate, fmtInstant, todayDhaka } from '../../lib/dates';
@@ -19,18 +21,27 @@ import { arrearsOf, paisaToDecimal, parseAmountInput, taka } from '../../lib/mon
 import type { ContactLogItem, MemberRow, MemberStatusEvent } from '../../lib/types';
 
 type Kind = 'status' | 'suspension' | 'reinstatement' | 'settlement' | 'contact' | 'pin';
-type Filter = 'all' | 'active' | 'arrears' | 'suspended';
+type Filter = 'all' | 'active' | 'arrears' | 'suspended' | 'leaving';
 
 const STATUS_TONE: Record<string, string> = {
   active: 'bg-ok-bg text-ok',
   warning: 'bg-warn-bg text-warn',
   suspended: 'bg-bad-bg text-bad',
+  leaving: 'bg-blue-bg text-blue',
 };
+/** The dot next to a name: only for states that need attention, so a normal active member has none. */
+const DOT_TONE: Record<string, string> = { warning: 'bg-warn', suspended: 'bg-bad', leaving: 'bg-blue' };
 
-const isActive = (m: MemberRow) => m.status === 'active' || m.status === 'warning';
+/** Left the fund: kept in the register as history, greyed and listed last. */
+const isGone = (m: MemberRow) => m.status === 'exited' || m.status === 'deceased';
+/** An approved settlement not yet fully paid: the member keeps their status until then but is on the way out. */
+const isLeaving = (m: MemberRow) => !isGone(m) && m.settlement_status !== null;
+const isActive = (m: MemberRow) => (m.status === 'active' || m.status === 'warning') && !isLeaving(m);
+/** What the register shows for the member: their status, or "leaving" while a settlement is being paid. */
+const shownStatus = (m: MemberRow): string => (isLeaving(m) ? 'leaving' : m.status);
 
 const inFilter = (m: MemberRow, f: Filter): boolean =>
-  f === 'all' || (f === 'active' ? isActive(m) : f === 'arrears' ? arrearsOf(m) > 0n : m.status === 'suspended');
+  f === 'all' || (f === 'active' ? isActive(m) : f === 'arrears' ? arrearsOf(m) > 0n : f === 'leaving' ? isLeaving(m) : m.status === 'suspended');
 
 /** Members as a register (search, filter) with the chosen member's details and actions beside it. */
 export function MembersAdminPage() {
@@ -48,9 +59,11 @@ export function MembersAdminPage() {
   const working = all.filter(isActive);
   const owing = all.filter((m) => arrearsOf(m) > 0n);
   const needle = search.trim().toLowerCase();
-  const rows = all.filter((m) => inFilter(m, filter) && (!needle || m.code.toLowerCase().includes(needle) || m.full_name.toLowerCase().includes(needle)));
+  const rows = all
+    .filter((m) => inFilter(m, filter) && (!needle || m.code.toLowerCase().includes(needle) || m.full_name.toLowerCase().includes(needle)))
+    .sort((a, b) => Number(isGone(a)) - Number(isGone(b)));
   const selected = all.find((m) => m.id === selectedId) ?? rows[0] ?? null;
-  const counts = Object.fromEntries((['all', 'active', 'arrears', 'suspended'] as const).map((f) => [f, all.filter((m) => inFilter(m, f)).length])) as Record<Filter, number>;
+  const counts = Object.fromEntries((['all', 'active', 'arrears', 'suspended', 'leaving'] as const).map((f) => [f, all.filter((m) => inFilter(m, f)).length])) as Record<Filter, number>;
 
   const choose = (m: MemberRow) => {
     setSelectedId(m.id);
@@ -94,6 +107,10 @@ export function MembersAdminPage() {
                   { value: 'active', label: t('member.status.active'), count: members.data ? formatCount(counts.active) : undefined },
                   { value: 'arrears', label: t('adminUi.members.filterArrears'), count: members.data ? formatCount(counts.arrears) : undefined },
                   { value: 'suspended', label: t('member.status.suspended'), count: members.data ? formatCount(counts.suspended) : undefined },
+                  // only while someone is leaving, so the bar does not grow for a rare case
+                  ...(counts.leaving > 0 || filter === 'leaving'
+                    ? [{ value: 'leaving' as const, label: t('member.status.leaving'), count: formatCount(counts.leaving) }]
+                    : []),
                 ]}
               />
             </div>
@@ -118,24 +135,29 @@ export function MembersAdminPage() {
                     {rows.map((m) => {
                       const owes = arrearsOf(m);
                       const isSel = selected?.id === m.id;
+                      const gone = isGone(m);
+                      const status = shownStatus(m);
                       return (
-                        <tr key={m.id} aria-selected={isSel} onClick={() => choose(m)} className={`cursor-pointer transition-colors ${isSel ? 'bg-primary-soft' : 'hover:bg-hover'}`}>
+                        <tr key={m.id} aria-selected={isSel} onClick={() => choose(m)} className={`cursor-pointer transition-colors ${isSel ? 'bg-primary-soft' : 'hover:bg-hover'} ${(gone || isLeaving(m)) && !isSel ? 'opacity-55' : ''}`}>
                           <td className="border-b border-border px-2 py-2.5">
                             <button type="button" onClick={(e) => { e.stopPropagation(); choose(m); }} className="flex min-w-0 items-center gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                              <MemberBadge code={m.code} />
+                              <Avatar fileId={m.photo_file_id} fallback={m.code} className="h-8 w-8 bg-soft text-[0.6875rem] font-bold text-ink2" />
                               <span className="min-w-0">
-                                <span className="block truncate font-semibold">{m.full_name}</span>
-                                {!isActive(m) || m.status === 'warning' ? (
-                                  <span className={`mt-0.5 inline-block rounded-full px-2 py-px text-[0.6875rem] font-semibold ${STATUS_TONE[m.status] ?? 'bg-soft text-muted'}`}>{t(`status.member.${m.status}`, { defaultValue: m.status })}</span>
+                                <span className="flex items-center gap-1.5">
+                                  <span className="truncate font-semibold">{m.full_name}</span>
+                                  {DOT_TONE[status] && <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${DOT_TONE[status]}`} />}
+                                </span>
+                                {status !== 'active' ? (
+                                  <span className={`mt-0.5 inline-block rounded-full px-2 py-px text-[0.6875rem] font-semibold ${STATUS_TONE[status] ?? 'bg-soft text-muted'}`}>{t(`status.member.${status}`, { defaultValue: status })}</span>
                                 ) : null}
                               </span>
                             </button>
                           </td>
                           <td className="hidden border-b border-border px-2 py-2.5 text-right tabular-nums md:table-cell">{formatCount(m.shares)}</td>
                           <td className="hidden border-b border-border px-2 py-2.5 text-right tabular-nums lg:table-cell">{taka(m.capital_paisa)}</td>
-                          <td className={`border-b border-border px-2 py-2.5 text-right font-semibold tabular-nums ${owes > 0n ? 'text-bad' : 'text-muted'}`}>{taka(owes)}</td>
+                          <td className={`border-b border-border px-2 py-2.5 text-right font-semibold tabular-nums ${owes > 0n ? 'text-bad' : 'text-muted'}`}>{gone && owes === 0n ? '—' : taka(owes)}</td>
                           <td className="hidden border-b border-border px-2 py-2.5 sm:table-cell">
-                            {m.under_verification ? <StatusPill status="pending" /> : m.current_period_status ? <StatusPill status={m.current_period_status} /> : <span className="text-muted">—</span>}
+                            {gone ? <span className="text-muted">—</span> : m.under_verification ? <StatusPill status="pending" /> : m.current_period_status ? <StatusPill status={m.current_period_status} /> : <span className="text-muted">—</span>}
                           </td>
                         </tr>
                       );
@@ -179,12 +201,17 @@ interface RegisterRow {
 function MemberPanel({ member: m, totalShares, loading, isCashier, onAction }: { member: MemberRow | null; totalShares: number; loading: boolean; isCashier: boolean; onAction: (kind: Kind, m: MemberRow) => void }) {
   const { t } = useTranslation();
   const register = useQuery({ queryKey: ['share-register'], queryFn: () => api<{ items: RegisterRow[]; total: number }>('/share-register') });
+  const [photoOpen, setPhotoOpen] = useState(false);
   if (loading) return <Card className="p-5"><Skeleton className="h-64 w-full" /></Card>;
   if (!m) return <Card className="p-5"><EmptyCard text={t('adminUi.members.pick')} icon={ICONS.user} /></Card>;
   const owes = arrearsOf(m);
   const mine = (register.data?.items ?? []).filter((r) => r.member_id === m.id);
   const percent = totalShares > 0 ? Math.round((m.shares * 1000) / totalShares) / 10 : 0;
-  const canChange = m.status === 'active' || m.status === 'warning';
+  const leaving = isLeaving(m);
+  // A member already being settled cannot be settled or suspended again.
+  const canChange = (m.status === 'active' || m.status === 'warning') && !leaving;
+  const status = shownStatus(m);
+  const notice = leaving ? 'leavingNotice' : m.status === 'suspended' ? 'suspendedNotice' : m.status === 'warning' ? 'warningNotice' : null;
 
   const actions: Array<[Kind, string, boolean]> = [
     ['contact', t('membersAdmin.addContactLog'), true],
@@ -194,7 +221,7 @@ function MemberPanel({ member: m, totalShares, loading, isCashier, onAction }: {
   // Rarely used actions (history) and risky ones (red) live behind the three-dot menu next to the name.
   const risky: Array<[Kind, string, boolean, string]> = [
     ['status', t('membersAdmin.statusHistory'), true, ICONS.clock],
-    ['settlement', t('membersAdmin.settlement'), isCashier && (canChange || m.status === 'suspended'), ICONS.wallet],
+    ['settlement', t('membersAdmin.settlement'), isCashier && (canChange || (m.status === 'suspended' && !leaving)), ICONS.wallet],
     ['suspension', t('membersAdmin.createSuspension'), isCashier && canChange, ICONS.pause],
   ];
   const menuItems = risky.filter(([, , show]) => show);
@@ -202,11 +229,20 @@ function MemberPanel({ member: m, totalShares, loading, isCashier, onAction }: {
   return (
     <Card className="p-5">
       <div className="flex items-center gap-3">
-        <MemberBadge code={m.code} size="lg" />
+        {isCashier ? (
+          <button type="button" onClick={() => setPhotoOpen(true)} aria-label={t('photo.edit')} className="relative shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <Avatar fileId={m.photo_file_id} fallback={m.code} className="h-11 w-11 bg-soft text-sm font-bold text-ink2" />
+            <span aria-hidden="true" className="absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full border-2 border-card bg-foreground text-background">
+              <Icon d="M4 8h3l2-3h6l2 3h3v11H4z M12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" size={11} sw={2.2} />
+            </span>
+          </button>
+        ) : (
+          <Avatar fileId={m.photo_file_id} fallback={m.code} className="h-11 w-11 bg-soft text-sm font-bold text-ink2" />
+        )}
         <div className="min-w-0 flex-1">
           <p className="truncate text-lg font-bold">{m.full_name}</p>
-          <span className={`mt-0.5 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[m.status] ?? 'bg-soft text-muted'}`}>
-            {t(`status.member.${m.status}`, { defaultValue: m.status })}
+          <span className={`mt-0.5 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[status] ?? 'bg-soft text-muted'}`}>
+            {t(`status.member.${status}`, { defaultValue: status })}
           </span>
         </div>
         {menuItems.length > 0 && (
@@ -227,6 +263,18 @@ function MemberPanel({ member: m, totalShares, loading, isCashier, onAction }: {
           </Menu.Root>
         )}
       </div>
+
+      {notice && (
+        <div role="note" className={`mt-4 flex gap-2.5 rounded-xl p-3 text-sm ${STATUS_TONE[status]}`}>
+          <span className="mt-0.5 shrink-0"><Icon d={ICONS.alert} size={18} /></span>
+          <div className="min-w-0">
+            <p>{t(`adminUi.members.${notice}`)}</p>
+            {leaving && (
+              <Link to="/admin/settlements" className="mt-1 inline-block font-semibold underline">{t('adminUi.members.openSettlements')}</Link>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="mt-4 grid grid-cols-2 gap-2.5">
         <div className="rounded-xl bg-soft px-3 py-2.5">
@@ -272,6 +320,7 @@ function MemberPanel({ member: m, totalShares, loading, isCashier, onAction }: {
           </button>
         ))}
       </div>
+      <PhotoSheet open={photoOpen} onClose={() => setPhotoOpen(false)} memberId={m.id} name={m.full_name} fileId={m.photo_file_id} asCashier />
     </Card>
   );
 }
@@ -342,11 +391,11 @@ function SuspensionDialog({ member, open, onClose }: { member: MemberRow; open: 
   return (
     <AdminDialog open={open} onClose={onClose} title={t('membersAdmin.createSuspension')}>
       <p className="mb-3 text-muted">{member.code} {member.full_name}</p>
-      <label className="block text-sm text-muted">
+      <label className="field-label">
         {t('common.reason')}
         <textarea className="field mt-1 min-h-20 w-full" value={reason} onChange={(e) => setReason(e.target.value)} />
       </label>
-      <label className="mt-2 block text-sm text-muted">
+      <label className="field-label mt-2">
         {t('proposal.clauseRef')}
         <input className="field mt-1 w-full" value={clause} onChange={(e) => setClause(e.target.value)} />
       </label>
@@ -441,7 +490,7 @@ function ReinstatementDialog({ member, open, onClose }: { member: MemberRow; ope
     <AdminDialog open={open} onClose={onClose} title={t('membersAdmin.reinstate')}>
       <p className="mb-1 text-muted">{member.code} {member.full_name}</p>
       <p className="mb-3 text-sm text-muted">{t('membersAdmin.reinstateHint')}</p>
-      <label className="block text-sm text-muted">
+      <label className="field-label">
         {t('proposal.terms')}
         <textarea className="field mt-1 min-h-20 w-full" value={terms} onChange={(e) => setTerms(e.target.value)} />
       </label>
@@ -510,7 +559,7 @@ function SettlementDialog({ member, open, onClose }: { member: MemberRow; open: 
   return (
     <AdminDialog open={open} onClose={onClose} title={t('membersAdmin.settlement')}>
       <p className="mb-3 text-muted">{member.code} {member.full_name}</p>
-      <label className="block text-sm text-muted">
+      <label className="field-label">
         {t('membersAdmin.settlementKind')}
         <select className="field mt-1 w-full" value={kind} onChange={(e) => { typed.current = false; setKind(e.target.value); }}>
           {SETTLEMENT_KINDS.map((k) => (
@@ -519,13 +568,13 @@ function SettlementDialog({ member, open, onClose }: { member: MemberRow; open: 
         </select>
       </label>
       {estimate.data && <SettlementBreakdown e={estimate.data} />}
-      <label className="mt-2 block text-sm text-muted">
+      <label className="field-label mt-2">
         {t('membersAdmin.settlementNetAmount')}
         <input className="field mt-1 w-full" inputMode="decimal" value={amount} onChange={(e) => { typed.current = true; setAmount(e.target.value); }} />
       </label>
-      <label className="mt-2 block text-sm text-muted">
+      <label className="field-label mt-2">
         {t('membersAdmin.settlementDueDate')}
-        <input type="date" className="field mt-1 w-full" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+        <DateInput className="field mt-1 w-full" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
       </label>
       {error != null && <p className="mt-2 text-bad">{error instanceof ApiError ? error.message : String(error)}</p>}
       <div className="mt-4 flex gap-2">
@@ -633,7 +682,7 @@ function ContactLogDialog({ member, open, onClose, isCashier }: { member: Member
 
       {isCashier && (
         <div className="mb-3 space-y-2 rounded-xl border border-border p-2">
-          <label className="block text-sm text-muted">
+          <label className="field-label">
             {t('membersAdmin.contactKind')}
             <select className="field mt-1 w-full" value={kind} onChange={(e) => setKind(e.target.value)}>
               {['call', 'message', 'email', 'registered_letter', 'visit'].map((k) => (
@@ -641,11 +690,11 @@ function ContactLogDialog({ member, open, onClose, isCashier }: { member: Member
               ))}
             </select>
           </label>
-          <label className="block text-sm text-muted">
+          <label className="field-label">
             {t('membersAdmin.contactOutcome')}
             <input className="field mt-1 w-full" value={outcome} onChange={(e) => setOutcome(e.target.value)} />
           </label>
-          <label className="block text-sm text-muted">
+          <label className="field-label">
             {t('common.note')}
             <textarea className="field mt-1 min-h-16 w-full" value={note} onChange={(e) => setNote(e.target.value)} />
           </label>

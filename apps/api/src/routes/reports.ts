@@ -49,6 +49,23 @@ export function reportRoutes(deps: ReportDeps, guards: Guards) {
       return send(reply, 'application/pdf', `statement-${req.query.period}.pdf`, pdf);
     });
 
+    /** The calendar years in which the member has any dues, confirmed payment, fine or capital movement. */
+    app.get('/reports/statement-years', { preHandler: authenticate, config: limit }, async (req) => {
+      const memberId = memberFor(req);
+      const res = await deps.pool.query(
+        `SELECT DISTINCT y::text AS year FROM (
+           SELECT EXTRACT(YEAR FROM due_date)::int AS y FROM v_due_status WHERE member_id = $1
+           UNION SELECT EXTRACT(YEAR FROM (COALESCE(confirmed_at, paid_at) AT TIME ZONE 'Asia/Dhaka')::date)::int FROM payments
+             WHERE member_id = $1 AND status IN ('confirmed','reversed')
+           UNION SELECT EXTRACT(YEAR FROM (created_at AT TIME ZONE 'Asia/Dhaka')::date)::int FROM fines WHERE member_id = $1
+           UNION SELECT EXTRACT(YEAR FROM entry_date)::int FROM ledger_entries
+             WHERE member_id = $1 AND (credit_account = 'MEMBER_CAPITAL' OR debit_account = 'MEMBER_CAPITAL')
+         ) t(y) WHERE y IS NOT NULL ORDER BY year`,
+        [memberId],
+      );
+      return { years: (res.rows as Array<{ year: string }>).map((r) => r.year) };
+    });
+
     app.get('/reports/zakat-statement', { preHandler: authenticate, config: limit, schema: { querystring: reportZakatQuerySchema } }, async (req, reply) => {
       const memberId = memberFor(req, req.query.member_id);
       const pdf = await zakatStatementPdf(deps.pool, deps.clock, memberId, req.query.as_of);

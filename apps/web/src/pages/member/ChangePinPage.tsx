@@ -26,7 +26,7 @@ export function ChangePinPage() {
   const ready = /^\d{6}$/.test(current) && isValidPin(next) && again === next && !change.isPending;
 
   const field = (label: string, value: string, set: (v: string) => void, autoComplete: string) => (
-    <label className="block text-sm text-muted">
+    <label className="field-label">
       {label}
       <input
         type="password"

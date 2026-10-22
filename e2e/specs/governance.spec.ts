@@ -72,7 +72,7 @@ test('(5) cashier executes a distribution proposal', async ({ browser, request }
     closes_at: '2099-12-31T23:59:59Z',
   });
 
-  // Distribution is share-weighted. With 20 outstanding shares the threshold is 11 shares.
+  // One member, one vote (migration 009): six yes votes are a majority of the fixture's members.
   // We create a new API device for each supporting voter (voting is tied to the device).
   for (const code of ['M03', 'M04', 'M05', 'M06', 'M07']) {
     const voter = new Api(request);

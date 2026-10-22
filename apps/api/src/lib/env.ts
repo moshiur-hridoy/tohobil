@@ -47,6 +47,10 @@ const envSchema = z
     /** Where the backup sidecar writes status.json and restore-status.json (read-only here, spec 12). */
     STATUS_DIR: z.string().min(1).default('data/status'),
     FCM_SERVICE_ACCOUNT_JSON_PATH: z.string().default('./service-account.json'),
+    /** Browser (PWA) push keys from `pnpm vapid:generate`; both empty means browser push is off. */
+    VAPID_PUBLIC_KEY: z.string().optional(),
+    VAPID_PRIVATE_KEY: z.string().optional(),
+    VAPID_SUBJECT: z.string().default('mailto:admin@example.com'),
 
     // Secrets (spec 11). Real use arrives in Phase 1; validating them now catches bad deployments early.
     APP_ENCRYPTION_KEY: z

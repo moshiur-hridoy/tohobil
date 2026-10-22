@@ -38,6 +38,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webmanifest}'],
         // Old precaches are deleted when a new service worker activates (no "stale until data is cleared").
         cleanupOutdatedCaches: true,
+        // Push and notification-click handlers (public/push-sw.js).
+        importScripts: ['push-sw.js'],
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {

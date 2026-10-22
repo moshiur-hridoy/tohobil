@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
+import { useSyncPush } from '../lib/push';
 import type { ProposalSummary } from '../lib/types';
+import { Avatar, useMyPhoto } from '../components/MemberPhoto';
 
 const TABS = [
   {
@@ -36,6 +38,7 @@ const TABS = [
 export function MemberLayout() {
   const { t } = useTranslation();
   const { me } = useAuth();
+  useSyncPush(!!me);
   // Same query as the Votes page and Home, so it shares their cache; the tab shows how many votes are open.
   const proposals = useQuery({
     queryKey: ['proposals', 'member'],
@@ -45,6 +48,7 @@ export function MemberLayout() {
   const openVotes = proposals.data?.items.filter((p) => p.status === 'open').length ?? 0;
   const onHome = useLocation().pathname === '/home';
   const initial = me?.full_name?.trim().charAt(0) || '👤';
+  const myPhoto = useMyPhoto();
 
   return (
     <div className="mx-auto flex min-h-screen max-w-lg flex-col">
@@ -54,9 +58,9 @@ export function MemberLayout() {
         <Link
           to="/menu"
           aria-label={t('nav.menu')}
-          className="grid h-11 w-11 place-items-center rounded-full bg-primary-soft text-lg font-bold text-primary"
+          className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          {initial}
+          <Avatar fileId={myPhoto} fallback={initial} className="h-11 w-11 bg-primary-soft text-lg font-bold text-primary" />
         </Link>
         <div className="min-w-0 flex-1">
           <div className="text-[0.8125rem] text-muted">{t('app.greeting')}</div>

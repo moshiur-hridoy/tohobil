@@ -68,6 +68,12 @@
   --ref-bad-400: #f87171;
   --ref-bad-100: #fbe5e2;
   --ref-bad-900: #311715;
+  --ref-red-950: #3d0d0a; /* the outstanding card while something is owed */
+  --ref-red-900: #5a1410;
+  --ref-red-800: #7a1f18;
+  --ref-red-700: #962a21;
+  --ref-coral-400: #ff6b5e;
+  --ref-red-ink: #2a0705;
   --ref-blue-600: #2d5bc4;
   --ref-blue-300: #7aa7ff;
   --ref-blue-100: #e8eefb;
@@ -121,6 +127,12 @@
   --hero-icon: var(--ref-olive-700);
   --hero-action: var(--ref-lime-400);
   --on-hero-action: var(--ref-olive-950);
+  /* The same card in its warning colours, while the member owes something (.hero-alert below) */
+  --hero-alert: var(--ref-red-950);
+  --hero-alert-chip: var(--ref-red-800);
+  --hero-alert-icon: var(--ref-red-800);
+  --hero-alert-action: var(--ref-coral-400);
+  --on-hero-alert-action: var(--ref-red-ink);
 
   /* Radii */
   --radius-sm: 0.25rem;
@@ -177,6 +189,9 @@
     --hero: var(--ref-olive-800);
     --hero-chip: var(--ref-olive-600);
     --hero-icon: var(--ref-olive-600);
+    --hero-alert: var(--ref-red-900);
+    --hero-alert-chip: var(--ref-red-700);
+    --hero-alert-icon: var(--ref-red-700);
   }
 }
 :root[data-theme='dark'] {
@@ -213,6 +228,9 @@
     --hero: var(--ref-olive-800);
     --hero-chip: var(--ref-olive-600);
     --hero-icon: var(--ref-olive-600);
+    --hero-alert: var(--ref-red-900);
+    --hero-alert-chip: var(--ref-red-700);
+    --hero-alert-icon: var(--ref-red-700);
 }
 
 /* Base styles */
@@ -224,4 +242,13 @@ body {
   color: var(--foreground);
   background-color: var(--background);
   -webkit-font-smoothing: antialiased;
+}
+
+/* The outstanding card in warning colours: swaps the --hero-* tokens, so the bg-hero etc. classes inside follow */
+.hero-alert {
+  --hero: var(--hero-alert);
+  --hero-chip: var(--hero-alert-chip);
+  --hero-icon: var(--hero-alert-icon);
+  --hero-action: var(--hero-alert-action);
+  --on-hero-action: var(--on-hero-alert-action);
 }

@@ -7,9 +7,16 @@ import { LoadError } from '../../components/StateViews';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { downloadFile } from '../../lib/download';
+import { localDigits } from '../../lib/format';
+import { fmtInstant } from '../../lib/dates';
+import { PrivacyToggle } from '../../components/PrivacyToggle';
 import { ThemeToggle } from '../../components/ThemeToggle';
+import { PushCard } from '../../components/PushCard';
+import { Avatar, PhotoSheet, useMyPhoto } from '../../components/MemberPhoto';
 
-const CARD = 'rounded-[20px] border border-border bg-card p-4';
+/** The fund's first year; the chips run from here to next year. */
+const FIRST_YEAR = 2026;
+const CARD = 'overflow-clip rounded-[20px] border border-border bg-card p-4';
 
 interface DeviceEvent {
   id: string;
@@ -33,6 +40,8 @@ export function MenuPage() {
 
   const events = useQuery({ queryKey: ['device-events'], queryFn: () => api<{ items: DeviceEvent[] }>('/device-events') });
   const devices = useQuery({ queryKey: ['devices'], queryFn: () => api<{ items: DeviceRow[] }>('/me/devices') });
+  const myPhoto = useMyPhoto();
+  const [photoOpen, setPhotoOpen] = useState(false);
 
   const privileged = !!me?.roles.some((r) => r === 'cashier' || r === 'auditor');
   const stepUpActive = !!me?.step_up_until;
@@ -52,15 +61,19 @@ export function MenuPage() {
       <div className="flex flex-col gap-3 px-4 pb-4 pt-1">
       {me && (
         <section className={CARD + ' flex flex-wrap items-center gap-x-3 gap-y-1'}>
-          <div className="grid h-[50px] w-[50px] shrink-0 place-items-center rounded-full bg-primary text-xl font-bold text-primary-foreground">
-            {me.full_name.trim().charAt(0)}
-          </div>
+          <button type="button" onClick={() => setPhotoOpen(true)} aria-label={t('photo.edit')} className="relative shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <Avatar fileId={myPhoto} fallback={me.full_name.trim().charAt(0)} className="h-[50px] w-[50px] bg-primary text-xl font-bold text-primary-foreground" />
+            <span aria-hidden="true" className="absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full border-2 border-card bg-foreground text-background">
+              <Icon d="M4 8h3l2-3h6l2 3h3v11H4z M12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" size={11} sw={2.2} />
+            </span>
+          </button>
           <div className="min-w-[6rem] flex-1">
             <p className="truncate text-[1.0625rem] font-bold">{me.full_name}</p>
             <p className="text-[0.8125rem] text-muted">
               {me.member_code} · {me.roles.map((r) => t(`roles.${r}`)).join(', ')}
             </p>
           </div>
+          <PrivacyToggle />
           <ThemeToggle />
           <button
             type="button"
@@ -72,6 +85,7 @@ export function MenuPage() {
           </button>
         </section>
       )}
+      {me && <PhotoSheet open={photoOpen} onClose={() => setPhotoOpen(false)} memberId={me.member_id} name={me.full_name} fileId={myPhoto} />}
       {me?.read_only && <p className="rounded-xl bg-warn-bg p-3 text-sm text-warn">{t('errors.auth.read_only')}</p>}
 
       <nav className="grid grid-cols-2 gap-3" aria-label={t('nav.menu')}>
@@ -92,10 +106,12 @@ export function MenuPage() {
         </Link>
       )}
 
+      <PushCard />
+
       <MyStatements />
 
       <div className={CARD}>
-        <h2 className="mb-2 text-base font-bold">{t('menu.devices')}</h2>
+        <h2 className="card-head mb-3 pb-3 text-base font-bold">{t('menu.devices')}</h2>
         <ul className="space-y-1">
           {devices.data?.items.map((d) => (
             <li key={d.id} className="flex justify-between text-sm">
@@ -107,14 +123,16 @@ export function MenuPage() {
       </div>
 
       <div className={CARD}>
-        <h2 className="mb-1 text-base font-bold">{t('menu.securityFeed')}</h2>
-        <p className="mb-2 text-sm text-muted">{t('menu.securityFeedHint')}</p>
+        <div className="card-head mb-3 pb-3">
+          <h2 className="text-base font-bold">{t('menu.securityFeed')}</h2>
+          <p className="text-sm text-muted">{t('menu.securityFeedHint')}</p>
+        </div>
         <ul className="space-y-1 text-sm">
           {events.data?.items.slice(0, 20).map((e) => (
             <li key={e.id}>
               <span className="font-medium">{e.member_code}</span> · {t(`menu.deviceEvent.${e.kind}`)} ·{' '}
               <time dateTime={e.at} className="text-muted">
-                {new Date(e.at).toLocaleDateString('bn-BD', { timeZone: 'Asia/Dhaka' })}
+                {fmtInstant(e.at)}
               </time>
             </li>
           ))}
@@ -130,7 +148,11 @@ export function MenuPage() {
 /** The member's own statement and zakat information as PDFs. */
 function MyStatements() {
   const { t } = useTranslation();
-  const [year, setYear] = useState(String(new Date().getFullYear()));
+  const thisYear = new Date().getFullYear();
+  const years = Array.from({ length: thisYear + 1 - FIRST_YEAR + 1 }, (_, i) => String(FIRST_YEAR + i));
+  const [year, setYear] = useState(String(thisYear));
+  const withData = useQuery({ queryKey: ['statement-years'], queryFn: () => api<{ years: string[] }>('/reports/statement-years') });
+  const noData = withData.data != null && !withData.data.years.includes(year);
   const [error, setError] = useState<unknown>(null);
   const get = async (path: string, name: string): Promise<void> => {
     setError(null);
@@ -142,15 +164,35 @@ function MyStatements() {
   };
   return (
     <div className={CARD}>
-      <h2 className="mb-1 text-base font-bold">{t('menuReports.title')}</h2>
-      <p className="mb-3 text-sm text-muted">{t('menuReports.hint')}</p>
-      <label className="block text-sm text-muted">
-        {t('menuReports.year')}
-        <input type="number" className="field mt-1 w-28" value={year} onChange={(e) => setYear(e.target.value)} />
-      </label>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" onClick={() => void get(`/reports/statement?period=${year}`, `statement-${year}.pdf`)} className="h-11 rounded-xl bg-primary px-4 font-medium text-primary-foreground">{t('menuReports.statement')}</button>
-        <button type="button" onClick={() => void get('/reports/zakat-statement', 'zakat-statement.pdf')} className="h-11 rounded-xl border border-border px-4">{t('menuReports.zakat')}</button>
+      <div className="card-head mb-4 pb-3">
+        <h2 className="text-base font-bold">{t('menuReports.title')}</h2>
+        <p className="text-sm text-muted">{t('menuReports.hint')}</p>
+      </div>
+      <div role="radiogroup" aria-label={t('menuReports.year')} className="mb-4 flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted">{t('menuReports.year')}</span>
+        {years.map((y) => (
+          <button
+            key={y}
+            type="button"
+            role="radio"
+            aria-checked={y === year}
+            onClick={() => setYear(y)}
+            className={`h-9 rounded-full border px-4 text-sm font-semibold transition-colors ${y === year ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-soft text-ink2 hover:bg-hover'}`}
+          >
+            {localDigits(y)}
+          </button>
+        ))}
+      </div>
+      {noData && <p className="-mt-2 mb-3 text-sm text-muted">{t('menuReports.noData', { year: localDigits(year) })}</p>}
+      <div className="grid gap-2">
+        <button type="button" disabled={noData} onClick={() => void get(`/reports/statement?period=${year}`, `statement-${year}.pdf`)} className="flex min-h-14 items-center justify-between rounded-2xl bg-primary px-4 text-left font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40">
+          <span>{t('menuReports.statement')}<span className="block text-xs font-normal">{t('menuReports.statementFor', { year: localDigits(year) })}</span></span>
+          <Icon d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" size={20} />
+        </button>
+        <button type="button" onClick={() => void get('/reports/zakat-statement', 'zakat-statement.pdf')} className="flex min-h-14 items-center justify-between rounded-2xl border border-border px-4 text-left font-semibold">
+          <span>{t('menuReports.zakat')}<span className="block text-xs font-normal text-muted">{t('menuReports.zakatNote')}</span></span>
+          <Icon d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" size={20} />
+        </button>
       </div>
       {error != null && <div className="mt-3"><LoadError error={error} /></div>}
     </div>

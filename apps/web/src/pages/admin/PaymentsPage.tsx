@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { PAYMENT_METHOD_LABELS } from '@barakah/shared';
 import { AuthedImage } from '../../components/AuthedImage';
 import {
-  AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, BTN_SM, BTN_SM_PRIMARY, Card, CardHead, EmptyCard, ICONS, InfoRow, MemberBadge, Notice, Segmented, SplitLayout,
+  AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, BTN_SM, BTN_SM_PRIMARY, Card, CardHead, EmptyCard, ICONS, InfoRow, MemberBadge, Notice, Segmented, SplitLayout,
 } from '../../components/admin';
 import { Icon } from '../../components/ui';
 import { ConfirmSheet, SheetRow } from '../../components/ConfirmSheet';
@@ -43,6 +43,7 @@ export function PaymentsPage() {
   const [possible, setPossible] = useState<Set<string>>(new Set());
   const [reason, setReason] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
+  const [smsOpen, setSmsOpen] = useState(false);
 
   const q = useInfiniteQuery({
     queryKey: ['payments', 'queue', status],
@@ -119,11 +120,27 @@ export function PaymentsPage() {
               label={t('paymentsPage.title')}
               value={tab}
               options={(['queue', 'approvals'] as const).map((k) => ({ value: k, label: t(`paymentsPage.${k}`) }))}
-              onChange={(k) => setParams(k === 'queue' ? {} : { tab: k })}
+              onChange={(k) => { setNotice(null); setParams(k === 'queue' ? {} : { tab: k }); }}
             />
-            {tab === 'queue' && isCashier && (
-              <button type="button" className={BTN_SECONDARY} onClick={() => { setNotice(null); setEntry({ prefill: null }); }}>
-                <Icon d={ICONS.plus} size={18} />
+            {/* Both tabs: a payment may need entering while reversal requests are open. */}
+            {isCashier && (
+              <button
+                type="button"
+                className={BTN_SECONDARY}
+                onClick={() => {
+                  setNotice(null);
+                  // The matches are marked in the queue, so the SMS reader always works from there.
+                  if (tab !== 'queue') setParams({});
+                  setSmsOpen(true);
+                }}
+              >
+                <Icon d={ICONS.message} size={18} />
+                {t('paymentsPage.fromSms')}
+              </button>
+            )}
+            {isCashier && (
+              <button type="button" className={BTN_PRIMARY} onClick={() => { setNotice(null); setEntry({ prefill: null }); }}>
+                <Icon d={ICONS.plus} size={18} sw={2} />
                 {t('paymentsPage.entryTitle')}
               </button>
             )}
@@ -137,16 +154,12 @@ export function PaymentsPage() {
         }
       />
 
+      <Notice text={notice} />
+
       {tab === 'approvals' ? (
         <ApprovalsTab />
       ) : (
         <>
-          {isCashier && (
-            <SmsPanel onResults={onResults} onCreate={(r) => setEntry({ prefill: { parsed: r.result, rawSms: r.text } })} />
-          )}
-
-          <Notice text={notice} />
-
           <SplitLayout
             sideWidth="360px"
             main={
@@ -240,6 +253,24 @@ export function PaymentsPage() {
         <p className="text-muted">{t('paymentsPage.reverseBody')}</p>
         <textarea aria-label={t('common.reason')} placeholder={t('common.reason')} className="field min-h-20 w-full" maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} />
       </ConfirmSheet>
+
+      <AdminDialog open={smsOpen} onClose={() => setSmsOpen(false)} title={t('paymentsPage.pasteSms')} wide>
+        <SmsPanel
+          onResults={onResults}
+          onCreate={(r) => {
+            setSmsOpen(false);
+            setEntry({ prefill: { parsed: r.result, rawSms: r.text } });
+          }}
+        />
+        {exact.size > 0 && (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-ok-bg p-3 text-sm text-ok">
+            <span className="font-medium">{t('paymentsPage.smsMatchedHint', { n: formatCount(exact.size) })}</span>
+            <button type="button" className={BTN_SECONDARY} onClick={() => setSmsOpen(false)}>
+              {t('paymentsPage.showInQueue')}
+            </button>
+          </div>
+        )}
+      </AdminDialog>
 
       <EntrySheet open={!!entry} onClose={() => setEntry(null)} prefill={entry?.prefill ?? null} onDone={() => setNotice(t('paymentsPage.entered'))} />
     </AdminPage>

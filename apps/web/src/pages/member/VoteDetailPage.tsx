@@ -10,6 +10,7 @@ import { useCountdown } from '../../lib/countdown';
 import { fmtInstant } from '../../lib/dates';
 import type { ProposalDetail } from '../../lib/types';
 import { PROPOSAL_TYPES } from '@barakah/shared';
+import { formatCount, localDigits } from '../../lib/format';
 
 const CHOICES = ['yes', 'no', 'abstain'] as const;
 
@@ -81,34 +82,37 @@ export function VoteDetailPage() {
             <PayloadPreview type={proposal.data.type as (typeof PROPOSAL_TYPES)[number]} payload={proposal.data.payload} />
 
             <div className="mt-4 rounded-2xl bg-background p-3.5">
-              <p className="text-sm text-muted">{t('proposal.threshold')}</p>
-              {proposal.data.ballots_hidden ? (
-                <>
-                  <p className="text-xl font-bold">
-                    {t('votes.needToPass', { need: proposal.data.basis === 'share' ? proposal.data.threshold_weight : proposal.data.threshold })}{' '}
-                    <span className="text-sm font-normal text-muted">
-                      ({proposal.data.basis === 'share' ? t('proposal.byShares') : t('proposal.byMembers')})
-                    </span>
-                  </p>
-                  <p className="mt-2 text-sm text-muted">{t('votes.hiddenUntilClose')}</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-xl font-bold">
-                    {proposal.data.basis === 'share'
-                      ? `${proposal.data.counts.yes_weight} / ${proposal.data.threshold_weight}`
-                      : `${proposal.data.counts.yes} / ${proposal.data.threshold}`}{' '}
-                    <span className="text-sm font-normal text-muted">
-                      ({proposal.data.basis === 'share' ? t('proposal.byShares') : t('proposal.byMembers')})
-                    </span>
-                  </p>
-                  <div className="mt-2 flex gap-4 text-sm">
-                    <span className="text-ok">{t('votes.yes')}: {proposal.data.counts.yes}</span>
-                    <span className="text-bad">{t('votes.no')}: {proposal.data.counts.no}</span>
-                    <span className="text-muted">{t('votes.abstain')}: {proposal.data.counts.abstain}</span>
-                  </div>
-                </>
-              )}
+              {(() => {
+                const d = proposal.data;
+                const byShare = d.basis === 'share';
+                const yes = String(byShare ? d.counts.yes_weight : d.counts.yes);
+                const need = String(byShare ? d.threshold_weight : d.threshold);
+                const unit = <span className="text-sm font-normal text-muted"> ({byShare ? t('proposal.byShares') : t('proposal.byMembers')})</span>;
+                if (d.ballots_hidden) {
+                  return (
+                    <>
+                      <p className="text-lg font-bold">{t('proposal.needToPass')}: {localDigits(need)}{unit}</p>
+                      <p className="mt-2 text-sm text-muted">{t('votes.hiddenUntilClose')}</p>
+                    </>
+                  );
+                }
+                return (
+                  <>
+                    <p className="text-lg font-bold">
+                      {t('proposal.yesVotes')}: {localDigits(yes)}
+                      <span className="text-muted"> · </span>
+                      {t('proposal.needToPass')} {localDigits(need)}
+                      {unit}
+                    </p>
+                    {BigInt(need) > 0n && BigInt(yes) >= BigInt(need) && <p className="mt-1 text-sm font-semibold text-ok">✓ {t('proposal.passed')}</p>}
+                    <div className="mt-2 flex gap-4 text-sm">
+                      <span className="text-ok">{t('votes.yes')}: {formatCount(d.counts.yes)}</span>
+                      <span className="text-bad">{t('votes.no')}: {formatCount(d.counts.no)}</span>
+                      <span className="text-muted">{t('votes.abstain')}: {formatCount(d.counts.abstain)}</span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
 
             {isSubject && (
@@ -163,11 +167,13 @@ export function VoteDetailPage() {
             )}
           </section>
 
-          <section className="rounded-[20px] border border-border bg-card p-4 shadow-card">
-            <h3 className="mb-1 text-base font-bold">{t('proposal.voterList')}</h3>
-            <p className="mb-1 text-sm text-ink2">
-              {t('votes.turnout', { voted: proposal.data.voters.filter((v) => v.voted).length, total: proposal.data.voters.length })}
-            </p>
+          <section className="overflow-clip rounded-[20px] border border-border bg-card p-4 shadow-card">
+            <div className="card-head mb-3 pb-3">
+              <h3 className="text-base font-bold">{t('proposal.voterList')}</h3>
+              <p className="text-sm text-ink2">
+                {t('votes.turnout', { voted: proposal.data.voters.filter((v) => v.voted).length, total: proposal.data.voters.length })}
+              </p>
+            </div>
             {proposal.data.ballots_hidden && <p className="mb-1 text-xs text-muted">{t('votes.hiddenUntilClose')}</p>}
             <ul className="divide-y divide-border">
               {proposal.data.voters.map((v) => {
@@ -178,14 +184,11 @@ export function VoteDetailPage() {
                       {v.code} {v.full_name}
                       {proposal.data!.basis === 'share' && <span className="text-muted"> · {v.weight}</span>}
                     </span>
-                    {proposal.data!.ballots_hidden ? (
-                      // While the vote is open only whether they voted is shown, never their choice.
-                      v.voted ? <span className="font-medium text-ok">✓ {t('votes.hasVoted')}</span> : <span className="text-muted">{t('votes.notVoted')}</span>
-                    ) : (
-                      <span className="font-medium">
-                        {cast ? t(`votes.${cast.choice}`) : <span className="text-muted">{t('votes.notVoted')}</span>}
-                      </span>
-                    )}
+                    {/* While the vote is open only whether they voted is shown (green/red dot), never their choice. */}
+                    <span className={`flex shrink-0 items-center gap-1.5 font-medium ${v.voted ? 'text-ok' : 'text-bad'}`}>
+                      <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-full ${v.voted ? 'bg-ok' : 'bg-bad'}`} />
+                      {!proposal.data!.ballots_hidden && cast ? t(`votes.${cast.choice}`) : v.voted ? t('proposal.votedYes') : t('proposal.votedNo')}
+                    </span>
                   </li>
                 );
               })}

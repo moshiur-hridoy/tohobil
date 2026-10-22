@@ -6,7 +6,7 @@ import { ConfirmSheet } from '../../components/ConfirmSheet';
 import { ListSkeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
 import { AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, BTN_SM, BTN_SM_PRIMARY, Card, ICONS, InfoRow, StatGrid, StatTile } from '../../components/admin';
-import { Icon } from '../../components/ui';
+import { Icon, DateInput, FilePicker } from '../../components/ui';
 import { api, apiBlob } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtDate } from '../../lib/dates';
@@ -14,8 +14,16 @@ import { formatCount } from '../../lib/format';
 import { holdingTotals, splitByCost } from '../../lib/holding';
 import { paisaToDecimal, parseAmountInput, taka } from '../../lib/money';
 import { todayDhaka } from '../../lib/dates';
-import type { AssetRow, HoldingDocument, HoldingEntry, HoldingResponse } from '../../lib/types';
+import type { AssetRow, HoldingDocument, HoldingEntry, HoldingResponse, HoldingWithdrawal } from '../../lib/types';
 import { CreateProposalForm } from './ProposalsPage';
+
+/** A withdrawal's stage: waiting on someone (amber), voting (blue), money due (amber), done (green). */
+const STAGE_TONE: Record<HoldingWithdrawal['status'], string> = {
+  draft: 'bg-warn-bg text-warn',
+  open: 'bg-blue-bg text-blue',
+  approved: 'bg-warn-bg text-warn',
+  executed: 'bg-ok-bg text-ok',
+};
 
 type Action =
   | { kind: 'paper'; entry: HoldingEntry }
@@ -194,7 +202,7 @@ function HoldingView({ id }: { id: string }) {
       )}
 
       <Card className="p-5">
-        <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="card-head mb-3 flex items-center justify-between gap-3 pb-3">
           <h2 className="text-base font-bold">{t('holding.contract')}</h2>
           {isCashier && (
             <button type="button" className={BTN_SM} onClick={() => {
@@ -287,23 +295,32 @@ function HoldingView({ id }: { id: string }) {
 
       {withdrawals.length > 0 && (
         <Card className="p-5">
-          <h2 className="mb-2 text-base font-bold">{t('holding.withdrawals')}</h2>
+          <h2 className="card-head mb-3 pb-3 text-base font-bold">{t('holding.withdrawals')}</h2>
           <ul className="divide-y divide-border text-sm">
             {withdrawals.map((w) => {
               const gain = w.withdrawn_paisa && w.cost_paisa ? BigInt(w.withdrawn_paisa) - BigInt(w.cost_paisa) : null;
               return (
-                <li key={w.proposal_id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
-                  <span>
-                    {w.everything ? t('holding.withdrawalAll') : taka(w.amount_paisa)}
-                    <span className="text-muted"> · {w.status === 'executed' && w.withdrawn_paisa
-                      ? t('holding.withdrawalDone', { amount: taka(w.withdrawn_paisa), date: w.executed_on ? fmtDate(w.executed_on) : '—' })
-                      : t('holding.withdrawalWaiting', { status: t(`status.proposal.${w.status}`) })}</span>
-                  </span>
-                  {gain !== null && gain !== 0n && (
-                    <span className={`text-xs font-semibold ${gain > 0n ? 'text-ok' : 'text-bad'}`}>
-                      {t(gain > 0n ? 'holding.gainOnWithdrawal' : 'holding.lossOnWithdrawal', { amount: taka(gain > 0n ? gain : -gain) })}
-                    </span>
+                <li key={w.proposal_id} className="py-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-semibold">{w.everything ? t('holding.withdrawalAll') : taka(w.amount_paisa)}</span>
+                    {/* Say where the withdrawal stands in plain words, not the bare proposal status ("খসড়া"). */}
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STAGE_TONE[w.status]}`}>{t(`holding.withdrawalStage.${w.status}`)}</span>
+                  </div>
+                  {w.status === 'executed' && w.withdrawn_paisa ? (
+                    <p className="mt-1 text-muted">{t('holding.withdrawalDone', { amount: taka(w.withdrawn_paisa), date: w.executed_on ? fmtDate(w.executed_on) : '—' })}</p>
+                  ) : (
+                    <p className="mt-1 text-muted">{t(`holding.withdrawalNext.${w.status}`)}</p>
                   )}
+                  <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
+                    <Link to={`/admin/proposals?id=${w.proposal_id}`} className="text-[0.8125rem] font-semibold text-primary hover:underline">
+                      {t('holding.withdrawalOpenProposal')} →
+                    </Link>
+                    {gain !== null && gain !== 0n && (
+                      <span className={`text-xs font-semibold ${gain > 0n ? 'text-ok' : 'text-bad'}`}>
+                        {t(gain > 0n ? 'holding.gainOnWithdrawal' : 'holding.lossOnWithdrawal', { amount: taka(gain > 0n ? gain : -gain) })}
+                      </span>
+                    )}
+                  </div>
                 </li>
               );
             })}
@@ -312,7 +329,7 @@ function HoldingView({ id }: { id: string }) {
       )}
 
       <Card className="p-5">
-        <h2 className="mb-2 text-base font-bold">{t('holding.history')}</h2>
+        <h2 className="card-head mb-3 pb-3 text-base font-bold">{t('holding.history')}</h2>
         {history.length === 0 ? <p className="text-sm text-muted">{t('holding.neverValued')}</p> : (
           <ul className="divide-y divide-border text-sm">
             {history.map(([date, h], i) => {
@@ -353,7 +370,7 @@ function HoldingView({ id }: { id: string }) {
       >
         <p className="text-sm text-muted">{t('holding.valueHint', { value: taka(totals.value) })}</p>
         <Field label={t('holding.newValue')}><input className="field mt-1 w-full" inputMode="decimal" value={total} onChange={(e) => setTotal(e.target.value)} /></Field>
-        <Field label={t('holding.asOf')}><input type="date" className="field mt-1 w-full" value={asOf} max={todayDhaka()} onChange={(e) => setAsOf(e.target.value)} /></Field>
+        <Field label={t('holding.asOf')}><DateInput className="field mt-1 w-full" value={asOf} max={todayDhaka()} onChange={(e) => setAsOf(e.target.value)} /></Field>
         <Field label={t('holding.basis')}><input className="field mt-1 w-full" value={basis} onChange={(e) => setBasis(e.target.value)} /></Field>
         {newTotal !== null && <p className="text-sm">{t('holding.resultProfit')}: <Profit paisa={BigInt(newTotal) - totals.invested} className="font-bold" /></p>}
       </ConfirmSheet>
@@ -404,7 +421,7 @@ function HoldingView({ id }: { id: string }) {
                 <option value="other">{t('assetsAdmin.docOther')}</option>
               </select>
             </Field>
-            <input type="file" accept="image/*,application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <FilePicker file={file} onChange={setFile} />
           </>
         )}
         {action?.kind === 'complete' && (
@@ -416,7 +433,7 @@ function HoldingView({ id }: { id: string }) {
         {action?.kind === 'contract' && (
           <>
             <Field label={t('holding.partnerName')}><input className="field mt-1 w-full" value={terms.name ?? ''} onChange={(e) => setTerms({ ...terms, name: e.target.value })} /></Field>
-            <Field label={t('holding.contractDate')}><input type="date" className="field mt-1 w-full" value={terms.contract_date ?? ''} onChange={(e) => setTerms({ ...terms, contract_date: e.target.value })} /></Field>
+            <Field label={t('holding.contractDate')}><DateInput className="field mt-1 w-full" value={terms.contract_date ?? ''} onChange={(e) => setTerms({ ...terms, contract_date: e.target.value })} /></Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label={t('holding.rate')}><input className="field mt-1 w-full" inputMode="decimal" value={terms.rate_percent ?? ''} onChange={(e) => setTerms({ ...terms, rate_percent: e.target.value })} /></Field>
               <Field label={t('holding.periodMonths')}><input className="field mt-1 w-full" inputMode="numeric" value={terms.period_months ?? ''} onChange={(e) => setTerms({ ...terms, period_months: e.target.value })} /></Field>
@@ -430,4 +447,4 @@ function HoldingView({ id }: { id: string }) {
   );
 }
 
-const Field = ({ label, children }: { label: string; children: ReactNode }) => <label className="block text-sm text-muted">{label}{children}</label>;
+const Field = ({ label, children }: { label: string; children: ReactNode }) => <label className="field-label">{label}{children}</label>;

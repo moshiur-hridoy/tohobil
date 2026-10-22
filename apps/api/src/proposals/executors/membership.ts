@@ -10,6 +10,7 @@ import {
 } from '../../lib/nav';
 import { ruleBool, ruleInt, rulePaisa } from '../../lib/rules';
 import { toBigInt } from '../../lib/money';
+import { ensurePhoneFree } from '../../members/entry';
 import { settlementFigures } from '../../members/settlement';
 import type { ExecutorSignature } from './shared';
 import { ledgerActor, proposalPosting, serialised } from './shared';
@@ -36,6 +37,7 @@ export const newMemberExecutor: ExecutorSignature = async (db, proposal, _input,
   }
 
   const price = divRound(nav.net_assets * BigInt(payload.shares), BigInt(nav.shares_outstanding));
+  await ensurePhoneFree(db, payload.phone);
 
   const codeRes = await db.query(
     `SELECT COALESCE(MAX(CAST(SUBSTRING(code FROM 2) AS int)), 0) + 1 AS n FROM members`,
@@ -296,6 +298,19 @@ export const settlementExecutor: ExecutorSignature = async (db, proposal, _input
       [proposal.id, memberId],
     );
   }
+
+  // Dues dated after today (generated ahead, or the next month already made) belong to a membership
+  // that is ending: close them at what was paid, which the gross above already refunds as capital.
+  // Without this they would turn overdue later and show the exited member as owing.
+  await db.query(
+    `INSERT INTO due_cancellations (due_id, reason, cancelled_by)
+     SELECT d.id, 'Member left the fund; settlement executed', $3
+     FROM dues d
+     WHERE d.member_id = $1 AND d.due_date > $2::date
+       AND NOT EXISTS (SELECT 1 FROM due_cancellations c WHERE c.due_id = d.id)
+       AND EXISTS (SELECT 1 FROM v_due_status v WHERE v.due_id = d.id AND v.outstanding_paisa > 0)`,
+    [memberId, today, actor.id],
+  );
 
   await db.query(
     `UPDATE share_holdings

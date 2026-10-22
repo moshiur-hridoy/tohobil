@@ -6,18 +6,12 @@ import { ConfirmSheet } from '../../components/ConfirmSheet';
 import { ListSkeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
 import { StatusPill } from '../../components/StatusPill';
-import { AdminHeader, AdminPage, BTN_SM, BTN_SM_PRIMARY, Card, CardHead, EmptyCard, ICONS, StatGrid, StatTile } from '../../components/admin';
+import { AdminHeader, AdminPage, BTN_SM, Card, CardHead, EmptyCard, ICONS, StatGrid, StatTile } from '../../components/admin';
 import { formatCount } from '../../lib/format';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtDate, fmtPeriod } from '../../lib/dates';
-import { parseAmountInput, taka } from '../../lib/money';
-
-interface Levy {
-  held_paisa: string;
-  remittances: Array<{ seq: string; entry_date: string; amount_paisa: string; memo: string }>;
-  levies: Array<{ period: string; members: number; total_paisa: string; outstanding_paisa: string }>;
-}
+import { taka } from '../../lib/money';
 
 interface Special {
   items: Array<{
@@ -39,31 +33,23 @@ interface Financing {
   instalments: Array<{ id: string; due_on: string; amount_paisa: string; paid_at: string | null }>;
 }
 
-/** Cashier: special contributions (who has paid), levy money held for the registrar, and the instalments of deferred purchases (spec 18.7). */
+/** Cashier: special contributions (who has paid) and the instalments of deferred purchases (spec 18.7). The levy fund lives on the charity & levy page. */
 export function ObligationsPage() {
   const { t } = useTranslation();
   const { me } = useAuth();
   const qc = useQueryClient();
   const isCashier = me?.roles.includes('cashier') ?? false;
-  const [remit, setRemit] = useState(false);
-  const [amount, setAmount] = useState('');
-  const [account, setAccount] = useState<CashAccount>('CASH');
-  const [payee, setPayee] = useState('');
-  const [note, setNote] = useState('');
   const [paying, setPaying] = useState<{ id: string; label: string } | null>(null);
   const [payAccount, setPayAccount] = useState<CashAccount>('BANK');
 
-  const levy = useQuery({ queryKey: ['levy'], queryFn: () => api<Levy>('/levy') });
   const special = useQuery({ queryKey: ['special-contributions'], queryFn: () => api<Special>('/special-contributions') });
   const financing = useQuery({ queryKey: ['financing'], queryFn: () => api<{ items: Financing[] }>('/financing') });
   const refresh = () => {
-    void qc.invalidateQueries({ queryKey: ['levy'] });
     void qc.invalidateQueries({ queryKey: ['special-contributions'] });
     void qc.invalidateQueries({ queryKey: ['financing'] });
     void qc.invalidateQueries({ queryKey: ['nav'] });
   };
 
-  const levyOutstanding = levy.data?.levies.reduce((n, l) => n + BigInt(l.outstanding_paisa), 0n) ?? 0n;
   const unpaid = financing.data?.items.flatMap((f) => f.instalments.filter((i) => !i.paid_at).map((i) => ({ ...i, asset: f.asset_name }))) ?? [];
   const next = [...unpaid].sort((x, y) => x.due_on.localeCompare(y.due_on))[0];
 
@@ -72,8 +58,6 @@ export function ObligationsPage() {
       <AdminHeader title={t('obligations.title')} subtitle={t('adminUi.sub.obligations')} />
 
       <StatGrid>
-        <StatTile tone="bg-blue-bg text-blue" icon={ICONS.shield} label={t('adminUi.obligations.statLevyHeld')} value={levy.data ? taka(levy.data.held_paisa) : null} />
-        <StatTile tone="bg-warn-bg text-warn" icon={ICONS.clock} label={t('adminUi.obligations.statLevyOutstanding')} value={levy.data ? taka(levyOutstanding) : null} />
         <StatTile tone="bg-primary-soft text-primary" icon={ICONS.layers} label={t('adminUi.obligations.statInstalments')} value={financing.data ? formatCount(unpaid.length) : null}
           sub={financing.data && unpaid.length > 0 ? taka(unpaid.reduce((n, i) => n + BigInt(i.amount_paisa), 0n)) : undefined} />
         <StatTile tone="bg-bad-bg text-bad" icon={ICONS.alert} label={t('adminUi.obligations.statNext')}
@@ -120,54 +104,7 @@ export function ObligationsPage() {
         </Card>
       )}
 
-      <div className="grid items-start gap-5 xl:grid-cols-2">
-        <Card className="px-5 pb-3 pt-5 sm:px-6">
-          <CardHead
-            icon={ICONS.shield}
-            tone="bg-blue-bg text-blue"
-            title={t('obligations.levy')}
-            sub={t('obligations.levyHint')}
-            action={isCashier && levy.data && BigInt(levy.data.held_paisa) > 0n ? (
-              <button type="button" onClick={() => setRemit(true)} className={BTN_SM_PRIMARY}>{t('obligations.remit')}</button>
-            ) : undefined}
-          />
-          {levy.error ? (
-            <LoadError error={levy.error} onRetry={() => void levy.refetch()} />
-          ) : !levy.data ? (
-            <ListSkeleton rows={2} />
-          ) : levy.data.levies.length === 0 ? (
-            <EmptyCard text={t('obligations.noLevy')} />
-          ) : (
-            <ul>
-              {levy.data.levies.map((l) => (
-                <li key={l.period} className="flex flex-wrap items-center justify-between gap-2 border-b border-border py-2.5 text-sm last:border-b-0">
-                  <span>
-                    <span className="font-semibold">{fmtPeriod(l.period)}</span>
-                    <span className="ml-2 text-muted">{t('obligations.members', { count: l.members })}</span>
-                  </span>
-                  <span className="tabular-nums">
-                    <span className={BigInt(l.outstanding_paisa) > 0n ? 'font-semibold text-warn' : 'text-muted'}>{taka(l.outstanding_paisa)}</span>
-                    <span className="text-muted"> / {taka(l.total_paisa)} {t('obligations.outstanding')}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-          {levy.data && levy.data.remittances.length > 0 && (
-            <>
-              <p className="mb-1 mt-4 text-xs font-semibold text-muted">{t('adminUi.obligations.remittances')}</p>
-              <ul className="text-sm">
-                {levy.data.remittances.map((r) => (
-                  <li key={r.seq} className="flex justify-between gap-2 border-t border-border py-2">
-                    <span className="min-w-0 truncate"><span className="text-muted">{fmtDate(r.entry_date)}</span> · {r.memo}</span>
-                    <span className="shrink-0 font-semibold tabular-nums">{taka(r.amount_paisa)}</span>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </Card>
-
+      <div>
         <Card className="px-5 pb-3 pt-5 sm:px-6">
           <CardHead icon={ICONS.home} title={t('obligations.financing')} sub={t('obligations.financingHint')} />
           {financing.error ? (
@@ -211,32 +148,6 @@ export function ObligationsPage() {
           )}
         </Card>
       </div>
-
-      <ConfirmSheet
-        open={remit}
-        onClose={() => setRemit(false)}
-        title={t('obligations.remit')}
-        confirmLabel={t('common.confirm')}
-        canConfirm={parseAmountInput(amount) !== null && payee.trim().length > 0 && note.trim().length >= 3}
-        onConfirm={async () => {
-          await api('/levy/remittances', { method: 'POST', body: { amount_paisa: parseAmountInput(amount), account, payee: payee.trim(), note: note.trim() } });
-          setAmount('');
-          setPayee('');
-          setNote('');
-          refresh();
-        }}
-      >
-        <label className="block text-sm text-muted">{t('common.amount')}
-          <input className="field mt-1 w-full" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
-        </label>
-        <AccountSelect value={account} onChange={setAccount} />
-        <label className="block text-sm text-muted">{t('obligations.payee')}
-          <input className="field mt-1 w-full" value={payee} onChange={(e) => setPayee(e.target.value)} />
-        </label>
-        <label className="block text-sm text-muted">{t('assetsAdmin.note')}
-          <textarea className="field mt-1 min-h-16 w-full" value={note} onChange={(e) => setNote(e.target.value)} />
-        </label>
-      </ConfirmSheet>
 
       <ConfirmSheet
         open={paying !== null}

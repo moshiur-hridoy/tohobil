@@ -67,6 +67,20 @@ async function nextMemberCode(db: Db): Promise<string> {
 }
 
 /**
+ * A phone number may belong to only one person still in the fund. Someone who left keeps their old
+ * record, so a former member can join again on the same number (ASSUMPTIONS 107).
+ */
+export async function ensurePhoneFree(db: Db, phone: string): Promise<void> {
+  const res = await db.query(
+    `SELECT 1 FROM members WHERE phone = $1 AND status NOT IN ('exited', 'deceased')`,
+    [phone],
+  );
+  if ((res.rowCount ?? 0) > 0) {
+    throw conflict('member.phone_taken', 'Another current member already has this phone number');
+  }
+}
+
+/**
  * Create the prospective member for a `new_member` proposal when the proposal payload does not yet
  * carry a `member_id`. This is a fallback that lets tests and the executor create the quote in one
  * step; the canonical flow is to create the member during proposal execution and then call this
@@ -87,6 +101,7 @@ async function ensureProspectiveMember(
   }
 
   const { name, phone, shares: _shares } = parseNewMemberPayload(proposal.payload);
+  await ensurePhoneFree(db, phone);
   const code = await nextMemberCode(db);
   const member = await db.query(
     `INSERT INTO members (code, full_name, phone, status, joined_on)

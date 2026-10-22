@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type pg from 'pg';
-import { duesQuerySchema, finesQuerySchema, rulesQuerySchema, type Clock } from '@barakah/shared';
+import { DEFAULT_MEMBER_PAYMENT_METHODS, PAYMENT_METHODS, duesQuerySchema, finesQuerySchema, rulesQuerySchema, type Clock } from '@barakah/shared';
 import { listAccountBalances } from '../accounts/service';
 import type { Guards } from '../auth/guards';
 import { listDues, listFines } from '../dues/queries';
@@ -33,12 +33,21 @@ export function referenceRoutes(deps: ReferenceDeps, guards: Guards) {
     );
 
     // How to pay the fund (spec 8, /pay). Read-only here; the cashier edits it with the settings
-    // routes in Phase 3. Only the three known keys are returned.
+    // routes. Only the known keys are returned, and `methods` falls back to the default three.
     app.get('/settings/payment-instructions', { preHandler: authenticate }, async () => {
       const res = await deps.pool.query(`SELECT value FROM settings WHERE key = 'payment_instructions'`);
       const value = (res.rows[0] as { value: Record<string, unknown> } | undefined)?.value ?? {};
       const text = (k: string): string => (typeof value[k] === 'string' ? (value[k] as string) : '');
-      return { bkash: text('bkash'), nagad: text('nagad'), bank: text('bank') };
+      const listed = Array.isArray(value.methods) ? PAYMENT_METHODS.filter((m) => (value.methods as unknown[]).includes(m)) : [];
+      return {
+        bkash: text('bkash'),
+        nagad: text('nagad'),
+        bank: text('bank'),
+        bank_account: text('bank_account'),
+        bank_holder: text('bank_holder'),
+        bank_branch: text('bank_branch'),
+        methods: listed.length > 0 ? listed : [...DEFAULT_MEMBER_PAYMENT_METHODS],
+      };
     });
 
     app.get('/accounts/balances', { preHandler: authenticate }, () =>

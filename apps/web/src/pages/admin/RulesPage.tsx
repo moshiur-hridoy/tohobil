@@ -7,7 +7,7 @@ import { ConfirmSheet } from '../../components/ConfirmSheet';
 import { ListSkeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
 import { AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, Card, CardHead, EmptyCard, ICONS } from '../../components/admin';
-import { Icon } from '../../components/ui';
+import { Icon, DateInput } from '../../components/ui';
 import { api } from '../../lib/api';
 import { errorMessage } from '../../lib/errors';
 import { useAuth } from '../../lib/auth';
@@ -286,7 +286,7 @@ function CreateRuleChange({ open, presetKey, onClose, current, clauses }: {
       onConfirm={submit}
     >
       <p className="mb-3 rounded-xl bg-soft px-3 py-2.5 text-[0.8125rem] text-ink2">{t('rulesPage.howItWorks')}</p>
-      <label className="block text-sm text-muted">
+      <label className="field-label">
         {t('rulesPage.pickRule')}
         <select className="field mt-1 w-full" value={key} onChange={(e) => pickKey(e.target.value)}>
           <option value="" disabled>—</option>
@@ -300,7 +300,7 @@ function CreateRuleChange({ open, presetKey, onClose, current, clauses }: {
         </p>
       )}
       {key && (
-        <label className="mt-2 block text-sm text-muted">
+        <label className="field-label mt-2">
           {kind === 'paisa' ? t('rulesPage.valueTaka') : isWholeNumber(kind) ? t('rulesPage.valueNumber') : t('rulesPage.value')}
           {kind === 'bool' ? (
             <select className="field mt-1 w-full" value={value} onChange={(e) => setValue(e.target.value)}>
@@ -309,7 +309,7 @@ function CreateRuleChange({ open, presetKey, onClose, current, clauses }: {
               <option value="false">{t('rulesPage.units.no')}</option>
             </select>
           ) : kind === 'date' ? (
-            <input type="date" className="field mt-1 w-full" value={value} onChange={(e) => setValue(e.target.value)} />
+            <DateInput className="field mt-1 w-full" value={value} onChange={(e) => setValue(e.target.value)} />
           ) : kind === undefined ? (
             <textarea className="field mt-1 min-h-20 w-full" value={value} onChange={(e) => setValue(e.target.value)} />
           ) : (
@@ -317,11 +317,11 @@ function CreateRuleChange({ open, presetKey, onClose, current, clauses }: {
           )}
         </label>
       )}
-      <label className="mt-2 block text-sm text-muted">
+      <label className="field-label mt-2">
         {t('rulesPage.validFrom')}
-        <input type="date" className="field mt-1 w-full" value={validFrom} onChange={(e) => setValidFrom(e.target.value)} />
+        <DateInput className="field mt-1 w-full" value={validFrom} onChange={(e) => setValidFrom(e.target.value)} />
       </label>
-      <label className="mt-2 block text-sm text-muted">
+      <label className="field-label mt-2">
         {t('proposal.clauseRef')}
         <input className="field mt-1 w-full" value={clause} onChange={(e) => setClause(e.target.value)} />
       </label>

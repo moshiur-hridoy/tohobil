@@ -8,7 +8,7 @@ import { LoadError } from '../../components/StateViews';
 import {
   AdminHeader, AdminPage, BTN_PRIMARY, BTN_SM, BTN_SM_PRIMARY, Card, CardHead, EmptyCard, FieldLabel, ICONS, Segmented, SplitLayout, StatGrid, StatTile,
 } from '../../components/admin';
-import { Chip, Icon } from '../../components/ui';
+import { Chip, FilePicker, Icon } from '../../components/ui';
 import { formatCount } from '../../lib/format';
 import { holdingTotals } from '../../lib/holding';
 import { Link, useNavigate } from 'react-router-dom';
@@ -318,7 +318,7 @@ export function AdminAssetsPage() {
         {action && <p className="text-muted">{action.asset.name}</p>}
         {action?.kind === 'pay' && (
           <>
-            <label className="block text-sm text-muted">
+            <label className="field-label">
               {t('common.amount')}
               <input className="field mt-1 w-full" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
             </label>
@@ -326,7 +326,7 @@ export function AdminAssetsPage() {
           </>
         )}
         {(action?.kind === 'pay' || action?.kind === 'complete') && (
-          <label className="block text-sm text-muted">
+          <label className="field-label">
             {t('assetsAdmin.note')}
             <textarea className="field mt-1 min-h-20 w-full" value={note} onChange={(e) => setNote(e.target.value)} />
           </label>
@@ -334,7 +334,7 @@ export function AdminAssetsPage() {
         {action?.kind === 'complete' && <p className="text-sm text-muted">{t('assetsAdmin.completeHint')}</p>}
         {action?.kind === 'document' && (
           <>
-            <label className="block text-sm text-muted">
+            <label className="field-label">
               {t('assetsAdmin.docType')}
               <select className="field mt-1 w-full" value={docType} onChange={(e) => setDocType(e.target.value)}>
                 <option value="deed">{t('assetsAdmin.docDeed')}</option>
@@ -342,7 +342,7 @@ export function AdminAssetsPage() {
                 <option value="other">{t('assetsAdmin.docOther')}</option>
               </select>
             </label>
-            <input type="file" accept="image/*,application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <FilePicker file={file} onChange={setFile} />
           </>
         )}
       </ConfirmSheet>

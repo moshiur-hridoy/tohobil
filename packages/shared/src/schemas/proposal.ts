@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PROPOSAL_STATUSES, PROPOSAL_TYPES, SETTLEMENT_KINDS, type ProposalType } from '../enums';
+import { LEVY_EXPENSE_CATEGORIES, PROPOSAL_STATUSES, PROPOSAL_TYPES, SETTLEMENT_KINDS, type ProposalType } from '../enums';
 import {
   cashAccountSchema,
   dateSchema,
@@ -36,6 +36,13 @@ export const proposalOpenSchema = z.object({
 
 export type ProposalOpen = z.infer<typeof proposalOpenSchema>;
 
+/** A draft is cancelled as is; a running vote needs a reason, kept in the audit log. */
+export const proposalCancelSchema = z
+  .object({ reason: z.string().trim().min(3).max(500).optional() })
+  .nullish();
+
+export type ProposalCancel = z.infer<typeof proposalCancelSchema>;
+
 export const voteSchema = z.object({
   choice: z.enum(['yes', 'no', 'abstain']),
 });
@@ -66,12 +73,16 @@ export const fineWaiverPayloadSchema = z.object({
   reason: z.string().min(3),
 });
 
-export const expensePayloadSchema = z.object({
-  max_amount_paisa: paisaStringSchema,
-  account: z.enum(['MAINTENANCE', 'OTHER_EXPENSE']),
-  payee: z.string().min(1),
-  purpose: z.string().min(3),
-});
+/** A spending proposal. `LEVY_CLEARING` pays a running cost from the levy fund (it then needs a `category`); the other two are the fund's own costs. */
+export const expensePayloadSchema = z
+  .object({
+    max_amount_paisa: paisaStringSchema,
+    account: z.enum(['MAINTENANCE', 'OTHER_EXPENSE', 'LEVY_CLEARING']),
+    category: z.enum(LEVY_EXPENSE_CATEGORIES).optional(),
+    payee: z.string().min(1),
+    purpose: z.string().min(3),
+  })
+  .refine((p) => p.account !== 'LEVY_CLEARING' || p.category !== undefined, { path: ['category'], message: 'required for a levy expense' });
 
 /** All of these must be true before an investment proposal can be opened (18.3). */
 export const complianceChecklistSchema = z.object({

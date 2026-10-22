@@ -9,6 +9,7 @@ import '@fontsource/noto-sans-bengali/600.css';
 import '@fontsource/noto-sans-bengali/700.css';
 import { i18n } from './lib/i18n';
 import { App } from './App';
+import { usePrivacy } from './lib/privacy';
 import { AuthProvider } from './lib/auth';
 import './styles/theme.css';
 import './styles/globals.css';
@@ -22,6 +23,11 @@ const queryClient = new QueryClient({
   },
 });
 
+/** The amounts are plain text, so a privacy switch re-draws the screen (the route and data stay). */
+function PrivateApp() {
+  return <App key={String(usePrivacy())} />;
+}
+
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing #root element');
 
@@ -31,7 +37,7 @@ ReactDOM.createRoot(root).render(
       <I18nextProvider i18n={i18n}>
         <BrowserRouter>
           <AuthProvider>
-            <App />
+            <PrivateApp />
           </AuthProvider>
         </BrowserRouter>
       </I18nextProvider>

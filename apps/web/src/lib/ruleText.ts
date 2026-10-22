@@ -53,6 +53,7 @@ const KINDS: Record<string, RuleKind> = {
   max_devices_privileged: 'count',
   auto_suspend: 'bool',
   cash_tracking_by_method: 'bool',
+  levy_expense_max_without_vote_paisa: 'paisa',
   'compliance.interest_free': 'bool',
   reinstatement_charges_fines: 'bool',
   fund_term_start: 'date',
@@ -134,7 +135,7 @@ export const RULE_GROUPS: ReadonlyArray<{ id: string; icon: string; keys: readon
   {
     id: 'votes',
     icon: 'M4 4h16v16H4zM9 12l2 2 4-4',
-    keys: ['default_vote_duration_hours', 'proposal_execution_window_days', 'big_financial_threshold_paisa'],
+    keys: ['default_vote_duration_hours', 'proposal_execution_window_days', 'big_financial_threshold_paisa', 'levy_expense_max_without_vote_paisa'],
   },
   {
     id: 'investment',

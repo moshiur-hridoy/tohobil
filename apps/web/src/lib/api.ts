@@ -30,7 +30,7 @@ export function setRefresher(fn: (() => Promise<boolean>) | null): void {
 }
 
 interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   /** JSON body, or a FormData for an upload (the browser then sets the multipart boundary). */
   body?: unknown;
   headers?: Record<string, string>;

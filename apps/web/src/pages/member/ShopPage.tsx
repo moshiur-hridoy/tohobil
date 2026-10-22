@@ -78,9 +78,9 @@ function ShopView({ id }: { id: string }) {
           </p>
         </section>
 
-        <section className="rounded-[20px] border border-border bg-card p-4 shadow-sm">
-          <h2 className="text-base font-bold">{t('holding.contract')}</h2>
-          <dl className="mt-2 space-y-2 text-sm">
+        <section className="overflow-clip rounded-[20px] border border-border bg-card p-4 shadow-sm">
+          <h2 className="card-head pb-3 text-base font-bold">{t('holding.contract')}</h2>
+          <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between gap-3">
               <dt className="text-muted">{t('holding.contractDate')}</dt>
               <dd className="font-semibold">{partner.contract_date ? fmtDate(partner.contract_date) : '—'}</dd>

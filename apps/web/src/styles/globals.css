@@ -8,7 +8,8 @@
 /* ---------------------------------------------------------------------------------------------
  * Form fields: one look for every text input, select and textarea (add the `field` class; layout
  * such as width and margin stays on the element). `field-lg` is the roomy variant for the sign-in
- * screens and the member pay form. Checkboxes and radios take the brand colour below.
+ * screens and the member pay form. Labels use `field-label`, help text `field-hint`. Checkboxes and
+ * radios take the brand colour below.
  * --------------------------------------------------------------------------------------------- */
 @layer components {
   .field {
@@ -19,6 +20,7 @@
     background-color: var(--background);
     color: var(--foreground);
     font-size: 0.9375rem;
+    font-weight: 400;
     transition: border-color 150ms, box-shadow 150ms, background-color 150ms;
   }
   .field::placeholder {
@@ -58,6 +60,42 @@
   .field::-webkit-calendar-picker-indicator {
     opacity: 0.6;
     cursor: pointer;
+  }
+  /* The line under a card's title row (`CardHead`): drawn wider than any card padding and clipped by
+     the card (`overflow: clip`, which unlike `hidden` keeps sticky table columns working). */
+  .card-head {
+    position: relative;
+  }
+  .card-head::after {
+    content: '';
+    position: absolute;
+    left: -3rem;
+    right: -3rem;
+    bottom: 0;
+    height: 1px;
+    background-color: var(--border);
+  }
+  /* Labels and help text: the label names the field (semibold, full colour); the hint under it
+     explains (smaller, muted, regular). An optional field ends its label with the muted
+     `<Optional />` mark; required fields carry no mark (docs/ASSUMPTIONS.md 98). */
+  .field-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--foreground);
+  }
+  .field-hint {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .field-optional {
+    font-weight: 400;
+    color: var(--muted);
   }
   .field-lg {
     height: 3.5rem;

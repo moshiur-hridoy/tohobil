@@ -5,7 +5,7 @@
 import pg from 'pg';
 import { ImportError, readDataset } from '../../apps/api/src/import/dataset';
 import { verifyImport } from '../../apps/api/src/import/verify';
-import { DEFAULT_NORMALIZED, flagValue, loadEnv } from './common';
+import { DEFAULT_NORMALIZED, pathFlag, loadEnv } from './common';
 
 loadEnv();
 const argv = process.argv.slice(2);
@@ -13,7 +13,7 @@ const argv = process.argv.slice(2);
 async function main(): Promise<void> {
   const url = process.env.READONLY_DATABASE_URL ?? process.env.DATABASE_URL;
   if (!url) throw new ImportError('READONLY_DATABASE_URL or DATABASE_URL is not set');
-  const ds = readDataset(flagValue(argv, 'dir') ?? DEFAULT_NORMALIZED);
+  const ds = readDataset(pathFlag(argv, 'dir') ?? DEFAULT_NORMALIZED);
   const pool = new pg.Pool({ connectionString: url, max: 1 });
   try {
     const report = await verifyImport(pool, ds);

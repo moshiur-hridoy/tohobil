@@ -150,7 +150,7 @@ export interface FileView {
  *  - A payment proof is for its payer, the cashier and the auditor only, and every view is audited
  *    (`file.view_proof`): proofs show account numbers and balances.
  *  - A file attached to the group's records (member photo, asset or constitution document, charity
- *    receipt, feasibility report) is for every member.
+ *    receipt, levy expense receipt, feasibility report) is for every member.
  *  - A file not attached to anything yet (just uploaded) is for its uploader, the cashier and the
  *    auditor.
  */
@@ -168,6 +168,7 @@ export async function openFile(
              OR EXISTS (SELECT 1 FROM documents d WHERE d.file_id = f.id)
              OR EXISTS (SELECT 1 FROM constitution_versions c WHERE c.file_id = f.id)
              OR EXISTS (SELECT 1 FROM charity_donations c WHERE c.proof_file_id = f.id)
+             OR EXISTS (SELECT 1 FROM levy_expenses l WHERE l.receipt_file_id = f.id)
              OR EXISTS (SELECT 1 FROM assets a WHERE a.feasibility_file_id = f.id)) AS is_shared
      FROM files f WHERE f.id = $1`,
     [id],

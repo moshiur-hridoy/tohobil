@@ -41,13 +41,16 @@ import { reportRoutes } from './routes/reports';
 import { systemRoutes } from './routes/system';
 import { proposalRoutes } from './routes/proposals';
 import { settingsRoutes } from './routes/settings';
+import { telegramRoutes } from './routes/telegram';
+import { createTelegramService } from './telegram/service';
+import { httpTelegramApi, type TelegramApi } from './telegram/client';
 import { charityRoutes } from './routes/charity';
 import { constitutionRoutes } from './routes/constitution';
 import { meetingRoutes } from './routes/meetings';
 import { FileStore } from './files/storage';
 import { createGuards } from './auth/guards';
 import { createSmsProvider } from './notifications/providers/sms';
-import { ConsolePushSender, FcmPushSender } from './notifications/providers/push';
+import { createPushSender, vapidFromEnv } from './notifications/providers/push';
 import type { PushSender } from './notifications/providers/push';
 import type { SmsProvider } from './notifications/providers/sms';
 
@@ -58,6 +61,7 @@ import type { SmsProvider } from './notifications/providers/sms';
   clock?: Clock;
   pushSender?: PushSender;
   smsProvider?: SmsProvider;
+  telegramApi?: TelegramApi;
 }
 
 /** Files that must never be served from cache, or users keep running a stale app (spec 8, PWA). */
@@ -81,6 +85,7 @@ export async function buildApp({
   clock = systemClock,
   pushSender: pushSenderOpt,
   smsProvider: smsProviderOpt,
+  telegramApi = httpTelegramApi,
 }: BuildAppOptions): Promise<FastifyInstance> {
   const log: FastifyBaseLogger = logger ?? createLogger(env.LOG_LEVEL);
 
@@ -90,10 +95,10 @@ export async function buildApp({
     download_url: env.APK_DOWNLOAD_URL,
   };
 
-  const fcmFile = env.FCM_SERVICE_ACCOUNT_JSON_PATH;
+  const vapid = vapidFromEnv(env);
   const pushSender =
     pushSenderOpt ??
-    (fcmFile && existsSync(fcmFile) ? new FcmPushSender() : new ConsolePushSender(log as unknown as Logger));
+    createPushSender({ fcmFile: env.FCM_SERVICE_ACCOUNT_JSON_PATH, vapid, log: log as unknown as Logger });
   const smsProvider =
     smsProviderOpt ??
     createSmsProvider(
@@ -238,15 +243,27 @@ export async function buildApp({
     await app.register(referenceRoutes(deps, guards), { prefix: '/api/v1' });
     await app.register(settingsRoutes({ pool: deps.pool }, guards), { prefix: '/api/v1' });
     await app.register(ledgerRoutes(deps, guards), { prefix: '/api/v1' });
+    const paymentDeps = { ...deps, log: log as unknown as Logger, pushSender, smsProvider };
+    const telegram = createTelegramService({
+      pool: deps.pool,
+      clock,
+      log: log as unknown as Logger,
+      api: telegramApi,
+      payments: paymentDeps,
+      encryptionKey: env.APP_ENCRYPTION_KEY,
+      pepper: env.TOKEN_PEPPER,
+      publicOrigin: env.PUBLIC_ORIGIN,
+    });
     await app.register(
-      paymentRoutes({ ...deps, log: log as unknown as Logger, pushSender, smsProvider }, guards),
+      paymentRoutes({ ...paymentDeps, onSubmitted: (id) => void telegram.notifyPending(id) }, guards),
       { prefix: '/api/v1' },
     );
+    await app.register(telegramRoutes(telegram, guards), { prefix: '/api/v1' });
     await app.register(matrixRoutes(deps, guards), { prefix: '/api/v1' });
     await app.register(objectionRoutes(deps, guards), { prefix: '/api/v1' });
     await app.register(
       notificationRoutes(
-        { pool: deps.pool, clock: deps.clock, appVersionDefaults, pushSender, smsProvider },
+        { pool: deps.pool, clock: deps.clock, appVersionDefaults, pushSender, smsProvider, vapidPublicKey: vapid?.publicKey ?? null },
         guards,
       ),
       { prefix: '/api/v1' },
@@ -268,7 +285,10 @@ export async function buildApp({
       ),
       { prefix: '/api/v1' },
     );
-    await app.register(proposalRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
+    await app.register(
+      proposalRoutes({ pool: deps.pool, clock: deps.clock, pushSender, smsProvider, log: log as unknown as Logger }, guards),
+      { prefix: '/api/v1' },
+    );
     await app.register(charityRoutes({ pool: deps.pool, clock: deps.clock }, guards), { prefix: '/api/v1' });
     await app.register(
       meetingRoutes({ pool: deps.pool, clock: deps.clock, pushSender, smsProvider, log: log as unknown as Logger }, guards),

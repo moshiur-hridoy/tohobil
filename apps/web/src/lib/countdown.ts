@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatCount } from './format';
 
 export function useCountdown(target: string | null): string | null {
   const { t } = useTranslation();
@@ -19,7 +20,7 @@ export function useCountdown(target: string | null): string | null {
   const minutes = Math.floor((ms % 3_600_000) / 60_000);
   if (hours >= 24) {
     const days = Math.floor(hours / 24);
-    return t('votes.remainingDays', { days, hours: hours % 24 });
+    return t('votes.remainingDays', { days: formatCount(days), hours: formatCount(hours % 24) });
   }
-  return t('votes.remainingHours', { hours, minutes });
+  return t('votes.remainingHours', { hours: formatCount(hours), minutes: formatCount(minutes) });
 }

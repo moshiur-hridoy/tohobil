@@ -16,6 +16,7 @@
     "migrate": "pnpm --filter @barakah/api migrate",
     "migrate:create": "pnpm --filter @barakah/api migrate:create",
     "seed": "tsx db/seed/run.ts",
+    "vapid:generate": "pnpm --filter @barakah/api exec web-push generate-vapid-keys",
     "activation-code": "pnpm --filter @barakah/api activation-code",
     "backup:smoke": "bash scripts/backup-smoke.sh",
     "i18n:report": "node scripts/i18n-report.mjs",

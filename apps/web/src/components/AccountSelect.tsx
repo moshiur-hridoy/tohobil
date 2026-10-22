@@ -7,7 +7,7 @@ export type CashAccount = (typeof CASH_ACCOUNTS)[number];
 export function AccountSelect({ value, onChange }: { value: CashAccount; onChange: (v: CashAccount) => void }) {
   const { t } = useTranslation();
   return (
-    <label className="block text-sm text-muted">
+    <label className="field-label">
       {t('payment.method')}
       <select
         className="field mt-1 w-full"

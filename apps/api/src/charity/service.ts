@@ -126,6 +126,8 @@ export interface FundExpenseEntry {
   /** Negative for a reversal (money back into the fund). */
   amount_paisa: string;
   memo: string | null;
+  /** Moved onto the levy fund; no longer a cost of the main fund. */
+  moved: boolean;
 }
 
 interface CharityEntryRow {
@@ -179,26 +181,33 @@ async function charityEntries(db: Db, from: string, to: string): Promise<Charity
   });
 }
 
-/** Every expense of the fund's own, oldest first, with the total; a reversal counts negative. */
+/**
+ * Every expense of the fund's own, oldest first, with the total; a reversal counts negative. A charge
+ * moved onto the levy fund (ASSUMPTIONS 106) is marked `moved` and left out of the total, and the
+ * moving entry itself is not listed here: it belongs to the levy fund.
+ */
 export async function listFundExpenses(db: Db): Promise<{ total_paisa: string; items: FundExpenseEntry[] }> {
   const res = await db.query(
     `SELECT e.seq, e.entry_date::text AS entry_date,
             CASE WHEN e.debit_account = ANY($1::text[]) THEN e.debit_account ELSE e.credit_account END AS account,
             CASE WHEN e.debit_account = ANY($1::text[]) THEN e.amount_paisa ELSE -e.amount_paisa END AS amount_paisa,
-            e.memo
+            e.memo,
+            EXISTS (SELECT 1 FROM levy_expenses x WHERE x.moved_from_seq = e.seq) AS moved
      FROM ledger_entries e
-     WHERE e.debit_account = ANY($1::text[]) OR e.credit_account = ANY($1::text[])
+     WHERE (e.debit_account = ANY($1::text[]) OR e.credit_account = ANY($1::text[]))
+       AND e.ref_type IS DISTINCT FROM 'levy_moved'
      ORDER BY e.entry_date, e.seq`,
     [FUND_EXPENSE_ACCOUNTS],
   );
-  const items = (res.rows as Array<{ seq: string | bigint; entry_date: string; account: string; amount_paisa: string | bigint; memo: string | null }>).map((r) => ({
+  const items = (res.rows as Array<{ seq: string | bigint; entry_date: string; account: string; amount_paisa: string | bigint; memo: string | null; moved: boolean }>).map((r) => ({
     seq: String(r.seq),
     entry_date: r.entry_date,
     account: r.account,
     amount_paisa: paisaOut(r.amount_paisa),
     memo: r.memo,
+    moved: r.moved,
   }));
-  const total = items.reduce((sum, e) => sum + BigInt(e.amount_paisa), 0n);
+  const total = items.filter((e) => !e.moved).reduce((sum, e) => sum + BigInt(e.amount_paisa), 0n);
   return { total_paisa: total.toString(), items };
 }
 

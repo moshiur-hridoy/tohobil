@@ -9,7 +9,7 @@ import { Icon } from '../../components/ui';
 import { AdminHeader, AdminPage, BTN_SECONDARY, Card, ICONS, InfoRow, Segmented, StatGrid, StatTile } from '../../components/admin';
 import { api } from '../../lib/api';
 import { downloadCsv } from '../../lib/csv';
-import { fmtDate, fmtPeriod, todayDhaka } from '../../lib/dates';
+import { fmtDate, fmtPeriod, fmtPeriodShort, todayDhaka } from '../../lib/dates';
 import { formatCount } from '../../lib/format';
 import { taka } from '../../lib/money';
 import type { DueStatus, MatrixCell, MatrixResponse } from '../../lib/types';
@@ -226,7 +226,7 @@ export function MatrixPage() {
                 <th className="sticky left-0 z-20 border-b border-r border-border bg-card px-4 py-3 text-left">{t('common.member')}</th>
                 {periods.map((p) => (
                   <th key={p} ref={p === current ? currentHead : undefined} className={`border-b border-border px-1 py-3 text-center font-semibold transition-colors ${p === current ? 'bg-primary-soft text-primary' : ''} ${p === hoverCol ? 'text-ink2' : ''}`}>
-                    {fmtPeriod(p)}
+                    {fmtPeriodShort(p)}
                   </th>
                 ))}
                 <th className={`${PAID_COL} z-20 border-b bg-card py-3`}>{t('matrixPage.paid')}</th>

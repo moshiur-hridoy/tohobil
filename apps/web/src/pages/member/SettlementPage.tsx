@@ -12,6 +12,7 @@ import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtDate } from '../../lib/dates';
 import { negClass, paisaToDecimal, parseAmountInput, taka } from '../../lib/money';
+import { Optional } from '../../components/ui';
 import type { SettlementView } from '../../lib/types';
 
 /** The caller's settlements (everyone's for the cashier and auditor): the numbers that were voted on. */
@@ -154,11 +155,11 @@ function PayoutDialog({ settlementId, payout, onClose }: { settlementId: string;
       {available !== null && (
         <p className="mb-2 text-sm">{t('settlement.payAvailable', { account: perMethod ? t(`cashAccount.${account}`) : t('adminDash.cashAndBank') })}: <strong className={negClass(available)}>{taka(available)}</strong></p>
       )}
-      <label className="block text-sm text-muted">
+      <label className="field-label">
         {t('settlement.payAmount')}
         <input className="field mt-1 w-full" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
       </label>
-      <label className="mt-2 block text-sm text-muted">
+      <label className="field-label mt-2">
         {t('settlement.payMethod')}
         <select className="field mt-1 w-full" value={method} onChange={(e) => setMethod(e.target.value as typeof method)}>
           {PAYMENT_METHODS.map((m) => (
@@ -166,8 +167,8 @@ function PayoutDialog({ settlementId, payout, onClose }: { settlementId: string;
           ))}
         </select>
       </label>
-      <label className="mt-2 block text-sm text-muted">
-        {t('settlement.payTrx')}
+      <label className="field-label mt-2">
+        {t('settlement.payTrx')}<Optional />
         <input className="field mt-1 w-full" value={trxId} onChange={(e) => setTrxId(e.target.value)} />
       </label>
       {tooMuch && <p className="mt-2 text-bad" data-testid="payout-short">{t('settlement.payShort')}</p>}

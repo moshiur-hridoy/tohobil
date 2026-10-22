@@ -59,6 +59,25 @@ describe('proposals lifecycle', () => {
     expect(json.status).toBe('draft');
   });
 
+  dbIt('lists and shows a proposal that carries an amount (paisa as a string)', async () => {
+    const created = await call('POST', '/proposals', s.M02.access_token, {
+      type: 'general',
+      title: 'Has an amount',
+      payload: { text: 'amount' },
+    });
+    const { id } = created.json() as { id: string };
+    await q(`UPDATE proposals SET amount_paisa = 2000000 WHERE id = $1`, [id]);
+
+    const list = await call('GET', '/proposals?limit=200', s.M01.access_token);
+    expect(list.statusCode).toBe(200);
+    const row = (list.json() as { items: Array<{ id: string; amount_paisa: string | null }> }).items.find((p) => p.id === id);
+    expect(row?.amount_paisa).toBe('2000000');
+
+    const detail = await call('GET', `/proposals/${id}`, s.M01.access_token);
+    expect(detail.statusCode).toBe(200);
+    expect((detail.json() as { amount_paisa: string }).amount_paisa).toBe('2000000');
+  });
+
   dbIt('rejects proposal creation by a suspended member', async () => {
     await q(`UPDATE members SET status = 'suspended' WHERE id = $1`, [fund.members.M02]);
     const res = await call('POST', '/proposals', s.M02.access_token, {
@@ -198,7 +217,7 @@ describe('proposals lifecycle', () => {
     expect(detail.status).toBe('approved');
   });
 
-  dbIt('closes a distribution early when share threshold is reached', async () => {
+  dbIt('closes a distribution early when the member majority is reached', async () => {
     const created = await call('POST', '/proposals', s.M01.access_token, {
       type: 'distribution',
       title: 'Distribution close-early',
@@ -210,7 +229,7 @@ describe('proposals lifecycle', () => {
       closes_at: '2099-01-01T00:00:00Z',
     });
 
-    // M01(2) + M02(4) + M03(1) + M05(3) + M07(4) = 14 shares > threshold 11.
+    // One member, one vote (migration 009): 5 of the 8 members is the majority.
     for (const code of ['M01', 'M02', 'M03', 'M05', 'M07'] as const) {
       const res = await call('POST', `/proposals/${id}/vote`, s[code].access_token, { choice: 'yes' });
       expect(res.statusCode).toBe(200);
@@ -236,6 +255,34 @@ describe('proposals lifecycle', () => {
     expect(closed.statusCode).toBe(409);
   });
 
+  dbIt('reminds only the members who have not voted, once a day', async () => {
+    const created = await call('POST', '/proposals', s.M02.access_token, {
+      type: 'general',
+      title: 'Remind me',
+      payload: { text: 'remind' },
+    });
+    const id = (created.json() as { id: string }).id;
+    await call('POST', `/proposals/${id}/open`, s.M01.access_token, { closes_at: '2099-01-01T00:00:00Z' });
+    await call('POST', `/proposals/${id}/vote`, s.M02.access_token, { choice: 'yes' });
+
+    // A plain member cannot send reminders.
+    expect((await call('POST', `/proposals/${id}/remind`, s.M02.access_token)).statusCode).toBe(403);
+
+    const first = await call('POST', `/proposals/${id}/remind`, s.M01.access_token);
+    expect(first.statusCode).toBe(200);
+    expect((first.json() as { reminded: number }).reminded).toBe(7); // 8 voters, M02 already voted
+
+    const rows = await q(
+      `SELECT member_id FROM notifications WHERE template = 'vote_reminder' AND dedupe_key LIKE $1`,
+      [`%:${id}:%`],
+    );
+    expect(rows.some((r) => r.member_id === fund.members.M02)).toBe(false);
+
+    // A second tap the same day sends nothing new.
+    const again = await call('POST', `/proposals/${id}/remind`, s.M01.access_token);
+    expect((again.json() as { reminded: number }).reminded).toBe(0);
+  });
+
   dbIt('cancels a draft proposal', async () => {
     const created = await call('POST', '/proposals', s.M02.access_token, {
       type: 'general',
@@ -245,6 +292,33 @@ describe('proposals lifecycle', () => {
     const id = (created.json() as { id: string }).id;
     const res = await call('POST', `/proposals/${id}/cancel`, s.M01.access_token);
     expect(res.statusCode).toBe(200);
+  });
+
+  dbIt('stops a running vote only with a reason, and keeps the ballots', async () => {
+    const created = await call('POST', '/proposals', s.M02.access_token, {
+      type: 'general',
+      title: 'Stop me',
+      payload: { text: 'stop' },
+    });
+    const id = (created.json() as { id: string }).id;
+    await call('POST', `/proposals/${id}/open`, s.M01.access_token, { closes_at: '2099-01-01T00:00:00Z' });
+    await call('POST', `/proposals/${id}/vote`, s.M02.access_token, { choice: 'yes' });
+
+    expect((await call('POST', `/proposals/${id}/cancel`, s.M02.access_token, { reason: 'not mine' })).statusCode).toBe(403);
+    const noReason = await call('POST', `/proposals/${id}/cancel`, s.M01.access_token, {});
+    expect(noReason.statusCode).toBe(400);
+    expect((noReason.json() as { code: string }).code).toBe('proposal.cancel_reason_required');
+
+    const ok = await call('POST', `/proposals/${id}/cancel`, s.M01.access_token, { reason: 'Rules changed, vote again' });
+    expect(ok.statusCode).toBe(200);
+    expect(((await call('GET', `/proposals/${id}`, s.M02.access_token)).json() as { status: string }).status).toBe('cancelled');
+    expect(await q(`SELECT 1 FROM votes WHERE proposal_id = $1`, [id])).toHaveLength(1);
+    const [log] = await q(`SELECT before, after FROM audit_log WHERE action = 'proposal.cancel' AND entity_id = $1`, [id]);
+    expect(log).toMatchObject({ before: { status: 'open' }, after: { status: 'cancelled', reason: 'Rules changed, vote again' } });
+
+    // Nothing to vote on any more, and a cancelled proposal cannot be cancelled again.
+    expect((await call('POST', `/proposals/${id}/vote`, s.M03.access_token, { choice: 'yes' })).statusCode).toBeGreaterThanOrEqual(400);
+    expect((await call('POST', `/proposals/${id}/cancel`, s.M01.access_token, { reason: 'again' })).statusCode).toBe(409);
   });
 
   dbIt('finalizes open proposals automatically when closes_at passes', async () => {
@@ -267,5 +341,40 @@ describe('proposals lifecycle', () => {
     const detail = (await call('GET', `/proposals/${id}`, s.M02.access_token)).json() as { status: string };
     expect(['approved', 'rejected']).toContain(detail.status);
     expect(detail.status).not.toBe('open');
+  });
+
+  // Last in the file: the settlement stays (financial rows are never deleted) and would change later counts.
+  dbIt('leaves a member with an unpaid settlement off the voter list', async () => {
+    const snap = await q(
+      `INSERT INTO member_snapshots
+         (member_id, kind, taken_on, shares, net_assets_paisa, shares_outstanding, nav_per_share_paisa,
+          paid_in_capital_paisa, gross_paisa, escrow_paisa, deductions, net_paisa)
+       VALUES ($1,'settlement_quote','2026-11-05',4,8000000,20,400000,8000000,8000000,0,'{}',7000000)
+       RETURNING id`,
+      [fund.members.M07],
+    );
+    await q(
+      `INSERT INTO settlements (member_id, snapshot_id, proposal_id, kind, net_paisa, payout_plan)
+       VALUES ($1,$2,gen_random_uuid(),'early_exit',7000000,'[{"due_on":"2027-02-15","amount_paisa":"7000000"}]')`,
+      [fund.members.M07, snap[0]!.id],
+    );
+
+    const created = await call('POST', '/proposals', s.M02.access_token, {
+      type: 'general',
+      title: 'Without the leaving member',
+      payload: { text: 'leaving' },
+    });
+    const id = (created.json() as { id: string }).id;
+    await call('POST', `/proposals/${id}/open`, s.M01.access_token, { closes_at: '2099-01-01T00:00:00Z' });
+
+    const detail = (await call('GET', `/proposals/${id}`, s.M02.access_token)).json() as {
+      eligible_count: number;
+      threshold: number;
+      voters: Array<{ member_id: string }>;
+    };
+    expect(detail.voters.some((v) => v.member_id === fund.members.M07)).toBe(false);
+    expect(detail.eligible_count).toBe(7);
+    expect(detail.threshold).toBe(4); // floor(7/2)+1
+    expect((await call('POST', `/proposals/${id}/vote`, s.M07.access_token, { choice: 'yes' })).statusCode).toBe(403);
   });
 });

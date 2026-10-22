@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { COMPLIANCE_CHECKLIST_FIELDS, type ProposalType } from '@barakah/shared';
+import { COMPLIANCE_CHECKLIST_FIELDS, LEVY_EXPENSE_CATEGORIES, type ProposalType } from '@barakah/shared';
 import { api, ApiError } from '../../lib/api';
 import { fmtDate } from '../../lib/dates';
 import { parseAmountInput, taka } from '../../lib/money';
+import { Optional, DateInput, FilePicker } from '../../components/ui';
 import type { AssetRow, MemberRow, PartnerRow } from '../../lib/types';
 
 /**
@@ -35,7 +36,9 @@ export const PROPOSAL_FORMS: Partial<Record<ProposalType, Field[]>> = {
   ],
   expense: [
     { key: 'max_amount_paisa', kind: 'money' },
-    { key: 'account', kind: { select: ['MAINTENANCE', 'OTHER_EXPENSE'] } },
+    // Running costs come from the levy fund (ASSUMPTIONS 105); the other two are the fund's own costs.
+    { key: 'account', kind: { select: ['LEVY_CLEARING', 'MAINTENANCE', 'OTHER_EXPENSE'] } },
+    { key: 'category', kind: { select: LEVY_EXPENSE_CATEGORIES }, optional: true },
     { key: 'payee', kind: 'text' },
     { key: 'purpose', kind: 'text' },
   ],
@@ -217,18 +220,18 @@ export function ProposalFields({ type, form, onChange }: { type: ProposalType; f
   const partners = useQuery({ queryKey: ['partners'], queryFn: () => api<{ items: PartnerRow[] }>('/partners'), enabled: needsPartners });
 
   const set = (key: string, value: string) => onChange({ ...form, values: { ...form.values, [key]: value } });
-  const label = (key: string, optional?: boolean) => `${t(`proposalFields.${key}`)}${optional ? ` (${t('proposalFields.optional')})` : ''}`;
+  const label = (key: string, optional?: boolean) => <>{t(`proposalFields.${key}`)}{optional && <Optional />}</>;
   const activeAssets = assets.data?.items.filter((a) => a.status !== 'sold') ?? [];
 
   return (
     <>
       {fields.map((f) => (
-        <label key={f.key} className="block text-sm text-muted">
+        <label key={f.key} className="field-label">
           {label(f.key, f.optional)}
           {f.kind === 'textarea' ? (
             <textarea className="field mt-1 min-h-20 w-full" value={form.values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)} />
           ) : f.kind === 'file' ? (
-            <input type="file" accept="image/*,application/pdf" className="mt-1 block" onChange={(e) => onChange({ ...form, files: { ...form.files, [f.key]: e.target.files?.[0] ?? null } })} />
+            <FilePicker className="mt-1 font-normal" file={form.files[f.key] ?? null} onChange={(file) => onChange({ ...form, files: { ...form.files, [f.key]: file } })} />
           ) : f.kind === 'member' ? (
             <select className={inputClass} value={form.values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}>
               <option value="">{t('membersAdmin.chooseMember')}</option>
@@ -278,7 +281,7 @@ export function ProposalFields({ type, form, onChange }: { type: ProposalType; f
           <legend className="px-1 text-sm font-medium">{t('proposalFields.instalments')}</legend>
           {form.instalments.map((row, i) => (
             <div key={i} className="mb-2 flex gap-2">
-              <input type="date" aria-label={t('proposalFields.due_on')} className="field flex-1" value={row.due_on} onChange={(e) => onChange({ ...form, instalments: form.instalments.map((r, j) => (j === i ? { ...r, due_on: e.target.value } : r)) })} />
+              <DateInput aria-label={t('proposalFields.due_on')} className="field flex-1" value={row.due_on} onChange={(e) => onChange({ ...form, instalments: form.instalments.map((r, j) => (j === i ? { ...r, due_on: e.target.value } : r)) })} />
               <input aria-label={t('common.amount')} placeholder={t('common.amount')} inputMode="decimal" className="field flex-1" value={row.amount} onChange={(e) => onChange({ ...form, instalments: form.instalments.map((r, j) => (j === i ? { ...r, amount: e.target.value } : r)) })} />
             </div>
           ))}

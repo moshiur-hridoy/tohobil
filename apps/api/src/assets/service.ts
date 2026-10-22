@@ -418,10 +418,12 @@ export async function getPartner(db: Db, id: string): Promise<Record<string, unk
     [id],
   );
   const entries = await db.query(
-    `SELECT l.seq::text AS seq, l.ref_id AS asset_id, l.entry_date::text AS entry_date, l.amount_paisa::text AS amount_paisa,
+    `SELECT l.seq::text AS seq, a.id AS asset_id, l.entry_date::text AS entry_date, l.amount_paisa::text AS amount_paisa,
             l.credit_account AS account, l.memo, l.ref_type,
             EXISTS (SELECT 1 FROM ledger_entries r WHERE r.reverses_seq = l.seq) AS reversed
-     FROM ledger_entries l JOIN assets a ON a.id = l.ref_id
+     -- imported purchases point at the asset; a purchase executed from a proposal points at that proposal
+     FROM ledger_entries l
+     JOIN assets a ON a.id = l.ref_id OR (l.ref_type = 'proposal' AND a.proposal_id = l.ref_id)
      WHERE a.partner_id = $1 AND l.debit_account = 'INVESTMENTS_AT_COST' AND l.reverses_seq IS NULL
      ORDER BY l.entry_date DESC, l.seq DESC`,
     [id],
@@ -431,7 +433,12 @@ export async function getPartner(db: Db, id: string): Promise<Record<string, unk
      FROM documents d JOIN files f ON f.id = d.file_id
      WHERE (d.entity_type = 'partner' AND d.entity_id = $1)
         OR (d.entity_type = 'asset' AND d.entity_id IN (SELECT id FROM assets WHERE partner_id = $1))
-     ORDER BY d.created_at`,
+     -- the feasibility file attached to the purchase proposal is kept on the asset, not in documents
+     UNION ALL
+     SELECT f.id, 'asset', a.id, f.id, 'feasibility', NULL, f.created_at, f.mime
+     FROM assets a JOIN files f ON f.id = a.feasibility_file_id
+     WHERE a.partner_id = $1
+     ORDER BY created_at`,
     [id],
   );
   const valuations = await db.query(

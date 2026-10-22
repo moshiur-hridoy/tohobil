@@ -75,6 +75,13 @@ const PAIRS: Array<[string, string, number]> = [
   ['on-hero', 'hero-icon', 3],
   ['on-hero-action', 'hero-action', 4.5],
   ['hero-action', 'hero', 3],
+  // the same card in its warning colours, while something is owed
+  ['on-hero', 'hero-alert', 4.5],
+  ['on-hero-muted', 'hero-alert', 4.5],
+  ['on-hero', 'hero-alert-chip', 4.5],
+  ['on-hero', 'hero-alert-icon', 3],
+  ['on-hero-alert-action', 'hero-alert-action', 4.5],
+  ['hero-alert-action', 'hero-alert', 3],
   // keyboard focus ring and the brand fill must be visible against the page
   ['ring', 'background', 3],
   ['ring', 'card', 3],

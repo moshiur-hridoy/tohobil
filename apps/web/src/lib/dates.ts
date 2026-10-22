@@ -1,10 +1,10 @@
-import { formatDateBn, toDhakaDate } from '@barakah/shared';
+import { formatDateDisplay, toDhakaDate } from '@barakah/shared';
 import type { TFunction } from 'i18next';
 import { getDigits, localDigits } from './format';
 
-/** "২০ জানুয়ারি ২০২৬" for a YYYY-MM-DD business date. */
+/** "২০ জানুয়ারি ২০২৬" (or "20 Jan 2026" with Western digits) for a YYYY-MM-DD business date. */
 export function fmtDate(date: string): string {
-  return formatDateBn(date, { digits: getDigits() });
+  return formatDateDisplay(date, { digits: getDigits() });
 }
 
 /** An ISO timestamp shown as its Asia/Dhaka business date. */
@@ -26,8 +26,12 @@ export function dayToIso(date: string): string {
 
 /** "2026-11" as "নভেম্বর ২০২৬" (month and year of a period). */
 export function fmtPeriod(period: string): string {
-  const text = formatDateBn(`${period}-01`, { digits: getDigits() });
-  return text.replace(/^\S+\s+/, '');
+  return fmtDate(`${period}-01`).replace(/^\S+\s+/, '');
+}
+
+/** "2026-11" as "নভে ২০২৬", only where a column is too narrow for the full name (the matrix header). */
+export function fmtPeriodShort(period: string): string {
+  return formatDateDisplay(`${period}-01`, { digits: getDigits(), shortMonth: true }).replace(/^\S+\s+/, '');
 }
 
 /** "21:30" as "রাত ৯:৩০": a 12-hour clock with the part of the day, the way people say it. */

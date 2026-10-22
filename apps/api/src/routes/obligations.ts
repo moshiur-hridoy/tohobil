@@ -1,12 +1,15 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { financingPaySchema, levyRemitSchema, uuidSchema } from '@barakah/shared';
+import { financingPaySchema, levyExpenseSchema, levyRemitSchema, uuidSchema } from '@barakah/shared';
 import { requireAuth, type Guards } from '../auth/guards';
 import {
   levySummary,
   listFinancing,
+  listMovableCosts,
+  moveCostsToLevy,
   payFinancingInstalment,
+  recordLevyExpense,
   remitLevy,
   specialSummary,
   type ObligationDeps,
@@ -14,7 +17,7 @@ import {
 
 const idParams = z.object({ id: uuidSchema });
 
-/** Levy money held for the registrar, special contributions and deferred-purchase instalments (spec 18.7). Members read; the cashier pays. */
+/** The levy fund (running costs, ASSUMPTIONS 105), special contributions and deferred-purchase instalments (spec 18.7). Members read; the cashier pays. */
 export function obligationRoutes(deps: ObligationDeps, guards: Guards) {
   return async function register(instance: FastifyInstance): Promise<void> {
     const app = instance.withTypeProvider<ZodTypeProvider>();
@@ -25,7 +28,21 @@ export function obligationRoutes(deps: ObligationDeps, guards: Guards) {
       return { userId: user.id, ip: req.ip, deviceId: user.device_id };
     };
 
-    app.get('/levy', { preHandler: authenticate }, () => levySummary(deps.pool));
+    app.get('/levy', { preHandler: authenticate }, () => levySummary(deps.pool, deps.clock.todayDhaka()));
+
+    app.post(
+      '/levy/expenses',
+      { preHandler: cashierStepUp, schema: { body: levyExpenseSchema } },
+      (req) => recordLevyExpense(deps, actor(req), req.body),
+    );
+
+    app.get(
+      '/levy/movable-costs',
+      { preHandler: [authenticate, requireRole('cashier', 'auditor')] },
+      () => listMovableCosts(deps.pool),
+    );
+
+    app.post('/levy/move-old-costs', { preHandler: cashierStepUp }, (req) => moveCostsToLevy(deps, actor(req)));
 
     app.post(
       '/levy/remittances',

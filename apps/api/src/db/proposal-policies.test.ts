@@ -5,6 +5,7 @@ import { createTestDb, type TestDb } from '../test/db-harness';
 
 /**
  * Spec 18.3 voting-policy table, written out independently of the migration so a wrong seed fails here.
+ * Every basis is 'member': owner decision, one member one vote for everything (migration 009, ASSUMPTIONS 111).
  * Phase 1 only seeds and checks the schema; voting itself arrives in Phase 3.
  *   [type, basis, threshold_kind, clause_ref, requires_feasibility]
  */
@@ -17,22 +18,22 @@ const EXPECTED: ReadonlyArray<
   ['reinstatement', 'member', 'majority', '4.1', false],
   ['fine_waiver', 'member', 'majority', '4.1', false],
   ['charity_donation', 'member', 'majority', '4.1', false],
-  ['expense', 'member', 'majority', '4.1', false], // member basis below the threshold, share basis at or above
+  ['expense', 'member', 'majority', '4.1', false],
   ['member_qard', 'member', 'majority', '6.3', false],
   ['settlement', 'member', 'majority', '5.1', false],
   ['suspension', 'member', 'majority', '2.4', false],
   ['member_deceased', 'member', 'majority', '8', false],
   ['asset_cost_levy', 'member', 'majority', '6.2', false],
   ['special_contribution', 'member', 'unanimous', '1.4', false],
-  ['investment_purchase', 'share', 'majority', '4.2', true],
-  ['asset_sale', 'share', 'majority', '4.2', false],
-  ['distribution', 'share', 'majority', '4.2', false],
-  ['valuation_update', 'share', 'majority', '4.2', false],
-  ['financing_arrangement', 'share', 'majority', '6.3', false],
-  ['dissolution', 'share', 'majority', '10.2', false],
-  ['wind_up', 'share', 'majority', '10.2', false],
-  ['land_selection', 'share', 'majority', '4.2', false],
-  ['project_closure', 'share', 'majority', '4.2', false],
+  ['investment_purchase', 'member', 'majority', '4.2', true],
+  ['asset_sale', 'member', 'majority', '4.2', false],
+  ['distribution', 'member', 'majority', '4.2', false],
+  ['valuation_update', 'member', 'majority', '4.2', false],
+  ['financing_arrangement', 'member', 'majority', '6.3', false],
+  ['dissolution', 'member', 'majority', '10.2', false],
+  ['wind_up', 'member', 'majority', '10.2', false],
+  ['land_selection', 'member', 'majority', '4.2', false],
+  ['project_closure', 'member', 'majority', '4.2', false],
   ['new_member', 'member', 'unanimous', '5.3', false],
   ['contribution_change', 'member', 'unanimous', '1.4', false],
   ['constitution_amendment', 'member', 'unanimous', null, false], // no clause: OWNER DECISION 5

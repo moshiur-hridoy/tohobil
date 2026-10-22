@@ -372,6 +372,13 @@ describe('settlement NAV invariant', () => {
       `INSERT INTO fines (due_id, member_id, amount_paisa, kind, reason) VALUES ($1, $2, 1000, 'late_payment', 'test')`,
       [due.id, m],
     );
+    // December's due is already made but dated after the exit: the settlement must close it.
+    await db!.admin.query(`INSERT INTO periods (period) VALUES ('2026-12') ON CONFLICT DO NOTHING`);
+    await db!.admin.query(
+      `INSERT INTO dues (member_id, period, kind, shares_snapshot, amount_paisa, due_date)
+       VALUES ($1, '2026-12', 'monthly', 1, 3000, '2026-12-10')`,
+      [m],
+    );
     const proposalId = ((await db!.admin.query(
       `INSERT INTO proposals (type, title, subject_member_id, payload, created_by, status)
        VALUES ('settlement', 'Exit', $1, '{}', $2, 'approved') RETURNING id`,
@@ -403,5 +410,29 @@ describe('settlement NAV invariant', () => {
     expect(fine.every((f) => f.outstanding_paisa === '0')).toBe(true);
     const income = await db!.admin.query(`SELECT 1 FROM ledger_entries WHERE ref_id = $1 AND credit_account = 'EXIT_FEE_INCOME'`, [proposalId]);
     expect(income.rows).toHaveLength(0);
+    // Nothing dated after the exit is left to turn overdue later.
+    const later = await db!.admin.query(`SELECT 1 FROM v_due_status WHERE member_id = $1 AND due_date > '2026-11-15' AND outstanding_paisa > 0`, [m]);
+    expect(later.rows).toHaveLength(0);
+  });
+
+  test('a member who left can join again on the same phone number, but not on a current member number', async () => {
+    const { ensurePhoneFree } = await import('./entry');
+    const current = (await db!.admin.query(`SELECT phone FROM members WHERE id = $1`, [fund.members.M02])).rows[0] as { phone: string };
+    await expect(ensurePhoneFree(db!.app, current.phone)).rejects.toMatchObject({ code: 'member.phone_taken' });
+
+    const left = (await db!.admin.query(
+      `UPDATE members SET status = 'exited', exited_on = '2026-11-15' WHERE id = $1 RETURNING phone`,
+      [fund.members.M04],
+    )).rows[0] as { phone: string };
+    await expect(ensurePhoneFree(db!.app, left.phone)).resolves.toBeUndefined();
+    await db!.admin.query(
+      `INSERT INTO members (code, full_name, phone, status, joined_on) VALUES ('M90', 'Back again', $1, 'prospective', '2026-11-15')`,
+      [left.phone],
+    );
+    // A second current member on that number is still refused by the database itself.
+    await expect(db!.admin.query(
+      `INSERT INTO members (code, full_name, phone, status, joined_on) VALUES ('M91', 'Twin', $1, 'prospective', '2026-11-15')`,
+      [left.phone],
+    )).rejects.toThrow(/members_phone_current/);
   });
 });

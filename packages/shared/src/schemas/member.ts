@@ -23,6 +23,13 @@ export const memberUpdateSchema = z.object({
 
 export type MemberUpdate = z.infer<typeof memberUpdateSchema>;
 
+/** `PUT /members/:id/photo`: the cashier sets a member's photo (an image the cashier uploaded) or removes it (`null`). */
+export const memberPhotoSchema = z.object({
+  photo_file_id: z.string().uuid().nullable(),
+});
+
+export type MemberPhoto = z.infer<typeof memberPhotoSchema>;
+
 /** `PATCH /members/:id/contact`: the cashier corrects a name or phone number. */
 export const memberContactUpdateSchema = z.object({
   phone: phoneSchema.optional(),

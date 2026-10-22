@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { EXPORT_ENTITIES } from '@barakah/shared';
 import { LoadError } from '../../components/StateViews';
 import { AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, Card, CardHead, FieldLabel, ICONS } from '../../components/admin';
-import { Icon } from '../../components/ui';
+import { Icon, DateInput } from '../../components/ui';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { todayDhaka } from '../../lib/dates';
@@ -68,8 +68,8 @@ export function ReportsPage() {
               </select>
             </FieldLabel>
             <div className="grid grid-cols-2 gap-3">
-              <FieldLabel label={t('common.from')}><input type="date" className="field w-full" value={from} onChange={(e) => setFrom(e.target.value)} /></FieldLabel>
-              <FieldLabel label={t('common.to')}><input type="date" className="field w-full" value={to} onChange={(e) => setTo(e.target.value)} /></FieldLabel>
+              <FieldLabel label={t('common.from')}><DateInput className="field w-full" value={from} onChange={(e) => setFrom(e.target.value)} /></FieldLabel>
+              <FieldLabel label={t('common.to')}><DateInput className="field w-full" value={to} onChange={(e) => setTo(e.target.value)} /></FieldLabel>
             </div>
             <button type="button" className={`${BTN_PRIMARY} w-full`} onClick={() => void get(`/reports/export.csv?entity=${entity}${from ? `&from=${from}` : ''}${to ? `&to=${to}` : ''}`, `${entity}.csv`)}>
               <Icon d={ICONS.download} size={18} />

@@ -9,7 +9,7 @@
 import pg from 'pg';
 import { ImportError, readDataset } from '../../apps/api/src/import/dataset';
 import { assertSafeTarget, loadDataset } from '../../apps/api/src/import/load';
-import { DEFAULT_NORMALIZED, flagValue, loadEnv } from './common';
+import { DEFAULT_NORMALIZED, pathFlag, loadEnv } from './common';
 
 loadEnv();
 const argv = process.argv.slice(2);
@@ -19,7 +19,7 @@ async function main(): Promise<void> {
   const url = process.env.DATABASE_URL;
   if (!url) throw new ImportError('DATABASE_URL is not set');
   assertSafeTarget(url, process.env.NODE_ENV, argv.includes('--allow-remote'));
-  const ds = readDataset(flagValue(argv, 'dir') ?? DEFAULT_NORMALIZED);
+  const ds = readDataset(pathFlag(argv, 'dir') ?? DEFAULT_NORMALIZED);
 
   const pool = new pg.Pool({ connectionString: url, max: 2 });
   try {

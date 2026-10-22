@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { initializeApp, cert, type ServiceAccount, type App } from 'firebase-admin/app';
 import { getMessaging } from 'firebase-admin/messaging';
+import webpush from 'web-push';
 import type { Logger } from 'pino';
 
 export interface PushResult {
@@ -92,4 +93,103 @@ export class FcmPushSender implements PushSender {
     }
     return results;
   }
+}
+
+export interface VapidConfig {
+  publicKey: string;
+  privateKey: string;
+  subject: string;
+}
+
+/**
+ * Browser (PWA) push. A subscription is stored as its JSON text in `devices.fcm_token`, so a token
+ * that starts with `{` is a web subscription and anything else is an FCM token (Android app).
+ */
+export class WebPushSender implements PushSender {
+  constructor(private readonly vapid: VapidConfig) {}
+
+  async send(
+    tokens: string[],
+    title: string | undefined,
+    body: string,
+    data?: Record<string, string>,
+  ): Promise<PushResult[]> {
+    const payload = JSON.stringify({ title: title ?? '', body, data: data ?? {} });
+    return Promise.all(
+      tokens.map(async (token): Promise<PushResult> => {
+        try {
+          const subscription = JSON.parse(token) as webpush.PushSubscription;
+          await webpush.sendNotification(subscription, payload, {
+            vapidDetails: {
+              subject: this.vapid.subject,
+              publicKey: this.vapid.publicKey,
+              privateKey: this.vapid.privateKey,
+            },
+            TTL: 24 * 60 * 60,
+            urgency: 'high',
+          });
+          return { ok: true };
+        } catch (err) {
+          const status = (err as { statusCode?: number }).statusCode;
+          const message = err instanceof Error ? err.message : String(err);
+          return { ok: false, unregistered: status === 404 || status === 410, error: message };
+        }
+      }),
+    );
+  }
+}
+
+const isWebSubscription = (token: string): boolean => token.startsWith('{');
+
+/** Sends web subscriptions through `web` and everything else through `native`, keeping the result order. */
+export class RoutingPushSender implements PushSender {
+  constructor(
+    private readonly native: PushSender,
+    private readonly web: PushSender | undefined,
+  ) {}
+
+  async send(
+    tokens: string[],
+    title: string | undefined,
+    body: string,
+    data?: Record<string, string>,
+  ): Promise<PushResult[]> {
+    const webIdx: number[] = [];
+    const nativeIdx: number[] = [];
+    tokens.forEach((t, i) => (isWebSubscription(t) ? webIdx : nativeIdx).push(i));
+    const results: PushResult[] = new Array<PushResult>(tokens.length);
+    if (nativeIdx.length) {
+      const r = await this.native.send(nativeIdx.map((i) => tokens[i]!), title, body, data);
+      nativeIdx.forEach((i, k) => (results[i] = r[k] ?? { ok: false, error: 'no result' }));
+    }
+    if (webIdx.length) {
+      const r = this.web
+        ? await this.web.send(webIdx.map((i) => tokens[i]!), title, body, data)
+        : webIdx.map(() => ({ ok: false, error: 'Web push not configured' }));
+      webIdx.forEach((i, k) => (results[i] = r[k] ?? { ok: false, error: 'no result' }));
+    }
+    return results;
+  }
+}
+
+/** FCM when its key file exists, browser push when the VAPID keys are set, else the console sender. */
+export function createPushSender(opts: {
+  fcmFile?: string;
+  vapid?: VapidConfig;
+  log: Logger;
+}): PushSender {
+  const native: PushSender =
+    opts.fcmFile && existsSync(opts.fcmFile) ? new FcmPushSender() : new ConsolePushSender(opts.log);
+  if (!opts.vapid) return native;
+  return new RoutingPushSender(native, new WebPushSender(opts.vapid));
+}
+
+/** The VAPID settings from the environment, or undefined when browser push is not set up. */
+export function vapidFromEnv(env: {
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_PRIVATE_KEY?: string;
+  VAPID_SUBJECT: string;
+}): VapidConfig | undefined {
+  if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) return undefined;
+  return { publicKey: env.VAPID_PUBLIC_KEY, privateKey: env.VAPID_PRIVATE_KEY, subject: env.VAPID_SUBJECT };
 }

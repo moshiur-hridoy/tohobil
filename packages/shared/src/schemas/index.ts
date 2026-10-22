@@ -16,3 +16,4 @@ export * from './charity';
 export * from './constitution';
 export * from './periods';
 export * from './meeting';
+export * from './telegram';

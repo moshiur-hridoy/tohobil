@@ -5,6 +5,7 @@ import {
   currentPeriod,
   dateInPeriod,
   formatDateBn,
+  formatDateDisplay,
   isValidIsoDate,
   parseDDMMYYYY,
   parseDDMonYYYY,
@@ -80,6 +81,14 @@ describe('SMS date parsing', () => {
     expect(parseDDMonYYYY('28-Dec-2025 Tk. 15,500')).toBe('2025-12-28');
     expect(parseDDMonYYYY('28-DEC-2025')).toBe('2025-12-28');
     expect(parseDDMonYYYY('28-Foo-2025')).toBeNull();
+  });
+});
+
+describe('formatDateDisplay', () => {
+  it('uses full Bengali month names, short English ones, and short Bengali on request', () => {
+    expect(formatDateDisplay('2026-10-22')).toBe('২২ অক্টোবর ২০২৬');
+    expect(formatDateDisplay('2026-10-22', { digits: 'en' })).toBe('22 Oct 2026');
+    expect(formatDateDisplay('2027-01-05', { shortMonth: true })).toBe('৫ জানু ২০২৭');
   });
 });
 

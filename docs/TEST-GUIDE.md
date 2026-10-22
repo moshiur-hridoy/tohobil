@@ -48,6 +48,16 @@ Tick each line when it behaves as described. "Cashier" means signed in as M01, "
 - [x] **Cashier:** Admin → Matrix shows every member's month at a glance; **export CSV** downloads a file.
 - [x] **Member:** Menu → Ledger lists every entry. Press "Object" on one; **Auditor** sees it under objections and can resolve it.
 
+### Approving payments from Telegram (needs the real server)
+Telegram can only reach a site with a public https address, so do this on the real server, not on your laptop.
+- [ ] **Cashier:** on Telegram, message `@BotFather`, send `/newbot`, choose a name. It gives a long token.
+- [ ] **Cashier:** Admin → Settings → "Telegram থেকে পেমেন্ট গ্রহণ". Paste the token, press **সংযোগ করুন** (asks for the authenticator code). It shows the bot's name.
+- [ ] **Cashier:** press **আমার Telegram চিনুন**, then **Telegram খুলুন**, and press **Start** in Telegram. The page changes to "আপনার Telegram যুক্ত আছে।"
+- [ ] **Cashier:** tick **Telegram থেকে অনুমোদন চালু**, then **পরীক্ষামূলক বার্তা পাঠান**. A test message arrives in Telegram.
+- [ ] **Member:** send a payment from Pay. **Cashier:** a message arrives in Telegram with the name, amount, method and TrxID. Compare it with your phone's bKash SMS, then press **গ্রহণ করুন**. The message changes to "গৃহীত" and the payment is confirmed on the dashboard.
+- [ ] **Member:** send another. **Cashier:** press **প্রত্যাখ্যান**, pick a reason. The member sees that reason.
+- [ ] **Cashier:** switch the tick off and send a payment: no message arrives.
+
 ### Fines and reminders (Phase 2)
 - [x] **Cashier:** Admin → Notifications: lists who cannot be reached by push, with a "Send reminder" button (once per 6 hours per member), and the log of what was sent.
 - [x] **Member:** Menu → Notices shows messages sent to you (a confirmed payment creates one).
@@ -62,7 +72,7 @@ Tick each line when it behaves as described. "Cashier" means signed in as M01, "
 - [ not need now ] **Suspension:** Admin → Members → "Create suspension" for a member, vote, execute. That member can still sign in but cannot pay or vote (read-only).
 
 ### Assets, rent and levies (Phase 4)
-- [ ] **Cashier:** Admin → Proposals → New → "Investment purchase" (for example gold). Tick every compliance box, attach any PDF as the feasibility file, set a maximum amount. Try opening it with one box unticked: it is refused. Tick all, vote, execute with the real cost: the asset appears under **Admin → Assets** and the cash goes down.
+- [x] **Cashier:** Admin → Proposals → New → "Investment purchase" (for example gold). Tick every compliance box, attach any PDF as the feasibility file, set a maximum amount. Try opening it with one box unticked: it is refused. Tick all, vote, execute with the real cost: the asset appears under **Admin → Assets** and the account you chose (cash or bank) goes down. With a partner chosen, the purchase and its feasibility file also show on that partner's page.
 - [ ] **Cashier:** Admin → Proposals → "Valuation update" for that asset, vote, execute: the **value per share** on the Assets screen changes.
 - [not need now ] **Land in stages:** purchase "Land": it shows *Being acquired*. Use **Pay instalment**, **Attach document** (type "Deed") and **Complete**. It is refused until the deed is attached and the ownership split covers every share.
 - [ not need now] **Rent:** Admin → Rent: add a rent stream, press "Generate this month", then **Receive rent**.

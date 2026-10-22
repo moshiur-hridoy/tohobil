@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import * as Tabs from '@radix-ui/react-tabs';
 import { NAV_CASH_ACCOUNTS, NAV_DEDUCTION_ACCOUNTS } from '@barakah/shared';
 import { Chip, Icon } from '../../components/ui';
+import { Avatar } from '../../components/MemberPhoto';
 import { AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, Card } from '../../components/admin';
 import { Skeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
@@ -150,7 +151,8 @@ export function AdminDashboard() {
 
 function NetAssetsHero({ accounts, members, matrix }: { accounts?: AccountBalance[]; members?: MemberRow[]; matrix?: MatrixResponse }) {
   const { t } = useTranslation();
-  const active = members?.filter((m) => m.status === 'active');
+  // A member whose settlement is being paid is leaving: not counted, though their status is still active.
+  const active = members?.filter((m) => (m.status === 'active' || m.status === 'warning') && m.settlement_status === null);
   const perMethod = useCashByMethod();
   const cash = accounts ? balanceOf(accounts, NAV_CASH_ACCOUNTS) : null;
   // Where the cash sits: one line per account, so a payment through bKash is seen leaving bKash.
@@ -386,6 +388,7 @@ const FILTERS: Array<[Filter, string]> = [
 interface StatusRow {
   id: string;
   code: string;
+  photo: string | null;
   name: string;
   cell: MatrixCell | null;
   /** Arrears across all months (overdue dues + unpaid fines), not just this one. */
@@ -409,7 +412,8 @@ function MemberStatus({ matrix, members, period, settlements }: { matrix?: Matri
   const byId = new Map(members?.map((m) => [m.id, m]));
   const settlingBy = new Map(settlements?.filter((s) => s.status !== 'completed').map((s) => [s.member_id, s.status]));
   const rows: StatusRow[] = (matrix?.members ?? [])
-    .filter((m) => m.member_status === 'active' || m.cells[period])
+    // Someone who left the fund has nothing to do this month; their history stays in the matrix.
+    .filter((m) => m.member_status !== 'exited' && (m.member_status === 'active' || m.cells[period]))
     .map((m) => {
       const cell = m.cells[period] ?? null;
       const member = byId.get(m.member_id);
@@ -419,7 +423,7 @@ function MemberStatus({ matrix, members, period, settlements }: { matrix?: Matri
         : cell?.status === 'paid' || cell?.status === 'paid_late' ? 'paid'
         : cell?.status === 'overdue' ? 'overdue'
         : 'open';
-      return { id: m.member_id, code: m.member_code, name: m.member_name, cell, owes, month, settling: settlingBy.get(m.member_id) ?? null };
+      return { id: m.member_id, code: m.member_code, photo: m.member_photo_file_id, name: m.member_name, cell, owes, month, settling: settlingBy.get(m.member_id) ?? null };
     })
     .sort((a, b) => rank(a) - rank(b) || (b.owes > a.owes ? 1 : b.owes < a.owes ? -1 : 0) || a.code.localeCompare(b.code));
 
@@ -429,7 +433,7 @@ function MemberStatus({ matrix, members, period, settlements }: { matrix?: Matri
   return (
     <Card className="min-w-0 px-5 pb-3 pt-5 sm:px-6">
       <Tabs.Root value={filter} onValueChange={(v) => setFilter(v as Filter)}>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="card-head mb-4 flex flex-wrap items-center justify-between gap-3 pb-3.5">
           <div>
             <h2 className="text-[1.0625rem] font-bold">{t('adminDash.membersTitle')}</h2>
             <p className="text-[0.8125rem] text-muted">
@@ -490,7 +494,7 @@ function StatusTable({ rows }: { rows: StatusRow[] }) {
           return (
             <div role="row" key={r.id} className={`${COLS} flex min-h-[3.5rem] border-b border-border py-2 last:border-b-0 ${r.settling ? 'opacity-55' : ''}`}>
               <div role="cell" className="flex min-w-0 flex-1 items-center gap-3">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-soft text-[0.6875rem] font-bold text-ink2">{r.code}</span>
+                <Avatar fileId={r.photo} fallback={r.code} className="h-8 w-8 bg-soft text-[0.6875rem] font-bold text-ink2" />
                 <div className="min-w-0">
                   <p className="truncate text-[0.9375rem] font-semibold">{r.name}</p>
                   {r.cell && <p className="truncate text-xs text-muted tabular-nums sm:hidden">{taka(paid)} / {taka(due)}</p>}
@@ -508,8 +512,9 @@ function StatusTable({ rows }: { rows: StatusRow[] }) {
               </div>
               <span role="cell" className="shrink-0">
                 {r.settling ? (
-                  <Link to="/admin/settlements" className="inline-flex min-h-8 items-center rounded-full bg-soft px-3 text-[0.8125rem] font-semibold text-ink2">
-                    {t(`settlement.status.${r.settling}`)}
+                  <Link to="/admin/settlements" title={t(`settlement.status.${r.settling}`)} className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-blue-bg px-3 text-[0.8125rem] font-semibold text-blue">
+                    <span aria-hidden="true" className="h-2 w-2 rounded-full bg-blue" />
+                    {t('member.status.leaving')}
                   </Link>
                 ) : (
                   <StatusPill status={r.month === 'pending' ? 'pending' : r.cell?.status ?? 'none'} />
@@ -588,7 +593,7 @@ function Tasks({ pending, approvals, objections, votes }: {
 
   return (
     <Card className="px-5 pb-3 pt-5">
-      <div className="mb-2 flex items-center justify-between">
+      <div className="card-head mb-3 flex items-center justify-between pb-3.5">
         <h2 className="text-[1.0625rem] font-bold">{t('adminDash.todo')}</h2>
         {loaded && rows.length > 0 && <span className="rounded-full bg-soft px-2 py-0.5 text-xs font-bold text-ink2 tabular-nums">{formatCount(rows.length)}</span>}
       </div>
@@ -644,7 +649,7 @@ function Safety({ system, systemFailed, verify, today }: { system?: SystemStatus
 
   return (
     <Card className="px-5 pb-2 pt-5">
-      <div className="mb-2 flex items-center gap-2.5">
+      <div className="card-head mb-3 flex items-center gap-2.5 pb-3.5">
         <Chip tone="bg-ok-bg text-ok" d={ICONS.shield} size={32} iconSize={18} />
         <h2 className="text-[1.0625rem] font-bold">{t('adminDash.safetyTitle')}</h2>
       </div>

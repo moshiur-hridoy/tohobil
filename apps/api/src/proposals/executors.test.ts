@@ -369,4 +369,22 @@ describe('proposal executors', () => {
       ['300000', false],
     ]);
   });
+
+  dbIt('lists a purchase made through a proposal on the partner page', async () => {
+    const partnerId = ((await q(`INSERT INTO investment_partners (kind, name) VALUES ('gold', 'Proposal Jewellers') RETURNING id`))[0] as { id: string }).id;
+    const compliance = {
+      permissible_business: true, not_speculative_trading: true, interest_free_instrument: true, liquidatable_within_term: true,
+      no_fixed_profit_promised: true, not_conventional_insurance: true, not_conventional_fixed_deposit: true,
+    };
+    const pid = await approvedProposal('investment_purchase', {
+      kind: 'gold', name: 'Bar', compliance, partner_id: partnerId, source_account: 'BANK', max_amount_paisa: '2000000',
+    });
+    const actor = await actorFor('M01');
+    await executeProposal({ pool: db!.app, clock: createFakeClock(START) }, actor, pid, { actual_amount_paisa: 2000000n, account: 'BANK' }, { ip: '127.0.0.1', user: actor });
+
+    const page = await app.inject({ method: 'GET', url: `/api/v1/partners/${partnerId}`, headers: { authorization: `Bearer ${s.M01.access_token}` } });
+    const { assets, entries } = page.json() as { assets: Array<{ id: string }>; entries: Array<{ asset_id: string; amount_paisa: string; account: string }> };
+    expect(assets).toHaveLength(1);
+    expect(entries).toEqual([expect.objectContaining({ asset_id: assets[0]!.id, amount_paisa: '2000000', account: 'BANK' })]);
+  });
 });

@@ -71,13 +71,16 @@ export function AdminHeader({ title, subtitle, actions }: { title: string; subti
 
 export function Card({ children, className = '', ...rest }: { children: ReactNode; className?: string } & HTMLAttributes<HTMLElement>) {
   return (
-    <section {...rest} className={`min-w-0 rounded-[20px] border border-border bg-card shadow-card ${className}`}>
+    <section {...rest} className={`min-w-0 overflow-clip rounded-[20px] border border-border bg-card shadow-card ${className}`}>
       {children}
     </section>
   );
 }
 
-/** A card's title row: optional icon chip, title and muted line, and an action on the right. */
+/**
+ * A card's title row: optional icon chip, title and muted line, and an action on the right. A line
+ * under it runs edge to edge whatever the card's padding (`card-head` in globals.css; the card clips it).
+ */
 export function CardHead({ title, sub, icon, tone = 'bg-primary-soft text-primary', action, id }: {
   title: ReactNode;
   sub?: ReactNode;
@@ -87,7 +90,7 @@ export function CardHead({ title, sub, icon, tone = 'bg-primary-soft text-primar
   id?: string;
 }) {
   return (
-    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+    <div className="card-head mb-4 flex flex-wrap items-center justify-between gap-3 pb-3.5">
       <div className="flex min-w-0 items-center gap-2.5">
         {icon && <Chip tone={tone} d={icon} size={32} iconSize={18} />}
         <div className="min-w-0">
@@ -210,7 +213,7 @@ export function InfoRow({ label, value, valueClass = '' }: { label: ReactNode; v
 /** A labelled form control; the control itself carries the `field` class. */
 export function FieldLabel({ label, children, className = '' }: { label: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <label className={`block text-[0.8125rem] font-medium text-ink2 ${className}`}>
+    <label className={`field-label ${className}`}>
       {label}
       <div className="mt-1.5">{children}</div>
     </label>

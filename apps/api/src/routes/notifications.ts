@@ -27,6 +27,8 @@ export interface NotificationRouteDeps {
   appVersionDefaults: { min: string; latest: string; download_url: string };
   pushSender: PushSender;
   smsProvider: SmsProvider;
+  /** The VAPID public key the browser needs to subscribe; null when browser push is off. */
+  vapidPublicKey?: string | null;
 }
 
 export function notificationRoutes(deps: NotificationRouteDeps, guards: Guards) {
@@ -49,19 +51,26 @@ export function notificationRoutes(deps: NotificationRouteDeps, guards: Guards) 
       };
     });
 
-    // Register or update an FCM token / push preference for the current device.
+    // The key a browser needs to subscribe for push (it is public by design).
+    app.get('/push/public-key', { preHandler: authenticate }, async () => ({
+      key: deps.vapidPublicKey ?? null,
+    }));
+
+    // Register or update an FCM token, a browser push subscription, or the push preference of this device.
     app.post(
       '/devices',
       { preHandler: authenticate, schema: { body: deviceRegisterSchema } },
       async (req, reply) => {
         const user = requireAuth(req);
         const body = req.body as DeviceRegister;
+        // A browser subscription is kept as its JSON text in the same column (a token starting with `{`).
+        const token = body.web_push ? JSON.stringify(body.web_push) : (body.fcm_token ?? null);
         await deps.pool.query(
           `UPDATE devices
            SET fcm_token = COALESCE($2, fcm_token),
                push_enabled = COALESCE($3, push_enabled)
            WHERE id = $1 AND revoked_at IS NULL`,
-          [user.device_id, body.fcm_token ?? null, body.push_enabled ?? null],
+          [user.device_id, token, body.push_enabled ?? null],
         );
         return reply.status(204).send();
       },

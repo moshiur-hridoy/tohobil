@@ -1,5 +1,5 @@
 import type pg from 'pg';
-import type { Clock, MemberContactUpdate, MemberListQuery, MemberUpdate } from '@barakah/shared';
+import type { Clock, MemberContactUpdate, MemberListQuery, MemberPhoto, MemberUpdate } from '@barakah/shared';
 import type { AuthUser } from '../auth/service';
 import { audit } from '../lib/audit';
 import { badRequest, conflict, notFound } from '../lib/errors';
@@ -78,7 +78,11 @@ export async function listMembers(
             COALESCE(fi.outstanding_fines_paisa, 0) AS outstanding_fines_paisa,
             cur.status AS current_period_status,
             EXISTS (SELECT 1 FROM payments p WHERE p.member_id = m.id AND p.status = 'pending')
-              AS under_verification
+              AS under_verification,
+            -- A member stays in their status until the settlement is fully paid (members/settlement.ts),
+            -- so screens use this to show them as leaving.
+            (SELECT s.status FROM settlements s WHERE s.member_id = m.id AND s.status <> 'completed'
+              ORDER BY s.created_at DESC LIMIT 1) AS settlement_status
      FROM members m
      LEFT JOIN v_member_balances b ON b.member_id = m.id
      LEFT JOIN LATERAL (
@@ -115,6 +119,7 @@ export async function listMembers(
       current_period: today.slice(0, 7),
       current_period_status: row['current_period_status'],
       under_verification: row['under_verification'],
+      settlement_status: row['settlement_status'] ?? null,
     })),
   };
 }
@@ -271,6 +276,19 @@ export async function listShareHoldings(
 type NotifyPrefs = { push?: boolean; sms?: boolean; digits?: 'bn' | 'en' };
 
 /**
+ * A photo must be an image the caller uploaded. A file they did not upload is the same as a missing
+ * one, or they could publish someone else's payment proof by guessing its id.
+ */
+async function assertOwnImage(tx: Db, fileId: string, userId: string): Promise<void> {
+  const file = await tx.query(`SELECT mime, created_by FROM files WHERE id = $1`, [fileId]);
+  const row = file.rows[0] as { mime: string; created_by: string | null } | undefined;
+  if (!row || row.created_by !== userId) throw notFound('file.not_found', 'File not found');
+  if (!row.mime.startsWith('image/')) {
+    throw badRequest('member.photo_not_image', 'The photo must be an image');
+  }
+}
+
+/**
  * `PATCH /members/me`: photo and notification preferences. Preferences are merged key by key, so
  * sending `{digits:'en'}` leaves push and sms alone. Open to every logged-in member, including
  * read-only (suspended) ones: it changes how the app talks to them, not any fund record.
@@ -295,18 +313,7 @@ export async function updateOwnProfile(
     );
     const before = cur.rows[0] as { photo_file_id: string | null; notify_prefs: NotifyPrefs };
 
-    if (input.photo_file_id) {
-      const file = await tx.query(`SELECT mime, created_by FROM files WHERE id = $1`, [
-        input.photo_file_id,
-      ]);
-      const row = file.rows[0] as { mime: string; created_by: string | null } | undefined;
-      // A file you did not upload is the same as a missing one: a photo must be your own upload, or
-      // you could publish someone else's payment proof by guessing its id.
-      if (!row || row.created_by !== user.id) throw notFound('file.not_found', 'File not found');
-      if (!row.mime.startsWith('image/')) {
-        throw badRequest('member.photo_not_image', 'The photo must be an image');
-      }
-    }
+    if (input.photo_file_id) await assertOwnImage(tx, input.photo_file_id, user.id);
 
     const photo = input.photo_file_id === undefined ? before.photo_file_id : input.photo_file_id;
     const notify = { ...before.notify_prefs, ...prefs };
@@ -328,6 +335,40 @@ export async function updateOwnProfile(
     });
 
     return { id: user.member_id, photo_file_id: photo, notify_prefs: notify };
+  });
+}
+
+/**
+ * `PUT /members/:id/photo` (cashier): add a photo for a member who cannot do it themselves, or take
+ * down one that should not be there. The image must be one the cashier uploaded; the audit row keeps
+ * the old and new file, so a member can always see who changed their photo.
+ */
+export async function setMemberPhoto(
+  deps: MemberDeps,
+  actor: AuthUser,
+  memberId: string,
+  input: MemberPhoto,
+  ctx: ClientCtx,
+): Promise<{ id: string; photo_file_id: string | null }> {
+  return inTransaction(deps.pool, async (tx) => {
+    const cur = await tx.query(`SELECT photo_file_id FROM members WHERE id = $1 FOR UPDATE`, [memberId]);
+    const before = cur.rows[0] as { photo_file_id: string | null } | undefined;
+    if (!before) throw notFound('member.not_found', 'Member not found');
+    if (input.photo_file_id) await assertOwnImage(tx, input.photo_file_id, actor.id);
+
+    await tx.query(`UPDATE members SET photo_file_id = $2 WHERE id = $1`, [memberId, input.photo_file_id]);
+    await audit(tx, {
+      actor: actor.id,
+      action: 'member.set_photo',
+      entityType: 'member',
+      entityId: memberId,
+      before: { photo_file_id: before.photo_file_id },
+      after: { photo_file_id: input.photo_file_id },
+      ip: ctx.ip,
+      deviceId: actor.device_id,
+    });
+
+    return { id: memberId, photo_file_id: input.photo_file_id };
   });
 }
 

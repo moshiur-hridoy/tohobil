@@ -102,6 +102,10 @@ export type AssetUnit = (typeof ASSET_UNITS)[number];
 export const RENT_STATUSES = ['expected', 'received', 'overdue', 'skipped'] as const;
 export type RentStatus = (typeof RENT_STATUSES)[number];
 
+/** What a levy-fund payment was for (ASSUMPTIONS 105). Bank and SMS charges may take the levy fund below zero. */
+export const LEVY_EXPENSE_CATEGORIES = ['bank_charge', 'sms_charge', 'photocopy', 'registration', 'other'] as const;
+export type LevyExpenseCategory = (typeof LEVY_EXPENSE_CATEGORIES)[number];
+
 export const SETTLEMENT_KINDS = [
   'early_exit',
   'compassionate_exit',

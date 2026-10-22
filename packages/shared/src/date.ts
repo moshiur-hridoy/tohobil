@@ -160,6 +160,21 @@ export function formatDateBn(dateStr: string, opts: { digits?: DigitSystem } = {
   return digits === 'bn' ? toBengaliDigits(text) : text;
 }
 
+const BN_MONTHS_SHORT = ['জানু', 'ফেব্রু', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টে', 'অক্টো', 'নভে', 'ডিসে'] as const;
+const EN_MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
+
+/**
+ * Format a YYYY-MM-DD date for the screen: "২২ অক্টোবর ২০২৬" with Bengali digits, "22 Oct 2026" with
+ * Western ones (the month follows the numerals so the two never mix). `shortMonth` gives "২২ অক্টো ২০২৬"
+ * for the few places too narrow for the full Bengali name.
+ */
+export function formatDateDisplay(dateStr: string, opts: { digits?: DigitSystem; shortMonth?: boolean } = {}): string {
+  const { digits = 'bn', shortMonth = false } = opts;
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const i = (month as number) - 1;
+  return digits === 'bn' ? toBengaliDigits(`${day} ${(shortMonth ? BN_MONTHS_SHORT : BN_MONTHS)[i]} ${year}`) : `${day} ${EN_MONTHS_SHORT[i]} ${year}`;
+}
+
 /**
  * Parse a date from DD/MM/YYYY format (used in bKash SMS). Returns YYYY-MM-DD or null when the
  * text has no valid calendar date.

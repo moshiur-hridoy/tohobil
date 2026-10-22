@@ -38,6 +38,8 @@ export interface PaymentDeps {
   log: Logger;
   pushSender: PushSender;
   smsProvider: SmsProvider;
+  /** Called after a member's payment is saved (the Telegram bot hears of it here). Must not throw. */
+  onSubmitted?: (paymentId: string) => void;
 }
 
 export interface ClientCtx {
@@ -153,7 +155,7 @@ export async function submitPayment(
   const trxId = input.trx_id?.trim() || null;
 
   try {
-    return await inTransaction(deps.pool, async (tx) => {
+    const created = await inTransaction(deps.pool, async (tx) => {
       if (input.proof_file_id) {
         const file = await tx.query(`SELECT mime, created_by FROM files WHERE id = $1`, [
           input.proof_file_id,
@@ -194,6 +196,8 @@ export async function submitPayment(
       });
       return { id, status: 'pending' as const };
     });
+    deps.onSubmitted?.(created.id);
+    return created;
   } catch (err) {
     return rethrowDuplicate(deps.pool, err, trxId);
   }

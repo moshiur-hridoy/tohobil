@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ASSET_KINDS, ASSET_STATUSES, ASSET_UNITS, PAYMENT_METHODS } from '../enums';
+import { ASSET_KINDS, ASSET_STATUSES, ASSET_UNITS, LEVY_EXPENSE_CATEGORIES, PAYMENT_METHODS } from '../enums';
 import { cashAccountSchema, dateSchema, paginationSchema, positivePaisaSchema, uuidSchema } from './common';
 
 export const assetListQuerySchema = z.object({
@@ -108,6 +108,20 @@ export const levyRemitSchema = z.object({
   note: z.string().trim().min(3).max(500),
 });
 export type LevyRemit = z.infer<typeof levyRemitSchema>;
+
+/**
+ * A running cost paid from the levy fund: `DR LEVY_CLEARING, CR <account>`. Up to the rule
+ * `levy_expense_max_without_vote_paisa` the cashier records it directly; above it needs a vote.
+ */
+export const levyExpenseSchema = z.object({
+  category: z.enum(LEVY_EXPENSE_CATEGORIES),
+  amount_paisa: positivePaisaSchema,
+  account: cashAccountSchema,
+  payee: z.string().trim().min(1).max(200),
+  note: z.string().trim().min(3).max(500),
+  receipt_file_id: uuidSchema.optional(),
+});
+export type LevyExpense = z.infer<typeof levyExpenseSchema>;
 
 /** Pay one instalment of a deferred purchase: DR DEFERRED_PURCHASE_PAYABLE, CR <account>. */
 export const financingPaySchema = z.object({ account: cashAccountSchema });

@@ -6,6 +6,7 @@ import { api } from '../../lib/api';
 import { formatCount } from '../../lib/format';
 import { arrearsOf, taka } from '../../lib/money';
 import type { MemberRow } from '../../lib/types';
+import { Avatar } from '../../components/MemberPhoto';
 
 interface RegisterRow {
   share_no: number;
@@ -38,29 +39,32 @@ export function MembersPage() {
           {members.data.items.map((m) => {
             const mine = register.data?.items.filter((r) => r.member_id === m.id) ?? [];
             return (
-              <li key={m.id} className="rounded-[18px] border border-border bg-card shadow-card p-3">
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="font-semibold">{m.code} · {m.full_name}</span>
-                  <span className="text-sm text-muted">{t(`status.member.${m.status}`, { defaultValue: m.status })}</span>
+              <li key={m.id} className="flex gap-3 rounded-[18px] border border-border bg-card p-3 shadow-card">
+                <Avatar fileId={m.photo_file_id} fallback={m.full_name.trim().charAt(0)} className="h-11 w-11 bg-primary-soft font-bold text-primary" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="font-semibold">{m.code} · {m.full_name}</span>
+                    <span className="text-sm text-muted">{t(`status.member.${m.status}`, { defaultValue: m.status })}</span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-x-4 text-sm">
+                    <span>{t('membersPage.shares')}: {formatCount(m.shares)}</span>
+                    <span>{t('membersPage.capital')}: {taka(m.capital_paisa)}</span>
+                    <span>{t('membersPage.outstanding')}: {taka(arrearsOf(m))}</span>
+                  </div>
+                  {mine.length > 0 && (
+                    <details className="mt-2 text-sm">
+                      <summary className="cursor-pointer text-primary">{t('membersPage.register')}</summary>
+                      <ul className="mt-1 space-y-1">
+                        {mine.map((r) => (
+                          <li key={r.share_no}>
+                            #{formatCount(r.share_no)} · {r.registered_name}
+                            {r.nominee_name && <span className="text-muted"> · {t('membersPage.nominee')}: {r.nominee_name}{r.nominee_relation ? ` (${r.nominee_relation})` : ''}</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
                 </div>
-                <div className="mt-1 flex flex-wrap gap-x-4 text-sm">
-                  <span>{t('membersPage.shares')}: {formatCount(m.shares)}</span>
-                  <span>{t('membersPage.capital')}: {taka(m.capital_paisa)}</span>
-                  <span>{t('membersPage.outstanding')}: {taka(arrearsOf(m))}</span>
-                </div>
-                {mine.length > 0 && (
-                  <details className="mt-2 text-sm">
-                    <summary className="cursor-pointer text-primary">{t('membersPage.register')}</summary>
-                    <ul className="mt-1 space-y-1">
-                      {mine.map((r) => (
-                        <li key={r.share_no}>
-                          #{formatCount(r.share_no)} · {r.registered_name}
-                          {r.nominee_name && <span className="text-muted"> · {t('membersPage.nominee')}: {r.nominee_name}{r.nominee_relation ? ` (${r.nominee_relation})` : ''}</span>}
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                )}
               </li>
             );
           })}

@@ -5,8 +5,34 @@ import { paginationSchema } from './common';
 export const notificationChannelSchema = z.enum(NOTIFICATION_CHANNELS);
 export const notificationStatusSchema = z.enum(NOTIFICATION_STATUSES);
 
+/** A browser push subscription (PWA). Only the big push services are accepted as endpoints. */
+const PUSH_HOSTS = [
+  /(^|\.)fcm\.googleapis\.com$/,
+  /(^|\.)push\.services\.mozilla\.com$/,
+  /(^|\.)push\.apple\.com$/,
+  /(^|\.)notify\.windows\.com$/,
+];
+
+export const webPushSubscriptionSchema = z.object({
+  endpoint: z
+    .string()
+    .max(1000)
+    .refine((v) => {
+      try {
+        const u = new URL(v);
+        return u.protocol === 'https:' && PUSH_HOSTS.some((re) => re.test(u.hostname));
+      } catch {
+        return false;
+      }
+    }, 'unsupported push service'),
+  keys: z.object({ p256dh: z.string().min(1).max(200), auth: z.string().min(1).max(100) }),
+});
+
+export type WebPushSubscription = z.infer<typeof webPushSubscriptionSchema>;
+
 export const deviceRegisterSchema = z.object({
   fcm_token: z.string().min(1).max(500).optional(),
+  web_push: webPushSubscriptionSchema.optional(),
   push_enabled: z.boolean().default(true),
 });
 

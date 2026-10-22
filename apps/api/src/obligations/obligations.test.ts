@@ -8,6 +8,8 @@ import { activateSession, seedFund, testEnv, type Fund, type TestSession } from 
 import { computeNav } from '../lib/nav';
 import { generateDues } from '../dues/service';
 import { executeProposal, type ClientCtx } from '../proposals/service';
+import { postEntries } from '../ledger/service';
+import { inTransaction } from '../lib/tx';
 
 const START = new Date('2026-11-05T03:00:00Z'); // 5 Nov 2026, 09:00 in Dhaka
 const TODAY = '2026-11-05';
@@ -230,6 +232,84 @@ describe('levy', () => {
     const summary = (await call('GET', '/levy', member.access_token)).json();
     expect(summary.held_paisa).toBe('0');
     expect(summary.remittances).toHaveLength(1);
+  });
+});
+
+describe('levy fund pays running costs (ASSUMPTIONS 105)', () => {
+  dbIt('takes bank charges even into a deficit, holds other costs to what is held, and never touches NAV', async () => {
+    const nav0 = await netAssets();
+    const levy0 = await balance('LEVY_CLEARING');
+    const spend = (body: Record<string, unknown>) =>
+      call('POST', '/levy/expenses', cashier.access_token, { account: 'CASH', payee: 'Bank', note: 'Monthly charge', ...body });
+
+    // Above the no-vote limit (1,000 BDT) the cashier must raise a proposal instead.
+    expect((await spend({ category: 'photocopy', amount_paisa: '150000' })).json().code).toBe('levy.needs_vote');
+    // A photocopy is only paid from levy money that is actually there.
+    expect((await spend({ category: 'photocopy', amount_paisa: String(levy0 + 100n) })).json().code).toBe('levy.exceeds_held');
+    // The bank takes its charge whether or not the levy fund has money: it goes below zero.
+    const charge = await spend({ category: 'bank_charge', amount_paisa: String(levy0 + 15000n) });
+    expect(charge.statusCode).toBe(200);
+    expect(await balance('LEVY_CLEARING')).toBe(-15000n);
+    expect(await netAssets()).toBe(nav0); // cash down, levy liability down: members' capital untouched
+
+    const row = await q(`SELECT category, payee, proposal_id, amount_paisa::text AS a FROM levy_expenses WHERE ledger_seq = $1`, [charge.json().ledger_seq]);
+    expect(row).toEqual([{ category: 'bank_charge', payee: 'Bank', proposal_id: null, a: String(levy0 + 15000n) }]);
+
+    const summary = (await call('GET', '/levy', member.access_token)).json();
+    expect(summary).toMatchObject({ held_paisa: '-15000', limit_paisa: '100000' });
+    expect(summary.entries[0]).toMatchObject({ direction: 'out', kind: 'expense', category: 'bank_charge', payee: 'Bank' });
+
+    // Members pay a levy, which covers the deficit; a bigger cost then goes through a vote.
+    const m3 = fund.members.M03;
+    const owed = (await q(`SELECT outstanding_paisa::text AS o FROM v_due_status WHERE member_id = $1 AND kind = 'levy'`, [m3]))[0]!.o as string;
+    const paid = await call('POST', '/payments/cashier-entry', cashier.access_token, {
+      member_id: m3, amount_paisa: owed, method: 'cash', purpose: 'levy', paid_at: '2026-11-05T03:00:00Z',
+    });
+    expect(paid.statusCode).toBe(201);
+    const held = BigInt(owed) - 15000n;
+    expect(await balance('LEVY_CLEARING')).toBe(held);
+
+    const pid = await approved('expense', { max_amount_paisa: '200000', account: 'LEVY_CLEARING', category: 'photocopy', payee: 'Print shop', purpose: 'Meeting papers' });
+    await execute(pid, { actual_amount_paisa: held, account: 'CASH' });
+    expect(await balance('LEVY_CLEARING')).toBe(0n);
+    expect(await balance('OTHER_EXPENSE')).toBe(0n);
+    expect(await q(`SELECT category, payee FROM levy_expenses WHERE proposal_id = $1`, [pid])).toEqual([{ category: 'photocopy', payee: 'Print shop' }]);
+    expect(await netAssets()).toBe(nav0);
+  });
+});
+
+describe('moving earlier charges onto the levy fund (ASSUMPTIONS 106)', () => {
+  dbIt('moves each unmoved, unreversed bank or SMS charge once, giving members their capital back', async () => {
+    // An SMS charge from before the levy fund, taken from the main fund.
+    await inTransaction(db!.app, async (tx) => {
+      await postEntries(tx, [
+        { entry_date: '2026-11-01', debit: 'SMS_CHARGE', credit: 'BANK', amount_paisa: 34_500n, member_id: null, ref_type: 'auto_charge', memo: 'Bank Account SMS Charge' },
+        { entry_date: '2026-11-01', debit: 'MAINTENANCE', credit: 'BANK', amount_paisa: 9_900n, member_id: null, ref_type: 'proposal', memo: 'Roof repair' },
+      ], { userId: null });
+    });
+    const nav0 = await netAssets();
+    const levy0 = await balance('LEVY_CLEARING');
+
+    const movable = (await call('GET', '/levy/movable-costs', cashier.access_token)).json();
+    expect(movable.total_paisa).toBe('34500'); // maintenance is the fund's own cost and stays
+    expect(movable.items).toHaveLength(1);
+    expect((await call('GET', '/levy/movable-costs', member.access_token)).statusCode).toBe(403);
+
+    const moved = await call('POST', '/levy/move-old-costs', cashier.access_token);
+    expect(moved.json()).toEqual({ moved: 1, total_paisa: '34500' });
+    expect(await balance('LEVY_CLEARING')).toBe(levy0 - 34_500n);
+    expect(await balance('SMS_CHARGE')).toBe(0n);
+    expect(await netAssets()).toBe(nav0 + 34_500n); // members' capital gets it back
+
+    // Never twice.
+    expect((await call('POST', '/levy/move-old-costs', cashier.access_token)).json()).toEqual({ moved: 0, total_paisa: '0' });
+
+    const expenses = (await call('GET', '/charity/expenses', cashier.access_token)).json();
+    const sms = expenses.items.find((x: { account: string }) => x.account === 'SMS_CHARGE');
+    expect(sms).toMatchObject({ moved: true, amount_paisa: '34500' });
+    expect(expenses.items.some((x: { amount_paisa: string }) => x.amount_paisa.startsWith('-'))).toBe(false);
+    const levy = (await call('GET', '/levy', member.access_token)).json();
+    expect(levy.entries[0]).toMatchObject({ kind: 'expense', category: 'sms_charge', moved_from_seq: sms.seq });
   });
 });
 

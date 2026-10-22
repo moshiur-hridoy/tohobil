@@ -25,7 +25,7 @@ const token = {} as Record<'M01' | 'M02' | 'M03' | 'M04' | 'M07', string>;
 let m: Fund['members'];
 
 const call = (
-  method: 'GET' | 'PATCH',
+  method: 'GET' | 'PATCH' | 'PUT',
   url: string,
   who?: string,
   payload?: Record<string, unknown>,
@@ -425,6 +425,47 @@ describe('PATCH /members/me', () => {
       });
     },
   );
+});
+
+describe('PUT /members/:id/photo', () => {
+  dbIt('lets the cashier add and remove a member photo with their own upload, and audits it', async () => {
+    const file = async (owner: string, n: string) =>
+      (
+        (await q(
+          `INSERT INTO files (sha256, mime, size_bytes, path, created_by)
+           VALUES (repeat($2,64), 'image/jpeg', 10, '/data/x', $1) RETURNING id`,
+          [owner, n],
+        )) as [{ id: string }]
+      )[0].id;
+    const cashiers = await file(fund.users.M01, 'd');
+    const members = await file(fund.users.M06, 'e');
+
+    // Only the cashier, and only with an image the cashier uploaded.
+    expect((await call('PUT', `/members/${m.M06}/photo`, token.M02, { photo_file_id: cashiers })).statusCode).toBe(403);
+    const notYours = await call('PUT', `/members/${m.M06}/photo`, token.M01, { photo_file_id: members });
+    expect(notYours.statusCode).toBe(404);
+    expect(notYours.json().code).toBe('file.not_found');
+    const noMember = await call('PUT', '/members/00000000-0000-0000-0000-00000000dead/photo', token.M01, { photo_file_id: cashiers });
+    expect(noMember.json().code).toBe('member.not_found');
+
+    const set = await call('PUT', `/members/${m.M06}/photo`, token.M01, { photo_file_id: cashiers });
+    expect(set.statusCode).toBe(200);
+    expect((await get(`/members/${m.M06}`, token.M02)).json().photo_file_id).toBe(cashiers);
+    const matrixRow = (await get('/matrix', token.M02)).json().members.find((r: { member_code: string }) => r.member_code === 'M06');
+    expect(matrixRow.member_photo_file_id).toBe(cashiers);
+
+    const removed = await call('PUT', `/members/${m.M06}/photo`, token.M01, { photo_file_id: null });
+    expect(removed.json().photo_file_id).toBeNull();
+
+    const audit = await q(
+      `SELECT actor_user_id, before, after FROM audit_log WHERE action = 'member.set_photo' AND entity_id = $1 ORDER BY id`,
+      [m.M06],
+    );
+    expect(audit).toEqual([
+      { actor_user_id: fund.users.M01, before: { photo_file_id: null }, after: { photo_file_id: cashiers } },
+      { actor_user_id: fund.users.M01, before: { photo_file_id: cashiers }, after: { photo_file_id: null } },
+    ]);
+  });
 });
 
 describe('PATCH /members/:id/contact', () => {

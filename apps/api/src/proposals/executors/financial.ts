@@ -1,4 +1,5 @@
-import { divRound, type CashAccountCode } from '@barakah/shared';
+import { divRound, type CashAccountCode, type LevyExpenseCategory } from '@barakah/shared';
+import { postLevyExpense } from '../../obligations/service';
 import { postEntries } from '../../ledger/service';
 import { badRequest, forbidden, notFound } from '../../lib/errors';
 import { accountBalance, computeNav } from '../../lib/nav';
@@ -37,7 +38,8 @@ export const fineWaiverExecutor: ExecutorSignature = async (db, proposal) => {
 export const expenseExecutor: ExecutorSignature = async (db, proposal, input, actor, ctx, deps) => {
   const payload = proposal.payload as {
     max_amount_paisa: string;
-    account: 'MAINTENANCE' | 'OTHER_EXPENSE';
+    account: 'MAINTENANCE' | 'OTHER_EXPENSE' | 'LEVY_CLEARING';
+    category?: LevyExpenseCategory;
     payee: string;
     purpose: string;
   };
@@ -48,6 +50,19 @@ export const expenseExecutor: ExecutorSignature = async (db, proposal, input, ac
   }
 
   const source = sourceAccount(input);
+  // A running cost over the no-vote limit: paid from the levy fund, never the fund's capital (ASSUMPTIONS 105).
+  if (payload.account === 'LEVY_CLEARING') {
+    const levy = await postLevyExpense(db as import('pg').PoolClient, ledgerActor(actor, ctx), deps.clock.todayDhaka(), {
+      category: payload.category ?? 'other',
+      amount_paisa: actual,
+      account: source,
+      payee: payload.payee,
+      note: `${payload.purpose}${input.note ? ` - ${input.note}` : ''}`,
+      receipt_file_id: input.proof_file_id ?? undefined,
+      proposal_id: proposal.id,
+    });
+    return serialised({ expense_account: 'LEVY_CLEARING', source_account: source, amount_paisa: actual.toString(), ledger_seqs: [levy.ledger_seq] });
+  }
   const posted = await postEntries(
     db as import('pg').PoolClient,
     [

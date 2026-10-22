@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import { buildApp } from './app';
 import { createPool } from './lib/db';
 import { loadEnv, EnvError } from './lib/env';
@@ -6,7 +5,7 @@ import { createLogger } from './lib/logger';
 import { systemClock } from '@barakah/shared';
 import { createScheduler } from './jobs';
 import { createSmsProvider } from './notifications/providers/sms';
-import { ConsolePushSender, FcmPushSender } from './notifications/providers/push';
+import { createPushSender, vapidFromEnv } from './notifications/providers/push';
 
 async function main(): Promise<void> {
   const env = loadEnv();
@@ -17,10 +16,11 @@ async function main(): Promise<void> {
     onError: (err) => logger.error({ err }, 'Idle database client error'),
   });
 
-  const pushSender =
-    env.FCM_SERVICE_ACCOUNT_JSON_PATH && existsSync(env.FCM_SERVICE_ACCOUNT_JSON_PATH)
-      ? new FcmPushSender()
-      : new ConsolePushSender(logger);
+  const pushSender = createPushSender({
+    fcmFile: env.FCM_SERVICE_ACCOUNT_JSON_PATH,
+    vapid: vapidFromEnv(env),
+    log: logger,
+  });
 
   const smsProvider = createSmsProvider(
     {

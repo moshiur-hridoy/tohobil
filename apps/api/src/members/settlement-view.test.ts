@@ -87,3 +87,12 @@ describe('GET /settlements', () => {
     expect(res.json().items[0].member_code).toBe('M02');
   });
 });
+
+describe('GET /members', () => {
+  it('marks a member with an unpaid settlement as leaving, everyone else not', async (ctx) => {
+    if (!db) return ctx.skip();
+    const items = (await get('/members', token.M01)).json().items as Array<{ code: string; settlement_status: string | null }>;
+    expect(items.find((m) => m.code === 'M02')!.settlement_status).toBe('approved');
+    expect(items.filter((m) => m.code !== 'M02').every((m) => m.settlement_status === null)).toBe(true);
+  });
+});

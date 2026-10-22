@@ -2,10 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
+import { todayDhaka } from '../lib/dates';
 import { useAuth } from '../lib/auth';
+import { useSyncPush } from '../lib/push';
 import { OwnerConflictBanner } from '../components/OwnerConflictBanner';
 import { Wordmark } from '../components/Logo';
+import { PrivacyToggle } from '../components/PrivacyToggle';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { LanguageToggle } from '../components/LanguageToggle';
 import { useHiddenNav } from '../lib/navPrefs';
 
 /** [route, i18n key]: one source for the desktop sidebar and the stacked mobile nav. */
@@ -94,6 +98,47 @@ function ExtraLink({ to, label, icon, compact = false }: { to: string; label: st
   );
 }
 
+/** Polled in the background; a failing call (e.g. a role without access) just shows no dot. */
+const POLL = { refetchInterval: 60_000, retry: false } as const;
+const has = (page: { items: unknown[] } | undefined) => (page?.items.length ?? 0) > 0;
+
+/**
+ * Pages with something waiting for the cashier: a green dot beside the name in the nav (owner request),
+ * so nobody has to open each page to find out. Each check is the same thing the page itself flags.
+ */
+function useNavAttention(): Partial<Record<AdminRoute, boolean>> {
+  const today = todayDhaka();
+  const period = today.slice(0, 7);
+  const payments = useQuery({ queryKey: ['nav', 'payments-pending'], queryFn: () => api<{ items: unknown[] }>('/payments?status=pending&limit=1'), ...POLL });
+  const approvals = useQuery({ queryKey: ['nav', 'approvals-pending'], queryFn: () => api<{ items: unknown[] }>('/approvals?status=pending&limit=1'), ...POLL });
+  const objections = useQuery({ queryKey: ['nav', 'objections-open'], queryFn: () => api<{ items: unknown[] }>('/objections?status=open&limit=1'), ...POLL });
+  const toExecute = useQuery({ queryKey: ['nav', 'proposals-approved'], queryFn: () => api<{ items: unknown[] }>('/proposals?status=approved&limit=1'), ...POLL });
+  const settlements = useQuery({ queryKey: ['nav', 'settlements'], queryFn: () => api<{ items: Array<{ status: string }> }>('/settlements'), ...POLL });
+  const meetings = useQuery({ queryKey: ['nav', 'meetings'], queryFn: () => api<{ items: Array<{ status: string }> }>('/meetings'), ...POLL });
+  const rent = useQuery({
+    queryKey: ['nav', 'rent', period],
+    queryFn: () => api<{ items: Array<{ amount_paisa: string; received_paisa: string; due_date: string }> }>(`/rent/expected?period=${period}`),
+    ...POLL,
+  });
+  const system = useQuery({
+    queryKey: ['nav', 'system'],
+    queryFn: () => api<{ backup: { ok: boolean } | null; restore_test: { ok: boolean } | null }>('/system/status'),
+    ...POLL,
+  });
+  // Same key and freshness as the dashboard, so the chain is not verified twice.
+  const verify = useQuery({ queryKey: ['ledger-verify'], queryFn: () => api<{ ok: boolean; count: number }>('/ledger/verify'), staleTime: 60_000, retry: false });
+
+  return {
+    '/admin/payments': has(payments.data) || has(approvals.data),
+    '/admin/ledger': has(objections.data),
+    '/admin/proposals': has(toExecute.data),
+    '/admin/settlements': settlements.data?.items.some((s) => s.status !== 'completed') ?? false,
+    '/admin/meetings': meetings.data?.items.some((m) => m.status === 'draft') ?? false,
+    '/admin/rent': rent.data?.items.some((r) => r.due_date < today && BigInt(r.received_paisa) < BigInt(r.amount_paisa)) ?? false,
+    '/admin/system': system.data?.backup?.ok === false || system.data?.restore_test?.ok === false || verify.data?.ok === false,
+  };
+}
+
 function labelForRoute(to: AdminRoute): string {
   const found = ADMIN_NAV.find(([route]) => route === to);
   return found ? found[1] : '';
@@ -110,6 +155,7 @@ export function CashierLayout() {
   });
   const openVotes = open.data?.items.length ?? 0;
   const badgeFor = (to: AdminRoute) => (to === '/admin/proposals' ? openVotes : 0);
+  const attention = useNavAttention();
 
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
@@ -135,6 +181,7 @@ export function CashierLayout() {
                   label={t(labelForRoute(to))}
                   icon={ADMIN_NAV_META[to].icon}
                   badge={badgeFor(to)}
+                  dot={attention[to] ?? false}
                 />
               ))}
             </div>
@@ -146,6 +193,8 @@ export function CashierLayout() {
         </nav>
         <div className="flex items-center gap-1 border-t border-border p-2">
           <LogoutButton />
+          <LanguageToggle />
+          <PrivacyToggle />
           <ThemeToggle />
         </div>
       </aside>
@@ -159,12 +208,15 @@ export function CashierLayout() {
             label={t(key)}
             icon={ADMIN_NAV_META[to].icon}
             badge={badgeFor(to)}
+            dot={attention[to] ?? false}
             compact
           />
         ))}
         <ExtraLink to="/totp" label={t('totp.title')} icon={TOTP_ICON} compact />
         <LogoutButton compact />
-        <ThemeToggle />
+        <LanguageToggle />
+        <PrivacyToggle />
+          <ThemeToggle />
       </nav>
 
       <main className="min-w-0 flex-1">
@@ -199,6 +251,7 @@ function LogoutButton({ compact = false }: { compact?: boolean }) {
 function ProfileCard() {
   const { t } = useTranslation();
   const { me } = useAuth();
+  useSyncPush(!!me);
 
   const initials =
     me?.full_name
@@ -233,12 +286,15 @@ function SidebarLink({
   label,
   icon,
   badge = 0,
+  dot = false,
   compact = false,
 }: {
   to: AdminRoute;
   label: string;
   icon: string;
   badge?: number;
+  /** Something on the page is waiting for action: a green dot (the count badge wins when both apply). */
+  dot?: boolean;
   compact?: boolean;
 }) {
   const { t } = useTranslation();
@@ -278,6 +334,9 @@ function SidebarLink({
         >
           {badge}
         </span>
+      )}
+      {dot && badge === 0 && (
+        <span role="status" aria-label={t('admin.nav.needsAction')} className="h-2 w-2 shrink-0 rounded-full bg-ok" />
       )}
     </NavLink>
   );

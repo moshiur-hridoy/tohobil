@@ -85,7 +85,7 @@ export function ActivationPage() {
             <h1 className="text-[1.375rem] font-semibold leading-snug">{t('auth.activateTitle')}</h1>
             <p className="mt-1 text-[0.8125rem] leading-normal text-muted">{t('auth.activateHint')}</p>
           </div>
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="field-label flex flex-col gap-1">
             {t('auth.memberRef')}
             <input
               value={ref}
@@ -98,7 +98,7 @@ export function ActivationPage() {
               className="field field-lg text-center text-xl uppercase tracking-widest"
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="field-label flex flex-col gap-1">
             {t('auth.activateCode')}
             <input
               value={code}

@@ -23,6 +23,7 @@ export type NotificationTemplate =
   | 'payment_rejected'
   | 'vote_opened'
   | 'vote_closing'
+  | 'vote_reminder'
   | 'vote_result'
   | 'suspension_notice'
   | 'reinstatement_notice'
@@ -64,6 +65,8 @@ export const TEMPLATE_META: Record<NotificationTemplate, TemplateMeta> = {
   payment_rejected: { channels: ['push', 'sms'], roleRecipients: ['member'] },
   vote_opened: { channels: ['push'], roleRecipients: ['member'] },
   vote_closing: { channels: ['push'], roleRecipients: ['member'] },
+  // Sent by the cashier to members who have not voted yet (owner request).
+  vote_reminder: { channels: ['push'], roleRecipients: ['member'] },
   vote_result: { channels: ['push'], roleRecipients: ['member'] },
   suspension_notice: {
     channels: ['push', 'sms'],

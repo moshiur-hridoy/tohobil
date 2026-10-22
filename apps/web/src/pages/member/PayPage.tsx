@@ -2,8 +2,8 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS, type PaymentMethod } from '@barakah/shared';
-import { Icon, PageHeader } from '../../components/ui';
+import { PAYMENT_METHOD_LABELS, addMonths, type PaymentMethod } from '@barakah/shared';
+import { Icon, Optional, PageHeader, DateInput, FilePicker } from '../../components/ui';
 import { ConfirmSheet, SheetRow } from '../../components/ConfirmSheet';
 import { CopyButton } from '../../components/CopyButton';
 import { ListSkeleton } from '../../components/Skeleton';
@@ -19,11 +19,22 @@ import { taka } from '../../lib/money';
 import type { DueRow, FineRow, Page, PaymentDetail, PaymentInstructions, PaymentRow } from '../../lib/types';
 
 const NEEDS_TRX: PaymentMethod[] = ['bkash', 'nagad', 'bank'];
+/** How many months ahead a member can add on the pay page. */
+const MAX_AHEAD = 12;
+/** How many upcoming months are listed (unticked) before the member asks for more. */
+const SHOWN_AHEAD = 2;
+const INFO_ICON = 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v5M12 8v.01';
+
+/** How to pay the fund: the numbers, and which methods members may pick (shared cache with the sheet). */
+function useInstructions() {
+  return useQuery({ queryKey: ['payment-instructions'], queryFn: () => api<PaymentInstructions>('/settings/payment-instructions'), staleTime: 5 * 60_000 });
+}
 
 export function PayPage() {
   const { t } = useTranslation();
   const { me } = useAuth();
   const qc = useQueryClient();
+  const [howTo, setHowTo] = useState(false);
 
   const dues = useQuery({
     queryKey: ['dues', 'me', me?.member_id],
@@ -42,7 +53,17 @@ export function PayPage() {
 
   return (
     <PullToRefresh onRefresh={refresh}>
-      <PageHeader title={t('payment.title')} subtitle={t('pay.subtitle')} />
+      <PageHeader
+        title={t('payment.title')}
+        subtitle={t('pay.subtitle')}
+        action={
+          <button type="button" onClick={() => setHowTo(true)} className="-mx-2 flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-sm font-semibold text-primary hover:bg-hover">
+            <Icon d={INFO_ICON} size={18} />
+            {t('pay.howTo')}
+          </button>
+        }
+      />
+      <HowToPaySheet open={howTo} onClose={() => setHowTo(false)} />
       <div className="flex flex-col gap-3 px-4 pb-4 pt-2">
         {dues.error ? (
           <LoadError error={dues.error} onRetry={() => void dues.refetch()} />
@@ -53,7 +74,7 @@ export function PayPage() {
         ) : (
           // Mounted once the dues are in, so the default ticks see them. Not re-keyed on refresh: coming
           // back from the bKash app refetches, and that must not wipe what the member has typed.
-          <SendMoneyForm openDues={openDues} openFines={openFines} onSent={() => void refresh()} />
+          <SendMoneyForm allDues={dues.data.items} openDues={openDues} openFines={openFines} onSent={() => void refresh()} />
         )}
         <History memberId={me?.member_id} />
       </div>
@@ -64,15 +85,15 @@ export function PayPage() {
 /** A numbered step: the page reads top to bottom as "what, how, then the details". */
 function Step({ n, title, hint, children }: { n: number; title: string; hint?: string; children: ReactNode }) {
   return (
-    <section className="rounded-[20px] border border-border bg-card p-4" aria-labelledby={`pay-step-${n}`}>
-      <div className="mb-3 flex items-start gap-3">
+    <section className="rounded-[20px] border border-border bg-card" aria-labelledby={`pay-step-${n}`}>
+      <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
         <span aria-hidden="true" className="grid h-7 w-7 flex-none place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground">{formatCount(n)}</span>
         <div className="min-w-0">
           <h2 id={`pay-step-${n}`} className="text-base font-bold leading-7">{title}</h2>
           {hint && <p className="text-[0.8125rem] leading-snug text-muted">{hint}</p>}
         </div>
       </div>
-      {children}
+      <div className="p-4">{children}</div>
     </section>
   );
 }
@@ -87,13 +108,13 @@ const PURPOSE_LABEL: Record<Purpose, string> = { dues: 'pay.purposeDues', levy: 
  * from the dues, so a mistyped figure (or one that includes the bKash charge) cannot unbalance the books.
  * Months are paid oldest first: ticking a month ticks every earlier one, unticking it unticks the later ones.
  */
-function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; openFines: FineRow[]; onSent: () => void }) {
+function SendMoneyForm({ allDues, openDues, openFines, onSent }: { allDues: DueRow[]; openDues: DueRow[]; openFines: FineRow[]; onSent: () => void }) {
   const { t } = useTranslation();
   const { me } = useAuth();
   const today = todayDhaka();
   const currentPeriod = today.slice(0, 7);
   const [purpose, setPurpose] = useState<Purpose>('dues');
-  const [method, setMethod] = useState<PaymentMethod>('bkash');
+  const [chosenMethod, setMethod] = useState<PaymentMethod | null>(null);
   const [trx, setTrx] = useState('');
   const [digits, setDigits] = useState('');
   const [date, setDate] = useState(today);
@@ -106,7 +127,10 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
   // One key per attempt, so a retry after a dropped connection can never create a second payment.
   const attemptKey = useRef(uuid());
 
-  const instructions = useQuery({ queryKey: ['payment-instructions'], queryFn: () => api<PaymentInstructions>('/settings/payment-instructions'), staleTime: 5 * 60_000 });
+  const instructions = useInstructions();
+  // The cashier picks which methods members see; until that loads the usual three are offered.
+  const methods = instructions.data?.methods?.length ? instructions.data.methods : (['bkash', 'bank', 'cash'] as PaymentMethod[]);
+  const method: PaymentMethod = chosenMethod && methods.includes(chosenMethod) ? chosenMethod : methods[0]!;
 
   // Levy and a special contribution are paid on their own, so a monthly payment never lands on them.
   const purposes = PURPOSES.filter((p) => p === 'dues' || openDues.some((d) => d.kind === p));
@@ -130,6 +154,20 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
       status: list.some((d) => d.status === 'overdue') ? 'overdue' : list.some((d) => d.status === 'partial') ? 'partial' : 'unpaid',
     };
   });
+  // Paying ahead (ASSUMPTIONS 99): the next months, whose dues do not exist yet, are listed unticked
+  // at the latest monthly due's amount, and more can be added one at a time. The server keeps the
+  // money as credit and applies it when the dues job creates that month, so nothing here has to match a due exactly.
+  const lastMonthly = allDues.filter((d) => d.kind === 'monthly').sort((a, b) => b.period.localeCompare(a.period))[0];
+  const lastPeriod = [lastMonthly?.period ?? currentPeriod, currentPeriod].sort().at(-1)!;
+  const owed = months.length;
+  const [ahead, setAhead] = useState(SHOWN_AHEAD);
+  if (purpose === 'dues' && lastMonthly) {
+    for (let i = 1; i <= ahead; i++) {
+      const period = addMonths(lastPeriod, i);
+      months.push({ period, list: [], fine: 0n, principal: BigInt(lastMonthly.amount_paisa), dueDate: `${period}-01`, verifying: false, status: 'advance' });
+    }
+  }
+  const nextAhead = lastMonthly && purpose === 'dues' && ahead < MAX_AHEAD ? addMonths(lastPeriod, ahead + 1) : null;
   const payable = months.filter((m) => !m.verifying);
   const looseFines = fines.filter((f) => !f.period || !months.some((m) => m.period === f.period));
 
@@ -137,6 +175,10 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
   const [picked, setPicked] = useState<Set<string>>(
     () => new Set([...payable.filter((m) => m.dueDate <= today).map((m) => m.period), ...looseFines.map((f) => f.id)]),
   );
+  const addAhead = () => {
+    if (!nextAhead) return;
+    setAhead((n) => n + 1);
+  };
   const toggleMonth = (period: string) =>
     setPicked((prev) => {
       const next = new Set(prev);
@@ -166,7 +208,6 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
   const paisa = total > 0n ? total.toString() : null;
   const trxNeeded = NEEDS_TRX.includes(method);
   const readOnly = !!me?.read_only;
-  const account = method === 'bkash' || method === 'nagad' || method === 'bank' ? instructions.data?.[method] : undefined;
 
   const review = () => {
     setDone(false);
@@ -202,6 +243,7 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
       },
     });
     setPicked(new Set());
+    setAhead(SHOWN_AHEAD);
     setTrx('');
     setDigits('');
     setPurpose('dues');
@@ -213,7 +255,8 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
   };
 
   const field = 'field field-lg mt-1.5 w-full';
-  const label = 'text-[0.8125rem] text-ink2';
+  const label = 'field-label';
+  const hint = 'field-hint';
 
   return (
     <form
@@ -223,7 +266,7 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
         review();
       }}
     >
-      <Step n={1} title={t('pay.step1')} hint={payable.length > 1 ? t('pay.step1Hint') : undefined}>
+      <Step n={1} title={t('pay.step1')}>
         {purposes.length > 1 && (
           <div role="radiogroup" aria-label={t('pay.purposeLabel')} className="mb-3 flex rounded-2xl border border-border bg-background p-1">
             {purposes.map((p) => (
@@ -241,10 +284,12 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
           </div>
         )}
 
+        {owed + looseFines.length === 0 && months.length > 0 && <p className="mb-2 rounded-2xl bg-ok-bg p-3 text-center text-sm font-semibold text-ok">{t('pay.noDuesAhead')}</p>}
         {months.length + looseFines.length === 0 ? (
           <p className="rounded-2xl bg-ok-bg p-4 text-center font-semibold text-ok">{t('pay.noDues')}</p>
         ) : (
-          <fieldset>
+          // min-w-0: a fieldset is otherwise as wide as its longest row, which overflows at large text.
+          <fieldset className="min-w-0">
             <legend className="sr-only">{t('pay.step1')}</legend>
             <ul className="space-y-2">
               {months.map((m) => {
@@ -256,7 +301,7 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
                     disabled={m.verifying}
                     onToggle={() => toggleMonth(m.period)}
                     title={`${fmtPeriod(m.period)}${kinds.length ? ` · ${kinds.map((k) => t(`pay.dueKind.${k}`)).join(', ')}` : ''}`}
-                    sub={m.fine > 0n ? t('pay.withFine', { due: taka(m.principal), fine: taka(m.fine) }) : t('pay.dueDate', { date: fmtDate(m.dueDate) })}
+                    sub={m.fine > 0n ? t('pay.withFine', { due: taka(m.principal), fine: taka(m.fine) }) : m.list.length === 0 ? undefined : t('pay.dueDate', { date: fmtDate(m.dueDate) })}
                     subBad={m.fine > 0n}
                     amount={taka(m.principal + m.fine)}
                     status={m.verifying ? 'pending' : m.period > currentPeriod ? 'advance' : m.status}
@@ -276,19 +321,26 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
             </ul>
           </fieldset>
         )}
+        {nextAhead && (
+          <button type="button" onClick={addAhead} className="mt-1 flex min-h-11 items-center gap-1.5 rounded-xl px-1 text-sm font-semibold text-primary hover:bg-hover">
+            <Icon d="M12 5v14M5 12h14" size={16} sw={2} />
+            {t('pay.addAhead')}
+          </button>
+        )}
+        {months.slice(owed).some((m) => picked.has(m.period)) && <p className="field-hint">{t('pay.aheadHint')}</p>}
 
-        <div className="mt-3 flex items-end justify-between gap-3 rounded-2xl bg-primary-soft px-4 py-3" aria-live="polite">
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-primary-soft px-4 py-3" aria-live="polite">
           <div>
-            <p className="text-[0.8125rem] text-ink2">{t('pay.payableTotal')}</p>
+            <p className="text-[0.9375rem] font-semibold text-ink2">{t('pay.payableTotal')}</p>
             {fineTotal > 0n && <p className="text-xs font-semibold text-bad">{t('pay.includesFine', { fine: taka(fineTotal) })}</p>}
           </div>
           <p data-testid="pay-total" className="text-[1.75rem] font-bold leading-tight text-primary">{taka(total)}</p>
         </div>
       </Step>
 
-      <Step n={2} title={t('pay.step2')} hint={total > 0n ? t('pay.step2Hint', { amount: taka(total) }) : undefined}>
-        <div role="radiogroup" aria-label={t('payment.method')} className="grid grid-cols-3 gap-2">
-          {PAYMENT_METHODS.map((m) => (
+      <Step n={2} title={t('pay.step2')}>
+        <div role="radiogroup" aria-label={t('pay.step2')} className="grid grid-cols-3 gap-2">
+          {methods.map((m) => (
             <button
               key={m}
               type="button"
@@ -297,28 +349,9 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
               onClick={() => setMethod(m)}
               className={`h-12 rounded-[14px] border-[1.5px] text-sm ${method === m ? 'border-primary bg-primary-soft font-bold text-primary' : 'border-border bg-card text-ink2'}`}
             >
-              {PAYMENT_METHOD_LABELS[m].bn}
+              {t(`pay.via.${m}`)}
             </button>
           ))}
-        </div>
-        <div className="mt-3">
-          {!trxNeeded ? (
-            <p className="rounded-[14px] bg-background px-3 py-3 text-sm text-ink2">{t(method === 'cash' ? 'pay.cashHint' : 'pay.otherHint')}</p>
-          ) : instructions.error ? (
-            <LoadError error={instructions.error} />
-          ) : !instructions.data ? (
-            <ListSkeleton rows={1} />
-          ) : account ? (
-            <div className="flex items-center gap-3 rounded-[14px] bg-background px-3 py-2.5">
-              <span className="min-w-0 flex-1">
-                <span className="block text-xs text-muted">{t('pay.sendTo', { method: PAYMENT_METHOD_LABELS[method].bn })}</span>
-                <span className="select-all break-all text-[1.0625rem] font-bold tracking-wide">{account}</span>
-              </span>
-              <CopyButton text={account} />
-            </div>
-          ) : (
-            <p className="rounded-[14px] bg-background px-3 py-3 text-sm text-muted">{t('pay.noInstructions')}</p>
-          )}
         </div>
       </Step>
 
@@ -328,31 +361,25 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
             <>
               <label className="block">
                 <span className={label}>{t('payment.trxId')}</span>
-                <input className={field} value={trx} onChange={(e) => setTrx(e.target.value)} autoCapitalize="characters" autoComplete="off" />
-                <span className="text-sm text-muted">{t('pay.trxHintOptional')}</span>
+                <input className={field} value={trx} onChange={(e) => setTrx(e.target.value)} placeholder={t('pay.trxExample')} autoCapitalize="characters" autoComplete="off" />
+                <span className={hint}>{t('pay.trxHintOptional')}</span>
               </label>
               <label className="block">
                 <span className={label}>{t(method === 'bank' ? 'pay.senderDigitsBank' : 'pay.senderDigitsPhone')}</span>
-                <input className={field} inputMode="numeric" maxLength={8} value={digits} onChange={(e) => setDigits(e.target.value)} autoComplete="off" aria-describedby="digits-hint" />
-                <span id="digits-hint" className="text-sm text-muted">{t('pay.senderDigitsHint')}</span>
+                <input className={field} inputMode="numeric" maxLength={8} value={digits} onChange={(e) => setDigits(e.target.value)} placeholder={t('pay.digitsExample')} autoComplete="off" aria-describedby="digits-hint" />
+                <span id="digits-hint" className={hint}>{t('pay.senderDigitsHint')}</span>
               </label>
             </>
           )}
 
           <label className="block">
             <span className={label}>{t('pay.sentOn')}</span>
-            <input className={field} type="date" value={date} max={todayDhaka()} onChange={(e) => setDate(e.target.value)} />
+            <DateInput className={field} value={date} max={todayDhaka()} onChange={(e) => setDate(e.target.value)} />
           </label>
 
           <div>
-            <span className={label}>{t('pay.screenshotLabel')}</span>
-            <input type="file" aria-label={t('pay.screenshotLabel')} accept="image/jpeg,image/png,image/webp,application/pdf" className="mt-1.5 block w-full rounded-[14px] border-[1.5px] border-dashed border-input p-3 text-sm" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-            {file && (
-              <p className="mt-1 text-sm">
-                {t('pay.screenshotAttached', { name: file.name })}{' '}
-                <button type="button" className="underline" onClick={() => setFile(null)}>{t('pay.removeFile')}</button>
-              </p>
-            )}
+            <span className={label}>{t('pay.screenshotLabel')}<Optional /></span>
+            <FilePicker className="mt-1.5" file={file} onChange={setFile} label={t('pay.screenshotLabel')} accept="image/jpeg,image/png,image/webp,application/pdf" />
           </div>
         </div>
       </Step>
@@ -391,6 +418,85 @@ function SendMoneyForm({ openDues, openFines, onSent }: { openDues: DueRow[]; op
   );
 }
 
+/** The "how do I send it?" sheet: every enabled method's numbers, each copyable, with a one-line guide. */
+function HowToPaySheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
+  const instructions = useInstructions();
+  const data = instructions.data;
+  const methods = data?.methods?.length ? data.methods : (['bkash', 'bank', 'cash'] as PaymentMethod[]);
+
+  const section = (m: PaymentMethod) => {
+    if (!data) return null;
+    if (m === 'bkash' || m === 'nagad') {
+      return (
+        <>
+          <p className="text-sm text-ink2">{t('pay.howToWallet', { method: PAYMENT_METHOD_LABELS[m].bn })}</p>
+          {data[m] ? <CopyRow label={t('pay.number')} value={data[m]} /> : <p className="text-sm text-muted">{t('pay.noInstructions')}</p>}
+        </>
+      );
+    }
+    if (m === 'bank') {
+      const rows: Array<[string, string | undefined]> = data.bank_account
+        ? [[t('pay.bankAccount'), data.bank_account], [t('pay.bankHolder'), data.bank_holder], [t('pay.bankName'), data.bank], [t('pay.bankBranch'), data.bank_branch]]
+        : [[t('pay.bankName'), data.bank]];
+      const shown = rows.filter((r): r is [string, string] => !!r[1]);
+      return (
+        <>
+          <p className="text-sm text-ink2">{t('pay.howToBank')}</p>
+          {shown.length > 0 ? shown.map(([label, value]) => <CopyRow key={label} label={label} value={value} />) : <p className="text-sm text-muted">{t('pay.noInstructions')}</p>}
+        </>
+      );
+    }
+    return <p className="text-sm text-ink2">{t(m === 'cash' ? 'pay.howToCash' : 'pay.otherHint')}</p>;
+  };
+
+  return (
+    <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
+        <Dialog.Content
+          aria-describedby="how-to-pay-after"
+          className="fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-[24px] border border-border bg-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-lg sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-[24px]"
+        >
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <Dialog.Title className="text-lg font-bold">{t('pay.howToTitle')}</Dialog.Title>
+            <Dialog.Close aria-label={t('common.close')} className="grid h-10 w-10 place-items-center rounded-full text-muted hover:bg-hover">
+              <Icon d="M6 6l12 12M18 6L6 18" size={20} />
+            </Dialog.Close>
+          </div>
+          {instructions.error ? (
+            <LoadError error={instructions.error} onRetry={() => void instructions.refetch()} />
+          ) : !data ? (
+            <ListSkeleton rows={3} />
+          ) : (
+            <div className="space-y-3">
+              {methods.map((m) => (
+                <section key={m} className="space-y-2 rounded-2xl border border-border p-3">
+                  <h3 className="font-bold">{PAYMENT_METHOD_LABELS[m].bn}</h3>
+                  {section(m)}
+                </section>
+              ))}
+            </div>
+          )}
+          <p id="how-to-pay-after" className="mt-3 text-sm text-muted">{t('pay.howToAfter')}</p>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
+
+function CopyRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-3 rounded-[14px] bg-background px-3 py-2.5">
+      <span className="min-w-0 flex-1">
+        <span className="block text-xs text-muted">{label}</span>
+        <span className="select-all break-all text-[1.0625rem] font-bold tracking-wide">{value}</span>
+      </span>
+      <CopyButton text={value} />
+    </div>
+  );
+}
+
 const toAscii = (v: string): string => v.replace(/[০-৯]/g, (c) => String(c.charCodeAt(0) - 0x09e6));
 
 function PickRow({ checked, disabled, onToggle, title, sub, subBad, amount, status }: {
@@ -420,38 +526,44 @@ function PickRow({ checked, disabled, onToggle, title, sub, subBad, amount, stat
   );
 }
 
+/** Newest payments first: a short list to start with, then a page at a time on "আরও দেখুন". */
+const HISTORY_FIRST = 5;
+const HISTORY_MORE = 10;
+
 function History({ memberId }: { memberId: string | undefined }) {
   const { t } = useTranslation();
   const q = useInfiniteQuery({
     queryKey: ['payments', 'me', memberId],
     enabled: !!memberId,
     initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam }) => api<Page<PaymentRow>>(`/payments?member_id=${memberId}&limit=20${pageParam ? `&cursor=${pageParam}` : ''}`),
+    queryFn: ({ pageParam }) => api<Page<PaymentRow>>(`/payments?member_id=${memberId}&limit=${pageParam ? `${HISTORY_MORE}&cursor=${pageParam}` : HISTORY_FIRST}`),
     getNextPageParam: (last) => last.next_cursor ?? undefined,
   });
   const items = q.data?.pages.flatMap((p) => p.items) ?? [];
 
   return (
-    <section className="rounded-[20px] border border-border bg-card p-4">
-      <h3 className="mb-2 text-base font-bold">{t('pay.history')}</h3>
-      {q.error ? (
-        <LoadError error={q.error} onRetry={() => void q.refetch()} />
-      ) : !q.data ? (
-        <ListSkeleton rows={3} />
-      ) : items.length === 0 ? (
-        <Empty text={t('pay.noHistory')} />
-      ) : (
-        <ul className="divide-y divide-border">
-          {items.map((p) => (
-            <PaymentItem key={p.id} p={p} />
-          ))}
-        </ul>
-      )}
-      {q.hasNextPage && (
-        <button type="button" disabled={q.isFetchingNextPage} onClick={() => void q.fetchNextPage()} className="mt-3 h-11 w-full rounded-[14px] border border-border">
-          {t('common.loadMore')}
-        </button>
-      )}
+    <section className="rounded-[20px] border border-border bg-card">
+      <h3 className="border-b border-border px-4 py-3.5 text-base font-bold leading-7">{t('pay.history')}</h3>
+      <div className="px-4 pb-4 pt-1">
+        {q.error ? (
+          <LoadError error={q.error} onRetry={() => void q.refetch()} />
+        ) : !q.data ? (
+          <ListSkeleton rows={3} />
+        ) : items.length === 0 ? (
+          <Empty text={t('pay.noHistory')} />
+        ) : (
+          <ul className="divide-y divide-border">
+            {items.map((p) => (
+              <PaymentItem key={p.id} p={p} />
+            ))}
+          </ul>
+        )}
+        {q.hasNextPage && (
+          <button type="button" disabled={q.isFetchingNextPage} onClick={() => void q.fetchNextPage()} className="mt-3 h-11 w-full rounded-[14px] border border-border">
+            {t('common.loadMore')}
+          </button>
+        )}
+      </div>
     </section>
   );
 }

@@ -65,7 +65,7 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
   }
 
   const [members, dues, fines, pending] = await Promise.all([
-    deps.pool.query(`SELECT id, code, full_name, status FROM members ORDER BY code`),
+    deps.pool.query(`SELECT id, code, full_name, status, photo_file_id FROM members ORDER BY code`),
     deps.pool.query(
       `SELECT v.member_id, v.period, v.status, v.amount_paisa, v.allocated_paisa, v.outstanding_paisa,
               (SELECT to_char(MAX((p.paid_at AT TIME ZONE 'Asia/Dhaka')::date), 'YYYY-MM-DD')
@@ -118,7 +118,7 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
     periods.map((p) => [p, { due: 0n, paid: 0n, fine: 0n, fine_paid: 0n }]),
   );
 
-  const rows = (members.rows as Array<{ id: string; code: string; full_name: string; status: string }>).map(
+  const rows = (members.rows as Array<{ id: string; code: string; full_name: string; status: string; photo_file_id: string | null }>).map(
     (m) => {
       const cells: Record<string, ReturnType<typeof cellOut> | null> = {};
       const totals = { due: 0n, paid: 0n, outstanding: 0n, fine: 0n, fine_paid: 0n };
@@ -176,6 +176,7 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
         member_code: m.code,
         member_name: m.full_name,
         member_status: m.status,
+        member_photo_file_id: m.photo_file_id,
         cells,
         totals: {
           due_paisa: str(totals.due),

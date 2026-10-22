@@ -146,7 +146,8 @@
       "suspended": "Suspended",
       "deceased": "Deceased",
       "exited": "Exited",
-      "prospective": "Prospective"
+      "prospective": "Prospective",
+      "leaving": "Leaving"
     }
   },
   "admin": {
@@ -189,7 +190,7 @@
       "reconcile": "Reconcile",
       "reports": "Reports",
       "rules": "Rules",
-      "charity": "Charity & expenses",
+      "charity": "Charity & levy",
       "settings": "Settings",
       "system": "System",
       "group": {
@@ -200,6 +201,7 @@
       },
       "obligations": "Obligations",
       "settlements": "Settlements",
+      "needsAction": "Needs action",
       "meetings": "Meetings"
     }
   },
@@ -238,27 +240,46 @@
     "subject": "Subject",
     "payload": "Details",
     "voterList": "Voter list",
+    "votedYes": "Voted",
+    "votedNo": "Not voted",
+    "remind": "Remind those who have not voted",
+    "remindTitle": "Send a vote reminder?",
+    "remindBody": "The {{n}} members who have not voted yet get a notification on their phone. Each member gets at most one a day.",
+    "remindSend": "Send",
+    "remindDone": "Reminded {{n}} members.",
+    "remindNone": "Everyone was already reminded today.",
     "threshold": "Threshold",
     "closesAt": "Closes at",
-    "open": "Open vote",
+    "open": "Start voting",
     "closeEarly": "Close early",
     "cancel": "Cancel",
     "execute": "Execute",
-    "openTitle": "Open proposal for voting",
+    "openTitle": "Start voting",
     "closeEarlyTitle": "Close vote early",
     "cancelTitle": "Cancel proposal",
     "executeTitle": "Execute approved proposal",
     "openBody": "Voting must stay open for at least one hour. Set the closing time; members can vote until then.",
     "closeEarlyBody": "Early close is only allowed when the result is mathematically decided (yes has reached threshold, or threshold is unreachable).",
-    "cancelBody": "Only draft proposals can be cancelled. This is immediate.",
+    "cancelBody": "The draft proposal is cancelled. Nobody has voted yet, so nothing else changes.",
+    "cancelOpenTitle": "Cancel this running vote?",
+    "cancelOpenBody": "Voting stops now and this proposal never takes effect. Ballots already cast stay on record but are not counted. Make a new proposal if needed. Who cancelled it, when and why is kept in the audit log.",
+    "cancelReason": "Reason for cancelling",
+    "cancelReasonHint": "For example: the voting rules changed; we will vote again under the new rules.",
     "executeBody": "The approved decision will be carried out. Money actions need an authenticator code.",
     "clauseRef": "Clause",
     "byShares": "By share weight",
+    "countShares": "{{n}} shares",
+    "countMembers": "{{n}} members",
+    "needShares": "{{n}} shares (of {{total}})",
+    "needMembers": "{{n}} members (of {{total}})",
     "byMembers": "By member count",
     "terms": "Terms",
     "executeAmount": "Amount actually paid or received",
     "executeAccount": "Account",
-    "executeAccountIn": "Money came into"
+    "executeAccountIn": "Money came into",
+    "yesVotes": "Yes votes",
+    "needToPass": "Needed to pass",
+    "passed": "Passed"
   },
   "compliance": {
     "interest_free_instrument": "Interest-free instrument",
@@ -402,7 +423,9 @@
       "voting_closed": "Voting on this proposal has ended.",
       "not_eligible": "You cannot vote on this proposal.",
       "not_found": "Proposal not found.",
-      "not_draft": "Only draft proposals can be opened or cancelled.",
+      "not_draft": "Only draft proposals can be opened.",
+      "not_cancellable": "Only a draft or a running vote can be cancelled. A finished vote cannot.",
+      "cancel_reason_required": "Give a reason to stop a running vote.",
       "no_voters": "No member is eligible to vote on this proposal.",
       "not_approved": "The proposal is not approved yet.",
       "not_finalized": "Voting has not finished yet.",
@@ -431,6 +454,9 @@
       "not_started": "Attendance can be marked once the meeting has started.",
       "duplicate_member": "A member is listed twice."
     },
+    "member": {
+      "phone_taken": "Another current member already has this phone number."
+    },
     "settlement": {
       "shortfall": "The net amount is negative. Settle what is owed first or reduce the deductions.",
       "payout_mismatch": "The payout plan total does not match today's net figure. Open the settlement form, use the suggested amount and make a new proposal.",
@@ -448,9 +474,16 @@
     },
     "nav": {
       "stale_valuation": "The value of an asset is more than a year old. Update its value first (proposal: Valuation update)."
+    },
+    "telegram": {
+      "invalid_token": "The token is not right. Paste the whole token BotFather gave you.",
+      "refused": "Telegram refused this. Check the token and that the site address is https.",
+      "not_connected": "Connect with the bot token first.",
+      "not_linked": "Identify your Telegram first."
     }
   },
   "common": {
+    "pickDate": "Pick a date",
     "save": "Save",
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -507,6 +540,7 @@
     "payment_rejected": "Your payment of ৳{amount} could not be accepted. Reason: {reason}.",
     "vote_opened": "New vote: {title}. Closes {closes_at}. Vote in the app.",
     "vote_closing": "24 hours left to vote: {title}. You have not voted yet.",
+    "vote_reminder": "You have not voted yet: {title}. Please vote in the app.",
     "vote_result": "Vote result: {title}: {result} (yes {yes}, no {no}).",
     "suspension_notice": "{name}, by the fund's decision your membership is suspended from {date}. See the app for details.",
     "reinstatement_notice": "{name}, your membership has been reinstated. Please pay the catch-up dues.",
@@ -525,6 +559,45 @@
     "zakat_info": "Your paid-in capital and estimated current value are attached. You calculate your own zakat.",
     "device_event": "{code} {name}: {event}",
     "ledger_verify_failed": "The ledger chain has a problem (entry {seq}). Do not change anything; look at it now."
+  },
+  "tg": {
+    "title": "🔔 Payment to check",
+    "member": "Member",
+    "amount": "Amount",
+    "method": "Method",
+    "purpose": "For",
+    "periods": "Months",
+    "trx": "Transaction ID",
+    "note": "Note",
+    "paidAt": "Sent at",
+    "proof": "Screenshot attached",
+    "self": "⚠️ This is your own payment. The auditor will see it.",
+    "approve": "✅ Approve",
+    "reject": "❌ Reject",
+    "back": "↩︎ Back",
+    "rejectWhy": "Why reject? Pick a reason (the member will see it):",
+    "confirmed": "✅ Approved, {time}",
+    "rejected": "❌ Rejected, {time}. Reason: {reason}",
+    "alreadyDone": "This was already settled ({status}).",
+    "failed": "⚠️ Could not do it: {reason}. Use the dashboard instead.",
+    "linked": "✅ Connected. New payments will be sent here.",
+    "notYours": "This bot is only for the fund cashier.",
+    "badCode": "The code is wrong or has expired. Get a new one from Settings.",
+    "test": "✅ Test passed. The bot is working.",
+    "off": "Approving from Telegram is switched off. Use the dashboard.",
+    "noRole": "You are not allowed to do this.",
+    "purposes": {
+      "dues": "Monthly dues",
+      "entry": "Entry price",
+      "levy": "Levy",
+      "special": "Special contribution",
+      "settlement_shortfall": "Settlement shortfall"
+    },
+    "reasons": {
+      "not_received": "Money not received",
+      "amount_mismatch": "Amount does not match",
+      "trx_mismatch": "Transaction ID does not match"
+    }
   },
   "auth": {
     "activateHint": "Enter the activation code the cashier gave you, or scan the QR code.",
@@ -569,6 +642,20 @@
     "signInHint": "Enter your member ID, for example M01",
     "signingInAs": "Signing in as member {{ref}}",
     "change": "Change"
+  },
+  "push": {
+    "title": "Phone notifications",
+    "turnOn": "Turn on notifications",
+    "turnOff": "Turn off notifications",
+    "failed": "Could not turn them on. Please try again in a moment.",
+    "state": {
+      "on": "Notifications are on for this phone.",
+      "off": "Turn them on to get dues, vote and payment news on this phone.",
+      "blocked": "Notifications are blocked in the browser. Allow them in the browser's site settings.",
+      "needs-install": "On iPhone, first add the app to the Home Screen (Share button, then Add to Home Screen) and open it from there.",
+      "unsupported": "This browser cannot show notifications. Use Chrome or Safari.",
+      "not-configured": "Notifications are not set up yet. Tell the cashier."
+    }
   },
   "menu": {
     "placeholder": "Profile, settings and more.",
@@ -617,7 +704,8 @@
       "suspended": "Suspended",
       "exited": "Exited",
       "prospective": "Prospective",
-      "inactive": "Inactive"
+      "inactive": "Inactive",
+      "leaving": "Leaving"
     },
     "proposal": {
       "draft": "Draft",
@@ -638,7 +726,7 @@
     "senderNoteBank": "Sender account, last 4 digits: {{digits}}",
     "trxHintOptional": "Add the transaction ID if the message has one; otherwise leave it empty.",
     "withFine": "Dues {{due}} + fine {{fine}}",
-    "payableTotal": "Total to send",
+    "payableTotal": "You sent in total",
     "pickSomething": "Pick at least one month.",
     "owedForMonth": "This month’s balance {{amount}} was filled in. Type a different amount if you like.",
     "subtitle": "Send the money, then submit the details here",
@@ -659,9 +747,7 @@
     "trxHint": "The transaction ID from the bKash, Nagad or bank message",
     "periodHint": "Which month is it for? (optional)",
     "periodAny": "Not sure",
-    "screenshotLabel": "Screenshot or receipt (optional)",
-    "screenshotAttached": "Attached: {{name}}",
-    "removeFile": "Remove",
+    "screenshotLabel": "Screenshot or receipt",
     "reviewTitle": "Check before sending",
     "reviewBody": "The cashier will check this against the fund's account. Nothing changes in your dues until they confirm.",
     "send": "Send for checking",
@@ -670,7 +756,7 @@
     "sentTitle": "Sent for checking",
     "sentBody": "Your {{amount}} payment has been sent for checking. Please wait. You will see it here once the cashier confirms it.",
     "sentOk": "OK",
-    "history": "My payments",
+    "history": "My transaction history",
     "noHistory": "No payments yet.",
     "receipt": "Receipt",
     "rejectedReason": "Reason: {{reason}}",
@@ -684,17 +770,36 @@
     "purposeDues": "Monthly dues",
     "purposeLevy": "Levy (registration, tax)",
     "purposeSpecial": "Special contribution",
-    "step1": "Which months are you paying for?",
-    "step1Hint": "Older months are paid first. Ticking a month also ticks the months before it.",
-    "step2": "Send the money",
-    "step2Hint": "Send {{amount}} to the number below.",
-    "sendTo": "{{method}} number",
-    "cashHint": "Hand the money to the cashier, then submit below.",
+    "step1": "Which months did you send money for?",
+    "step2": "How did you send the money?",
     "otherHint": "Ask the cashier how to send it.",
     "step3": "Tell us about the payment",
     "step3Hint": "The cashier uses these to match your money.",
     "sentOn": "When did you send it",
-    "includesFine": "Includes {{fine}} in fines"
+    "includesFine": "Includes {{fine}} in fines",
+    "via": {
+      "bkash": "bKash",
+      "nagad": "Nagad",
+      "bank": "Bank",
+      "cash": "Cash",
+      "other": "Other"
+    },
+    "howTo": "How to send?",
+    "howToTitle": "How to send money",
+    "howToWallet": "Copy the number and Send Money in the {{method}} app, including the charge.",
+    "howToBank": "For a bank transfer, copy each detail below separately.",
+    "howToCash": "To pay in cash, contact the cashier.",
+    "howToAfter": "After sending, pick the method on this page and submit the details.",
+    "number": "Number",
+    "bankAccount": "Account number",
+    "bankHolder": "Account name",
+    "bankName": "Bank name",
+    "bankBranch": "Branch",
+    "trxExample": "e.g. 9JK7A2B4CD",
+    "digitsExample": "e.g. 4567",
+    "addAhead": "Add one more month ahead",
+    "aheadHint": "Money paid ahead is held in your name and taken automatically when that month's due is created.",
+    "noDuesAhead": "Nothing is owed now. You can pay upcoming months ahead."
   },
   "ledgerPage": {
     "title": "Ledger",
@@ -756,7 +861,8 @@
       "receipt": "Receipt",
       "deed": "Deed",
       "other": "Paper",
-      "contract": "Contract"
+      "contract": "Contract",
+      "feasibility": "Feasibility study"
     },
     "contract": "Contract and terms",
     "editTerms": "Edit terms",
@@ -783,14 +889,37 @@
     "withdrawals": "Withdrawals",
     "withdrawalAll": "Everything",
     "withdrawalWaiting": "Waiting: {{status}}",
+    "withdrawalStage": {
+      "draft": "Proposal created, voting not started",
+      "open": "Members are voting",
+      "approved": "Passed, waiting for the money",
+      "executed": "Money received"
+    },
+    "withdrawalNext": {
+      "draft": "This withdrawal is a draft proposal. Press \"Open vote\" on the Proposals page so members can vote. Nothing is withdrawn unless the vote passes.",
+      "open": "Voting is under way. Once it passes, the money can be collected from the shop.",
+      "approved": "Members agreed. When the money arrives from the shop, press \"Execute\" on the Proposals page and enter how much came in.",
+      "executed": "The money is in the books."
+    },
+    "withdrawalOpenProposal": "Open proposal",
     "withdrawalDone": "Received {{amount}} on {{date}}",
     "gainOnWithdrawal": "profit {{amount}}",
     "lossOnWithdrawal": "loss {{amount}}",
     "withdrawMinHint": "This is the lowest the members agree to take back for all the gold. If the shop pays less, it cannot be done. The current value ({{value}}) is filled in; lower it a little if the members allow room to bargain."
   },
+  "privacy": {
+    "hide": "Hide amounts",
+    "show": "Show amounts"
+  },
   "theme": {
     "toDark": "Switch to dark mode",
     "toLight": "Switch to light mode"
+  },
+  "language": {
+    "toEnglish": "Switch to English",
+    "toBengali": "বাংলায় দেখুন (Bengali)",
+    "shortEn": "EN",
+    "shortBn": "বাং"
   },
   "membersPage": {
     "title": "Members and shares",
@@ -947,7 +1076,6 @@
     "pasteSms": "Paste SMS",
     "pasteHint": "Paste one or more bank or mobile-money messages. Separate messages with an empty line.",
     "parse": "Read the message",
-    "parsed": "Read from the message",
     "notParsed": "I could not read this message.",
     "trxId": "TrxID",
     "method": "Method",
@@ -1012,7 +1140,10 @@
     "noApprovals": "Nothing is waiting.",
     "decided": "Decided.",
     "stepUpNeeded": "This needs your authenticator code.",
-    "selfPayment": "This is your own payment: the auditor will see that you confirmed it."
+    "selfPayment": "This is your own payment: the auditor will see that you confirmed it.",
+    "fromSms": "From SMS",
+    "smsMatchedHint": "{{n}} payments match exactly. They are green in the list; approve them together with the button at the top.",
+    "showInQueue": "Show in the list"
   },
   "adminLedger": {
     "title": "Ledger",
@@ -1266,7 +1397,7 @@
     "payHint": "Record the money you handed to the member. It leaves the fund and the amount owed to the member goes down.",
     "payAmount": "Amount (taka)",
     "payMethod": "Paid from",
-    "payTrx": "Transaction ID (optional)",
+    "payTrx": "Transaction ID",
     "paid": "paid",
     "status": {
       "approved": "Approved",
@@ -1282,7 +1413,9 @@
     "count": "Total: {{count}}",
     "compliance": "Compliance checklist",
     "complianceIncomplete": "All checklist items must be true before this proposal can be opened.",
-    "created": "Created: {{date}}"
+    "created": "Created: {{date}}",
+    "selected": "Selected proposal",
+    "voted": "Voted"
   },
   "membersAdmin": {
     "more": "More actions",
@@ -1396,7 +1529,8 @@
       "compliance_interest_free": "Interest-free investing",
       "max_devices_per_member": "Devices per member (no longer used)",
       "max_devices_privileged": "Devices per office-holder",
-      "reinstatement_charges_fines": "Fines on reinstatement"
+      "reinstatement_charges_fines": "Fines on reinstatement",
+      "levy_expense_max_without_vote_paisa": "Levy expense limit without a vote"
     },
     "hints": {
       "monthly_due_per_share_paisa": "What each share pays every month.",
@@ -1435,7 +1569,8 @@
       "compliance_interest_free": "The fund only invests in interest-free (halal) ways.",
       "max_devices_per_member": "Members can now sign in from any device with their ID and PIN.",
       "max_devices_privileged": "How many devices a cashier or admin may use.",
-      "reinstatement_charges_fines": "Whether a reinstated member also pays fines for the months missed."
+      "reinstatement_charges_fines": "Whether a reinstated member also pays fines for the months missed.",
+      "levy_expense_max_without_vote_paisa": "Up to this amount the cashier records a levy-fund expense directly, with a receipt. Above it, a proposal and a vote are needed."
     },
     "sectionsNav": "Rule sections",
     "upcoming": "From {{date}}: {{value}}",
@@ -1529,13 +1664,52 @@
     "general": "General",
     "paymentInstructions": "Payment instructions",
     "fundName": "Fund name",
-    "saveTitle": "Save settings",
     "saved": "Saved.",
-    "changed": "Changed",
     "zakat": "Zakat notice date",
     "zakatHint": "Pick a date before Ramadan. On that day every member gets the zakat information notice. The system gives figures only, never a zakat calculation.",
     "sidePanel": "Side panel",
-    "sidePanelHint": "Untick what you do not need for now. It is only hidden from the menu on this device; the page and its data stay as they are. Dashboard and Settings are always shown."
+    "sidePanelHint": "Untick what you do not need for now. It is only hidden from the menu on this device; the page and its data stay as they are. Dashboard and Settings are always shown.",
+    "memberMethods": "Methods members can pick",
+    "memberMethodsHint": "Only these appear on the pay page. At least one must stay on.",
+    "telegram": {
+      "title": "Approve payments from Telegram",
+      "hint": "When a payment arrives, a message goes to your Telegram. Check it against your phone SMS and approve or reject it right there.",
+      "stepToken": "1. Create a bot",
+      "stepTokenHint": "In Telegram, message @BotFather with /newbot to create a bot. It gives you a long token; paste it below.",
+      "tokenLabel": "Bot token",
+      "tokenPlaceholder": "123456789:AA...",
+      "connect": "Connect",
+      "replaceToken": "Replace token",
+      "botName": "Bot: @{{name}}",
+      "tokenSaved": "The token is stored safely and is never shown again.",
+      "stepLink": "2. Identify your Telegram",
+      "stepLinkHint": "The button below opens Telegram. Press Start there. The code works for 10 minutes.",
+      "linkButton": "Identify my Telegram",
+      "openTelegram": "Open Telegram",
+      "linkWaiting": "Waiting for you to press Start in Telegram…",
+      "linkedOk": "Your Telegram is connected.",
+      "notLinked": "No Telegram is connected yet.",
+      "stepOn": "3. Switch it on",
+      "enable": "Approve from Telegram",
+      "enableHint": "While off, no payment messages arrive and the buttons do nothing.",
+      "needLinkFirst": "Connect the bot and your Telegram first.",
+      "test": "Send a test message",
+      "testSent": "Message sent. Check Telegram.",
+      "disconnect": "Disconnect",
+      "disconnectTitle": "Disconnect Telegram?",
+      "disconnectBody": "The token is deleted. To use it again you must connect from the start.",
+      "saved": "Saved.",
+      "stepUpNote": "These actions need your authenticator code.",
+      "on": "On"
+    },
+    "sectionsNav": "Settings sections",
+    "paymentsHint": "Members see these under \"How do I send?\" on the pay page.",
+    "nav": {
+      "general": "General",
+      "payments": "Payments",
+      "telegram": "Telegram",
+      "device": "This device"
+    }
   },
   "ownerConflict": {
     "title": "Owner decision conflict: {{count}} unresolved.",
@@ -1721,7 +1895,9 @@
     "nominee_relation": "Nominee relation",
     "clause_ref": "Clause",
     "items": "Items",
-    "partner_id": "Shop (investment partner)"
+    "partner_id": "Shop (investment partner)",
+    "payout_plan": "Payout plan",
+    "category": "Kind of cost (for the levy fund)"
   },
   "proposalOptions": {
     "receive": "Receive (member lends to the fund)",
@@ -1739,7 +1915,12 @@
     "BKASH": "bKash",
     "NAGAD": "Nagad",
     "cashier": "Cashier",
-    "auditor": "Auditor"
+    "auditor": "Auditor",
+    "LEVY_CLEARING": "Levy fund (running costs)",
+    "bank_charge": "Bank charge",
+    "sms_charge": "SMS charge",
+    "photocopy": "Photocopy",
+    "registration": "Registration & VAT"
   },
   "reports": {
     "statementTitle": "Member statement",
@@ -1859,6 +2040,9 @@
     "title": "My statements",
     "hint": "PDF of dues, payments and paid-in capital",
     "year": "Year",
+    "noData": "No data found for {{year}}",
+    "statementFor": "Dues and payments for {{year}}",
+    "zakatNote": "Capital held and zakat figures",
     "statement": "Statement (PDF)",
     "zakat": "Zakat information (PDF)"
   },
@@ -1874,8 +2058,8 @@
       "reconcile": "Count the money each month; the auditor approves and locks it",
       "reports": "Every download is written to the audit log",
       "rules": "The rules in force today, with their history. A change needs a vote.",
-      "charity": "Fines and other money that is not the fund's, and where it went",
-      "settings": "Fund name, payment details and the zakat notice",
+      "charity": "Two separate funds; their money never mixes",
+      "settings": "Fund name, payment details, Telegram and this device's menu",
       "system": "Backups, the ledger check and the server"
     },
     "members": {
@@ -1891,7 +2075,11 @@
       "noMatch": "No member matches.",
       "thisMonth": "This month",
       "pick": "Pick a member to see their details.",
-      "actions": "Actions"
+      "actions": "Actions",
+      "leavingNotice": "This member’s exit (settlement) has been approved. Their membership ends once the payout is fully paid. Until then they are not counted as an active member.",
+      "suspendedNotice": "This member is suspended. They become active again once a reinstatement proposal passes.",
+      "warningNotice": "This member is on warning. The status history shows why.",
+      "openSettlements": "Open settlements"
     },
     "payments": {
       "pick": "Pick a payment to check it.",
@@ -2011,5 +2199,71 @@
       "evening": "evening",
       "night": "night"
     }
+  },
+  "file": {
+    "add": "Add a photo or receipt",
+    "hint": "Pick a screenshot, photo or PDF from your phone",
+    "attached": "Attached",
+    "change": "Change",
+    "remove": "Remove"
+  },
+  "photo": {
+    "title": "Profile photo",
+    "titleFor": "{{name}}'s photo",
+    "hint": "A photo is optional. Every member can see it. Without one, the first letter of your name is shown.",
+    "hintCashier": "Add a photo for a member who cannot do it themselves, or remove a wrong one. Every change is written to the audit log.",
+    "choose": "Choose a photo",
+    "change": "Change photo",
+    "remove": "Remove photo",
+    "uploading": "Adding photo…",
+    "edit": "Add or change photo"
+  },
+  "fundsPage": {
+    "title": "Charity & levy",
+    "subtitle": "Two separate funds; their money never mixes",
+    "charityTitle": "Charity fund",
+    "charityRule": "Fines, bank interest and the early-exit charge come in here. This money is only given away, never spent on the fund.",
+    "levyTitle": "Levy fund",
+    "levyRule": "Members' levies come in here. Running costs such as bank and SMS charges, photocopies and registration are paid from here, not from the main fund.",
+    "inHand": "In hand",
+    "deficit": "Deficit",
+    "deficitHint": "Bank charges took more than the levy money. The next levy will cover it.",
+    "cameIn": "Came in",
+    "wentOut": "Went out",
+    "membersOwe": "Members still owe",
+    "history": "Transactions (newest first)",
+    "donate": "Propose a donation",
+    "spend": "Record an expense",
+    "raiseLevy": "Propose a levy",
+    "levyCollected": "Levy paid",
+    "receipt": "Receipt",
+    "noLevy": "No levy fund transactions yet.",
+    "capitalCosts": "Costs paid from the main fund",
+    "capitalCostsSub": "Costs from before the levy fund, and the fund's own upkeep such as asset maintenance (by vote)",
+    "spendTitle": "Expense from the levy fund",
+    "whatFor": "What it was for",
+    "limitHint": "Up to {{limit}} without a vote. Registration and VAT have no limit, because that levy was itself voted.",
+    "needsVote": "This is over the no-vote limit, so it needs a proposal and a vote.",
+    "makeProposal": "Create a proposal",
+    "notEnough": "The levy fund holds {{held}}. Only bank or SMS charges may go beyond that.",
+    "payee": "Paid to",
+    "payeeExample": "e.g. the bank, the photocopy shop",
+    "category": {
+      "bank_charge": "Bank charge",
+      "sms_charge": "SMS charge",
+      "photocopy": "Photocopy",
+      "registration": "Registration & VAT",
+      "other": "Other"
+    },
+    "noCharity": "No charity fund transactions yet.",
+    "movedFrom": "moved from the main fund, #{{seq}}",
+    "movedToLevy": "moved to the levy fund",
+    "moveHint": "{{n}} earlier bank and SMS charges ({{total}}) are still taken from the main fund. They are levy-fund costs.",
+    "moveButton": "Move to levy",
+    "moveTitle": "Move earlier charges to the levy fund",
+    "moveExplain": "These costs will be recorded as levy-fund costs. The earlier entries stay as they are; each gets a new transfer entry. Once moved, they cannot be moved again.",
+    "moveTotal": "Total {{total}}",
+    "moveAfter": "Members' capital gets this money back and the levy fund shows the same deficit. The next levy collection covers it.",
+    "moveConfirm": "Yes, move to levy"
   }
 }

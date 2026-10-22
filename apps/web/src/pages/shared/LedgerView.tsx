@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ACCOUNT_CODES, NAV_CASH_ACCOUNTS } from '@barakah/shared';
 import { AdminHeader, BTN_SECONDARY, Card, ICONS, StatGrid, StatTile } from '../../components/admin';
 import { ConfirmSheet } from '../../components/ConfirmSheet';
-import { Icon } from '../../components/ui';
+import { Icon, DateInput } from '../../components/ui';
 import { ListSkeleton } from '../../components/Skeleton';
 import { PullToRefresh } from '../../components/PullToRefresh';
 import { Empty, LoadError } from '../../components/StateViews';
@@ -163,8 +163,8 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
                   <option key={m.id} value={m.id}>{m.code} {m.full_name}</option>
                 ))}
               </select>
-              <input aria-label={t('common.from')} type="date" className={field} value={from} onChange={(e) => setFrom(e.target.value)} />
-              <input aria-label={t('common.to')} type="date" className={field} value={to} onChange={(e) => setTo(e.target.value)} />
+              <DateInput aria-label={t('common.from')} className={field} value={from} onChange={(e) => setFrom(e.target.value)} />
+              <DateInput aria-label={t('common.to')} className={field} value={to} onChange={(e) => setTo(e.target.value)} />
               <select aria-label={t('ledgerPage.date')} className={`${field} col-span-2 lg:col-span-1`} value={order} onChange={(e) => setOrder(e.target.value as 'asc' | 'desc')}>
                 <option value="desc">{t('ledgerPage.newestFirst')}</option>
                 <option value="asc">{t('ledgerPage.oldestFirst')}</option>
@@ -267,8 +267,8 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
               <option key={m.id} value={m.id}>{m.code} {m.full_name}</option>
             ))}
           </select>
-          <input aria-label={t('common.from')} type="date" className={field} value={from} onChange={(e) => setFrom(e.target.value)} />
-          <input aria-label={t('common.to')} type="date" className={field} value={to} onChange={(e) => setTo(e.target.value)} />
+          <DateInput aria-label={t('common.from')} className={field} value={from} onChange={(e) => setFrom(e.target.value)} />
+          <DateInput aria-label={t('common.to')} className={field} value={to} onChange={(e) => setTo(e.target.value)} />
           <select aria-label={t('ledgerPage.date')} className={field} value={order} onChange={(e) => setOrder(e.target.value as 'asc' | 'desc')}>
             <option value="desc">{t('ledgerPage.newestFirst')}</option>
             <option value="asc">{t('ledgerPage.oldestFirst')}</option>

@@ -147,11 +147,15 @@ export function AdminNotificationsPage() {
             <CardHead
               icon={ICONS.alert}
               tone="bg-warn-bg text-warn"
-              title={t('adminNotifications.unreachable')}
+              title={
+                <span className="flex items-center gap-2">
+                  {t('adminNotifications.unreachable')}
+                  {unreachable.data && unreachable.data.length > 0 && (
+                    <span className="rounded-full bg-warn-bg px-2.5 py-0.5 text-xs font-bold text-warn tabular-nums">{formatCount(unreachable.data.length)}</span>
+                  )}
+                </span>
+              }
               sub={t('adminNotifications.unreachableHint')}
-              action={unreachable.data && unreachable.data.length > 0 ? (
-                <span className="rounded-full bg-warn-bg px-2.5 py-0.5 text-xs font-bold text-warn tabular-nums">{formatCount(unreachable.data.length)}</span>
-              ) : undefined}
             />
             {unreachable.error ? (
               <LoadError error={unreachable.error} onRetry={() => void unreachable.refetch()} />

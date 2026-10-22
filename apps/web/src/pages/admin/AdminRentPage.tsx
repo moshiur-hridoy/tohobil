@@ -9,7 +9,7 @@ import { StatusPill } from '../../components/StatusPill';
 import {
   AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, BTN_SM_PRIMARY, Card, CardHead, EmptyCard, FieldLabel, ICONS, SplitLayout, StatGrid, StatTile,
 } from '../../components/admin';
-import { Icon } from '../../components/ui';
+import { Icon, DateInput } from '../../components/ui';
 import { formatCount } from '../../lib/format';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -204,7 +204,7 @@ export function AdminRentPage() {
                     <FieldLabel label={t('rentAdmin.monthly')}><input inputMode="decimal" className="field w-full" value={monthly} onChange={(e) => setMonthly(e.target.value)} /></FieldLabel>
                     <FieldLabel label={t('rentAdmin.dueDayLabel')}><input type="number" min={1} max={28} className="field w-full" value={dueDay} onChange={(e) => setDueDay(e.target.value)} /></FieldLabel>
                   </div>
-                  <FieldLabel label={t('rentAdmin.activeFrom')}><input type="date" className="field w-full" value={from} onChange={(e) => setFrom(e.target.value)} /></FieldLabel>
+                  <FieldLabel label={t('rentAdmin.activeFrom')}><DateInput className="field w-full" value={from} onChange={(e) => setFrom(e.target.value)} /></FieldLabel>
                   <button type="button" disabled={!name.trim() || parseAmountInput(monthly) === null} onClick={() => void addStream()} className={`${BTN_PRIMARY} w-full`}>
                     {t('rentAdmin.addStream')}
                   </button>
@@ -224,19 +224,19 @@ export function AdminRentPage() {
         onConfirm={receive}
       >
         {receiving && <p className="text-muted">{receiving.stream_name} · {receiving.period} · {t('rentAdmin.remaining')} {taka(remaining(receiving))}</p>}
-        <label className="block text-sm text-muted">
+        <label className="field-label">
           {t('common.amount')}
           <input className="field mt-1 w-full" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
         </label>
-        <label className="block text-sm text-muted">
+        <label className="field-label">
           {t('payment.method')}
           <select className="field mt-1 w-full" value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
             {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{t(`payment.methods.${m}`)}</option>)}
           </select>
         </label>
-        <label className="block text-sm text-muted">
+        <label className="field-label">
           {t('common.date')}
-          <input type="date" className="field mt-1 w-full" value={paidAt} onChange={(e) => setPaidAt(e.target.value)} />
+          <DateInput className="field mt-1 w-full" value={paidAt} onChange={(e) => setPaidAt(e.target.value)} />
         </label>
       </ConfirmSheet>
     </AdminPage>

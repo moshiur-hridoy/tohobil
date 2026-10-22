@@ -1,6 +1,6 @@
 /** Response shapes of the API as the screens use them. Money is always a decimal string of paisa. */
 
-import type { ProposalStatus, ProposalType, ThresholdKind, VotingBasis } from '@barakah/shared';
+import type { LevyExpenseCategory, PaymentMethod, ProposalStatus, ProposalType, ThresholdKind, VotingBasis } from '@barakah/shared';
 
 export type DueStatus = 'paid' | 'paid_late' | 'partial' | 'unpaid' | 'overdue';
 export type PaymentStatus = 'pending' | 'confirmed' | 'rejected' | 'reversed';
@@ -10,6 +10,7 @@ export interface MemberRow {
   code: string;
   full_name: string;
   status: string;
+  photo_file_id: string | null;
   phone: string | null;
   shares: number;
   capital_paisa: string;
@@ -22,6 +23,8 @@ export interface MemberRow {
   current_period: string;
   current_period_status: DueStatus | null;
   under_verification: boolean;
+  /** Set while an approved settlement is not fully paid: the member is leaving (still in their old status). */
+  settlement_status: 'approved' | 'paying' | null;
   joined_on: string | null;
 }
 
@@ -137,6 +140,7 @@ export interface MatrixResponse {
     member_code: string;
     member_name: string;
     member_status: string;
+    member_photo_file_id: string | null;
     cells: Record<string, MatrixCell | null>;
     totals: { due_paisa: string; paid_paisa: string; outstanding_paisa: string; fine_paisa: string; fine_paid_paisa: string };
   }>;
@@ -193,7 +197,13 @@ export interface ParsedSms {
 export interface PaymentInstructions {
   bkash: string;
   nagad: string;
+  /** The bank's name (older data: the whole bank line). */
   bank: string;
+  bank_account?: string;
+  bank_holder?: string;
+  bank_branch?: string;
+  /** The methods members may pick, in display order. */
+  methods?: PaymentMethod[];
 }
 
 export interface AssetRow {
@@ -443,6 +453,8 @@ export interface FundExpenseEntry {
   account: 'BANK_CHARGE' | 'SMS_CHARGE' | 'MAINTENANCE' | 'OTHER_EXPENSE';
   amount_paisa: string;
   memo: string | null;
+  /** Moved onto the levy fund: no longer a cost of the main fund. */
+  moved: boolean;
 }
 
 export interface CharityStatement {
@@ -458,6 +470,40 @@ export interface CharityStatement {
 export interface FundExpenses {
   total_paisa: string;
   items: FundExpenseEntry[];
+}
+
+export interface LevyEntry {
+  seq: string;
+  entry_date: string;
+  direction: 'in' | 'out';
+  kind: 'collection' | 'expense' | 'reversal' | 'other';
+  category: LevyExpenseCategory | null;
+  payee: string | null;
+  member_code: string | null;
+  member_name: string | null;
+  amount_paisa: string;
+  memo: string | null;
+  receipt_file_id: string | null;
+  /** An earlier main-fund charge moved onto the levy fund: the entry it came from. */
+  moved_from_seq: string | null;
+}
+
+/** `GET /levy/movable-costs`: earlier bank and SMS charges still on the main fund. */
+export interface MovableCosts {
+  total_paisa: string;
+  items: Array<{ seq: string; entry_date: string; account: 'BANK_CHARGE' | 'SMS_CHARGE'; amount_paisa: string; memo: string | null }>;
+}
+
+/** `GET /levy`: the levy fund that pays the running costs (ASSUMPTIONS 105). */
+export interface LevySummary {
+  /** Negative when bank charges have taken the fund below zero. */
+  held_paisa: string;
+  in_paisa: string;
+  out_paisa: string;
+  /** The cashier may spend up to this without a vote. */
+  limit_paisa: string | null;
+  entries: LevyEntry[];
+  levies: Array<{ period: string; members: number; total_paisa: string; outstanding_paisa: string }>;
 }
 
 export interface ConstitutionVersionSummary {

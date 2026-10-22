@@ -6,7 +6,7 @@ import { fmtInstant } from '../../../lib/dates';
 import { taka } from '../../../lib/money';
 import type { ParsedSms } from '../../../lib/types';
 import { LoadError } from '../../../components/StateViews';
-import { BTN_PRIMARY, BTN_SM, Card, CardHead, ICONS } from '../../../components/admin';
+import { BTN_PRIMARY, BTN_SM } from '../../../components/admin';
 
 export interface SmsResult {
   text: string;
@@ -16,6 +16,7 @@ export interface SmsResult {
 /**
  * "Paste SMS" (spec 8): one or more messages separated by an empty line. Each is read by the server,
  * which only suggests; the cashier creates the entry or approves the highlighted pending payment.
+ * Shown inside a dialog: with Telegram approvals it is the exception, not the daily screen.
  */
 export function SmsPanel({ onResults, onCreate }: { onResults: (r: SmsResult[]) => void; onCreate: (r: SmsResult) => void }) {
   const { t } = useTranslation();
@@ -41,10 +42,9 @@ export function SmsPanel({ onResults, onCreate }: { onResults: (r: SmsResult[]) 
   };
 
   return (
-    <Card className="p-5" aria-labelledby="sms-title">
-      <CardHead id="sms-title" icon={ICONS.message} tone="bg-blue-bg text-blue" title={t('paymentsPage.pasteSms')} sub={t('paymentsPage.pasteHint')} />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div>
+    <div className="space-y-4">
+      <p className="text-sm text-muted">{t('paymentsPage.pasteHint')}</p>
+      <div>
           <textarea
             aria-label={t('paymentsPage.pasteSms')}
             className="field min-h-28 w-full font-mono text-sm"
@@ -55,12 +55,9 @@ export function SmsPanel({ onResults, onCreate }: { onResults: (r: SmsResult[]) 
           <button type="button" disabled={busy || !text.trim()} onClick={() => void parse()} className={`${BTN_PRIMARY} mt-2`}>
             {busy ? t('common.working') : t('paymentsPage.parse')}
           </button>
-        </div>
+      </div>
         <div className="min-w-0">
           {error != null && <LoadError error={error} />}
-          {error == null && results.length === 0 && (
-            <p className="grid h-full min-h-28 place-items-center rounded-xl border border-dashed border-border px-4 text-center text-sm text-muted">{t('paymentsPage.parsed')}</p>
-          )}
           {error == null && results.length > 0 && (
             <ul className="space-y-3">
               {results.map((r, i) => (
@@ -100,7 +97,6 @@ export function SmsPanel({ onResults, onCreate }: { onResults: (r: SmsResult[]) 
             </ul>
           )}
         </div>
-      </div>
-    </Card>
+    </div>
   );
 }

@@ -88,6 +88,20 @@ describe('settings routes', () => {
     expect(auditRows[0]).toMatchObject({ action: 'settings.update', entity_type: 'settings', entity_id: 'payment_instructions', after: body.value });
   });
 
+  dbIt('payment instructions carry split bank details and the methods members see', async () => {
+    const before = await call('GET', '/settings/payment-instructions', s.M02.access_token);
+    expect((before.json() as { methods: string[] }).methods).toEqual(['bkash', 'bank', 'cash']);
+
+    const value = { bkash: '+8801711111111', nagad: '', bank: 'Islami Bank', bank_account: '2050123456789', bank_holder: 'Barakah Fund', bank_branch: 'Mirpur', methods: ['bkash', 'bank'] };
+    const res = await call('PATCH', '/settings', s.M01.access_token, { key: 'payment_instructions', value });
+    expect(res.statusCode).toBe(200);
+    const after = await call('GET', '/settings/payment-instructions', s.M02.access_token);
+    expect(after.json()).toEqual(value);
+
+    const none = await call('PATCH', '/settings', s.M01.access_token, { key: 'payment_instructions', value: { ...value, methods: [] } });
+    expect(none.statusCode).toBe(400);
+  });
+
   dbIt('member without cashier role cannot update settings', async () => {
     const res = await call('PATCH', '/settings', s.M02.access_token, {
       key: 'fund_name',

@@ -10,12 +10,12 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { RAW_TABS, convertSheet, reviewCsv, type RawTabs } from '../../apps/api/src/import/convert';
 import { FILES, type NormalizedName } from '../../apps/api/src/import/schemas';
-import { DEFAULT_NORMALIZED, DEFAULT_RAW, DEFAULT_REVIEW, flagValue } from './common';
+import { DEFAULT_NORMALIZED, DEFAULT_RAW, DEFAULT_REVIEW, pathFlag } from './common';
 
 const argv = process.argv.slice(2);
-const rawDir = flagValue(argv, 'raw') ?? DEFAULT_RAW;
-const outDir = flagValue(argv, 'out') ?? DEFAULT_NORMALIZED;
-const reviewPath = flagValue(argv, 'out') ? join(dirname(outDir), 'review.csv') : DEFAULT_REVIEW;
+const rawDir = pathFlag(argv, 'raw') ?? DEFAULT_RAW;
+const outDir = pathFlag(argv, 'out') ?? DEFAULT_NORMALIZED;
+const reviewPath = pathFlag(argv, 'out') ? join(dirname(outDir), 'review.csv') : DEFAULT_REVIEW;
 
 const tabs: RawTabs = {};
 for (const [key, file] of Object.entries(RAW_TABS) as Array<[keyof RawTabs, string]>) {

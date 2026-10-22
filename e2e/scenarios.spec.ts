@@ -66,11 +66,14 @@ test('(2) member submits, cashier pastes the SMS and approves, member sees it co
 
   // Cashier pastes the bKash message: the pending payment is matched exactly.
   await cashier.page.goto('/admin/payments');
+  await cashier.page.getByRole('button', { name: tr('paymentsPage.fromSms') }).click();
   await cashier.page.getByRole('textbox', { name: tr('paymentsPage.pasteSms') }).fill(
     `You have received Tk 20,000.00 from 01700000002. Fee Tk 0.00. Balance Tk 24,000.00. TrxID ${trx} at ${todayDdMmYyyy()} 10:00`,
   );
   await cashier.page.getByRole('button', { name: tr('paymentsPage.parse') }).click();
   await expect(cashier.page.getByText(tr('paymentsPage.exactMatch')).first()).toBeVisible();
+  await shot(cashier.page, 'cashier-sms-dialog');
+  await cashier.page.getByRole('button', { name: tr('paymentsPage.showInQueue') }).click();
   await expect(cashier.page.getByRole('button', { name: tr('paymentsPage.bulkApprove', { n: '১' }) })).toBeVisible();
 
   await shot(cashier.page, 'cashier-payments');
@@ -94,9 +97,9 @@ test('(2) member submits, cashier pastes the SMS and approves, member sees it co
   await member.page.goto('/home');
   await expect(member.page.getByText(tr('home.underVerificationHint'))).toHaveCount(0);
 
-  // The ledger shows the entry to everyone and its chain verifies.
+  // The ledger shows the entry to everyone and its chain verifies. bKash money lands in BANK: one cash pool (ASSUMPTIONS 96).
   await member.page.goto('/menu/ledger');
-  await expect(member.page.getByText('BKASH → MEMBER_CAPITAL')).toBeVisible();
+  await expect(member.page.getByText('BANK → MEMBER_CAPITAL')).toBeVisible();
   await member.page.getByRole('button', { name: tr('ledgerPage.verify') }).click();
   await expect(member.page.getByText(tr('ledgerPage.verifyOk', { n: '১', seq: '১' }))).toBeVisible();
 

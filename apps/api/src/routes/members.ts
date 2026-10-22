@@ -4,6 +4,7 @@ import { z } from 'zod';
 import {
   contactLogEntrySchema,
   memberContactUpdateSchema,
+  memberPhotoSchema,
   memberListQuerySchema,
   memberUpdateSchema,
   shareHoldingsQuerySchema,
@@ -23,6 +24,7 @@ import {
   listMembers,
   listShareHoldings,
   listShareRegister,
+  setMemberPhoto,
   updateMemberContact,
   updateOwnProfile,
   type MemberDeps,
@@ -71,6 +73,15 @@ export function memberRoutes(deps: MemberRouteDeps, guards: Guards) {
       '/members/me',
       { preHandler: authenticate, schema: { body: memberUpdateSchema } },
       (req) => updateOwnProfile(deps, requireAuth(req), req.body, { ip: req.ip }),
+    );
+
+    app.put(
+      '/members/:id/photo',
+      {
+        preHandler: [authenticate, requireRole('cashier')],
+        schema: { params: idParams, body: memberPhotoSchema },
+      },
+      (req) => setMemberPhoto(deps, requireAuth(req), req.params.id, req.body, { ip: req.ip }),
     );
 
     app.patch(

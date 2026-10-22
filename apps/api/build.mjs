@@ -20,6 +20,7 @@ await build({
     'cli/generate-dues': 'src/cli/generate-dues.ts',
     'cli/import-sheet': 'src/cli/import-sheet.ts',
     'cli/set-role': 'src/cli/set-role.ts',
+    'cli/load-constitution': 'src/cli/load-constitution.ts',
   },
   outdir: 'dist',
   bundle: true,

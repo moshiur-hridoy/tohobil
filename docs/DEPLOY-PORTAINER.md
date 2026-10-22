@@ -100,6 +100,17 @@ The auditor is a different member: `node dist/cli/set-role.js M07 auditor` (one 
 
 Hand the printed code over in person. Do not seed fictional data in production: the seed refuses a non-local database.
 
+### Loading the constitution (once)
+
+Members read the constitution in the app (Menu, Constitution), but only after it is loaded. The file `private/constitution_v1.bn.md` stays on your Mac. Upload it into the same `AppData/barakah/import` folder as the CSVs (the `api` container sees it at `/import`), then in the `api` container console:
+
+```
+node dist/cli/load-constitution.js /import/constitution_v1.bn.md            # dry run: lists the clauses
+node dist/cli/load-constitution.js /import/constitution_v1.bn.md --commit   # loads it as version 1, once
+```
+
+A loaded version can never be deleted; later changes go through an amendment proposal. Delete the uploaded file afterwards.
+
 ### Loading the real sheet data (once)
 
 The test data on your Mac is not copied to the server. The real members and payments come from the legacy sheet, in three steps.

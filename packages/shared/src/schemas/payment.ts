@@ -85,6 +85,17 @@ export const cashierEntrySchema = z
 
 export type CashierEntry = z.infer<typeof cashierEntrySchema>;
 
+/**
+ * `GET /payments/entry-preview` (cashier): the member's open dues and fines in the order a payment
+ * pays them. Nothing is saved. Entry money has its own quote, so it is not here.
+ */
+export const entryPreviewQuerySchema = z.object({
+  member_id: uuidSchema,
+  purpose: z.enum(['dues', 'levy', 'special']).default('dues'),
+});
+
+export type EntryPreviewQuery = z.infer<typeof entryPreviewQuerySchema>;
+
 /** Confirm body: optional manual allocation, validated against the payment amount by the service. */
 export const paymentConfirmSchema = z.object({
   allocations: z.array(allocationItemSchema).max(100).optional(),

@@ -5,6 +5,7 @@ import {
   approvalDecisionSchema,
   approvalsQuerySchema,
   cashierEntrySchema,
+  entryPreviewQuerySchema,
   paymentConfirmSchema,
   paymentRejectSchema,
   paymentsQuerySchema,
@@ -19,6 +20,7 @@ import {
   approveApproval,
   cashierEntry,
   confirmPayment,
+  entryPreview,
   getPayment,
   listApprovals,
   listPayments,
@@ -73,6 +75,12 @@ export function paymentRoutes(deps: PaymentDeps, guards: Guards) {
           body: await cashierEntry(deps, user, req.body, { ip: req.ip }),
         }));
       },
+    );
+
+    app.get(
+      '/payments/entry-preview',
+      { preHandler: cashier, schema: { querystring: entryPreviewQuerySchema } },
+      (req) => entryPreview(deps, req.query),
     );
 
     app.post(

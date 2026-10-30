@@ -43,20 +43,10 @@ Tick each line when it behaves as described. "Cashier" means signed in as M01, "
 ### Paying and confirming money (Phase 1)
 - [x] **Member:** Pay → press "I have sent money", enter an amount, bKash, a TrxID like `ABC123`, today's date, send. It shows as *under verification*.
 - [x] **Cashier:** Admin → Payments shows it. Open it, check the amount, **Confirm** (asks for the authenticator code the first time). It becomes *confirmed*.
-- [ ] **Member:** the payment is now confirmed and the month's due is paid (or part-paid).
-- [ ] **Cashier:** try the same TrxID again as another member: it is refused (duplicate).
+- [x] **Member:** the payment is now confirmed and the month's due is paid (or part-paid).
+- [x] **Cashier:** try the same TrxID again as another member: it is refused (duplicate).
 - [x] **Cashier:** Admin → Matrix shows every member's month at a glance; **export CSV** downloads a file.
 - [x] **Member:** Menu → Ledger lists every entry. Press "Object" on one; **Auditor** sees it under objections and can resolve it.
-
-### Approving payments from Telegram (needs the real server)
-Telegram can only reach a site with a public https address, so do this on the real server, not on your laptop.
-- [ ] **Cashier:** on Telegram, message `@BotFather`, send `/newbot`, choose a name. It gives a long token.
-- [ ] **Cashier:** Admin → Settings → "Telegram থেকে পেমেন্ট গ্রহণ". Paste the token, press **সংযোগ করুন** (asks for the authenticator code). It shows the bot's name.
-- [ ] **Cashier:** press **আমার Telegram চিনুন**, then **Telegram খুলুন**, and press **Start** in Telegram. The page changes to "আপনার Telegram যুক্ত আছে।"
-- [ ] **Cashier:** tick **Telegram থেকে অনুমোদন চালু**, then **পরীক্ষামূলক বার্তা পাঠান**. A test message arrives in Telegram.
-- [ ] **Member:** send a payment from Pay. **Cashier:** a message arrives in Telegram with the name, amount, method and TrxID. Compare it with your phone's bKash SMS, then press **গ্রহণ করুন**. The message changes to "গৃহীত" and the payment is confirmed on the dashboard.
-- [ ] **Member:** send another. **Cashier:** press **প্রত্যাখ্যান**, pick a reason. The member sees that reason.
-- [ ] **Cashier:** switch the tick off and send a payment: no message arrives.
 
 ### Fines and reminders (Phase 2)
 - [x] **Cashier:** Admin → Notifications: lists who cannot be reached by push, with a "Send reminder" button (once per 6 hours per member), and the log of what was sent.
@@ -67,12 +57,12 @@ Telegram can only reach a site with a public https address, so do this on the re
 - [x] **Members:** Votes → open the proposal → Yes / No / Abstain. You can change your vote until it closes.
 - [x] **Cashier:** when enough members agree, "Close early", then **Execute**. Status becomes *executed*.
 
-- [ ] **Constitution:** Menu → Constitution shows the current version, clause search, and "I have read it". (A version only appears after a `constitution_amendment` proposal is executed with a PDF.)
+- [x] **Constitution:** Menu → Constitution shows the current version, clause search, and "I have read it". (A version only appears after a `constitution_amendment` proposal is executed with a PDF.)
 
-- [ not need now ] **Suspension:** Admin → Members → "Create suspension" for a member, vote, execute. That member can still sign in but cannot pay or vote (read-only).
+- [x] **Suspension:** Admin → Members → "Create suspension" for a member, vote, execute. That member can still sign in but cannot pay or vote (read-only).
 
 ### Assets, rent and levies (Phase 4)
-- [x] **Cashier:** Admin → Proposals → New → "Investment purchase" (for example gold). Tick every compliance box, attach any PDF as the feasibility file, set a maximum amount. Try opening it with one box unticked: it is refused. Tick all, vote, execute with the real cost: the asset appears under **Admin → Assets** and the account you chose (cash or bank) goes down. With a partner chosen, the purchase and its feasibility file also show on that partner's page.
+- [ ] **Cashier:** Admin → Proposals → New → "Investment purchase" (for example gold). Tick every compliance box, attach any PDF as the feasibility file, set a maximum amount. Try opening it with one box unticked: it is refused. Tick all, vote, execute with the real cost: the asset appears under **Admin → Assets** and tbhe cash goes down.
 - [ ] **Cashier:** Admin → Proposals → "Valuation update" for that asset, vote, execute: the **value per share** on the Assets screen changes.
 - [not need now ] **Land in stages:** purchase "Land": it shows *Being acquired*. Use **Pay instalment**, **Attach document** (type "Deed") and **Complete**. It is refused until the deed is attached and the ownership split covers every share.
 - [ not need now] **Rent:** Admin → Rent: add a rent stream, press "Generate this month", then **Receive rent**.

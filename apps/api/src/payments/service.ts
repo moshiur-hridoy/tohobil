@@ -4,6 +4,7 @@ import {
   toDhakaDate,
   type CashierEntry,
   type Clock,
+  type EntryPreviewQuery,
   type ParseSms,
   type PaymentConfirm,
   type PaymentPurpose,
@@ -821,6 +822,62 @@ export async function getPayment(
     out['preview'] = planOut(planDefaultAllocation(toBigInt(row['amount_paisa']), items.dues, items.fines));
   }
   return out;
+}
+
+/**
+ * `GET /payments/entry-preview` (cashier): every open due and fine of the member, one per row, in the
+ * order the default allocation pays them (`confirmInTx`), plus the credit already held and the latest
+ * monthly due. The entry sheet fills these rows top down with the typed amount, so it shows where the
+ * money will go before anything is posted. Read-only.
+ */
+export async function entryPreview(deps: PaymentDeps, input: EntryPreviewQuery): Promise<Record<string, unknown>> {
+  const member = await deps.pool.query(`SELECT 1 FROM members WHERE id = $1`, [input.member_id]);
+  if (member.rowCount === 0) throw notFound('member.not_found', 'Member not found');
+
+  const { dues, fines } = await openItems(deps.pool, input.member_id, input.purpose, deps.clock.todayDhaka());
+  // The order `planDefaultAllocation` pays in, so the sheet can fill the list top down and match it.
+  const order: Array<{ id: string; fine: boolean; ahead: boolean }> = [
+    ...dues.filter((d) => !d.ahead).map((d) => ({ id: d.id, fine: false, ahead: false })),
+    ...fines.map((f) => ({ id: f.id, fine: true, ahead: false })),
+    ...dues.filter((d) => d.ahead).map((d) => ({ id: d.id, fine: false, ahead: true })),
+  ];
+  const outstanding = new Map([...dues, ...fines].map((x) => [x.id, x.outstanding]));
+  const details = await deps.pool.query(
+    `SELECT d.id, d.period, d.kind, d.due_date::text AS due_date, d.amount_paisa FROM dues d WHERE d.id = ANY($1::uuid[])
+     UNION ALL
+     SELECT f.id, d.period, 'fine', NULL, f.amount_paisa FROM fines f LEFT JOIN dues d ON d.id = f.due_id WHERE f.id = ANY($2::uuid[])`,
+    [dues.map((d) => d.id), fines.map((f) => f.id)],
+  );
+  type Detail = { id: string; period: string | null; kind: string; due_date: string | null; amount_paisa: unknown };
+  const byId = new Map((details.rows as Detail[]).map((r) => [r.id, r]));
+
+  const credit = await deps.pool.query(
+    `SELECT COALESCE(SUM(unallocated_paisa), 0) AS c FROM payments WHERE member_id = $1 AND status = 'confirmed'`,
+    [input.member_id],
+  );
+  // The latest monthly due prices the months ahead that have no due yet (ASSUMPTIONS 99).
+  const monthly = await deps.pool.query(
+    `SELECT period, amount_paisa FROM dues WHERE member_id = $1 AND kind = 'monthly' ORDER BY period DESC LIMIT 1`,
+    [input.member_id],
+  );
+  const last = monthly.rows[0] as { period: string; amount_paisa: unknown } | undefined;
+
+  return {
+    items: order.map((o) => {
+      const d = byId.get(o.id) as Detail;
+      return {
+        ...(o.fine ? { fine_id: o.id } : { due_id: o.id }),
+        period: d.period,
+        kind: d.kind,
+        due_date: d.due_date,
+        ahead: o.ahead,
+        amount_paisa: paisaOut(d.amount_paisa),
+        outstanding_paisa: (outstanding.get(o.id) as bigint).toString(),
+      };
+    }),
+    credit_paisa: toBigInt((credit.rows[0] as { c: unknown }).c).toString(),
+    monthly: input.purpose === 'dues' && last ? { period: last.period, amount_paisa: paisaOut(last.amount_paisa) } : null,
+  };
 }
 
 // ---- SMS parsing ----------------------------------------------------------------------------

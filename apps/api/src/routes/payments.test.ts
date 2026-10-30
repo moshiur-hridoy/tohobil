@@ -286,6 +286,27 @@ describe('payments', () => {
     expect((await dueRows(m.M02)).every((d) => d.outstanding === '0')).toBe(true);
   });
 
+  dbIt('entry preview lists open dues and fines in payment order, with credit and the monthly price', async () => {
+    const preview = (who: string, query: string) => call('GET', `/payments/entry-preview?${query}`, who);
+    expect((await preview(s.M02.access_token, `member_id=${m.M04}`)).statusCode).toBe(403);
+
+    // M02 paid everything above and kept 70,000 as credit
+    const paid = await preview(s.M01.access_token, `member_id=${m.M02}`);
+    expect(paid.statusCode).toBe(200);
+    const [m02Sep] = (await dueRows(m.M02)).slice(-1);
+    expect(paid.json()).toEqual({ items: [], credit_paisa: '70000', monthly: { period: '2026-09', amount_paisa: m02Sep!.amount } });
+
+    // M04 owes August and September: oldest first, one row each (fine order is in allocation.test.ts)
+    const [aug, sep] = await dueRows(m.M04);
+    const res = await preview(s.M01.access_token, `member_id=${m.M04}`);
+    expect(res.json().items).toEqual([
+      { due_id: aug!.due_id, period: '2026-08', kind: 'monthly', due_date: expect.any(String), ahead: false, amount_paisa: aug!.amount, outstanding_paisa: aug!.outstanding },
+      { due_id: sep!.due_id, period: '2026-09', kind: 'monthly', due_date: expect.any(String), ahead: false, amount_paisa: sep!.amount, outstanding_paisa: sep!.outstanding },
+    ]);
+    // levy money never pays monthly dues or fines, and has no monthly price to project
+    expect((await preview(s.M01.access_token, `member_id=${m.M04}&purpose=levy`)).json()).toMatchObject({ items: [], monthly: null });
+  });
+
   dbIt('confirm twice is 409 and posts nothing more', async () => {
     const p = (await submit(s.M03.access_token, { amount_paisa: '1000' })).json().id as string;
     expect((await confirm(p)).statusCode).toBe(200);

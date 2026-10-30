@@ -46,6 +46,13 @@ export function MemberLayout() {
     refetchInterval: 60_000,
   });
   const openVotes = proposals.data?.items.filter((p) => p.status === 'open').length ?? 0;
+  // Same query as the Notices page, so opening a notice there lowers the bell's count here too.
+  const notices = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => api<{ items: Array<{ opened_at: string | null }> }>('/notifications?channel=push&limit=50'),
+    refetchInterval: 60_000,
+  });
+  const unread = notices.data?.items.filter((n) => !n.opened_at).length ?? 0;
   const onHome = useLocation().pathname === '/home';
   const initial = me?.full_name?.trim().charAt(0) || '👤';
   const myPhoto = useMyPhoto();
@@ -69,11 +76,20 @@ export function MemberLayout() {
         <Link
           to="/menu/notices"
           aria-label={t('notices.title')}
-          className="grid h-11 w-11 place-items-center rounded-[14px] border border-border bg-card text-foreground"
+          className="relative grid h-11 w-11 place-items-center rounded-[14px] border border-border bg-card text-foreground"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7 M10 20a2 2 0 0 0 4 0" />
           </svg>
+          {unread > 0 && (
+            <span
+              role="status"
+              aria-label={t('notices.unreadCount', { count: unread })}
+              className="absolute -right-1.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-bad px-1 text-[0.6875rem] font-bold leading-none text-on-bad"
+            >
+              {unread > 9 ? '9+' : unread}
+            </span>
+          )}
         </Link>
       </header>
       )}

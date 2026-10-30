@@ -6,10 +6,13 @@ import { ConfirmSheet, SheetRow } from '../../../components/ConfirmSheet';
 import { api } from '../../../lib/api';
 import { uuid } from '../../../lib/uuid';
 import { errorMessage } from '../../../lib/errors';
-import { dayToIso, fmtDate, todayDhaka } from '../../../lib/dates';
+import { dayToIso, fmtDate, fmtPeriod, todayDhaka } from '../../../lib/dates';
 import { paisaToDecimal, parseAmountInput, taka } from '../../../lib/money';
+import { formatCount } from '../../../lib/format';
 import type { MemberRow, ParsedSms, PaymentInstructions } from '../../../lib/types';
 import { DateInput } from '../../../components/ui';
+import { StatusPill } from '../../../components/StatusPill';
+import { MAX_AHEAD, amountForTap, entryRows, type EntryPreview, type EntryRow } from './entryRows';
 
 type Purpose = 'dues' | 'special' | 'levy' | 'entry';
 const PURPOSE_LABEL: Record<Purpose, string> = {
@@ -111,6 +114,15 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
   };
 
   const paisa = parseAmountInput(amount);
+  // The member's open months, filled with the typed amount in the order the server will pay them.
+  const preview = useQuery({
+    queryKey: ['entry-preview', memberId, purpose],
+    queryFn: () => api<EntryPreview>(`/payments/entry-preview?member_id=${memberId}&purpose=${purpose}`),
+    enabled: open && !!memberId && !prospective && purpose !== 'entry',
+  });
+  const fill = preview.data && purpose !== 'entry' ? entryRows(preview.data, BigInt(paisa ?? '0'), todayDhaka()) : null;
+  const aheadPaid = fill?.rows.reduce((s, r) => s + (r.status === 'advance' ? r.covered : 0n), 0n) ?? 0n;
+  const forPeriods = [...new Set(fill?.rows.flatMap((r) => (r.covered > 0n && r.period ? [r.period] : [])) ?? [])];
   const needsTrx = method === 'bkash' || method === 'nagad' || method === 'bank';
   const entryBlocked = purpose === 'entry' && (!q || date > q.pay_by);
   const valid = !!paisa && !!memberId && date <= todayDhaka() && (!needsTrx || trx.trim() !== '') && !entryBlocked;
@@ -126,6 +138,7 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
         ...(trx.trim() ? { trx_id: trx.trim() } : {}),
         paid_at: dayToIso(date),
         ...(purpose !== 'dues' ? { purpose } : {}),
+        ...(forPeriods.length > 0 ? { for_periods: forPeriods.slice(0, 24) } : {}),
         ...(prefill?.rawSms ? { raw_sms: prefill.rawSms } : {}),
       },
     });
@@ -184,6 +197,26 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
         {t('payment.amount')} (৳)
         <input className={field} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
       </label>
+      {fill && (
+        <fieldset className="min-w-0">
+          <legend className="text-sm font-semibold">{t('paymentsPage.entryRowsTitle')}</legend>
+          {fill.rows.length === 0 ? (
+            <p className="mt-1 text-sm text-muted">{t('paymentsPage.owedNothing')}</p>
+          ) : (
+            <>
+              <p className="mb-1.5 text-xs text-muted">{t('paymentsPage.entryRowsHint')}</p>
+              <ul className="space-y-1.5">
+                {fill.rows.map((r, i) => (
+                  <EntryRowCard key={r.key} row={r} onTap={() => setAmount(paisaToDecimal(amountForTap(fill.rows, i)))} />
+                ))}
+              </ul>
+            </>
+          )}
+          {preview.data && preview.data.credit_paisa !== '0' && (
+            <p className="mt-1.5 text-xs text-muted">{t('paymentsPage.creditHeld', { amount: taka(preview.data.credit_paisa) })}</p>
+          )}
+        </fieldset>
+      )}
       <label className="field-label">
         {t('payment.method')}
         <select className={field} value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
@@ -208,7 +241,52 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
           <SheetRow label={t('paymentsPage.paidAt')} value={fmtDate(date)} />
         </div>
       )}
+      {valid && fill && (aheadPaid > 0n || fill.leftover > 0n) && (
+        <div role="alert" className="space-y-1 rounded-md border border-warn bg-warn-bg p-3 text-sm text-warn">
+          {aheadPaid > 0n && <p>{t('paymentsPage.aheadWarn', { amount: taka(aheadPaid) })}</p>}
+          {fill.leftover > 0n &&
+            (preview.data?.monthly ? (
+              <p>{t('paymentsPage.leftoverWarn', { months: formatCount(MAX_AHEAD), amount: taka(fill.leftover) })}</p>
+            ) : (
+              <p>{t(fill.rows.length === 0 ? 'paymentsPage.creditWarnAll' : 'paymentsPage.creditWarn', { amount: taka(fill.leftover) })}</p>
+            ))}
+        </div>
+      )}
       <p className="text-warn">{t('paymentsPage.entryWarn')}</p>
     </ConfirmSheet>
+  );
+}
+
+/**
+ * One month (or fine) in the entry sheet, smaller than the pay page's card. Ticked when the amount
+ * pays it in full; a part payment says how much lands and how much stays open. Tapping it sets the
+ * amount (see `amountForTap`).
+ */
+function EntryRowCard({ row, onTap }: { row: EntryRow; onTap: () => void }) {
+  const { t } = useTranslation();
+  const full = row.covered === row.need;
+  const part = row.covered > 0n && !full;
+  const title =
+    row.kind === 'fine'
+      ? `${t('pay.fineLabel')}${row.period ? ` · ${fmtPeriod(row.period)}` : ''}`
+      : `${row.period ? fmtPeriod(row.period) : ''}${row.kind !== 'monthly' ? ` · ${t(`pay.dueKind.${row.kind}`)}` : ''}`;
+  return (
+    <li>
+      <label className={`flex min-h-12 cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-1.5 ${full ? 'border-primary bg-primary-soft' : part ? 'border-warn bg-warn-bg' : 'border-border bg-card'}`}>
+        <input type="checkbox" checked={full} onChange={onTap} className="h-[18px] w-[18px] shrink-0 accent-[var(--primary)]" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold">{title}</span>
+          {part ? (
+            <span className="block text-xs font-semibold text-warn">{t('paymentsPage.entryPartial', { paid: taka(row.covered), left: taka(row.need - row.covered) })}</span>
+          ) : (
+            row.dueDate && <span className="block text-xs text-muted">{t('pay.dueDate', { date: fmtDate(row.dueDate) })}</span>
+          )}
+        </span>
+        <span className="flex shrink-0 items-center gap-2">
+          <span className="text-sm font-bold">{taka(row.need)}</span>
+          <StatusPill status={row.status} />
+        </span>
+      </label>
+    </li>
   );
 }

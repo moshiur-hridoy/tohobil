@@ -39,6 +39,9 @@ interface RequestOptions {
 }
 
 async function send(path: string, opts: RequestOptions): Promise<Response> {
+  // The public UI demo answers from recorded data instead of a server (docs/DEMO.md).
+  // Normal builds drop this branch and never load the demo code.
+  if (import.meta.env.VITE_DEMO === '1') return (await import('../demo/mock')).demoFetch(path, opts);
   const headers: Record<string, string> = { ...opts.headers };
   const isForm = typeof FormData !== 'undefined' && opts.body instanceof FormData;
   if (opts.body !== undefined && !isForm) headers['content-type'] = 'application/json';

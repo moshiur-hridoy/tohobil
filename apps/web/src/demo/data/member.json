@@ -1,0 +1,7111 @@
+{
+ "/accounts/balances": {
+  "items": [
+   {
+    "code": "CASH",
+    "name": "Cash in Hand",
+    "kind": "asset",
+    "is_cash": true,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "BANK",
+    "name": "Bank Account",
+    "kind": "asset",
+    "is_cash": true,
+    "retired": false,
+    "balance_paisa": "95100000",
+    "natural_balance_paisa": "95100000"
+   },
+   {
+    "code": "BKASH",
+    "name": "bKash Account",
+    "kind": "asset",
+    "is_cash": true,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "NAGAD",
+    "name": "Nagad Account",
+    "kind": "asset",
+    "is_cash": true,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "INVESTMENTS_AT_COST",
+    "name": "Investments at Cost",
+    "kind": "asset",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "MEMBER_CAPITAL",
+    "name": "Member Capital",
+    "kind": "equity",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "-95500000",
+    "natural_balance_paisa": "95500000"
+   },
+   {
+    "code": "OPENING_ADJUSTMENT",
+    "name": "Opening Adjustment",
+    "kind": "equity",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "SETTLEMENT_PAYABLE",
+    "name": "Settlement Payable",
+    "kind": "liability",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "MEMBER_ESCROW",
+    "name": "Member Escrow",
+    "kind": "liability",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "CHARITY_PAYABLE",
+    "name": "Charity Payable",
+    "kind": "liability",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "LEVY_CLEARING",
+    "name": "Levy Clearing",
+    "kind": "liability",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "INACTIVE_HELD",
+    "name": "Inactive Member Held",
+    "kind": "liability",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "MEMBER_QARD",
+    "name": "Member Qard",
+    "kind": "liability",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "DEFERRED_PURCHASE_PAYABLE",
+    "name": "Deferred Purchase Payable",
+    "kind": "liability",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "FINE_INCOME",
+    "name": "Fine Income (legacy)",
+    "kind": "income",
+    "is_cash": false,
+    "retired": true,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "RENT_INCOME",
+    "name": "Rent Income",
+    "kind": "income",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "BANK_PROFIT",
+    "name": "Bank Profit (permitted)",
+    "kind": "income",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "ASSET_GAIN",
+    "name": "Asset Gain",
+    "kind": "income",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "OTHER_INCOME",
+    "name": "Other Income",
+    "kind": "income",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "EXIT_FEE_INCOME",
+    "name": "Exit Fee Income",
+    "kind": "income",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "BANK_CHARGE",
+    "name": "Bank Charge",
+    "kind": "expense",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "SMS_CHARGE",
+    "name": "SMS Charge",
+    "kind": "expense",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "MAINTENANCE",
+    "name": "Maintenance",
+    "kind": "expense",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "ASSET_LOSS",
+    "name": "Asset Loss",
+    "kind": "expense",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "OTHER_EXPENSE",
+    "name": "Other Expense",
+    "kind": "expense",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "0",
+    "natural_balance_paisa": "0"
+   },
+   {
+    "code": "DISTRIBUTIONS",
+    "name": "Distributions",
+    "kind": "expense",
+    "is_cash": false,
+    "retired": false,
+    "balance_paisa": "400000",
+    "natural_balance_paisa": "400000"
+   }
+  ]
+ },
+ "/assets?limit=200": {
+  "items": [
+   {
+    "id": "6d0f97ab-cf7a-4cbf-b441-e9f7d94f83ca",
+    "kind": "land",
+    "name": "গাজীপুরে ৫ কাঠা জমি",
+    "description": "ভবিষ্যতে দোকান ভাড়ার জন্য",
+    "location": "গাজীপুর",
+    "acquired_on": null,
+    "cost_paisa": "0",
+    "quantity": null,
+    "unit": null,
+    "status": "planned",
+    "sold_on": null,
+    "sale_price_paisa": null,
+    "legal_owner_name": null,
+    "ownership_split": null,
+    "compliance": null,
+    "feasibility_file_id": null,
+    "proposal_id": null,
+    "partner_id": null,
+    "created_at": "2026-10-30T14:49:46.972Z",
+    "latest_value_paisa": null,
+    "latest_value_as_of": null
+   },
+   {
+    "id": "fde086af-976a-4e0c-9d2c-6a865edf4c6f",
+    "kind": "gold",
+    "name": "সোনা ১০ ভরি",
+    "description": "দীর্ঘমেয়াদি সঞ্চয়ের জন্য সোনা কেনার পরিকল্পনা",
+    "location": null,
+    "acquired_on": null,
+    "cost_paisa": "0",
+    "quantity": "10.0000",
+    "unit": "vori",
+    "status": "planned",
+    "sold_on": null,
+    "sale_price_paisa": null,
+    "legal_owner_name": null,
+    "ownership_split": null,
+    "compliance": null,
+    "feasibility_file_id": null,
+    "proposal_id": null,
+    "partner_id": null,
+    "created_at": "2026-10-30T14:49:46.883Z",
+    "latest_value_paisa": null,
+    "latest_value_as_of": null
+   }
+  ]
+ },
+ "/constitution/versions": {
+  "items": []
+ },
+ "/device-events": {
+  "items": [
+   {
+    "id": "6eee10c1-3d84-49b1-a6fb-c3befa23d4bf",
+    "kind": "registered",
+    "at": "2026-10-30T14:51:46.143Z",
+    "member_code": "M02",
+    "full_name": "সদস্য দুই"
+   },
+   {
+    "id": "5e700302-e712-448a-ade9-7b6c169d2db2",
+    "kind": "reset",
+    "at": "2026-10-30T14:51:46.137Z",
+    "member_code": "M02",
+    "full_name": "সদস্য দুই"
+   },
+   {
+    "id": "d70b4075-8748-4b08-80fe-cbb2ec2c4a6c",
+    "kind": "registered",
+    "at": "2026-10-30T14:50:48.749Z",
+    "member_code": "M07",
+    "full_name": "সদস্য সাত"
+   },
+   {
+    "id": "061c1feb-4579-4a59-b840-9fb8be81effb",
+    "kind": "reset",
+    "at": "2026-10-30T14:50:48.743Z",
+    "member_code": "M07",
+    "full_name": "সদস্য সাত"
+   },
+   {
+    "id": "fb7db9c6-7649-403f-a477-b4608bdc73be",
+    "kind": "registered",
+    "at": "2026-10-30T14:49:49.036Z",
+    "member_code": "M01",
+    "full_name": "সদস্য এক"
+   },
+   {
+    "id": "df89cc53-249f-456a-820c-17536393c561",
+    "kind": "reset",
+    "at": "2026-10-30T14:49:49.032Z",
+    "member_code": "M01",
+    "full_name": "সদস্য এক"
+   },
+   {
+    "id": "01f60dc2-84a7-4d0c-9d28-09cb0d6a2571",
+    "kind": "registered",
+    "at": "2026-10-30T14:49:44.815Z",
+    "member_code": "M08",
+    "full_name": "সদস্য আট"
+   },
+   {
+    "id": "86687e20-0cc4-489d-87b9-03bb8a53d0c3",
+    "kind": "registered",
+    "at": "2026-10-30T14:49:43.866Z",
+    "member_code": "M07",
+    "full_name": "সদস্য সাত"
+   },
+   {
+    "id": "39962ebc-182f-45ab-a515-6ca870061f31",
+    "kind": "registered",
+    "at": "2026-10-30T14:49:43.019Z",
+    "member_code": "M06",
+    "full_name": "সদস্য ছয়"
+   },
+   {
+    "id": "71c6af73-5069-4638-b6e6-9dc1d929aa3c",
+    "kind": "registered",
+    "at": "2026-10-30T14:49:42.126Z",
+    "member_code": "M05",
+    "full_name": "সদস্য পাঁচ"
+   },
+   {
+    "id": "873c22f5-9f08-4d6e-8601-3ffce41b8f52",
+    "kind": "registered",
+    "at": "2026-10-30T14:49:41.250Z",
+    "member_code": "M04",
+    "full_name": "সদস্য চার"
+   },
+   {
+    "id": "211b010c-dbf9-427b-b042-6d021b2522e8",
+    "kind": "registered",
+    "at": "2026-10-30T14:49:40.517Z",
+    "member_code": "M03",
+    "full_name": "সদস্য তিন"
+   },
+   {
+    "id": "a335402d-9f37-424a-929c-ddbd6d093d69",
+    "kind": "registered",
+    "at": "2026-10-30T14:49:39.750Z",
+    "member_code": "M02",
+    "full_name": "সদস্য দুই"
+   },
+   {
+    "id": "74821d20-ff07-43d1-ba0c-eb5e790fc2bf",
+    "kind": "registered",
+    "at": "2026-10-30T14:49:38.826Z",
+    "member_code": "M01",
+    "full_name": "সদস্য এক"
+   }
+  ]
+ },
+ "/dues?member_id=a0000000-0000-0000-0000-000000000002&limit=60": {
+  "items": [
+   {
+    "id": "762ca12f-b867-4484-95fc-b0af44822a80",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "period": "2026-10",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-10-20",
+    "status": "paid",
+    "under_verification": false
+   },
+   {
+    "id": "16d3c1e1-732b-49d4-9b13-9cc1ea1e3390",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "period": "2026-09",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-09-20",
+    "status": "paid",
+    "under_verification": false
+   },
+   {
+    "id": "8bad42c4-2970-4d81-9175-fc95d4a19f35",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "period": "2026-08",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-08-20",
+    "status": "paid",
+    "under_verification": false
+   },
+   {
+    "id": "40ed8b42-9e91-4563-8713-0e58b218c47f",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "period": "2026-07",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-07-20",
+    "status": "paid",
+    "under_verification": false
+   },
+   {
+    "id": "27c3e4a4-2dea-4f6e-9e6b-4f6c40a02484",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "period": "2026-06",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-06-20",
+    "status": "paid",
+    "under_verification": false
+   },
+   {
+    "id": "786d9134-eb35-4c12-8406-755a8d078945",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "period": "2026-05",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-05-20",
+    "status": "paid",
+    "under_verification": false
+   },
+   {
+    "id": "dd748b80-0416-486d-a82e-712b781ef0c2",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "period": "2026-04",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-04-20",
+    "status": "paid",
+    "under_verification": false
+   },
+   {
+    "id": "aa715d1b-8ae5-4e62-abb9-679d7a97f31a",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "period": "2026-03",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-03-20",
+    "status": "paid",
+    "under_verification": false
+   },
+   {
+    "id": "018e8a20-0b0d-4f58-bbb8-b99f7ddb0436",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "period": "2026-02",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-02-20",
+    "status": "paid",
+    "under_verification": false
+   },
+   {
+    "id": "036ae54f-4399-488a-930b-3655de8749a4",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "period": "2026-01",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-01-20",
+    "status": "paid",
+    "under_verification": false
+   }
+  ],
+  "next_cursor": null
+ },
+ "/fines?member_id=a0000000-0000-0000-0000-000000000002&limit=60": {
+  "items": [],
+  "next_cursor": null
+ },
+ "/ledger?limit=50&order=desc": {
+  "items": [
+   {
+    "seq": "81",
+    "entry_date": "2026-10-30",
+    "debit_account": "DISTRIBUTIONS",
+    "credit_account": "BANK",
+    "amount_paisa": "80000",
+    "member_id": null,
+    "member_code": null,
+    "ref_type": "proposal",
+    "ref_id": "40aea313-6890-4af9-b204-6dc8e7b051d3",
+    "memo": "Distribution by shares (4)",
+    "hash": "9eb39e8fe729c4976a2ca4b8c7e021e7097a4546f19ecf3798bab19b9714c6db",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "80",
+    "entry_date": "2026-10-30",
+    "debit_account": "DISTRIBUTIONS",
+    "credit_account": "BANK",
+    "amount_paisa": "80000",
+    "member_id": null,
+    "member_code": null,
+    "ref_type": "proposal",
+    "ref_id": "40aea313-6890-4af9-b204-6dc8e7b051d3",
+    "memo": "Distribution by shares (4)",
+    "hash": "cddd078d8305dec22216c7265f939e2c2b4f90bcae6a678d35495f15afcaf810",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "79",
+    "entry_date": "2026-10-30",
+    "debit_account": "DISTRIBUTIONS",
+    "credit_account": "BANK",
+    "amount_paisa": "20000",
+    "member_id": null,
+    "member_code": null,
+    "ref_type": "proposal",
+    "ref_id": "40aea313-6890-4af9-b204-6dc8e7b051d3",
+    "memo": "Distribution by shares (1)",
+    "hash": "7706c8c4c566905626ddde0e84306c2573f66fe5ba296050e620c76a553a3281",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "78",
+    "entry_date": "2026-10-30",
+    "debit_account": "DISTRIBUTIONS",
+    "credit_account": "BANK",
+    "amount_paisa": "60000",
+    "member_id": null,
+    "member_code": null,
+    "ref_type": "proposal",
+    "ref_id": "40aea313-6890-4af9-b204-6dc8e7b051d3",
+    "memo": "Distribution by shares (3)",
+    "hash": "4fe31d7555eb4945b3a037e6ac68c6dcc55103ddd5a270ecd6acb9d51617662d",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "77",
+    "entry_date": "2026-10-30",
+    "debit_account": "DISTRIBUTIONS",
+    "credit_account": "BANK",
+    "amount_paisa": "20000",
+    "member_id": null,
+    "member_code": null,
+    "ref_type": "proposal",
+    "ref_id": "40aea313-6890-4af9-b204-6dc8e7b051d3",
+    "memo": "Distribution by shares (1)",
+    "hash": "388311be5cecaebd66c794aa2ac5b78e0708858e4607426e8a8aba81d020c8fb",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "76",
+    "entry_date": "2026-10-30",
+    "debit_account": "DISTRIBUTIONS",
+    "credit_account": "BANK",
+    "amount_paisa": "20000",
+    "member_id": null,
+    "member_code": null,
+    "ref_type": "proposal",
+    "ref_id": "40aea313-6890-4af9-b204-6dc8e7b051d3",
+    "memo": "Distribution by shares (1)",
+    "hash": "03b204fee2a9a185688ee6dafdac4527ac3374e9c5b5339cb45c6fd8e99196ed",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "75",
+    "entry_date": "2026-10-30",
+    "debit_account": "DISTRIBUTIONS",
+    "credit_account": "BANK",
+    "amount_paisa": "80000",
+    "member_id": null,
+    "member_code": null,
+    "ref_type": "proposal",
+    "ref_id": "40aea313-6890-4af9-b204-6dc8e7b051d3",
+    "memo": "Distribution by shares (4)",
+    "hash": "f32dc456c8df4232521c5a67ee3b2be1447d63672071f9df6742ea874447809c",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "74",
+    "entry_date": "2026-10-30",
+    "debit_account": "DISTRIBUTIONS",
+    "credit_account": "BANK",
+    "amount_paisa": "40000",
+    "member_id": null,
+    "member_code": null,
+    "ref_type": "proposal",
+    "ref_id": "40aea313-6890-4af9-b204-6dc8e7b051d3",
+    "memo": "Distribution by shares (2)",
+    "hash": "c91018d2bb4650a1890f745222a823c16aa670765d57596bbb33c6a25b2f1a17",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "73",
+    "entry_date": "2026-10-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "ref_type": "payment",
+    "ref_id": "555ea421-2d34-4d7d-838b-748dea57d3a3",
+    "memo": "principal",
+    "hash": "a32f5a19bf9fa40e39e05b96542b829017314244ed0672bbf1cc2e30e177b65f",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "72",
+    "entry_date": "2026-09-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "ref_type": "payment",
+    "ref_id": "ead9746a-2663-4a61-80e0-124b45146b96",
+    "memo": "principal",
+    "hash": "2dac959e8d1c75d90516cffc6577ababe230b2182874c55c8213c3b76829ed44",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "71",
+    "entry_date": "2026-08-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "ref_type": "payment",
+    "ref_id": "9101f527-ce6f-4ade-9387-b0cf544f3a1b",
+    "memo": "principal",
+    "hash": "f13ec6be4dddfb0c51ad0e7eede15d0ecb1dd6eabe6f39d7c494aea0fc78232f",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "70",
+    "entry_date": "2026-07-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "ref_type": "payment",
+    "ref_id": "e1014128-4040-459a-be75-39c1ada6422a",
+    "memo": "principal",
+    "hash": "bdecd4b5570b98da2b820d8a7b3bcde94055e98d045ab29dfdb3fe28e41fbffb",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "69",
+    "entry_date": "2026-06-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "ref_type": "payment",
+    "ref_id": "43182b09-21a9-4834-a8e1-88fe511a7797",
+    "memo": "principal",
+    "hash": "f3625036ce18052e453a2728148f09fb2335c031914f74249527b922fe644205",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "68",
+    "entry_date": "2026-05-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "ref_type": "payment",
+    "ref_id": "6d294bac-0c83-41d4-8971-0efab7f741d8",
+    "memo": "principal",
+    "hash": "2b3bffcb80f2a721d72d58bd9ef66bac143d0ee45861e5c7ffca35941c20f452",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "67",
+    "entry_date": "2026-04-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "ref_type": "payment",
+    "ref_id": "65f17a73-e56b-4ce9-bc7c-cf064dfc2859",
+    "memo": "principal",
+    "hash": "135037aa921ea44258c1cb26e60b839157409431b37394970d5061292670d3d1",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "66",
+    "entry_date": "2026-03-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "ref_type": "payment",
+    "ref_id": "26b04bd9-ff95-4e09-839b-e26cd709f5bf",
+    "memo": "principal",
+    "hash": "c0f4bfc3dde9c55729e420d5bf2155aab1d03b6267cc31b7828bbd13acd1b826",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "65",
+    "entry_date": "2026-02-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "ref_type": "payment",
+    "ref_id": "e76e1d27-cad7-440d-a7e5-ce3382c53bbc",
+    "memo": "principal",
+    "hash": "ad0ff7f9c6561cbb500a5149fe1510406b7a96cb4992908c0c546bc9b69bdebc",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "64",
+    "entry_date": "2026-01-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "ref_type": "payment",
+    "ref_id": "b977f246-a2fe-4167-b7a3-934055b72d6c",
+    "memo": "principal",
+    "hash": "1a3422138c1999b7bd0991acb79de42c614dad94774805adc74993594b57a2b9",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "63",
+    "entry_date": "2026-10-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "ref_type": "payment",
+    "ref_id": "47c81946-eedf-4e11-8ed4-1cc37a5f4809",
+    "memo": "principal",
+    "hash": "a248356f290adb9f5b8f83bd6fcfe64cc4b2b4ab4749f6f512a3762e5e04a155",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "62",
+    "entry_date": "2026-09-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "ref_type": "payment",
+    "ref_id": "41dace53-9e95-4885-a2a7-5fc2ce7e1555",
+    "memo": "principal",
+    "hash": "8a3bb4b8437310231093f7d56382382d98d7a88df694a55de94b7d9ac4190a09",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "61",
+    "entry_date": "2026-08-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "ref_type": "payment",
+    "ref_id": "2c7e042d-d7f4-4f2a-85b4-237702dda99b",
+    "memo": "principal",
+    "hash": "2459e836786b8aa98ec762dfbab1e652a42acecfd809a9d0d4164e4a9250aa8d",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "60",
+    "entry_date": "2026-07-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "ref_type": "payment",
+    "ref_id": "0ee8d848-0acc-40e3-8289-9af07fc4cb80",
+    "memo": "principal",
+    "hash": "73acfd9945fde7d8f79e918cc0a017de020bfd081c893493b375007f6bc75a95",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "59",
+    "entry_date": "2026-06-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "ref_type": "payment",
+    "ref_id": "05a7fbbf-8e3a-4dd2-9160-1e7eb52428e2",
+    "memo": "principal",
+    "hash": "b96fdd9c2ecc1d6224f2bbaa714ee378ec03f082fbd24594d9a7f7a0d2e3f02a",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "58",
+    "entry_date": "2026-05-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "ref_type": "payment",
+    "ref_id": "7b48bf9a-3030-4ebf-b938-a0c1058e01b4",
+    "memo": "principal",
+    "hash": "099a39968d94c5f3023e196801327693e77e3fecbd840c125f0f3594fb16ec2f",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "57",
+    "entry_date": "2026-04-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "ref_type": "payment",
+    "ref_id": "13189904-f088-49b0-91e9-73365f464b86",
+    "memo": "principal",
+    "hash": "ff55e0cacf6f42e4e7d25e0d5b6a2b9ceb1fe2549a61ca0ac9c0e52fa38c3ad5",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "56",
+    "entry_date": "2026-03-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "ref_type": "payment",
+    "ref_id": "8b66b2e2-6b37-4d27-9c82-be30ccfd1d78",
+    "memo": "principal",
+    "hash": "c5c25c21a43bb91d433456037501fa1cbcc26da63048a30611fefc71bd039cde",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "55",
+    "entry_date": "2026-02-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "ref_type": "payment",
+    "ref_id": "c0ca5810-fe54-4896-8742-859657ba5c75",
+    "memo": "principal",
+    "hash": "a435bfd4ad3e5dd518eb5319a3cc9568ed5123792e11567d8986f2c34b7008b4",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "54",
+    "entry_date": "2026-01-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "2000000",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "ref_type": "payment",
+    "ref_id": "f8d05710-d334-488a-942d-17115db0b457",
+    "memo": "principal",
+    "hash": "72fd86e3632d1c15a57c1c1467e43921f72890e3650da8a25139e753777ee245",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "53",
+    "entry_date": "2026-07-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "500000",
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "member_code": "M06",
+    "ref_type": "payment",
+    "ref_id": "8ef66439-ee1a-4d92-82db-0fc9aae6a4e5",
+    "memo": "principal",
+    "hash": "57b94e4d2fff641109629bc44fc2bdb6fae655b8507300d63a6e052dd76393ec",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "52",
+    "entry_date": "2026-06-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "500000",
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "member_code": "M06",
+    "ref_type": "payment",
+    "ref_id": "32767792-8891-46e6-bffe-f8ca3418c23e",
+    "memo": "principal",
+    "hash": "2b609a376e05c4eae67d0ab42cd92301a84727689d4f50914ed4d13227a39a69",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "51",
+    "entry_date": "2026-05-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "500000",
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "member_code": "M06",
+    "ref_type": "payment",
+    "ref_id": "24736760-0148-4ed6-ade4-40307cb2b3eb",
+    "memo": "principal",
+    "hash": "9a778f759ea11d981c421fcb7b2db71d5987aca524efd1c9216f895e7e0346aa",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "50",
+    "entry_date": "2026-04-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "500000",
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "member_code": "M06",
+    "ref_type": "payment",
+    "ref_id": "e4a86fe0-c9c8-4333-8bd4-5c093d411135",
+    "memo": "principal",
+    "hash": "979203c0a2bec708dc9e6f584676ec126a755a58bc993271869080f3b39cd52a",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "49",
+    "entry_date": "2026-03-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "500000",
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "member_code": "M06",
+    "ref_type": "payment",
+    "ref_id": "23be5a4c-de76-4ba0-bfc3-3e321cf8c6f5",
+    "memo": "principal",
+    "hash": "ef3659479558d199f797d4d93fe849c35d791fc3e26a14a53092c30f6a58054f",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "48",
+    "entry_date": "2026-02-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "500000",
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "member_code": "M06",
+    "ref_type": "payment",
+    "ref_id": "0938c66d-cc48-4ea1-8972-05c5e3fd9bea",
+    "memo": "principal",
+    "hash": "05c28765676f5c161f177c550a44438640d61c46c2071b831dbd8ef7c12ccbdc",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "47",
+    "entry_date": "2026-01-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "500000",
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "member_code": "M06",
+    "ref_type": "payment",
+    "ref_id": "8eb12d33-a4e2-4d15-b1e7-bcdd0fdab6af",
+    "memo": "principal",
+    "hash": "8682e35dc15778f4b14fc7423b4f2846ca3c9052f94d7a37b0326830ad70d471",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "46",
+    "entry_date": "2026-09-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "1500000",
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "ref_type": "payment",
+    "ref_id": "26e6309d-5ff9-41ff-a8dc-e7dc0c86fa37",
+    "memo": "principal",
+    "hash": "d84c78b1cdc2e17db22d510930c9f0ab324b2ec27751b54190aeacb6ee9eed4c",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "45",
+    "entry_date": "2026-08-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "1500000",
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "ref_type": "payment",
+    "ref_id": "cac020c0-7868-462f-b159-f9b27dd8cf77",
+    "memo": "principal",
+    "hash": "d4f8a254adfaa5d73e67bc63f59dd15aa185b7244705bd3f1b7e5f85201edecf",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "44",
+    "entry_date": "2026-07-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "1500000",
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "ref_type": "payment",
+    "ref_id": "eee8210e-a153-4e17-8842-62dcfa4d9d19",
+    "memo": "principal",
+    "hash": "f2cf1b9812267030070942061521032f72935aecb83c0914be02ae91f647a94c",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "43",
+    "entry_date": "2026-06-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "1500000",
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "ref_type": "payment",
+    "ref_id": "5fc0ea5e-84ed-4247-8e60-37ed4f7b8619",
+    "memo": "principal",
+    "hash": "f326d410623f3f0c496766ce3ff7a6ab6e223dce62b139232703df72941c44ac",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "42",
+    "entry_date": "2026-05-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "1500000",
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "ref_type": "payment",
+    "ref_id": "b4e7c56f-6da9-40f8-a754-1d30e4410e04",
+    "memo": "principal",
+    "hash": "4535aca5ebb21e7d7bdcc710aa0f67eb6b7be84ef9293fdb26f760077143d962",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "41",
+    "entry_date": "2026-04-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "1500000",
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "ref_type": "payment",
+    "ref_id": "a9c85945-7f94-4337-9611-945252243f5e",
+    "memo": "principal",
+    "hash": "320321e7cab8d7cbc855d9d05122842ef22592608ceb637678f75a364c2db4f2",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "40",
+    "entry_date": "2026-03-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "1500000",
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "ref_type": "payment",
+    "ref_id": "be526063-bb9c-4aaf-be60-dd97d8df5caf",
+    "memo": "principal",
+    "hash": "230a0452d2f0db8fdcd6782430df4684ab9847dde987dec64aff3a7c39641bd0",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "39",
+    "entry_date": "2026-02-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "1500000",
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "ref_type": "payment",
+    "ref_id": "26e940a8-d96c-48dc-87cd-6b845d193cae",
+    "memo": "principal",
+    "hash": "ca748007fbbe0d9d0a3179aff559706ef367f787c1f269d1379715ad04a696bd",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "38",
+    "entry_date": "2026-01-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "1500000",
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "ref_type": "payment",
+    "ref_id": "84413204-d579-4e42-a85a-30903fed03d2",
+    "memo": "principal",
+    "hash": "e5d8b9a6be2d40f98ff89c710200b375e4e0ba25f1de5fe8a36a6b1cdc78c9d5",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "37",
+    "entry_date": "2026-08-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "500000",
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "member_code": "M04",
+    "ref_type": "payment",
+    "ref_id": "976f8f4d-9a28-4dad-af74-ee07bf20c2db",
+    "memo": "principal",
+    "hash": "c90f2b8032540b3b093a0a4790b817432759bcfc751ca5c55bdb3efeddccebdd",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "36",
+    "entry_date": "2026-07-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "500000",
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "member_code": "M04",
+    "ref_type": "payment",
+    "ref_id": "5dd541e6-a5e2-406f-a2ed-6fb8f31578aa",
+    "memo": "principal",
+    "hash": "76637dbf8324a4566c8f5c269a778b6415a2b98396a2b47ba5c310741144731a",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "35",
+    "entry_date": "2026-06-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "500000",
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "member_code": "M04",
+    "ref_type": "payment",
+    "ref_id": "7c73aba0-5056-4f28-adba-8cae0cfcb3af",
+    "memo": "principal",
+    "hash": "8f16b6a474e22f7803584dd3bf8b8bf83d0c1418c76577ccad7235c5a7a739c7",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "34",
+    "entry_date": "2026-05-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "500000",
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "member_code": "M04",
+    "ref_type": "payment",
+    "ref_id": "1a4a0e8b-401b-4e4f-9096-2ac962dd95b1",
+    "memo": "principal",
+    "hash": "48688f8808ed98c316799e79c7576257c5816c5978887b23208341ca1596f88c",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "33",
+    "entry_date": "2026-04-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "500000",
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "member_code": "M04",
+    "ref_type": "payment",
+    "ref_id": "085f62b6-ac66-426e-8794-0c43cd6649ac",
+    "memo": "principal",
+    "hash": "dce140683826586983a8402bcb8794561ac1ebc7c1c482d080d8c05c164b4d8f",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   },
+   {
+    "seq": "32",
+    "entry_date": "2026-03-05",
+    "debit_account": "BANK",
+    "credit_account": "MEMBER_CAPITAL",
+    "amount_paisa": "500000",
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "member_code": "M04",
+    "ref_type": "payment",
+    "ref_id": "188ed05a-d2f6-4515-a355-540f263afe53",
+    "memo": "principal",
+    "hash": "0d6de930dbc3c6aecfcd7c81f30c2d8498abb52eaedd10242d1d5b691ade8574",
+    "reverses_seq": null,
+    "reversed_by_seq": null,
+    "posted_by_code": "M01",
+    "open_objections": 0
+   }
+  ],
+  "next_cursor": "WyIzMiJd"
+ },
+ "/matrix?from=2024-01&to=2026-12": {
+  "from": "2024-01",
+  "to": "2026-12",
+  "periods": [
+   "2024-01",
+   "2024-02",
+   "2024-03",
+   "2024-04",
+   "2024-05",
+   "2024-06",
+   "2024-07",
+   "2024-08",
+   "2024-09",
+   "2024-10",
+   "2024-11",
+   "2024-12",
+   "2025-01",
+   "2025-02",
+   "2025-03",
+   "2025-04",
+   "2025-05",
+   "2025-06",
+   "2025-07",
+   "2025-08",
+   "2025-09",
+   "2025-10",
+   "2025-11",
+   "2025-12",
+   "2026-01",
+   "2026-02",
+   "2026-03",
+   "2026-04",
+   "2026-05",
+   "2026-06",
+   "2026-07",
+   "2026-08",
+   "2026-09",
+   "2026-10",
+   "2026-11",
+   "2026-12"
+  ],
+  "members": [
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "member_code": "M01",
+    "member_name": "সদস্য এক",
+    "member_status": "active",
+    "member_photo_file_id": null,
+    "cells": {
+     "2024-01": null,
+     "2024-02": null,
+     "2024-03": null,
+     "2024-04": null,
+     "2024-05": null,
+     "2024-06": null,
+     "2024-07": null,
+     "2024-08": null,
+     "2024-09": null,
+     "2024-10": null,
+     "2024-11": null,
+     "2024-12": null,
+     "2025-01": null,
+     "2025-02": null,
+     "2025-03": null,
+     "2025-04": null,
+     "2025-05": null,
+     "2025-06": null,
+     "2025-07": null,
+     "2025-08": null,
+     "2025-09": null,
+     "2025-10": null,
+     "2025-11": null,
+     "2025-12": null,
+     "2026-01": {
+      "status": "paid",
+      "due_paisa": "1000000",
+      "paid_paisa": "1000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-01-05",
+      "advance": false
+     },
+     "2026-02": {
+      "status": "paid",
+      "due_paisa": "1000000",
+      "paid_paisa": "1000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-02-05",
+      "advance": false
+     },
+     "2026-03": {
+      "status": "paid",
+      "due_paisa": "1000000",
+      "paid_paisa": "1000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-03-05",
+      "advance": false
+     },
+     "2026-04": {
+      "status": "paid",
+      "due_paisa": "1000000",
+      "paid_paisa": "1000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-04-05",
+      "advance": false
+     },
+     "2026-05": {
+      "status": "paid",
+      "due_paisa": "1000000",
+      "paid_paisa": "1000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-05-05",
+      "advance": false
+     },
+     "2026-06": {
+      "status": "paid",
+      "due_paisa": "1000000",
+      "paid_paisa": "1000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-06-05",
+      "advance": false
+     },
+     "2026-07": {
+      "status": "paid",
+      "due_paisa": "1000000",
+      "paid_paisa": "1000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-07-05",
+      "advance": false
+     },
+     "2026-08": {
+      "status": "paid",
+      "due_paisa": "1000000",
+      "paid_paisa": "1000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-08-05",
+      "advance": false
+     },
+     "2026-09": {
+      "status": "paid",
+      "due_paisa": "1000000",
+      "paid_paisa": "1000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-09-05",
+      "advance": false
+     },
+     "2026-10": {
+      "status": "paid",
+      "due_paisa": "1000000",
+      "paid_paisa": "1000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-10-05",
+      "advance": false
+     },
+     "2026-11": null,
+     "2026-12": null
+    },
+    "totals": {
+     "due_paisa": "10000000",
+     "paid_paisa": "10000000",
+     "outstanding_paisa": "0",
+     "fine_paisa": "0",
+     "fine_paid_paisa": "0"
+    }
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "member_status": "active",
+    "member_photo_file_id": null,
+    "cells": {
+     "2024-01": null,
+     "2024-02": null,
+     "2024-03": null,
+     "2024-04": null,
+     "2024-05": null,
+     "2024-06": null,
+     "2024-07": null,
+     "2024-08": null,
+     "2024-09": null,
+     "2024-10": null,
+     "2024-11": null,
+     "2024-12": null,
+     "2025-01": null,
+     "2025-02": null,
+     "2025-03": null,
+     "2025-04": null,
+     "2025-05": null,
+     "2025-06": null,
+     "2025-07": null,
+     "2025-08": null,
+     "2025-09": null,
+     "2025-10": null,
+     "2025-11": null,
+     "2025-12": null,
+     "2026-01": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-01-05",
+      "advance": false
+     },
+     "2026-02": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-02-05",
+      "advance": false
+     },
+     "2026-03": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-03-05",
+      "advance": false
+     },
+     "2026-04": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-04-05",
+      "advance": false
+     },
+     "2026-05": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-05-05",
+      "advance": false
+     },
+     "2026-06": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-06-05",
+      "advance": false
+     },
+     "2026-07": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-07-05",
+      "advance": false
+     },
+     "2026-08": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-08-05",
+      "advance": false
+     },
+     "2026-09": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-09-05",
+      "advance": false
+     },
+     "2026-10": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-10-05",
+      "advance": false
+     },
+     "2026-11": null,
+     "2026-12": null
+    },
+    "totals": {
+     "due_paisa": "20000000",
+     "paid_paisa": "20000000",
+     "outstanding_paisa": "0",
+     "fine_paisa": "0",
+     "fine_paid_paisa": "0"
+    }
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "member_code": "M03",
+    "member_name": "সদস্য তিন",
+    "member_status": "active",
+    "member_photo_file_id": null,
+    "cells": {
+     "2024-01": null,
+     "2024-02": null,
+     "2024-03": null,
+     "2024-04": null,
+     "2024-05": null,
+     "2024-06": null,
+     "2024-07": null,
+     "2024-08": null,
+     "2024-09": null,
+     "2024-10": null,
+     "2024-11": null,
+     "2024-12": null,
+     "2025-01": null,
+     "2025-02": null,
+     "2025-03": null,
+     "2025-04": null,
+     "2025-05": null,
+     "2025-06": null,
+     "2025-07": null,
+     "2025-08": null,
+     "2025-09": null,
+     "2025-10": null,
+     "2025-11": null,
+     "2025-12": null,
+     "2026-01": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-01-05",
+      "advance": false
+     },
+     "2026-02": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-02-05",
+      "advance": false
+     },
+     "2026-03": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-03-05",
+      "advance": false
+     },
+     "2026-04": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-04-05",
+      "advance": false
+     },
+     "2026-05": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-05-05",
+      "advance": false
+     },
+     "2026-06": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-06-05",
+      "advance": false
+     },
+     "2026-07": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-07-05",
+      "advance": false
+     },
+     "2026-08": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-08-05",
+      "advance": false
+     },
+     "2026-09": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-09-05",
+      "advance": false
+     },
+     "2026-10": {
+      "status": "overdue",
+      "due_paisa": "500000",
+      "paid_paisa": "0",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": null,
+      "advance": false
+     },
+     "2026-11": null,
+     "2026-12": null
+    },
+    "totals": {
+     "due_paisa": "5000000",
+     "paid_paisa": "4500000",
+     "outstanding_paisa": "500000",
+     "fine_paisa": "0",
+     "fine_paid_paisa": "0"
+    }
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "member_code": "M04",
+    "member_name": "সদস্য চার",
+    "member_status": "active",
+    "member_photo_file_id": null,
+    "cells": {
+     "2024-01": null,
+     "2024-02": null,
+     "2024-03": null,
+     "2024-04": null,
+     "2024-05": null,
+     "2024-06": null,
+     "2024-07": null,
+     "2024-08": null,
+     "2024-09": null,
+     "2024-10": null,
+     "2024-11": null,
+     "2024-12": null,
+     "2025-01": null,
+     "2025-02": null,
+     "2025-03": null,
+     "2025-04": null,
+     "2025-05": null,
+     "2025-06": null,
+     "2025-07": null,
+     "2025-08": null,
+     "2025-09": null,
+     "2025-10": null,
+     "2025-11": null,
+     "2025-12": null,
+     "2026-01": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-01-05",
+      "advance": false
+     },
+     "2026-02": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-02-05",
+      "advance": false
+     },
+     "2026-03": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-03-05",
+      "advance": false
+     },
+     "2026-04": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-04-05",
+      "advance": false
+     },
+     "2026-05": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-05-05",
+      "advance": false
+     },
+     "2026-06": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-06-05",
+      "advance": false
+     },
+     "2026-07": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-07-05",
+      "advance": false
+     },
+     "2026-08": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-08-05",
+      "advance": false
+     },
+     "2026-09": {
+      "status": "overdue",
+      "due_paisa": "500000",
+      "paid_paisa": "0",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": null,
+      "advance": false
+     },
+     "2026-10": {
+      "status": "overdue",
+      "due_paisa": "500000",
+      "paid_paisa": "0",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": null,
+      "advance": false
+     },
+     "2026-11": null,
+     "2026-12": null
+    },
+    "totals": {
+     "due_paisa": "5000000",
+     "paid_paisa": "4000000",
+     "outstanding_paisa": "1000000",
+     "fine_paisa": "0",
+     "fine_paid_paisa": "0"
+    }
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "member_name": "সদস্য পাঁচ",
+    "member_status": "active",
+    "member_photo_file_id": null,
+    "cells": {
+     "2024-01": null,
+     "2024-02": null,
+     "2024-03": null,
+     "2024-04": null,
+     "2024-05": null,
+     "2024-06": null,
+     "2024-07": null,
+     "2024-08": null,
+     "2024-09": null,
+     "2024-10": null,
+     "2024-11": null,
+     "2024-12": null,
+     "2025-01": null,
+     "2025-02": null,
+     "2025-03": null,
+     "2025-04": null,
+     "2025-05": null,
+     "2025-06": null,
+     "2025-07": null,
+     "2025-08": null,
+     "2025-09": null,
+     "2025-10": null,
+     "2025-11": null,
+     "2025-12": null,
+     "2026-01": {
+      "status": "paid",
+      "due_paisa": "1500000",
+      "paid_paisa": "1500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-01-05",
+      "advance": false
+     },
+     "2026-02": {
+      "status": "paid",
+      "due_paisa": "1500000",
+      "paid_paisa": "1500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-02-05",
+      "advance": false
+     },
+     "2026-03": {
+      "status": "paid",
+      "due_paisa": "1500000",
+      "paid_paisa": "1500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-03-05",
+      "advance": false
+     },
+     "2026-04": {
+      "status": "paid",
+      "due_paisa": "1500000",
+      "paid_paisa": "1500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-04-05",
+      "advance": false
+     },
+     "2026-05": {
+      "status": "paid",
+      "due_paisa": "1500000",
+      "paid_paisa": "1500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-05-05",
+      "advance": false
+     },
+     "2026-06": {
+      "status": "paid",
+      "due_paisa": "1500000",
+      "paid_paisa": "1500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-06-05",
+      "advance": false
+     },
+     "2026-07": {
+      "status": "paid",
+      "due_paisa": "1500000",
+      "paid_paisa": "1500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-07-05",
+      "advance": false
+     },
+     "2026-08": {
+      "status": "paid",
+      "due_paisa": "1500000",
+      "paid_paisa": "1500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-08-05",
+      "advance": false
+     },
+     "2026-09": {
+      "status": "paid",
+      "due_paisa": "1500000",
+      "paid_paisa": "1500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-09-05",
+      "advance": false
+     },
+     "2026-10": {
+      "status": "overdue",
+      "due_paisa": "1500000",
+      "paid_paisa": "0",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": true,
+      "paid_on": null,
+      "advance": false
+     },
+     "2026-11": null,
+     "2026-12": null
+    },
+    "totals": {
+     "due_paisa": "15000000",
+     "paid_paisa": "13500000",
+     "outstanding_paisa": "1500000",
+     "fine_paisa": "0",
+     "fine_paid_paisa": "0"
+    }
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "member_code": "M06",
+    "member_name": "সদস্য ছয়",
+    "member_status": "active",
+    "member_photo_file_id": null,
+    "cells": {
+     "2024-01": null,
+     "2024-02": null,
+     "2024-03": null,
+     "2024-04": null,
+     "2024-05": null,
+     "2024-06": null,
+     "2024-07": null,
+     "2024-08": null,
+     "2024-09": null,
+     "2024-10": null,
+     "2024-11": null,
+     "2024-12": null,
+     "2025-01": null,
+     "2025-02": null,
+     "2025-03": null,
+     "2025-04": null,
+     "2025-05": null,
+     "2025-06": null,
+     "2025-07": null,
+     "2025-08": null,
+     "2025-09": null,
+     "2025-10": null,
+     "2025-11": null,
+     "2025-12": null,
+     "2026-01": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-01-05",
+      "advance": false
+     },
+     "2026-02": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-02-05",
+      "advance": false
+     },
+     "2026-03": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-03-05",
+      "advance": false
+     },
+     "2026-04": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-04-05",
+      "advance": false
+     },
+     "2026-05": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-05-05",
+      "advance": false
+     },
+     "2026-06": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-06-05",
+      "advance": false
+     },
+     "2026-07": {
+      "status": "paid",
+      "due_paisa": "500000",
+      "paid_paisa": "500000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-07-05",
+      "advance": false
+     },
+     "2026-08": {
+      "status": "overdue",
+      "due_paisa": "500000",
+      "paid_paisa": "0",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": null,
+      "advance": false
+     },
+     "2026-09": {
+      "status": "overdue",
+      "due_paisa": "500000",
+      "paid_paisa": "0",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": null,
+      "advance": false
+     },
+     "2026-10": {
+      "status": "overdue",
+      "due_paisa": "500000",
+      "paid_paisa": "0",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": null,
+      "advance": false
+     },
+     "2026-11": null,
+     "2026-12": null
+    },
+    "totals": {
+     "due_paisa": "5000000",
+     "paid_paisa": "3500000",
+     "outstanding_paisa": "1500000",
+     "fine_paisa": "0",
+     "fine_paid_paisa": "0"
+    }
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "member_name": "সদস্য সাত",
+    "member_status": "active",
+    "member_photo_file_id": null,
+    "cells": {
+     "2024-01": null,
+     "2024-02": null,
+     "2024-03": null,
+     "2024-04": null,
+     "2024-05": null,
+     "2024-06": null,
+     "2024-07": null,
+     "2024-08": null,
+     "2024-09": null,
+     "2024-10": null,
+     "2024-11": null,
+     "2024-12": null,
+     "2025-01": null,
+     "2025-02": null,
+     "2025-03": null,
+     "2025-04": null,
+     "2025-05": null,
+     "2025-06": null,
+     "2025-07": null,
+     "2025-08": null,
+     "2025-09": null,
+     "2025-10": null,
+     "2025-11": null,
+     "2025-12": null,
+     "2026-01": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-01-05",
+      "advance": false
+     },
+     "2026-02": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-02-05",
+      "advance": false
+     },
+     "2026-03": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-03-05",
+      "advance": false
+     },
+     "2026-04": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-04-05",
+      "advance": false
+     },
+     "2026-05": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-05-05",
+      "advance": false
+     },
+     "2026-06": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-06-05",
+      "advance": false
+     },
+     "2026-07": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-07-05",
+      "advance": false
+     },
+     "2026-08": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-08-05",
+      "advance": false
+     },
+     "2026-09": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-09-05",
+      "advance": false
+     },
+     "2026-10": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-10-05",
+      "advance": false
+     },
+     "2026-11": null,
+     "2026-12": null
+    },
+    "totals": {
+     "due_paisa": "20000000",
+     "paid_paisa": "20000000",
+     "outstanding_paisa": "0",
+     "fine_paisa": "0",
+     "fine_paid_paisa": "0"
+    }
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "member_name": "সদস্য আট",
+    "member_status": "active",
+    "member_photo_file_id": null,
+    "cells": {
+     "2024-01": null,
+     "2024-02": null,
+     "2024-03": null,
+     "2024-04": null,
+     "2024-05": null,
+     "2024-06": null,
+     "2024-07": null,
+     "2024-08": null,
+     "2024-09": null,
+     "2024-10": null,
+     "2024-11": null,
+     "2024-12": null,
+     "2025-01": null,
+     "2025-02": null,
+     "2025-03": null,
+     "2025-04": null,
+     "2025-05": null,
+     "2025-06": null,
+     "2025-07": null,
+     "2025-08": null,
+     "2025-09": null,
+     "2025-10": null,
+     "2025-11": null,
+     "2025-12": null,
+     "2026-01": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-01-05",
+      "advance": false
+     },
+     "2026-02": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-02-05",
+      "advance": false
+     },
+     "2026-03": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-03-05",
+      "advance": false
+     },
+     "2026-04": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-04-05",
+      "advance": false
+     },
+     "2026-05": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-05-05",
+      "advance": false
+     },
+     "2026-06": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-06-05",
+      "advance": false
+     },
+     "2026-07": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-07-05",
+      "advance": false
+     },
+     "2026-08": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-08-05",
+      "advance": false
+     },
+     "2026-09": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-09-05",
+      "advance": false
+     },
+     "2026-10": {
+      "status": "paid",
+      "due_paisa": "2000000",
+      "paid_paisa": "2000000",
+      "fine_paisa": "0",
+      "fine_paid_paisa": "0",
+      "pending": false,
+      "paid_on": "2026-10-05",
+      "advance": false
+     },
+     "2026-11": null,
+     "2026-12": null
+    },
+    "totals": {
+     "due_paisa": "20000000",
+     "paid_paisa": "20000000",
+     "outstanding_paisa": "0",
+     "fine_paisa": "0",
+     "fine_paid_paisa": "0"
+    }
+   }
+  ],
+  "totals_by_period": {
+   "2024-01": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2024-02": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2024-03": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2024-04": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2024-05": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2024-06": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2024-07": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2024-08": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2024-09": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2024-10": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2024-11": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2024-12": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2025-01": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2025-02": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2025-03": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2025-04": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2025-05": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2025-06": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2025-07": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2025-08": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2025-09": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2025-10": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2025-11": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2025-12": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2026-01": {
+    "due_paisa": "10000000",
+    "paid_paisa": "10000000",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2026-02": {
+    "due_paisa": "10000000",
+    "paid_paisa": "10000000",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2026-03": {
+    "due_paisa": "10000000",
+    "paid_paisa": "10000000",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2026-04": {
+    "due_paisa": "10000000",
+    "paid_paisa": "10000000",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2026-05": {
+    "due_paisa": "10000000",
+    "paid_paisa": "10000000",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2026-06": {
+    "due_paisa": "10000000",
+    "paid_paisa": "10000000",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2026-07": {
+    "due_paisa": "10000000",
+    "paid_paisa": "10000000",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2026-08": {
+    "due_paisa": "10000000",
+    "paid_paisa": "9500000",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2026-09": {
+    "due_paisa": "10000000",
+    "paid_paisa": "9000000",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2026-10": {
+    "due_paisa": "10000000",
+    "paid_paisa": "7000000",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2026-11": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   },
+   "2026-12": {
+    "due_paisa": "0",
+    "paid_paisa": "0",
+    "fine_paisa": "0",
+    "fine_paid_paisa": "0"
+   }
+  }
+ },
+ "/me": {
+  "id": "b0000000-0000-0000-0000-000000000002",
+  "member_id": "a0000000-0000-0000-0000-000000000002",
+  "member_code": "M02",
+  "full_name": "সদস্য দুই",
+  "roles": [
+   "member"
+  ],
+  "member_status": "active",
+  "read_only": false,
+  "totp_enabled": false,
+  "step_up_until": null,
+  "device_id": "f1bcc625-9d06-4c31-bee0-ef7d59520f16",
+  "notify_prefs": {
+   "sms": false,
+   "push": true,
+   "digits": "bn"
+  }
+ },
+ "/me/devices": {
+  "items": [
+   {
+    "id": "f1bcc625-9d06-4c31-bee0-ef7d59520f16",
+    "label": "Web browser",
+    "platform": "web",
+    "created_at": "2026-10-30T14:51:46.125Z",
+    "last_seen_at": "2026-10-30T14:51:51.541Z",
+    "current": true
+   }
+  ]
+ },
+ "/meetings": {
+  "items": [
+   {
+    "id": "f0f740f2-ca0a-402d-ab67-225279fbb7c6",
+    "status": "scheduled",
+    "date": "2026-11-13",
+    "time": "20:00",
+    "scheduled_for": "2026-11-13T14:00:00.000Z",
+    "link": "https://meet.google.com/",
+    "notes": "বার্ষিক হিসাব ও নতুন বিনিয়োগ নিয়ে আলোচনা",
+    "created_at": "2026-10-30T14:49:46.990Z",
+    "present_count": 0,
+    "absent_count": 0
+   }
+  ]
+ },
+ "/meetings/f0f740f2-ca0a-402d-ab67-225279fbb7c6": {
+  "id": "f0f740f2-ca0a-402d-ab67-225279fbb7c6",
+  "status": "scheduled",
+  "date": "2026-11-13",
+  "time": "20:00",
+  "scheduled_for": "2026-11-13T14:00:00.000Z",
+  "link": "https://meet.google.com/",
+  "notes": "বার্ষিক হিসাব ও নতুন বিনিয়োগ নিয়ে আলোচনা",
+  "created_at": "2026-10-30T14:49:46.990Z",
+  "present_count": 0,
+  "absent_count": 0,
+  "attendance": [
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "member_code": "M01",
+    "member_name": "সদস্য এক",
+    "status": null,
+    "reason": null
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "status": null,
+    "reason": null
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "member_code": "M03",
+    "member_name": "সদস্য তিন",
+    "status": null,
+    "reason": null
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "member_code": "M04",
+    "member_name": "সদস্য চার",
+    "status": null,
+    "reason": null
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "member_name": "সদস্য পাঁচ",
+    "status": null,
+    "reason": null
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "member_code": "M06",
+    "member_name": "সদস্য ছয়",
+    "status": null,
+    "reason": null
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "member_name": "সদস্য সাত",
+    "status": null,
+    "reason": null
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "member_name": "সদস্য আট",
+    "status": null,
+    "reason": null
+   }
+  ],
+  "absence_fines": []
+ },
+ "/meetings/next": {
+  "meeting": {
+   "id": "f0f740f2-ca0a-402d-ab67-225279fbb7c6",
+   "status": "scheduled",
+   "date": "2026-11-13",
+   "time": "20:00",
+   "scheduled_for": "2026-11-13T14:00:00.000Z",
+   "link": "https://meet.google.com/",
+   "notes": "বার্ষিক হিসাব ও নতুন বিনিয়োগ নিয়ে আলোচনা",
+   "created_at": "2026-10-30T14:49:46.990Z",
+   "present_count": 0,
+   "absent_count": 0
+  }
+ },
+ "/members": {
+  "items": [
+   {
+    "id": "a0000000-0000-0000-0000-000000000001",
+    "code": "M01",
+    "full_name": "সদস্য এক",
+    "status": "active",
+    "photo_file_id": null,
+    "phone": null,
+    "joined_on": "2026-01-01",
+    "suspended_on": null,
+    "exited_on": null,
+    "shares": 2,
+    "capital_paisa": "10000000",
+    "outstanding_principal_paisa": "0",
+    "overdue_paisa": "0",
+    "outstanding_fines_paisa": "0",
+    "overdue_count": 0,
+    "current_period": "2026-10",
+    "current_period_status": "paid",
+    "under_verification": false,
+    "settlement_status": null
+   },
+   {
+    "id": "a0000000-0000-0000-0000-000000000002",
+    "code": "M02",
+    "full_name": "সদস্য দুই",
+    "status": "active",
+    "photo_file_id": null,
+    "phone": "+8801700000002",
+    "joined_on": "2026-01-01",
+    "suspended_on": null,
+    "exited_on": null,
+    "shares": 4,
+    "capital_paisa": "20000000",
+    "outstanding_principal_paisa": "0",
+    "overdue_paisa": "0",
+    "outstanding_fines_paisa": "0",
+    "overdue_count": 0,
+    "current_period": "2026-10",
+    "current_period_status": "paid",
+    "under_verification": false,
+    "settlement_status": null
+   },
+   {
+    "id": "a0000000-0000-0000-0000-000000000003",
+    "code": "M03",
+    "full_name": "সদস্য তিন",
+    "status": "active",
+    "photo_file_id": null,
+    "phone": null,
+    "joined_on": "2026-01-01",
+    "suspended_on": null,
+    "exited_on": null,
+    "shares": 1,
+    "capital_paisa": "4500000",
+    "outstanding_principal_paisa": "500000",
+    "overdue_paisa": "500000",
+    "outstanding_fines_paisa": "0",
+    "overdue_count": 1,
+    "current_period": "2026-10",
+    "current_period_status": "overdue",
+    "under_verification": false,
+    "settlement_status": null
+   },
+   {
+    "id": "a0000000-0000-0000-0000-000000000004",
+    "code": "M04",
+    "full_name": "সদস্য চার",
+    "status": "active",
+    "photo_file_id": null,
+    "phone": null,
+    "joined_on": "2026-01-01",
+    "suspended_on": null,
+    "exited_on": null,
+    "shares": 1,
+    "capital_paisa": "4000000",
+    "outstanding_principal_paisa": "1000000",
+    "overdue_paisa": "1000000",
+    "outstanding_fines_paisa": "0",
+    "overdue_count": 2,
+    "current_period": "2026-10",
+    "current_period_status": "overdue",
+    "under_verification": false,
+    "settlement_status": null
+   },
+   {
+    "id": "a0000000-0000-0000-0000-000000000005",
+    "code": "M05",
+    "full_name": "সদস্য পাঁচ",
+    "status": "active",
+    "photo_file_id": null,
+    "phone": null,
+    "joined_on": "2026-01-01",
+    "suspended_on": null,
+    "exited_on": null,
+    "shares": 3,
+    "capital_paisa": "13500000",
+    "outstanding_principal_paisa": "1500000",
+    "overdue_paisa": "1500000",
+    "outstanding_fines_paisa": "0",
+    "overdue_count": 1,
+    "current_period": "2026-10",
+    "current_period_status": "overdue",
+    "under_verification": true,
+    "settlement_status": null
+   },
+   {
+    "id": "a0000000-0000-0000-0000-000000000006",
+    "code": "M06",
+    "full_name": "সদস্য ছয়",
+    "status": "active",
+    "photo_file_id": null,
+    "phone": null,
+    "joined_on": "2026-01-01",
+    "suspended_on": null,
+    "exited_on": null,
+    "shares": 1,
+    "capital_paisa": "3500000",
+    "outstanding_principal_paisa": "1500000",
+    "overdue_paisa": "1500000",
+    "outstanding_fines_paisa": "0",
+    "overdue_count": 3,
+    "current_period": "2026-10",
+    "current_period_status": "overdue",
+    "under_verification": false,
+    "settlement_status": null
+   },
+   {
+    "id": "a0000000-0000-0000-0000-000000000007",
+    "code": "M07",
+    "full_name": "সদস্য সাত",
+    "status": "active",
+    "photo_file_id": null,
+    "phone": null,
+    "joined_on": "2026-01-01",
+    "suspended_on": null,
+    "exited_on": null,
+    "shares": 4,
+    "capital_paisa": "20000000",
+    "outstanding_principal_paisa": "0",
+    "overdue_paisa": "0",
+    "outstanding_fines_paisa": "0",
+    "overdue_count": 0,
+    "current_period": "2026-10",
+    "current_period_status": "paid",
+    "under_verification": false,
+    "settlement_status": null
+   },
+   {
+    "id": "a0000000-0000-0000-0000-000000000008",
+    "code": "M08",
+    "full_name": "সদস্য আট",
+    "status": "active",
+    "photo_file_id": null,
+    "phone": null,
+    "joined_on": "2026-01-01",
+    "suspended_on": null,
+    "exited_on": null,
+    "shares": 4,
+    "capital_paisa": "20000000",
+    "outstanding_principal_paisa": "0",
+    "overdue_paisa": "0",
+    "outstanding_fines_paisa": "0",
+    "overdue_count": 0,
+    "current_period": "2026-10",
+    "current_period_status": "paid",
+    "under_verification": false,
+    "settlement_status": null
+   }
+  ]
+ },
+ "/members/a0000000-0000-0000-0000-000000000002": {
+  "id": "a0000000-0000-0000-0000-000000000002",
+  "code": "M02",
+  "full_name": "সদস্য দুই",
+  "status": "active",
+  "photo_file_id": null,
+  "phone": "+8801700000002",
+  "joined_on": "2026-01-01",
+  "suspended_on": null,
+  "exited_on": null,
+  "shares": 4,
+  "capital_paisa": "20000000",
+  "share_holdings": [
+   {
+    "id": "c0000000-0000-0000-0000-000000000002",
+    "shares": 4,
+    "effective_from": "2026-01-01",
+    "effective_to": null,
+    "source": "initial"
+   }
+  ],
+  "share_register": [
+   {
+    "share_no": 3,
+    "registered_name": "শেয়ার 3",
+    "nominee_name": "নমিনি 3",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 4,
+    "registered_name": "শেয়ার 4",
+    "nominee_name": "নমিনি 4",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 5,
+    "registered_name": "শেয়ার 5",
+    "nominee_name": "নমিনি 5",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 6,
+    "registered_name": "শেয়ার 6",
+    "nominee_name": "নমিনি 6",
+    "nominee_relation": "পুত্র"
+   }
+  ],
+  "dues": [
+   {
+    "id": "762ca12f-b867-4484-95fc-b0af44822a80",
+    "period": "2026-10",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-10-20",
+    "status": "paid"
+   },
+   {
+    "id": "16d3c1e1-732b-49d4-9b13-9cc1ea1e3390",
+    "period": "2026-09",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-09-20",
+    "status": "paid"
+   },
+   {
+    "id": "8bad42c4-2970-4d81-9175-fc95d4a19f35",
+    "period": "2026-08",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-08-20",
+    "status": "paid"
+   },
+   {
+    "id": "40ed8b42-9e91-4563-8713-0e58b218c47f",
+    "period": "2026-07",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-07-20",
+    "status": "paid"
+   },
+   {
+    "id": "27c3e4a4-2dea-4f6e-9e6b-4f6c40a02484",
+    "period": "2026-06",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-06-20",
+    "status": "paid"
+   },
+   {
+    "id": "786d9134-eb35-4c12-8406-755a8d078945",
+    "period": "2026-05",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-05-20",
+    "status": "paid"
+   },
+   {
+    "id": "dd748b80-0416-486d-a82e-712b781ef0c2",
+    "period": "2026-04",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-04-20",
+    "status": "paid"
+   },
+   {
+    "id": "aa715d1b-8ae5-4e62-abb9-679d7a97f31a",
+    "period": "2026-03",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-03-20",
+    "status": "paid"
+   },
+   {
+    "id": "018e8a20-0b0d-4f58-bbb8-b99f7ddb0436",
+    "period": "2026-02",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-02-20",
+    "status": "paid"
+   },
+   {
+    "id": "036ae54f-4399-488a-930b-3655de8749a4",
+    "period": "2026-01",
+    "kind": "monthly",
+    "shares_snapshot": 4,
+    "amount_paisa": "2000000",
+    "allocated_paisa": "2000000",
+    "outstanding_paisa": "0",
+    "due_date": "2026-01-20",
+    "status": "paid"
+   }
+  ],
+  "fines": [],
+  "payments": {
+   "items": [
+    {
+     "id": "26fad5a4-ffe0-4163-b1aa-a0afc351633e",
+     "amount_paisa": "2000000",
+     "method": "nagad",
+     "purpose": "dues",
+     "status": "confirmed",
+     "source": "cashier_entry",
+     "paid_at": "2026-10-05T04:00:00.000Z",
+     "submitted_at": "2026-10-30T14:49:45.447Z",
+     "confirmed_at": "2026-10-30T14:49:45.453Z",
+     "trx_id": "DEMOM02202610",
+     "note": null,
+     "reject_reason": null
+    },
+    {
+     "id": "3eafc32b-63b4-4c64-ac54-22e544601110",
+     "amount_paisa": "2000000",
+     "method": "bank",
+     "purpose": "dues",
+     "status": "confirmed",
+     "source": "cashier_entry",
+     "paid_at": "2026-09-05T04:00:00.000Z",
+     "submitted_at": "2026-10-30T14:49:45.429Z",
+     "confirmed_at": "2026-10-30T14:49:45.436Z",
+     "trx_id": "DEMOM02202609",
+     "note": null,
+     "reject_reason": null
+    },
+    {
+     "id": "b4e04c3b-153c-4af8-a3eb-e6e369ea1a5f",
+     "amount_paisa": "2000000",
+     "method": "cash",
+     "purpose": "dues",
+     "status": "confirmed",
+     "source": "cashier_entry",
+     "paid_at": "2026-08-05T04:00:00.000Z",
+     "submitted_at": "2026-10-30T14:49:45.278Z",
+     "confirmed_at": "2026-10-30T14:49:45.301Z",
+     "trx_id": null,
+     "note": null,
+     "reject_reason": null
+    },
+    {
+     "id": "28d20e7c-b172-404b-be1f-07a985613339",
+     "amount_paisa": "2000000",
+     "method": "bkash",
+     "purpose": "dues",
+     "status": "confirmed",
+     "source": "cashier_entry",
+     "paid_at": "2026-07-05T04:00:00.000Z",
+     "submitted_at": "2026-10-30T14:49:45.233Z",
+     "confirmed_at": "2026-10-30T14:49:45.249Z",
+     "trx_id": "DEMOM02202607",
+     "note": null,
+     "reject_reason": null
+    },
+    {
+     "id": "f5a3e31d-246a-4411-b21e-c80c52d6d2b2",
+     "amount_paisa": "2000000",
+     "method": "nagad",
+     "purpose": "dues",
+     "status": "confirmed",
+     "source": "cashier_entry",
+     "paid_at": "2026-06-05T04:00:00.000Z",
+     "submitted_at": "2026-10-30T14:49:45.190Z",
+     "confirmed_at": "2026-10-30T14:49:45.209Z",
+     "trx_id": "DEMOM02202606",
+     "note": null,
+     "reject_reason": null
+    },
+    {
+     "id": "77d86d09-3aba-4175-94e9-126468fbcf1f",
+     "amount_paisa": "2000000",
+     "method": "bank",
+     "purpose": "dues",
+     "status": "confirmed",
+     "source": "cashier_entry",
+     "paid_at": "2026-05-05T04:00:00.000Z",
+     "submitted_at": "2026-10-30T14:49:45.164Z",
+     "confirmed_at": "2026-10-30T14:49:45.169Z",
+     "trx_id": "DEMOM02202605",
+     "note": null,
+     "reject_reason": null
+    },
+    {
+     "id": "52c5606e-3df4-406b-93af-3da584c16da1",
+     "amount_paisa": "2000000",
+     "method": "cash",
+     "purpose": "dues",
+     "status": "confirmed",
+     "source": "cashier_entry",
+     "paid_at": "2026-04-05T04:00:00.000Z",
+     "submitted_at": "2026-10-30T14:49:45.150Z",
+     "confirmed_at": "2026-10-30T14:49:45.156Z",
+     "trx_id": null,
+     "note": null,
+     "reject_reason": null
+    },
+    {
+     "id": "90094f13-442f-4fbb-9eec-85bfe1ea1b4a",
+     "amount_paisa": "2000000",
+     "method": "bkash",
+     "purpose": "dues",
+     "status": "confirmed",
+     "source": "cashier_entry",
+     "paid_at": "2026-03-05T04:00:00.000Z",
+     "submitted_at": "2026-10-30T14:49:45.137Z",
+     "confirmed_at": "2026-10-30T14:49:45.143Z",
+     "trx_id": "DEMOM02202603",
+     "note": null,
+     "reject_reason": null
+    },
+    {
+     "id": "74dff2bb-c492-4270-bfcd-b4b20c7ffdcc",
+     "amount_paisa": "2000000",
+     "method": "nagad",
+     "purpose": "dues",
+     "status": "confirmed",
+     "source": "cashier_entry",
+     "paid_at": "2026-02-05T04:00:00.000Z",
+     "submitted_at": "2026-10-30T14:49:45.124Z",
+     "confirmed_at": "2026-10-30T14:49:45.130Z",
+     "trx_id": "DEMOM02202602",
+     "note": null,
+     "reject_reason": null
+    },
+    {
+     "id": "640c1c88-e410-4667-bcfc-9398ed02328f",
+     "amount_paisa": "2000000",
+     "method": "bank",
+     "purpose": "dues",
+     "status": "confirmed",
+     "source": "cashier_entry",
+     "paid_at": "2026-01-05T04:00:00.000Z",
+     "submitted_at": "2026-10-30T14:49:45.110Z",
+     "confirmed_at": "2026-10-30T14:49:45.116Z",
+     "trx_id": "DEMOM02202601",
+     "note": null,
+     "reject_reason": null
+    }
+   ],
+   "has_more": false
+  },
+  "ledger": {
+   "items": [
+    {
+     "seq": "20",
+     "entry_date": "2026-10-05",
+     "debit_account": "BANK",
+     "credit_account": "MEMBER_CAPITAL",
+     "amount_paisa": "2000000",
+     "ref_type": "payment",
+     "ref_id": "26fad5a4-ffe0-4163-b1aa-a0afc351633e",
+     "memo": "principal",
+     "hash": "0958cbe61b38a934e9136ffc17c9df3b34414b977f95e6ea02aa5442d8e9ed2f"
+    },
+    {
+     "seq": "19",
+     "entry_date": "2026-09-05",
+     "debit_account": "BANK",
+     "credit_account": "MEMBER_CAPITAL",
+     "amount_paisa": "2000000",
+     "ref_type": "payment",
+     "ref_id": "3eafc32b-63b4-4c64-ac54-22e544601110",
+     "memo": "principal",
+     "hash": "0f54f09345792e6cb7d480d5b27fd68ae9d43386f82be52e965c941a38c8a253"
+    },
+    {
+     "seq": "18",
+     "entry_date": "2026-08-05",
+     "debit_account": "BANK",
+     "credit_account": "MEMBER_CAPITAL",
+     "amount_paisa": "2000000",
+     "ref_type": "payment",
+     "ref_id": "b4e04c3b-153c-4af8-a3eb-e6e369ea1a5f",
+     "memo": "principal",
+     "hash": "04155c09795ab0933e390ff37dbb73715639726c74ff39065fd4b1954c1dfdf4"
+    },
+    {
+     "seq": "17",
+     "entry_date": "2026-07-05",
+     "debit_account": "BANK",
+     "credit_account": "MEMBER_CAPITAL",
+     "amount_paisa": "2000000",
+     "ref_type": "payment",
+     "ref_id": "28d20e7c-b172-404b-be1f-07a985613339",
+     "memo": "principal",
+     "hash": "1208ef30562888efa6f24ecb45601e3545dd254f47808eb13e3f09d2d4e9fa7c"
+    },
+    {
+     "seq": "16",
+     "entry_date": "2026-06-05",
+     "debit_account": "BANK",
+     "credit_account": "MEMBER_CAPITAL",
+     "amount_paisa": "2000000",
+     "ref_type": "payment",
+     "ref_id": "f5a3e31d-246a-4411-b21e-c80c52d6d2b2",
+     "memo": "principal",
+     "hash": "da254d8cee3f6617311b284cafc38fcfd3caf62b1aa10150344d27c88bb960d2"
+    },
+    {
+     "seq": "15",
+     "entry_date": "2026-05-05",
+     "debit_account": "BANK",
+     "credit_account": "MEMBER_CAPITAL",
+     "amount_paisa": "2000000",
+     "ref_type": "payment",
+     "ref_id": "77d86d09-3aba-4175-94e9-126468fbcf1f",
+     "memo": "principal",
+     "hash": "571660e4ff2fe6a3da996c2ba699531154f9097bee02ba74f73da7613001fff1"
+    },
+    {
+     "seq": "14",
+     "entry_date": "2026-04-05",
+     "debit_account": "BANK",
+     "credit_account": "MEMBER_CAPITAL",
+     "amount_paisa": "2000000",
+     "ref_type": "payment",
+     "ref_id": "52c5606e-3df4-406b-93af-3da584c16da1",
+     "memo": "principal",
+     "hash": "9a8d0ce6d218445fd969a690bc53a5f547394ea4720f1c4df476ff3b92b1ccc0"
+    },
+    {
+     "seq": "13",
+     "entry_date": "2026-03-05",
+     "debit_account": "BANK",
+     "credit_account": "MEMBER_CAPITAL",
+     "amount_paisa": "2000000",
+     "ref_type": "payment",
+     "ref_id": "90094f13-442f-4fbb-9eec-85bfe1ea1b4a",
+     "memo": "principal",
+     "hash": "39bb832ef162416184f0f2d54145436e6c0afbd5ad886d6659fe9ab68bba43d1"
+    },
+    {
+     "seq": "12",
+     "entry_date": "2026-02-05",
+     "debit_account": "BANK",
+     "credit_account": "MEMBER_CAPITAL",
+     "amount_paisa": "2000000",
+     "ref_type": "payment",
+     "ref_id": "74dff2bb-c492-4270-bfcd-b4b20c7ffdcc",
+     "memo": "principal",
+     "hash": "fc47f08feee9983e523a67779fd2f93c5bcf6eab979279344fe964c821d80b23"
+    },
+    {
+     "seq": "11",
+     "entry_date": "2026-01-05",
+     "debit_account": "BANK",
+     "credit_account": "MEMBER_CAPITAL",
+     "amount_paisa": "2000000",
+     "ref_type": "payment",
+     "ref_id": "640c1c88-e410-4667-bcfc-9398ed02328f",
+     "memo": "principal",
+     "hash": "72662114f6db975067b0b3cf5048676605439d13013c351df9b2aeca478b15b2"
+    }
+   ],
+   "has_more": false
+  }
+ },
+ "/nav": {
+  "net_assets_paisa": "95100000",
+  "shares_outstanding": "20",
+  "nav_per_share_paisa": "4755000",
+  "cash": [
+   {
+    "account": "CASH",
+    "balance_paisa": "0"
+   },
+   {
+    "account": "BANK",
+    "balance_paisa": "95100000"
+   },
+   {
+    "account": "BKASH",
+    "balance_paisa": "0"
+   },
+   {
+    "account": "NAGAD",
+    "balance_paisa": "0"
+   }
+  ],
+  "assets": [],
+  "deductions": [
+   {
+    "account": "SETTLEMENT_PAYABLE",
+    "balance_paisa": "0"
+   },
+   {
+    "account": "MEMBER_ESCROW",
+    "balance_paisa": "0"
+   },
+   {
+    "account": "CHARITY_PAYABLE",
+    "balance_paisa": "0"
+   },
+   {
+    "account": "LEVY_CLEARING",
+    "balance_paisa": "0"
+   },
+   {
+    "account": "INACTIVE_HELD",
+    "balance_paisa": "0"
+   },
+   {
+    "account": "MEMBER_QARD",
+    "balance_paisa": "0"
+   },
+   {
+    "account": "DEFERRED_PURCHASE_PAYABLE",
+    "balance_paisa": "0"
+   }
+  ],
+  "stale_valuations": []
+ },
+ "/notifications?channel=push&limit=50": {
+  "items": [
+   {
+    "id": "47cbcc4f-06ef-4a8a-a131-1f25a85f3c10",
+    "template": "payment_confirmed",
+    "channel": "push",
+    "payload": {
+     "payment_id": "26fad5a4-ffe0-4163-b1aa-a0afc351633e",
+     "amount_paisa": "2000000",
+     "objection_link": "/menu/ledger?ref_type=payment&ref_id=26fad5a4-ffe0-4163-b1aa-a0afc351633e"
+    },
+    "status": "skipped",
+    "scheduled_for": "2026-10-30T14:49:45.447Z",
+    "sent_at": null,
+    "opened_at": null,
+    "error": "no_push_tokens"
+   },
+   {
+    "id": "d97f03aa-b5b5-43c8-ba6d-9c772a2d1ae4",
+    "template": "payment_confirmed",
+    "channel": "push",
+    "payload": {
+     "payment_id": "3eafc32b-63b4-4c64-ac54-22e544601110",
+     "amount_paisa": "2000000",
+     "objection_link": "/menu/ledger?ref_type=payment&ref_id=3eafc32b-63b4-4c64-ac54-22e544601110"
+    },
+    "status": "skipped",
+    "scheduled_for": "2026-10-30T14:49:45.429Z",
+    "sent_at": null,
+    "opened_at": null,
+    "error": "no_push_tokens"
+   },
+   {
+    "id": "49b6b426-3af4-4d64-b3fe-67f8c248db24",
+    "template": "payment_confirmed",
+    "channel": "push",
+    "payload": {
+     "payment_id": "b4e04c3b-153c-4af8-a3eb-e6e369ea1a5f",
+     "amount_paisa": "2000000",
+     "objection_link": "/menu/ledger?ref_type=payment&ref_id=b4e04c3b-153c-4af8-a3eb-e6e369ea1a5f"
+    },
+    "status": "skipped",
+    "scheduled_for": "2026-10-30T14:49:45.278Z",
+    "sent_at": null,
+    "opened_at": null,
+    "error": "no_push_tokens"
+   },
+   {
+    "id": "c93d0c93-725d-4f43-8a67-08691756357a",
+    "template": "payment_confirmed",
+    "channel": "push",
+    "payload": {
+     "payment_id": "28d20e7c-b172-404b-be1f-07a985613339",
+     "amount_paisa": "2000000",
+     "objection_link": "/menu/ledger?ref_type=payment&ref_id=28d20e7c-b172-404b-be1f-07a985613339"
+    },
+    "status": "skipped",
+    "scheduled_for": "2026-10-30T14:49:45.233Z",
+    "sent_at": null,
+    "opened_at": null,
+    "error": "no_push_tokens"
+   },
+   {
+    "id": "0a5b00d7-d2ae-4760-9631-3ff0bf22aa8c",
+    "template": "payment_confirmed",
+    "channel": "push",
+    "payload": {
+     "payment_id": "f5a3e31d-246a-4411-b21e-c80c52d6d2b2",
+     "amount_paisa": "2000000",
+     "objection_link": "/menu/ledger?ref_type=payment&ref_id=f5a3e31d-246a-4411-b21e-c80c52d6d2b2"
+    },
+    "status": "skipped",
+    "scheduled_for": "2026-10-30T14:49:45.190Z",
+    "sent_at": null,
+    "opened_at": null,
+    "error": "no_push_tokens"
+   },
+   {
+    "id": "ff2e5dba-4968-487c-91ff-b758e3537ee4",
+    "template": "payment_confirmed",
+    "channel": "push",
+    "payload": {
+     "payment_id": "77d86d09-3aba-4175-94e9-126468fbcf1f",
+     "amount_paisa": "2000000",
+     "objection_link": "/menu/ledger?ref_type=payment&ref_id=77d86d09-3aba-4175-94e9-126468fbcf1f"
+    },
+    "status": "skipped",
+    "scheduled_for": "2026-10-30T14:49:45.164Z",
+    "sent_at": null,
+    "opened_at": null,
+    "error": "no_push_tokens"
+   },
+   {
+    "id": "b93fc9eb-1e93-4664-ae60-a972fec75886",
+    "template": "payment_confirmed",
+    "channel": "push",
+    "payload": {
+     "payment_id": "52c5606e-3df4-406b-93af-3da584c16da1",
+     "amount_paisa": "2000000",
+     "objection_link": "/menu/ledger?ref_type=payment&ref_id=52c5606e-3df4-406b-93af-3da584c16da1"
+    },
+    "status": "skipped",
+    "scheduled_for": "2026-10-30T14:49:45.150Z",
+    "sent_at": null,
+    "opened_at": null,
+    "error": "no_push_tokens"
+   },
+   {
+    "id": "108b14f7-75d3-4c9f-8793-5133bf34a72d",
+    "template": "payment_confirmed",
+    "channel": "push",
+    "payload": {
+     "payment_id": "90094f13-442f-4fbb-9eec-85bfe1ea1b4a",
+     "amount_paisa": "2000000",
+     "objection_link": "/menu/ledger?ref_type=payment&ref_id=90094f13-442f-4fbb-9eec-85bfe1ea1b4a"
+    },
+    "status": "skipped",
+    "scheduled_for": "2026-10-30T14:49:45.137Z",
+    "sent_at": null,
+    "opened_at": null,
+    "error": "no_push_tokens"
+   },
+   {
+    "id": "0e52f8a2-89dd-4b0e-a37b-d666fa350e62",
+    "template": "payment_confirmed",
+    "channel": "push",
+    "payload": {
+     "payment_id": "74dff2bb-c492-4270-bfcd-b4b20c7ffdcc",
+     "amount_paisa": "2000000",
+     "objection_link": "/menu/ledger?ref_type=payment&ref_id=74dff2bb-c492-4270-bfcd-b4b20c7ffdcc"
+    },
+    "status": "skipped",
+    "scheduled_for": "2026-10-30T14:49:45.124Z",
+    "sent_at": null,
+    "opened_at": null,
+    "error": "no_push_tokens"
+   },
+   {
+    "id": "48bdadd3-1d4b-4fbb-9eac-e3bbded2e2ec",
+    "template": "payment_confirmed",
+    "channel": "push",
+    "payload": {
+     "payment_id": "640c1c88-e410-4667-bcfc-9398ed02328f",
+     "amount_paisa": "2000000",
+     "objection_link": "/menu/ledger?ref_type=payment&ref_id=640c1c88-e410-4667-bcfc-9398ed02328f"
+    },
+    "status": "skipped",
+    "scheduled_for": "2026-10-30T14:49:45.110Z",
+    "sent_at": null,
+    "opened_at": null,
+    "error": "no_push_tokens"
+   }
+  ],
+  "next_cursor": null
+ },
+ "/partners": {
+  "items": [
+   {
+    "id": "9fa7a3aa-b5a9-4402-8804-4b24ddc68a57",
+    "kind": "gold",
+    "name": "আল-আমিন জুয়েলার্স",
+    "contract_date": "2026-10-30",
+    "rate_percent": 12,
+    "period_months": 12,
+    "sharing_policy": "মুনাফা ৬০:৪০ হারে ভাগ",
+    "contract_note": null,
+    "created_at": "2026-10-30T14:49:46.979Z"
+   }
+  ]
+ },
+ "/partners/9fa7a3aa-b5a9-4402-8804-4b24ddc68a57": {
+  "partner": {
+   "id": "9fa7a3aa-b5a9-4402-8804-4b24ddc68a57",
+   "kind": "gold",
+   "name": "আল-আমিন জুয়েলার্স",
+   "contract_date": "2026-10-30",
+   "rate_percent": 12,
+   "period_months": 12,
+   "sharing_policy": "মুনাফা ৬০:৪০ হারে ভাগ",
+   "contract_note": null,
+   "created_at": "2026-10-30T14:49:46.979Z"
+  },
+  "assets": [],
+  "entries": [],
+  "documents": [],
+  "valuations": [],
+  "withdrawals": []
+ },
+ "/payments": {
+  "items": [
+   {
+    "id": "bc7c0d1c-321b-4c00-99a9-2a31212e26b2",
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "member_name": "সদস্য পাঁচ",
+    "amount_paisa": "1500000",
+    "method": "bkash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-10-30T14:49:46.491Z",
+    "status": "pending",
+    "source": "member_submitted",
+    "for_periods": [
+     "2026-10"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.490Z",
+    "confirmed_at": null,
+    "confirmed_by_code": null
+   },
+   {
+    "id": "5e6f2462-c675-4cb3-8bab-42bdfab0bd84",
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "member_code": "M01",
+    "member_name": "সদস্য এক",
+    "amount_paisa": "1000000",
+    "method": "cash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-10-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-10"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.088Z",
+    "confirmed_at": "2026-10-30T14:49:45.096Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "555ea421-2d34-4d7d-838b-748dea57d3a3",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "member_name": "সদস্য আট",
+    "amount_paisa": "2000000",
+    "method": "bkash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-10-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-10"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.472Z",
+    "confirmed_at": "2026-10-30T14:49:46.477Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "47c81946-eedf-4e11-8ed4-1cc37a5f4809",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "member_name": "সদস্য সাত",
+    "amount_paisa": "2000000",
+    "method": "bank",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-10-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-10"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.330Z",
+    "confirmed_at": "2026-10-30T14:49:46.335Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "26fad5a4-ffe0-4163-b1aa-a0afc351633e",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "amount_paisa": "2000000",
+    "method": "nagad",
+    "purpose": "dues",
+    "trx_id": "DEMOM02202610",
+    "paid_at": "2026-10-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-10"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.447Z",
+    "confirmed_at": "2026-10-30T14:49:45.453Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "ebf318ad-acd0-4336-b51a-89a8367d7948",
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "member_code": "M03",
+    "member_name": "সদস্য তিন",
+    "amount_paisa": "500000",
+    "method": "bkash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-09-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-09"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.800Z",
+    "confirmed_at": "2026-10-30T14:49:45.814Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "ead9746a-2663-4a61-80e0-124b45146b96",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "member_name": "সদস্য আট",
+    "amount_paisa": "2000000",
+    "method": "nagad",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-09-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-09"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.459Z",
+    "confirmed_at": "2026-10-30T14:49:46.464Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "7793fa36-e1f4-4030-a8d4-2da9235eac06",
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "member_code": "M01",
+    "member_name": "সদস্য এক",
+    "amount_paisa": "1000000",
+    "method": "bkash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-09-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-09"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.075Z",
+    "confirmed_at": "2026-10-30T14:49:45.080Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "41dace53-9e95-4885-a2a7-5fc2ce7e1555",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "member_name": "সদস্য সাত",
+    "amount_paisa": "2000000",
+    "method": "cash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-09-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-09"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.317Z",
+    "confirmed_at": "2026-10-30T14:49:46.322Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "3eafc32b-63b4-4c64-ac54-22e544601110",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "amount_paisa": "2000000",
+    "method": "bank",
+    "purpose": "dues",
+    "trx_id": "DEMOM02202609",
+    "paid_at": "2026-09-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-09"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.429Z",
+    "confirmed_at": "2026-10-30T14:49:45.436Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "26e6309d-5ff9-41ff-a8dc-e7dc0c86fa37",
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "member_name": "সদস্য পাঁচ",
+    "amount_paisa": "1500000",
+    "method": "cash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-09-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-09"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.080Z",
+    "confirmed_at": "2026-10-30T14:49:46.086Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "cac020c0-7868-462f-b159-f9b27dd8cf77",
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "member_name": "সদস্য পাঁচ",
+    "amount_paisa": "1500000",
+    "method": "bkash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-08-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-08"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.068Z",
+    "confirmed_at": "2026-10-30T14:49:46.073Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "b4e04c3b-153c-4af8-a3eb-e6e369ea1a5f",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "amount_paisa": "2000000",
+    "method": "cash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-08-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-08"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.278Z",
+    "confirmed_at": "2026-10-30T14:49:45.301Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "976f8f4d-9a28-4dad-af74-ee07bf20c2db",
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "member_code": "M04",
+    "member_name": "সদস্য চার",
+    "amount_paisa": "500000",
+    "method": "bkash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-08-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-08"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.958Z",
+    "confirmed_at": "2026-10-30T14:49:45.964Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "9101f527-ce6f-4ade-9387-b0cf544f3a1b",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "member_name": "সদস্য আট",
+    "amount_paisa": "2000000",
+    "method": "bank",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-08-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-08"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.446Z",
+    "confirmed_at": "2026-10-30T14:49:46.451Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "8046ed18-cec1-4e63-9b43-f08a342f1fc7",
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "member_code": "M01",
+    "member_name": "সদস্য এক",
+    "amount_paisa": "1000000",
+    "method": "nagad",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-08-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-08"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.059Z",
+    "confirmed_at": "2026-10-30T14:49:45.065Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "4115cdaf-5f8e-485d-b6b9-6161aa4612d5",
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "member_code": "M03",
+    "member_name": "সদস্য তিন",
+    "amount_paisa": "500000",
+    "method": "nagad",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-08-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-08"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.743Z",
+    "confirmed_at": "2026-10-30T14:49:45.766Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "2c7e042d-d7f4-4f2a-85b4-237702dda99b",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "member_name": "সদস্য সাত",
+    "amount_paisa": "2000000",
+    "method": "bkash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-08-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-08"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.302Z",
+    "confirmed_at": "2026-10-30T14:49:46.308Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "eee8210e-a153-4e17-8842-62dcfa4d9d19",
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "member_name": "সদস্য পাঁচ",
+    "amount_paisa": "1500000",
+    "method": "nagad",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-07-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-07"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.055Z",
+    "confirmed_at": "2026-10-30T14:49:46.061Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "e1014128-4040-459a-be75-39c1ada6422a",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "member_name": "সদস্য আট",
+    "amount_paisa": "2000000",
+    "method": "cash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-07-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-07"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.432Z",
+    "confirmed_at": "2026-10-30T14:49:46.438Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "8ef66439-ee1a-4d92-82db-0fc9aae6a4e5",
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "member_code": "M06",
+    "member_name": "সদস্য ছয়",
+    "amount_paisa": "500000",
+    "method": "bkash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-07-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-07"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.188Z",
+    "confirmed_at": "2026-10-30T14:49:46.194Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "7b69bbb4-07b1-481f-b7c7-241f16ae99d1",
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "member_code": "M01",
+    "member_name": "সদস্য এক",
+    "amount_paisa": "1000000",
+    "method": "bank",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-07-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-07"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.046Z",
+    "confirmed_at": "2026-10-30T14:49:45.051Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "5dd541e6-a5e2-406f-a2ed-6fb8f31578aa",
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "member_code": "M04",
+    "member_name": "সদস্য চার",
+    "amount_paisa": "500000",
+    "method": "nagad",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-07-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-07"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.945Z",
+    "confirmed_at": "2026-10-30T14:49:45.951Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "3a08f661-7ff7-496e-9b40-25b9a8d56018",
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "member_code": "M03",
+    "member_name": "সদস্য তিন",
+    "amount_paisa": "500000",
+    "method": "bank",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-07-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-07"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.713Z",
+    "confirmed_at": "2026-10-30T14:49:45.727Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "28d20e7c-b172-404b-be1f-07a985613339",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "amount_paisa": "2000000",
+    "method": "bkash",
+    "purpose": "dues",
+    "trx_id": "DEMOM02202607",
+    "paid_at": "2026-07-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-07"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.233Z",
+    "confirmed_at": "2026-10-30T14:49:45.249Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "0ee8d848-0acc-40e3-8289-9af07fc4cb80",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "member_name": "সদস্য সাত",
+    "amount_paisa": "2000000",
+    "method": "nagad",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-07-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-07"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.287Z",
+    "confirmed_at": "2026-10-30T14:49:46.293Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "f5a3e31d-246a-4411-b21e-c80c52d6d2b2",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "amount_paisa": "2000000",
+    "method": "nagad",
+    "purpose": "dues",
+    "trx_id": "DEMOM02202606",
+    "paid_at": "2026-06-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-06"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.190Z",
+    "confirmed_at": "2026-10-30T14:49:45.209Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "7c73aba0-5056-4f28-adba-8cae0cfcb3af",
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "member_code": "M04",
+    "member_name": "সদস্য চার",
+    "amount_paisa": "500000",
+    "method": "bank",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-06-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-06"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.930Z",
+    "confirmed_at": "2026-10-30T14:49:45.935Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "5fc0ea5e-84ed-4247-8e60-37ed4f7b8619",
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "member_name": "সদস্য পাঁচ",
+    "amount_paisa": "1500000",
+    "method": "bank",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-06-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-06"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.043Z",
+    "confirmed_at": "2026-10-30T14:49:46.048Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "43182b09-21a9-4834-a8e1-88fe511a7797",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "member_name": "সদস্য আট",
+    "amount_paisa": "2000000",
+    "method": "bkash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-06-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-06"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.419Z",
+    "confirmed_at": "2026-10-30T14:49:46.424Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "34644309-c6ea-4eea-85c8-53cec3630d24",
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "member_code": "M03",
+    "member_name": "সদস্য তিন",
+    "amount_paisa": "500000",
+    "method": "cash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-06-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-06"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.689Z",
+    "confirmed_at": "2026-10-30T14:49:45.697Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "32767792-8891-46e6-bffe-f8ca3418c23e",
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "member_code": "M06",
+    "member_name": "সদস্য ছয়",
+    "amount_paisa": "500000",
+    "method": "nagad",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-06-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-06"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.175Z",
+    "confirmed_at": "2026-10-30T14:49:46.181Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "09be2dfd-ad76-40dd-9d81-98544e2a2e3e",
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "member_code": "M01",
+    "member_name": "সদস্য এক",
+    "amount_paisa": "1000000",
+    "method": "cash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-06-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-06"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.031Z",
+    "confirmed_at": "2026-10-30T14:49:45.038Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "05a7fbbf-8e3a-4dd2-9160-1e7eb52428e2",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "member_name": "সদস্য সাত",
+    "amount_paisa": "2000000",
+    "method": "bank",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-06-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-06"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.273Z",
+    "confirmed_at": "2026-10-30T14:49:46.278Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "bfe5181f-f9f7-436f-9f8e-22b8d0c64588",
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "member_code": "M01",
+    "member_name": "সদস্য এক",
+    "amount_paisa": "1000000",
+    "method": "bkash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-05-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-05"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:44.993Z",
+    "confirmed_at": "2026-10-30T14:49:45.012Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "b4e7c56f-6da9-40f8-a754-1d30e4410e04",
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "member_name": "সদস্য পাঁচ",
+    "amount_paisa": "1500000",
+    "method": "cash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-05-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-05"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.030Z",
+    "confirmed_at": "2026-10-30T14:49:46.035Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "7b48bf9a-3030-4ebf-b938-a0c1058e01b4",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "member_name": "সদস্য সাত",
+    "amount_paisa": "2000000",
+    "method": "cash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-05-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-05"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.261Z",
+    "confirmed_at": "2026-10-30T14:49:46.266Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "77d86d09-3aba-4175-94e9-126468fbcf1f",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "amount_paisa": "2000000",
+    "method": "bank",
+    "purpose": "dues",
+    "trx_id": "DEMOM02202605",
+    "paid_at": "2026-05-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-05"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.164Z",
+    "confirmed_at": "2026-10-30T14:49:45.169Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "6d294bac-0c83-41d4-8971-0efab7f741d8",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "member_name": "সদস্য আট",
+    "amount_paisa": "2000000",
+    "method": "nagad",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-05-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-05"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.407Z",
+    "confirmed_at": "2026-10-30T14:49:46.412Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "24736760-0148-4ed6-ade4-40307cb2b3eb",
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "member_code": "M06",
+    "member_name": "সদস্য ছয়",
+    "amount_paisa": "500000",
+    "method": "bank",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-05-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-05"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.159Z",
+    "confirmed_at": "2026-10-30T14:49:46.169Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "1a4a0e8b-401b-4e4f-9096-2ac962dd95b1",
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "member_code": "M04",
+    "member_name": "সদস্য চার",
+    "amount_paisa": "500000",
+    "method": "cash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-05-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-05"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.916Z",
+    "confirmed_at": "2026-10-30T14:49:45.922Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "16822a3f-94c5-4dde-8c49-20f9b0e45fe3",
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "member_code": "M03",
+    "member_name": "সদস্য তিন",
+    "amount_paisa": "500000",
+    "method": "bkash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-05-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-05"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.668Z",
+    "confirmed_at": "2026-10-30T14:49:45.677Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "e4a86fe0-c9c8-4333-8bd4-5c093d411135",
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "member_code": "M06",
+    "member_name": "সদস্য ছয়",
+    "amount_paisa": "500000",
+    "method": "cash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-04-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-04"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.140Z",
+    "confirmed_at": "2026-10-30T14:49:46.147Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "a9c85945-7f94-4337-9611-945252243f5e",
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "member_name": "সদস্য পাঁচ",
+    "amount_paisa": "1500000",
+    "method": "bkash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-04-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-04"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.017Z",
+    "confirmed_at": "2026-10-30T14:49:46.023Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "65f17a73-e56b-4ce9-bc7c-cf064dfc2859",
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "member_name": "সদস্য আট",
+    "amount_paisa": "2000000",
+    "method": "bank",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-04-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-04"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.386Z",
+    "confirmed_at": "2026-10-30T14:49:46.396Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "52c5606e-3df4-406b-93af-3da584c16da1",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "amount_paisa": "2000000",
+    "method": "cash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-04-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-04"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.150Z",
+    "confirmed_at": "2026-10-30T14:49:45.156Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "2e5734ef-e56d-4b32-a41c-8d54e12c4ee7",
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "member_code": "M03",
+    "member_name": "সদস্য তিন",
+    "amount_paisa": "500000",
+    "method": "nagad",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-04-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-04"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.613Z",
+    "confirmed_at": "2026-10-30T14:49:45.633Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "2d7f04d5-6683-4cb1-8fb7-645bbfcd2fbe",
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "member_code": "M01",
+    "member_name": "সদস্য এক",
+    "amount_paisa": "1000000",
+    "method": "nagad",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-04-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-04"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:44.977Z",
+    "confirmed_at": "2026-10-30T14:49:44.983Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "13189904-f088-49b0-91e9-73365f464b86",
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "member_name": "সদস্য সাত",
+    "amount_paisa": "2000000",
+    "method": "bkash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-04-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-04"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:46.248Z",
+    "confirmed_at": "2026-10-30T14:49:46.253Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "085f62b6-ac66-426e-8794-0c43cd6649ac",
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "member_code": "M04",
+    "member_name": "সদস্য চার",
+    "amount_paisa": "500000",
+    "method": "bkash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-04-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-04"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.902Z",
+    "confirmed_at": "2026-10-30T14:49:45.909Z",
+    "confirmed_by_code": "M01"
+   }
+  ],
+  "next_cursor": "WyIyMDI2LTA0LTA1VDA0OjAwOjAwLjAwMDAwMFoiLCIwODVmNjJiNi1hYzY2LTQyNmUtODc5NC0wYzQzY2Q2NjQ5YWMiXQ"
+ },
+ "/payments?member_id=a0000000-0000-0000-0000-000000000002&limit=5": {
+  "items": [
+   {
+    "id": "26fad5a4-ffe0-4163-b1aa-a0afc351633e",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "amount_paisa": "2000000",
+    "method": "nagad",
+    "purpose": "dues",
+    "trx_id": "DEMOM02202610",
+    "paid_at": "2026-10-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-10"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.447Z",
+    "confirmed_at": "2026-10-30T14:49:45.453Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "3eafc32b-63b4-4c64-ac54-22e544601110",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "amount_paisa": "2000000",
+    "method": "bank",
+    "purpose": "dues",
+    "trx_id": "DEMOM02202609",
+    "paid_at": "2026-09-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-09"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.429Z",
+    "confirmed_at": "2026-10-30T14:49:45.436Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "b4e04c3b-153c-4af8-a3eb-e6e369ea1a5f",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "amount_paisa": "2000000",
+    "method": "cash",
+    "purpose": "dues",
+    "trx_id": null,
+    "paid_at": "2026-08-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-08"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.278Z",
+    "confirmed_at": "2026-10-30T14:49:45.301Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "28d20e7c-b172-404b-be1f-07a985613339",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "amount_paisa": "2000000",
+    "method": "bkash",
+    "purpose": "dues",
+    "trx_id": "DEMOM02202607",
+    "paid_at": "2026-07-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-07"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.233Z",
+    "confirmed_at": "2026-10-30T14:49:45.249Z",
+    "confirmed_by_code": "M01"
+   },
+   {
+    "id": "f5a3e31d-246a-4411-b21e-c80c52d6d2b2",
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "amount_paisa": "2000000",
+    "method": "nagad",
+    "purpose": "dues",
+    "trx_id": "DEMOM02202606",
+    "paid_at": "2026-06-05T04:00:00.000Z",
+    "status": "confirmed",
+    "source": "cashier_entry",
+    "for_periods": [
+     "2026-06"
+    ],
+    "proof_file_id": null,
+    "has_raw_sms": false,
+    "note": null,
+    "reject_reason": null,
+    "unallocated_paisa": "0",
+    "submitted_at": "2026-10-30T14:49:45.190Z",
+    "confirmed_at": "2026-10-30T14:49:45.209Z",
+    "confirmed_by_code": "M01"
+   }
+  ],
+  "next_cursor": "WyIyMDI2LTA2LTA1VDA0OjAwOjAwLjAwMDAwMFoiLCJmNWEzZTMxZC0yNDZhLTQ0MTEtYjIxZS1jODBjNTJkNmQyYjIiXQ"
+ },
+ "/payments/0ee8d848-0acc-40e3-8289-9af07fc4cb80": {
+  "id": "0ee8d848-0acc-40e3-8289-9af07fc4cb80",
+  "member_id": "a0000000-0000-0000-0000-000000000007",
+  "member_code": "M07",
+  "member_name": "সদস্য সাত",
+  "amount_paisa": "2000000",
+  "method": "nagad",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-07-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-07"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:46.287Z",
+  "confirmed_at": "2026-10-30T14:49:46.293Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "8ea1ebfb-f777-4b31-a7aa-b125fbfe328e",
+    "fine_id": null,
+    "period": "2026-07",
+    "due_kind": "monthly",
+    "amount_paisa": "2000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/26e6309d-5ff9-41ff-a8dc-e7dc0c86fa37": {
+  "id": "26e6309d-5ff9-41ff-a8dc-e7dc0c86fa37",
+  "member_id": "a0000000-0000-0000-0000-000000000005",
+  "member_code": "M05",
+  "member_name": "সদস্য পাঁচ",
+  "amount_paisa": "1500000",
+  "method": "cash",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-09-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-09"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:46.080Z",
+  "confirmed_at": "2026-10-30T14:49:46.086Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "c9a8a872-e257-4a61-9471-abd63b1697bd",
+    "fine_id": null,
+    "period": "2026-09",
+    "due_kind": "monthly",
+    "amount_paisa": "1500000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/26fad5a4-ffe0-4163-b1aa-a0afc351633e": {
+  "id": "26fad5a4-ffe0-4163-b1aa-a0afc351633e",
+  "member_id": "a0000000-0000-0000-0000-000000000002",
+  "member_code": "M02",
+  "member_name": "সদস্য দুই",
+  "amount_paisa": "2000000",
+  "method": "nagad",
+  "purpose": "dues",
+  "trx_id": "DEMOM02202610",
+  "paid_at": "2026-10-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-10"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:45.447Z",
+  "confirmed_at": "2026-10-30T14:49:45.453Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "762ca12f-b867-4484-95fc-b0af44822a80",
+    "fine_id": null,
+    "period": "2026-10",
+    "due_kind": "monthly",
+    "amount_paisa": "2000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/28d20e7c-b172-404b-be1f-07a985613339": {
+  "id": "28d20e7c-b172-404b-be1f-07a985613339",
+  "member_id": "a0000000-0000-0000-0000-000000000002",
+  "member_code": "M02",
+  "member_name": "সদস্য দুই",
+  "amount_paisa": "2000000",
+  "method": "bkash",
+  "purpose": "dues",
+  "trx_id": "DEMOM02202607",
+  "paid_at": "2026-07-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-07"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:45.233Z",
+  "confirmed_at": "2026-10-30T14:49:45.249Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "40ed8b42-9e91-4563-8713-0e58b218c47f",
+    "fine_id": null,
+    "period": "2026-07",
+    "due_kind": "monthly",
+    "amount_paisa": "2000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/2c7e042d-d7f4-4f2a-85b4-237702dda99b": {
+  "id": "2c7e042d-d7f4-4f2a-85b4-237702dda99b",
+  "member_id": "a0000000-0000-0000-0000-000000000007",
+  "member_code": "M07",
+  "member_name": "সদস্য সাত",
+  "amount_paisa": "2000000",
+  "method": "bkash",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-08-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-08"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:46.302Z",
+  "confirmed_at": "2026-10-30T14:49:46.308Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "6f6ad309-9b38-46a0-b8c3-579943105b55",
+    "fine_id": null,
+    "period": "2026-08",
+    "due_kind": "monthly",
+    "amount_paisa": "2000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/3a08f661-7ff7-496e-9b40-25b9a8d56018": {
+  "id": "3a08f661-7ff7-496e-9b40-25b9a8d56018",
+  "member_id": "a0000000-0000-0000-0000-000000000003",
+  "member_code": "M03",
+  "member_name": "সদস্য তিন",
+  "amount_paisa": "500000",
+  "method": "bank",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-07-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-07"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:45.713Z",
+  "confirmed_at": "2026-10-30T14:49:45.727Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "3f153116-4013-4e36-bfe3-053de6ff455a",
+    "fine_id": null,
+    "period": "2026-07",
+    "due_kind": "monthly",
+    "amount_paisa": "500000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/3eafc32b-63b4-4c64-ac54-22e544601110": {
+  "id": "3eafc32b-63b4-4c64-ac54-22e544601110",
+  "member_id": "a0000000-0000-0000-0000-000000000002",
+  "member_code": "M02",
+  "member_name": "সদস্য দুই",
+  "amount_paisa": "2000000",
+  "method": "bank",
+  "purpose": "dues",
+  "trx_id": "DEMOM02202609",
+  "paid_at": "2026-09-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-09"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:45.429Z",
+  "confirmed_at": "2026-10-30T14:49:45.436Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "16d3c1e1-732b-49d4-9b13-9cc1ea1e3390",
+    "fine_id": null,
+    "period": "2026-09",
+    "due_kind": "monthly",
+    "amount_paisa": "2000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/4115cdaf-5f8e-485d-b6b9-6161aa4612d5": {
+  "id": "4115cdaf-5f8e-485d-b6b9-6161aa4612d5",
+  "member_id": "a0000000-0000-0000-0000-000000000003",
+  "member_code": "M03",
+  "member_name": "সদস্য তিন",
+  "amount_paisa": "500000",
+  "method": "nagad",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-08-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-08"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:45.743Z",
+  "confirmed_at": "2026-10-30T14:49:45.766Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "a1749650-de27-4c15-a3d5-8a303bf78351",
+    "fine_id": null,
+    "period": "2026-08",
+    "due_kind": "monthly",
+    "amount_paisa": "500000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/41dace53-9e95-4885-a2a7-5fc2ce7e1555": {
+  "id": "41dace53-9e95-4885-a2a7-5fc2ce7e1555",
+  "member_id": "a0000000-0000-0000-0000-000000000007",
+  "member_code": "M07",
+  "member_name": "সদস্য সাত",
+  "amount_paisa": "2000000",
+  "method": "cash",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-09-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-09"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:46.317Z",
+  "confirmed_at": "2026-10-30T14:49:46.322Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "364629d1-727b-4d40-afe6-115e5da16ef5",
+    "fine_id": null,
+    "period": "2026-09",
+    "due_kind": "monthly",
+    "amount_paisa": "2000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/43182b09-21a9-4834-a8e1-88fe511a7797": {
+  "id": "43182b09-21a9-4834-a8e1-88fe511a7797",
+  "member_id": "a0000000-0000-0000-0000-000000000008",
+  "member_code": "M08",
+  "member_name": "সদস্য আট",
+  "amount_paisa": "2000000",
+  "method": "bkash",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-06-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-06"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:46.419Z",
+  "confirmed_at": "2026-10-30T14:49:46.424Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "fc4e6a71-e833-4400-8360-f3cceace80a6",
+    "fine_id": null,
+    "period": "2026-06",
+    "due_kind": "monthly",
+    "amount_paisa": "2000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/47c81946-eedf-4e11-8ed4-1cc37a5f4809": {
+  "id": "47c81946-eedf-4e11-8ed4-1cc37a5f4809",
+  "member_id": "a0000000-0000-0000-0000-000000000007",
+  "member_code": "M07",
+  "member_name": "সদস্য সাত",
+  "amount_paisa": "2000000",
+  "method": "bank",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-10-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-10"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:46.330Z",
+  "confirmed_at": "2026-10-30T14:49:46.335Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "5bcea3ca-192a-42ff-b29c-ab0a3d79ff75",
+    "fine_id": null,
+    "period": "2026-10",
+    "due_kind": "monthly",
+    "amount_paisa": "2000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/555ea421-2d34-4d7d-838b-748dea57d3a3": {
+  "id": "555ea421-2d34-4d7d-838b-748dea57d3a3",
+  "member_id": "a0000000-0000-0000-0000-000000000008",
+  "member_code": "M08",
+  "member_name": "সদস্য আট",
+  "amount_paisa": "2000000",
+  "method": "bkash",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-10-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-10"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:46.472Z",
+  "confirmed_at": "2026-10-30T14:49:46.477Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "952421cb-3645-45a6-8476-6ea5bed52ea3",
+    "fine_id": null,
+    "period": "2026-10",
+    "due_kind": "monthly",
+    "amount_paisa": "2000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/5dd541e6-a5e2-406f-a2ed-6fb8f31578aa": {
+  "id": "5dd541e6-a5e2-406f-a2ed-6fb8f31578aa",
+  "member_id": "a0000000-0000-0000-0000-000000000004",
+  "member_code": "M04",
+  "member_name": "সদস্য চার",
+  "amount_paisa": "500000",
+  "method": "nagad",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-07-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-07"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:45.945Z",
+  "confirmed_at": "2026-10-30T14:49:45.951Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "2a5b6dce-04eb-429e-96eb-77cb574da7fa",
+    "fine_id": null,
+    "period": "2026-07",
+    "due_kind": "monthly",
+    "amount_paisa": "500000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/5e6f2462-c675-4cb3-8bab-42bdfab0bd84": {
+  "id": "5e6f2462-c675-4cb3-8bab-42bdfab0bd84",
+  "member_id": "a0000000-0000-0000-0000-000000000001",
+  "member_code": "M01",
+  "member_name": "সদস্য এক",
+  "amount_paisa": "1000000",
+  "method": "cash",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-10-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-10"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:45.088Z",
+  "confirmed_at": "2026-10-30T14:49:45.096Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "f9e601c3-02c7-4e6d-ab94-d986a5a2b49d",
+    "fine_id": null,
+    "period": "2026-10",
+    "due_kind": "monthly",
+    "amount_paisa": "1000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/5fc0ea5e-84ed-4247-8e60-37ed4f7b8619": {
+  "id": "5fc0ea5e-84ed-4247-8e60-37ed4f7b8619",
+  "member_id": "a0000000-0000-0000-0000-000000000005",
+  "member_code": "M05",
+  "member_name": "সদস্য পাঁচ",
+  "amount_paisa": "1500000",
+  "method": "bank",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-06-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-06"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:46.043Z",
+  "confirmed_at": "2026-10-30T14:49:46.048Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "304ba8e0-5598-409d-ad72-d9e44125a638",
+    "fine_id": null,
+    "period": "2026-06",
+    "due_kind": "monthly",
+    "amount_paisa": "1500000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/7793fa36-e1f4-4030-a8d4-2da9235eac06": {
+  "id": "7793fa36-e1f4-4030-a8d4-2da9235eac06",
+  "member_id": "a0000000-0000-0000-0000-000000000001",
+  "member_code": "M01",
+  "member_name": "সদস্য এক",
+  "amount_paisa": "1000000",
+  "method": "bkash",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-09-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-09"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:45.075Z",
+  "confirmed_at": "2026-10-30T14:49:45.080Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "921c32b2-b285-4145-809a-3a15e5bdac5f",
+    "fine_id": null,
+    "period": "2026-09",
+    "due_kind": "monthly",
+    "amount_paisa": "1000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/7b69bbb4-07b1-481f-b7c7-241f16ae99d1": {
+  "id": "7b69bbb4-07b1-481f-b7c7-241f16ae99d1",
+  "member_id": "a0000000-0000-0000-0000-000000000001",
+  "member_code": "M01",
+  "member_name": "সদস্য এক",
+  "amount_paisa": "1000000",
+  "method": "bank",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-07-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-07"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:45.046Z",
+  "confirmed_at": "2026-10-30T14:49:45.051Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "10bd37dc-f3ec-4742-b02c-cc32b94f8630",
+    "fine_id": null,
+    "period": "2026-07",
+    "due_kind": "monthly",
+    "amount_paisa": "1000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/7c73aba0-5056-4f28-adba-8cae0cfcb3af": {
+  "id": "7c73aba0-5056-4f28-adba-8cae0cfcb3af",
+  "member_id": "a0000000-0000-0000-0000-000000000004",
+  "member_code": "M04",
+  "member_name": "সদস্য চার",
+  "amount_paisa": "500000",
+  "method": "bank",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-06-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-06"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:45.930Z",
+  "confirmed_at": "2026-10-30T14:49:45.935Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "da45ce22-5607-4e57-8679-7ef868074d19",
+    "fine_id": null,
+    "period": "2026-06",
+    "due_kind": "monthly",
+    "amount_paisa": "500000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/8046ed18-cec1-4e63-9b43-f08a342f1fc7": {
+  "id": "8046ed18-cec1-4e63-9b43-f08a342f1fc7",
+  "member_id": "a0000000-0000-0000-0000-000000000001",
+  "member_code": "M01",
+  "member_name": "সদস্য এক",
+  "amount_paisa": "1000000",
+  "method": "nagad",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-08-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-08"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:45.059Z",
+  "confirmed_at": "2026-10-30T14:49:45.065Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "073041c0-9bd6-4ca0-9627-329286012656",
+    "fine_id": null,
+    "period": "2026-08",
+    "due_kind": "monthly",
+    "amount_paisa": "1000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/8ef66439-ee1a-4d92-82db-0fc9aae6a4e5": {
+  "id": "8ef66439-ee1a-4d92-82db-0fc9aae6a4e5",
+  "member_id": "a0000000-0000-0000-0000-000000000006",
+  "member_code": "M06",
+  "member_name": "সদস্য ছয়",
+  "amount_paisa": "500000",
+  "method": "bkash",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-07-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-07"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:46.188Z",
+  "confirmed_at": "2026-10-30T14:49:46.194Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "7171d512-552a-42fb-9634-085d07e1cac6",
+    "fine_id": null,
+    "period": "2026-07",
+    "due_kind": "monthly",
+    "amount_paisa": "500000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/9101f527-ce6f-4ade-9387-b0cf544f3a1b": {
+  "id": "9101f527-ce6f-4ade-9387-b0cf544f3a1b",
+  "member_id": "a0000000-0000-0000-0000-000000000008",
+  "member_code": "M08",
+  "member_name": "সদস্য আট",
+  "amount_paisa": "2000000",
+  "method": "bank",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-08-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-08"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:46.446Z",
+  "confirmed_at": "2026-10-30T14:49:46.451Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "083b454f-1b32-4ab6-bc0d-a4418dd1223f",
+    "fine_id": null,
+    "period": "2026-08",
+    "due_kind": "monthly",
+    "amount_paisa": "2000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/976f8f4d-9a28-4dad-af74-ee07bf20c2db": {
+  "id": "976f8f4d-9a28-4dad-af74-ee07bf20c2db",
+  "member_id": "a0000000-0000-0000-0000-000000000004",
+  "member_code": "M04",
+  "member_name": "সদস্য চার",
+  "amount_paisa": "500000",
+  "method": "bkash",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-08-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-08"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:45.958Z",
+  "confirmed_at": "2026-10-30T14:49:45.964Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "09e556a7-951d-4e8f-bc83-f747276ee426",
+    "fine_id": null,
+    "period": "2026-08",
+    "due_kind": "monthly",
+    "amount_paisa": "500000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/b4e04c3b-153c-4af8-a3eb-e6e369ea1a5f": {
+  "id": "b4e04c3b-153c-4af8-a3eb-e6e369ea1a5f",
+  "member_id": "a0000000-0000-0000-0000-000000000002",
+  "member_code": "M02",
+  "member_name": "সদস্য দুই",
+  "amount_paisa": "2000000",
+  "method": "cash",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-08-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-08"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:45.278Z",
+  "confirmed_at": "2026-10-30T14:49:45.301Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "8bad42c4-2970-4d81-9175-fc95d4a19f35",
+    "fine_id": null,
+    "period": "2026-08",
+    "due_kind": "monthly",
+    "amount_paisa": "2000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/bc7c0d1c-321b-4c00-99a9-2a31212e26b2": {
+  "id": "bc7c0d1c-321b-4c00-99a9-2a31212e26b2",
+  "member_id": "a0000000-0000-0000-0000-000000000005",
+  "member_code": "M05",
+  "member_name": "সদস্য পাঁচ",
+  "amount_paisa": "1500000",
+  "method": "bkash",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-10-30T14:49:46.491Z",
+  "status": "pending",
+  "source": "member_submitted",
+  "for_periods": [
+   "2026-10"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:46.490Z",
+  "confirmed_at": null,
+  "confirmed_by_code": null,
+  "allocations": [],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/cac020c0-7868-462f-b159-f9b27dd8cf77": {
+  "id": "cac020c0-7868-462f-b159-f9b27dd8cf77",
+  "member_id": "a0000000-0000-0000-0000-000000000005",
+  "member_code": "M05",
+  "member_name": "সদস্য পাঁচ",
+  "amount_paisa": "1500000",
+  "method": "bkash",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-08-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-08"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:46.068Z",
+  "confirmed_at": "2026-10-30T14:49:46.073Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "52408f51-3e5f-4b93-bbc2-89241a578171",
+    "fine_id": null,
+    "period": "2026-08",
+    "due_kind": "monthly",
+    "amount_paisa": "1500000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/e1014128-4040-459a-be75-39c1ada6422a": {
+  "id": "e1014128-4040-459a-be75-39c1ada6422a",
+  "member_id": "a0000000-0000-0000-0000-000000000008",
+  "member_code": "M08",
+  "member_name": "সদস্য আট",
+  "amount_paisa": "2000000",
+  "method": "cash",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-07-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-07"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:46.432Z",
+  "confirmed_at": "2026-10-30T14:49:46.438Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "957b87c4-71d6-428e-8d72-f5fea9aaadea",
+    "fine_id": null,
+    "period": "2026-07",
+    "due_kind": "monthly",
+    "amount_paisa": "2000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/ead9746a-2663-4a61-80e0-124b45146b96": {
+  "id": "ead9746a-2663-4a61-80e0-124b45146b96",
+  "member_id": "a0000000-0000-0000-0000-000000000008",
+  "member_code": "M08",
+  "member_name": "সদস্য আট",
+  "amount_paisa": "2000000",
+  "method": "nagad",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-09-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-09"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:46.459Z",
+  "confirmed_at": "2026-10-30T14:49:46.464Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "3b07d5ad-4a66-49d2-ae2c-26775c142fff",
+    "fine_id": null,
+    "period": "2026-09",
+    "due_kind": "monthly",
+    "amount_paisa": "2000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/ebf318ad-acd0-4336-b51a-89a8367d7948": {
+  "id": "ebf318ad-acd0-4336-b51a-89a8367d7948",
+  "member_id": "a0000000-0000-0000-0000-000000000003",
+  "member_code": "M03",
+  "member_name": "সদস্য তিন",
+  "amount_paisa": "500000",
+  "method": "bkash",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-09-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-09"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:45.800Z",
+  "confirmed_at": "2026-10-30T14:49:45.814Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "ca357d3c-d250-4731-bec7-2e1ba9d84617",
+    "fine_id": null,
+    "period": "2026-09",
+    "due_kind": "monthly",
+    "amount_paisa": "500000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/eee8210e-a153-4e17-8842-62dcfa4d9d19": {
+  "id": "eee8210e-a153-4e17-8842-62dcfa4d9d19",
+  "member_id": "a0000000-0000-0000-0000-000000000005",
+  "member_code": "M05",
+  "member_name": "সদস্য পাঁচ",
+  "amount_paisa": "1500000",
+  "method": "nagad",
+  "purpose": "dues",
+  "trx_id": null,
+  "paid_at": "2026-07-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-07"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:46.055Z",
+  "confirmed_at": "2026-10-30T14:49:46.061Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "1342a843-1070-419e-8830-1132529afdb5",
+    "fine_id": null,
+    "period": "2026-07",
+    "due_kind": "monthly",
+    "amount_paisa": "1500000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/payments/f5a3e31d-246a-4411-b21e-c80c52d6d2b2": {
+  "id": "f5a3e31d-246a-4411-b21e-c80c52d6d2b2",
+  "member_id": "a0000000-0000-0000-0000-000000000002",
+  "member_code": "M02",
+  "member_name": "সদস্য দুই",
+  "amount_paisa": "2000000",
+  "method": "nagad",
+  "purpose": "dues",
+  "trx_id": "DEMOM02202606",
+  "paid_at": "2026-06-05T04:00:00.000Z",
+  "status": "confirmed",
+  "source": "cashier_entry",
+  "for_periods": [
+   "2026-06"
+  ],
+  "proof_file_id": null,
+  "has_raw_sms": false,
+  "note": null,
+  "reject_reason": null,
+  "unallocated_paisa": "0",
+  "submitted_at": "2026-10-30T14:49:45.190Z",
+  "confirmed_at": "2026-10-30T14:49:45.209Z",
+  "confirmed_by_code": "M01",
+  "allocations": [
+   {
+    "due_id": "27c3e4a4-2dea-4f6e-9e6b-4f6c40a02484",
+    "fine_id": null,
+    "period": "2026-06",
+    "due_kind": "monthly",
+    "amount_paisa": "2000000"
+   }
+  ],
+  "raw_sms": null,
+  "preview": null
+ },
+ "/proposals?limit=200": {
+  "items": [
+   {
+    "id": "72134ce1-38d0-42f8-83a9-b1ba91dafa8e",
+    "type": "general",
+    "title": "মাসিক চাঁদা দেওয়ার শেষ তারিখ ২০ তারিখে সরানো",
+    "status": "rejected",
+    "subject_member_id": null,
+    "payload": {
+     "text": "শেষ তারিখ ১০ থেকে ২০ তারিখ"
+    },
+    "basis": "member",
+    "threshold_kind": "majority",
+    "eligible_count": 8,
+    "eligible_weight": "8",
+    "threshold": 5,
+    "threshold_weight": "5",
+    "counts": {
+     "yes": 1,
+     "no": 5,
+     "abstain": 0,
+     "yes_weight": "1",
+     "no_weight": "5",
+     "abstain_weight": "0"
+    },
+    "ballots_hidden": false,
+    "my_choice": null,
+    "can_vote": false,
+    "opens_at": "2026-10-30T14:49:46.781Z",
+    "closes_at": "2026-11-06T18:00:00.000Z",
+    "finalized_at": "2026-10-30T14:49:46.859Z",
+    "executed_at": null,
+    "created_at": "2026-10-30T14:49:46.776Z",
+    "created_by": "b0000000-0000-0000-0000-000000000001",
+    "clause_ref": null,
+    "amount_paisa": null
+   },
+   {
+    "id": "40aea313-6890-4af9-b204-6dc8e7b051d3",
+    "type": "distribution",
+    "title": "অর্ধবার্ষিক মুনাফা বণ্টন",
+    "status": "executed",
+    "subject_member_id": null,
+    "payload": {
+     "total_paisa": "400000",
+     "source_account": "CASH"
+    },
+    "basis": "member",
+    "threshold_kind": "majority",
+    "eligible_count": 8,
+    "eligible_weight": "8",
+    "threshold": 5,
+    "threshold_weight": "5",
+    "counts": {
+     "yes": 6,
+     "no": 0,
+     "abstain": 0,
+     "yes_weight": "6",
+     "no_weight": "0",
+     "abstain_weight": "0"
+    },
+    "ballots_hidden": false,
+    "my_choice": null,
+    "can_vote": false,
+    "opens_at": "2026-10-30T14:49:46.683Z",
+    "closes_at": "2026-11-06T18:00:00.000Z",
+    "finalized_at": "2026-10-30T14:49:46.750Z",
+    "executed_at": "2026-10-30T14:49:46.758Z",
+    "created_at": "2026-10-30T14:49:46.677Z",
+    "created_by": "b0000000-0000-0000-0000-000000000001",
+    "clause_ref": null,
+    "amount_paisa": null
+   },
+   {
+    "id": "cebeb256-ef89-43e6-95eb-a8a293f785f1",
+    "type": "charity_donation",
+    "title": "বন্যার্তদের জন্য অনুদান",
+    "status": "approved",
+    "subject_member_id": null,
+    "payload": {
+     "purpose": "বন্যার্ত পরিবারের খাদ্য সহায়তা",
+     "recipient": "স্থানীয় ত্রাণ কমিটি",
+     "amount_paisa": "1000000"
+    },
+    "basis": "member",
+    "threshold_kind": "majority",
+    "eligible_count": 8,
+    "eligible_weight": "8",
+    "threshold": 5,
+    "threshold_weight": "5",
+    "counts": {
+     "yes": 6,
+     "no": 0,
+     "abstain": 0,
+     "yes_weight": "6",
+     "no_weight": "0",
+     "abstain_weight": "0"
+    },
+    "ballots_hidden": false,
+    "my_choice": null,
+    "can_vote": false,
+    "opens_at": "2026-10-30T14:49:46.591Z",
+    "closes_at": "2026-11-06T18:00:00.000Z",
+    "finalized_at": "2026-10-30T14:49:46.646Z",
+    "executed_at": null,
+    "created_at": "2026-10-30T14:49:46.585Z",
+    "created_by": "b0000000-0000-0000-0000-000000000001",
+    "clause_ref": null,
+    "amount_paisa": null
+   },
+   {
+    "id": "af56cebc-a513-4234-a7f0-967767d03779",
+    "type": "expense",
+    "title": "দোকানের সাইনবোর্ড মেরামত",
+    "status": "open",
+    "subject_member_id": null,
+    "payload": {
+     "payee": "রহমান সাইন হাউস",
+     "account": "MAINTENANCE",
+     "purpose": "দোকানের পুরনো সাইনবোর্ড বদলানো",
+     "max_amount_paisa": "1500000"
+    },
+    "basis": "member",
+    "threshold_kind": "majority",
+    "eligible_count": 8,
+    "eligible_weight": "8",
+    "threshold": 5,
+    "threshold_weight": "5",
+    "counts": {
+     "yes": 0,
+     "no": 0,
+     "abstain": 0,
+     "yes_weight": "0",
+     "no_weight": "0",
+     "abstain_weight": "0"
+    },
+    "ballots_hidden": true,
+    "my_choice": null,
+    "can_vote": true,
+    "opens_at": "2026-10-30T14:49:46.560Z",
+    "closes_at": "2026-11-09T18:00:00.000Z",
+    "finalized_at": null,
+    "executed_at": null,
+    "created_at": "2026-10-30T14:49:46.554Z",
+    "created_by": "b0000000-0000-0000-0000-000000000001",
+    "clause_ref": null,
+    "amount_paisa": "1500000"
+   },
+   {
+    "id": "16dca52b-25dd-4d70-b974-4d68c9800cfa",
+    "type": "general",
+    "title": "বার্ষিক সাধারণ সভা ঢাকায় আয়োজন",
+    "status": "open",
+    "subject_member_id": null,
+    "payload": {
+     "text": "বার্ষিক সভা ঢাকায় হবে"
+    },
+    "basis": "member",
+    "threshold_kind": "majority",
+    "eligible_count": 8,
+    "eligible_weight": "8",
+    "threshold": 5,
+    "threshold_weight": "5",
+    "counts": {
+     "yes": 0,
+     "no": 0,
+     "abstain": 0,
+     "yes_weight": "0",
+     "no_weight": "0",
+     "abstain_weight": "0"
+    },
+    "ballots_hidden": true,
+    "my_choice": null,
+    "can_vote": true,
+    "opens_at": "2026-10-30T14:49:46.507Z",
+    "closes_at": "2026-11-09T18:00:00.000Z",
+    "finalized_at": null,
+    "executed_at": null,
+    "created_at": "2026-10-30T14:49:46.497Z",
+    "created_by": "b0000000-0000-0000-0000-000000000001",
+    "clause_ref": null,
+    "amount_paisa": null
+   }
+  ],
+  "next_cursor": null
+ },
+ "/proposals/16dca52b-25dd-4d70-b974-4d68c9800cfa": {
+  "id": "16dca52b-25dd-4d70-b974-4d68c9800cfa",
+  "type": "general",
+  "title": "বার্ষিক সাধারণ সভা ঢাকায় আয়োজন",
+  "description": "আগামী বছরের বার্ষিক সভা ঢাকায় সবার সুবিধামতো একটি হলে করার প্রস্তাব।",
+  "subject_member_id": null,
+  "subject": null,
+  "payload": {
+   "text": "বার্ষিক সভা ঢাকায় হবে"
+  },
+  "status": "open",
+  "basis": "member",
+  "threshold_kind": "majority",
+  "eligible_count": 8,
+  "eligible_weight": "8",
+  "threshold": 5,
+  "threshold_weight": "5",
+  "counts": {
+   "yes": 0,
+   "no": 0,
+   "abstain": 0,
+   "yes_weight": "0",
+   "no_weight": "0",
+   "abstain_weight": "0"
+  },
+  "ballots_hidden": true,
+  "opens_at": "2026-10-30T14:49:46.507Z",
+  "closes_at": "2026-11-09T18:00:00.000Z",
+  "finalized_at": null,
+  "executed_at": null,
+  "created_at": "2026-10-30T14:49:46.497Z",
+  "created_by": "b0000000-0000-0000-0000-000000000001",
+  "clause_ref": null,
+  "amount_paisa": null,
+  "voters": [
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "full_name": "সদস্য এক",
+    "code": "M01",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "full_name": "সদস্য দুই",
+    "code": "M02",
+    "weight": 1,
+    "voted": false
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "full_name": "সদস্য তিন",
+    "code": "M03",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "full_name": "সদস্য চার",
+    "code": "M04",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "full_name": "সদস্য পাঁচ",
+    "code": "M05",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "full_name": "সদস্য ছয়",
+    "code": "M06",
+    "weight": 1,
+    "voted": false
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "full_name": "সদস্য সাত",
+    "code": "M07",
+    "weight": 1,
+    "voted": false
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "full_name": "সদস্য আট",
+    "code": "M08",
+    "weight": 1,
+    "voted": false
+   }
+  ],
+  "votes": []
+ },
+ "/proposals/40aea313-6890-4af9-b204-6dc8e7b051d3": {
+  "id": "40aea313-6890-4af9-b204-6dc8e7b051d3",
+  "type": "distribution",
+  "title": "অর্ধবার্ষিক মুনাফা বণ্টন",
+  "description": null,
+  "subject_member_id": null,
+  "subject": null,
+  "payload": {
+   "total_paisa": "400000",
+   "source_account": "CASH"
+  },
+  "status": "executed",
+  "basis": "member",
+  "threshold_kind": "majority",
+  "eligible_count": 8,
+  "eligible_weight": "8",
+  "threshold": 5,
+  "threshold_weight": "5",
+  "counts": {
+   "yes": 6,
+   "no": 0,
+   "abstain": 0,
+   "yes_weight": "6",
+   "no_weight": "0",
+   "abstain_weight": "0"
+  },
+  "ballots_hidden": false,
+  "opens_at": "2026-10-30T14:49:46.683Z",
+  "closes_at": "2026-11-06T18:00:00.000Z",
+  "finalized_at": "2026-10-30T14:49:46.750Z",
+  "executed_at": "2026-10-30T14:49:46.758Z",
+  "created_at": "2026-10-30T14:49:46.677Z",
+  "created_by": "b0000000-0000-0000-0000-000000000001",
+  "clause_ref": null,
+  "amount_paisa": null,
+  "voters": [
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "full_name": "সদস্য এক",
+    "code": "M01",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "full_name": "সদস্য দুই",
+    "code": "M02",
+    "weight": 1,
+    "voted": false
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "full_name": "সদস্য তিন",
+    "code": "M03",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "full_name": "সদস্য চার",
+    "code": "M04",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "full_name": "সদস্য পাঁচ",
+    "code": "M05",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "full_name": "সদস্য ছয়",
+    "code": "M06",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "full_name": "সদস্য সাত",
+    "code": "M07",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "full_name": "সদস্য আট",
+    "code": "M08",
+    "weight": 1,
+    "voted": false
+   }
+  ],
+  "votes": [
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "choice": "yes",
+    "cast_at": "2026-10-30T14:49:46.693Z"
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "choice": "yes",
+    "cast_at": "2026-10-30T14:49:46.701Z"
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "choice": "yes",
+    "cast_at": "2026-10-30T14:49:46.708Z"
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "choice": "yes",
+    "cast_at": "2026-10-30T14:49:46.716Z"
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "choice": "yes",
+    "cast_at": "2026-10-30T14:49:46.724Z"
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "choice": "yes",
+    "cast_at": "2026-10-30T14:49:46.732Z"
+   }
+  ]
+ },
+ "/proposals/72134ce1-38d0-42f8-83a9-b1ba91dafa8e": {
+  "id": "72134ce1-38d0-42f8-83a9-b1ba91dafa8e",
+  "type": "general",
+  "title": "মাসিক চাঁদা দেওয়ার শেষ তারিখ ২০ তারিখে সরানো",
+  "description": null,
+  "subject_member_id": null,
+  "subject": null,
+  "payload": {
+   "text": "শেষ তারিখ ১০ থেকে ২০ তারিখ"
+  },
+  "status": "rejected",
+  "basis": "member",
+  "threshold_kind": "majority",
+  "eligible_count": 8,
+  "eligible_weight": "8",
+  "threshold": 5,
+  "threshold_weight": "5",
+  "counts": {
+   "yes": 1,
+   "no": 5,
+   "abstain": 0,
+   "yes_weight": "1",
+   "no_weight": "5",
+   "abstain_weight": "0"
+  },
+  "ballots_hidden": false,
+  "opens_at": "2026-10-30T14:49:46.781Z",
+  "closes_at": "2026-11-06T18:00:00.000Z",
+  "finalized_at": "2026-10-30T14:49:46.859Z",
+  "executed_at": null,
+  "created_at": "2026-10-30T14:49:46.776Z",
+  "created_by": "b0000000-0000-0000-0000-000000000001",
+  "clause_ref": null,
+  "amount_paisa": null,
+  "voters": [
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "full_name": "সদস্য এক",
+    "code": "M01",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "full_name": "সদস্য দুই",
+    "code": "M02",
+    "weight": 1,
+    "voted": false
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "full_name": "সদস্য তিন",
+    "code": "M03",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "full_name": "সদস্য চার",
+    "code": "M04",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "full_name": "সদস্য পাঁচ",
+    "code": "M05",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "full_name": "সদস্য ছয়",
+    "code": "M06",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "full_name": "সদস্য সাত",
+    "code": "M07",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "full_name": "সদস্য আট",
+    "code": "M08",
+    "weight": 1,
+    "voted": false
+   }
+  ],
+  "votes": [
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "choice": "no",
+    "cast_at": "2026-10-30T14:49:46.790Z"
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "choice": "no",
+    "cast_at": "2026-10-30T14:49:46.798Z"
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "choice": "no",
+    "cast_at": "2026-10-30T14:49:46.806Z"
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "choice": "no",
+    "cast_at": "2026-10-30T14:49:46.813Z"
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "choice": "yes",
+    "cast_at": "2026-10-30T14:49:46.821Z"
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "choice": "no",
+    "cast_at": "2026-10-30T14:49:46.830Z"
+   }
+  ]
+ },
+ "/proposals/af56cebc-a513-4234-a7f0-967767d03779": {
+  "id": "af56cebc-a513-4234-a7f0-967767d03779",
+  "type": "expense",
+  "title": "দোকানের সাইনবোর্ড মেরামত",
+  "description": null,
+  "subject_member_id": null,
+  "subject": null,
+  "payload": {
+   "payee": "রহমান সাইন হাউস",
+   "account": "MAINTENANCE",
+   "purpose": "দোকানের পুরনো সাইনবোর্ড বদলানো",
+   "max_amount_paisa": "1500000"
+  },
+  "status": "open",
+  "basis": "member",
+  "threshold_kind": "majority",
+  "eligible_count": 8,
+  "eligible_weight": "8",
+  "threshold": 5,
+  "threshold_weight": "5",
+  "counts": {
+   "yes": 0,
+   "no": 0,
+   "abstain": 0,
+   "yes_weight": "0",
+   "no_weight": "0",
+   "abstain_weight": "0"
+  },
+  "ballots_hidden": true,
+  "opens_at": "2026-10-30T14:49:46.560Z",
+  "closes_at": "2026-11-09T18:00:00.000Z",
+  "finalized_at": null,
+  "executed_at": null,
+  "created_at": "2026-10-30T14:49:46.554Z",
+  "created_by": "b0000000-0000-0000-0000-000000000001",
+  "clause_ref": null,
+  "amount_paisa": "1500000",
+  "voters": [
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "full_name": "সদস্য এক",
+    "code": "M01",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "full_name": "সদস্য দুই",
+    "code": "M02",
+    "weight": 1,
+    "voted": false
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "full_name": "সদস্য তিন",
+    "code": "M03",
+    "weight": 1,
+    "voted": false
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "full_name": "সদস্য চার",
+    "code": "M04",
+    "weight": 1,
+    "voted": false
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "full_name": "সদস্য পাঁচ",
+    "code": "M05",
+    "weight": 1,
+    "voted": false
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "full_name": "সদস্য ছয়",
+    "code": "M06",
+    "weight": 1,
+    "voted": false
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "full_name": "সদস্য সাত",
+    "code": "M07",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "full_name": "সদস্য আট",
+    "code": "M08",
+    "weight": 1,
+    "voted": false
+   }
+  ],
+  "votes": []
+ },
+ "/proposals/cebeb256-ef89-43e6-95eb-a8a293f785f1": {
+  "id": "cebeb256-ef89-43e6-95eb-a8a293f785f1",
+  "type": "charity_donation",
+  "title": "বন্যার্তদের জন্য অনুদান",
+  "description": null,
+  "subject_member_id": null,
+  "subject": null,
+  "payload": {
+   "purpose": "বন্যার্ত পরিবারের খাদ্য সহায়তা",
+   "recipient": "স্থানীয় ত্রাণ কমিটি",
+   "amount_paisa": "1000000"
+  },
+  "status": "approved",
+  "basis": "member",
+  "threshold_kind": "majority",
+  "eligible_count": 8,
+  "eligible_weight": "8",
+  "threshold": 5,
+  "threshold_weight": "5",
+  "counts": {
+   "yes": 6,
+   "no": 0,
+   "abstain": 0,
+   "yes_weight": "6",
+   "no_weight": "0",
+   "abstain_weight": "0"
+  },
+  "ballots_hidden": false,
+  "opens_at": "2026-10-30T14:49:46.591Z",
+  "closes_at": "2026-11-06T18:00:00.000Z",
+  "finalized_at": "2026-10-30T14:49:46.646Z",
+  "executed_at": null,
+  "created_at": "2026-10-30T14:49:46.585Z",
+  "created_by": "b0000000-0000-0000-0000-000000000001",
+  "clause_ref": null,
+  "amount_paisa": null,
+  "voters": [
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "full_name": "সদস্য এক",
+    "code": "M01",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "full_name": "সদস্য দুই",
+    "code": "M02",
+    "weight": 1,
+    "voted": false
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "full_name": "সদস্য তিন",
+    "code": "M03",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "full_name": "সদস্য চার",
+    "code": "M04",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "full_name": "সদস্য পাঁচ",
+    "code": "M05",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "full_name": "সদস্য ছয়",
+    "code": "M06",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "full_name": "সদস্য সাত",
+    "code": "M07",
+    "weight": 1,
+    "voted": true
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "full_name": "সদস্য আট",
+    "code": "M08",
+    "weight": 1,
+    "voted": false
+   }
+  ],
+  "votes": [
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "choice": "yes",
+    "cast_at": "2026-10-30T14:49:46.599Z"
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "choice": "yes",
+    "cast_at": "2026-10-30T14:49:46.607Z"
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "choice": "yes",
+    "cast_at": "2026-10-30T14:49:46.615Z"
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "choice": "yes",
+    "cast_at": "2026-10-30T14:49:46.623Z"
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "choice": "yes",
+    "cast_at": "2026-10-30T14:49:46.631Z"
+   },
+   {
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "choice": "yes",
+    "cast_at": "2026-10-30T14:49:46.638Z"
+   }
+  ]
+ },
+ "/push/public-key": {
+  "key": "BIwteIp-4cTbxVM5F64ReXqemqoKOMUCzS-vg-q9pSjXncDYCUI-8hp1Eev53o_MRtPhv2MOJcEteMzXOL7d8xk"
+ },
+ "/reports/statement-years": {
+  "years": [
+   "2026"
+  ]
+ },
+ "/settings/payment-instructions": {
+  "bkash": "+8801XXXXXXXXX",
+  "nagad": "+8801XXXXXXXXX",
+  "bank": "Bank Name, A/C: XXXXXXXXXX",
+  "bank_account": "",
+  "bank_holder": "",
+  "bank_branch": "",
+  "methods": [
+   "bkash",
+   "bank",
+   "cash"
+  ]
+ },
+ "/settlements": {
+  "items": []
+ },
+ "/share-register": {
+  "items": [
+   {
+    "share_no": 1,
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "member_code": "M01",
+    "member_name": "সদস্য এক",
+    "registered_name": "শেয়ার 1",
+    "nominee_name": "নমিনি 1",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 2,
+    "member_id": "a0000000-0000-0000-0000-000000000001",
+    "member_code": "M01",
+    "member_name": "সদস্য এক",
+    "registered_name": "শেয়ার 2",
+    "nominee_name": "নমিনি 2",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 3,
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "registered_name": "শেয়ার 3",
+    "nominee_name": "নমিনি 3",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 4,
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "registered_name": "শেয়ার 4",
+    "nominee_name": "নমিনি 4",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 5,
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "registered_name": "শেয়ার 5",
+    "nominee_name": "নমিনি 5",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 6,
+    "member_id": "a0000000-0000-0000-0000-000000000002",
+    "member_code": "M02",
+    "member_name": "সদস্য দুই",
+    "registered_name": "শেয়ার 6",
+    "nominee_name": "নমিনি 6",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 7,
+    "member_id": "a0000000-0000-0000-0000-000000000003",
+    "member_code": "M03",
+    "member_name": "সদস্য তিন",
+    "registered_name": "শেয়ার 7",
+    "nominee_name": "নমিনি 7",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 8,
+    "member_id": "a0000000-0000-0000-0000-000000000004",
+    "member_code": "M04",
+    "member_name": "সদস্য চার",
+    "registered_name": "শেয়ার 8",
+    "nominee_name": "নমিনি 8",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 9,
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "member_name": "সদস্য পাঁচ",
+    "registered_name": "শেয়ার 9",
+    "nominee_name": "নমিনি 9",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 10,
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "member_name": "সদস্য পাঁচ",
+    "registered_name": "শেয়ার 10",
+    "nominee_name": "নমিনি 10",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 11,
+    "member_id": "a0000000-0000-0000-0000-000000000005",
+    "member_code": "M05",
+    "member_name": "সদস্য পাঁচ",
+    "registered_name": "শেয়ার 11",
+    "nominee_name": "নমিনি 11",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 12,
+    "member_id": "a0000000-0000-0000-0000-000000000006",
+    "member_code": "M06",
+    "member_name": "সদস্য ছয়",
+    "registered_name": "শেয়ার 12",
+    "nominee_name": "নমিনি 12",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 13,
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "member_name": "সদস্য সাত",
+    "registered_name": "শেয়ার 13",
+    "nominee_name": "নমিনি 13",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 14,
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "member_name": "সদস্য সাত",
+    "registered_name": "শেয়ার 14",
+    "nominee_name": "নমিনি 14",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 15,
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "member_name": "সদস্য সাত",
+    "registered_name": "শেয়ার 15",
+    "nominee_name": "নমিনি 15",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 16,
+    "member_id": "a0000000-0000-0000-0000-000000000007",
+    "member_code": "M07",
+    "member_name": "সদস্য সাত",
+    "registered_name": "শেয়ার 16",
+    "nominee_name": "নমিনি 16",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 17,
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "member_name": "সদস্য আট",
+    "registered_name": "শেয়ার 17",
+    "nominee_name": "নমিনি 17",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 18,
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "member_name": "সদস্য আট",
+    "registered_name": "শেয়ার 18",
+    "nominee_name": "নমিনি 18",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 19,
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "member_name": "সদস্য আট",
+    "registered_name": "শেয়ার 19",
+    "nominee_name": "নমিনি 19",
+    "nominee_relation": "পুত্র"
+   },
+   {
+    "share_no": 20,
+    "member_id": "a0000000-0000-0000-0000-000000000008",
+    "member_code": "M08",
+    "member_name": "সদস্য আট",
+    "registered_name": "শেয়ার 20",
+    "nominee_name": "নমিনি 20",
+    "nominee_relation": "পুত্র"
+   }
+  ],
+  "total": 20
+ }
+}

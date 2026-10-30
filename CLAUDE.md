@@ -57,6 +57,9 @@ pnpm backup:smoke
 # Performance check with 100,000 ledger rows (p95 under 300 ms); writes perf-latest.txt
 pnpm perf
 
+# Public UI demo with no server (docs/DEMO.md): record fictional data from the e2e stack, then build the static site
+pnpm demo:record && pnpm demo:build
+
 # Rewrite docs/BENGALI-REVIEW.md (every Bengali string next to its English, doubtful ones first)
 pnpm i18n:report
 ```

@@ -11,6 +11,7 @@ import { i18n } from './lib/i18n';
 import { App } from './App';
 import { usePrivacy } from './lib/privacy';
 import { AuthProvider } from './lib/auth';
+import { DemoBanner, IS_DEMO } from './demo/DemoUi';
 import './styles/theme.css';
 import './styles/globals.css';
 
@@ -38,6 +39,7 @@ ReactDOM.createRoot(root).render(
         <BrowserRouter>
           <AuthProvider>
             <PrivateApp />
+            {IS_DEMO && <DemoBanner />}
           </AuthProvider>
         </BrowserRouter>
       </I18nextProvider>

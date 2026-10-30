@@ -7,6 +7,7 @@ import { Icon } from '../../components/ui';
 import { ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { errorMessage } from '../../lib/errors';
+import { DemoLogin, IS_DEMO } from '../../demo/DemoUi';
 
 /** Member ID, then the PIN pad. Works on any device: the PIN is the only credential members hold. */
 export function LoginPage() {
@@ -29,6 +30,7 @@ export function LoginPage() {
     const valid = /^M\d{2}$/.test(ref.trim().toUpperCase());
     return (
       <AuthShell footer={t('auth.pinFooter')}>
+        {IS_DEMO && <DemoLogin />}
         <div>
           <h1 className="text-2xl font-bold leading-snug">{t('auth.signInTitle')}</h1>
           <p className="mt-1 text-sm text-muted">{t('auth.signInHint')}</p>

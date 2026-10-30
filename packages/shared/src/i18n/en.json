@@ -480,6 +480,10 @@
       "refused": "Telegram refused this. Check the token and that the site address is https.",
       "not_connected": "Connect with the bot token first.",
       "not_linked": "Identify your Telegram first."
+    },
+    "demo": {
+      "read_only": "This is a demo: changes are not saved.",
+      "not_recorded": "This part has no sample data in the demo."
     }
   },
   "common": {
@@ -2265,5 +2269,18 @@
     "moveTotal": "Total {{total}}",
     "moveAfter": "Members' capital gets this money back and the levy fund shows the same deficit. The next levy collection covers it.",
     "moveConfirm": "Yes, move to levy"
+  },
+  "demo": {
+    "title": "Try the demo",
+    "hint": "Sample data from a made-up fund. Pick a role to look around; nothing you do is saved.",
+    "cashier": "Cashier",
+    "cashierHint": "Payments, approvals, ledger and reports",
+    "auditor": "Auditor",
+    "auditorHint": "Read-only checks of the books",
+    "member": "Member",
+    "memberHint": "The phone app: dues, paying, voting",
+    "or": "or sign in with a member ID",
+    "badge": "Demo · sample data",
+    "switchRole": "Switch role"
   }
 }

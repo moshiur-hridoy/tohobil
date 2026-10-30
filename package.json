@@ -29,7 +29,9 @@
     "import:verify": "pnpm --filter @barakah/api import:verify",
     "verify-ledger": "tsx scripts/verify-ledger.ts",
     "android:release": "pnpm --filter @barakah/web android:release",
-    "e2e": "tsx e2e/prepare.ts && playwright test -c e2e/playwright.config.ts"
+    "e2e": "tsx e2e/prepare.ts && playwright test -c e2e/playwright.config.ts",
+    "demo:record": "tsx e2e/prepare.ts && playwright test -c e2e/demo/playwright.config.ts",
+    "demo:build": "VITE_DEMO=1 pnpm --filter @barakah/web build && printf '/*  /index.html  200\\n' > apps/web/dist/_redirects"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",

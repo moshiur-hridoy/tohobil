@@ -125,6 +125,10 @@ describe('matrix and objections', () => {
     expect(row.cells['2026-12']).toMatchObject({ status: 'paid', advance: true, projected: true, paid_paisa: price.toString() });
     expect(row.cells['2027-01']).toMatchObject({ status: 'partial', advance: false, projected: true, paid_paisa: (price / 2n).toString() });
     expect(row.cells['2027-02']).toBeNull();
+    // the badge counts every month ahead, whatever range is asked for: December from the credit
+    expect(row.ahead_months).toBe(1);
+    const narrow = (await call('GET', '/matrix?from=2026-09&to=2026-11', s.M02.access_token)).json();
+    expect(narrow.members.find((m: { member_code: string }) => m.member_code === 'M07').ahead_months).toBe(1);
     expect(row.cells['2026-11'].projected).toBe(false);
     // no due exists for them yet, so they stay out of the totals
     expect(body.totals_by_period['2026-12'].paid_paisa).toBe('0');

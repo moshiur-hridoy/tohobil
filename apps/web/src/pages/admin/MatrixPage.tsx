@@ -240,8 +240,8 @@ export function MatrixPage() {
               {q.data.members.map((m) => {
                 const { due: owes, fine: fineOwed, advance: advancePaid } = balanceOf(m.cells, current);
                 const label = `${m.member_code} ${m.member_name}`;
-                // Months after this one already paid: shown as a badge next to the name.
-                const ahead = periods.filter((p) => p > current && m.cells[p]?.advance).length;
+                // Months after this one already paid, in total (not only the range shown): a badge next to the name.
+                const ahead = m.ahead_months ?? periods.filter((p) => p > current && m.cells[p]?.advance).length;
                 return (
                   <tr key={m.member_id} className="group">
                     <th scope="row" className="sticky left-0 z-10 whitespace-nowrap border-b border-r border-border bg-card px-4 py-2 text-left font-normal transition-colors group-hover:bg-hover">

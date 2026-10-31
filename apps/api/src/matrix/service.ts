@@ -66,7 +66,7 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
     }
   }
 
-  const [members, dues, fines, pending, latestMonthly, credits] = await Promise.all([
+  const [members, dues, fines, pending, latestMonthly, credits, paidAhead] = await Promise.all([
     deps.pool.query(`SELECT id, code, full_name, status, photo_file_id FROM members ORDER BY code`),
     deps.pool.query(
       `SELECT v.member_id, v.period, v.status, v.amount_paisa, v.allocated_paisa, v.outstanding_paisa,
@@ -103,6 +103,15 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
       `SELECT member_id, SUM(unallocated_paisa) AS credit FROM payments
        WHERE status = 'confirmed' AND unallocated_paisa > 0 GROUP BY member_id`,
     ),
+    // Months after this one already paid in full, whatever range is asked for (the "N months ahead" badge).
+    deps.pool.query(
+      `SELECT member_id, COUNT(*)::int AS months FROM (
+         SELECT member_id, period FROM v_due_status
+         WHERE period > $1 AND kind <> 'special'
+         GROUP BY member_id, period HAVING SUM(GREATEST(outstanding_paisa, 0)) = 0
+       ) paid GROUP BY member_id`,
+      [current],
+    ),
   ]);
 
   // The months after a member's last monthly due that their credit pays, at that due's amount:
@@ -111,10 +120,14 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
     (latestMonthly.rows as Array<{ member_id: string; period: string; amount_paisa: unknown }>).map((r) => [r.member_id, { period: r.period, price: toBigInt(r.amount_paisa) }]),
   );
   const projected = new Map<string, bigint>();
+  const aheadMonths = new Map((paidAhead.rows as Array<{ member_id: string; months: number }>).map((r) => [r.member_id, r.months]));
   for (const r of credits.rows as Array<{ member_id: string; credit: unknown }>) {
     const last = lastDue.get(r.member_id);
     if (!last || last.price <= 0n) continue;
     let held = toBigInt(r.credit);
+    // whole months the credit pays after the last due count as paid ahead too
+    const bought = Number(held / last.price);
+    if (bought > 0) aheadMonths.set(r.member_id, (aheadMonths.get(r.member_id) ?? 0) + bought);
     for (let p = addMonths(last.period, 1); held > 0n && p <= to; p = addMonths(p, 1)) {
       const take = held < last.price ? held : last.price;
       held -= take;
@@ -221,6 +234,8 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
         member_name: m.full_name,
         member_status: m.status,
         member_photo_file_id: m.photo_file_id,
+        /** Months after this one already paid (dues paid ahead plus whole months of advance credit), in any range. */
+        ahead_months: aheadMonths.get(m.id) ?? 0,
         cells,
         totals: {
           due_paisa: str(totals.due),

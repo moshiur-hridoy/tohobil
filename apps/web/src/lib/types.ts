@@ -143,6 +143,8 @@ export interface MatrixResponse {
     member_name: string;
     member_status: string;
     member_photo_file_id: string | null;
+    /** Months after this one already paid, counted over every month (not just the range shown). */
+    ahead_months?: number;
     cells: Record<string, MatrixCell | null>;
     totals: { due_paisa: string; paid_paisa: string; outstanding_paisa: string; fine_paisa: string; fine_paid_paisa: string };
   }>;

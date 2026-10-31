@@ -12,7 +12,7 @@ import { formatCount } from '../../../lib/format';
 import type { MemberRow, ParsedSms, PaymentInstructions } from '../../../lib/types';
 import { DateInput } from '../../../components/ui';
 import { StatusPill } from '../../../components/StatusPill';
-import { MAX_AHEAD, amountForTap, entryRows, type EntryPreview, type EntryRow } from './entryRows';
+import { MAX_AHEAD, allocationsFor, entryRows, pickedTotal, togglePick, type EntryPreview, type EntryRow } from './entryRows';
 
 type Purpose = 'dues' | 'special' | 'levy' | 'entry';
 const PURPOSE_LABEL: Record<Purpose, string> = {
@@ -59,6 +59,8 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
   const [purpose, setPurpose] = useState<Purpose>('dues');
   const [requoteError, setRequoteError] = useState<unknown>(null);
   const [requoting, setRequoting] = useState(false);
+  // Rows the cashier ticked one by one; null while the typed amount simply fills the rows top down.
+  const [picked, setPicked] = useState<Set<string> | null>(null);
   const key = useRef(uuid());
 
   useEffect(() => {
@@ -72,6 +74,7 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
     setMethod(p?.method ?? 'cash');
     setTrx(p?.trx_id ?? '');
     setDate(p?.paid_at ? p.paid_at.slice(0, 10) : todayDhaka());
+    setPicked(null);
   }, [open, prefill, members.data]);
 
   const member = members.data?.items.find((m) => m.id === memberId);
@@ -94,6 +97,7 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
   useEffect(() => {
     setPurpose(prospective ? 'entry' : 'dues');
     setRequoteError(null);
+    setPicked(null);
   }, [memberId, prospective]);
   // The entry price is not typed: it is what the quote still asks for.
   useEffect(() => {
@@ -120,7 +124,14 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
     queryFn: () => api<EntryPreview>(`/payments/entry-preview?member_id=${memberId}&purpose=${purpose}`),
     enabled: open && !!memberId && !prospective && purpose !== 'entry',
   });
-  const fill = preview.data && purpose !== 'entry' ? entryRows(preview.data, BigInt(paisa ?? '0'), todayDhaka()) : null;
+  const fill = preview.data && purpose !== 'entry' ? entryRows(preview.data, BigInt(paisa ?? '0'), todayDhaka(), picked) : null;
+  const allocations = fill ? allocationsFor(fill.rows) : [];
+  const tap = (rowKey: string) => {
+    if (!fill) return;
+    const next = togglePick(fill.rows, picked, rowKey);
+    setPicked(next);
+    setAmount(paisaToDecimal(pickedTotal(fill.rows, next)));
+  };
   const aheadPaid = fill?.rows.reduce((s, r) => s + (r.status === 'advance' ? r.covered : 0n), 0n) ?? 0n;
   const forPeriods = [...new Set(fill?.rows.flatMap((r) => (r.covered > 0n && r.period ? [r.period] : [])) ?? [])];
   const needsTrx = method === 'bkash' || method === 'nagad' || method === 'bank';
@@ -139,6 +150,8 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
         paid_at: dayToIso(date),
         ...(purpose !== 'dues' ? { purpose } : {}),
         ...(forPeriods.length > 0 ? { for_periods: forPeriods.slice(0, 24) } : {}),
+        // Exactly what the rows show, so a month's fine is paid with that month (ASSUMPTIONS 61).
+        ...(allocations.length > 0 ? { allocations } : {}),
         ...(prefill?.rawSms ? { raw_sms: prefill.rawSms } : {}),
       },
     });
@@ -195,7 +208,15 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
       )}
       <label className="field-label">
         {t('payment.amount')} (৳)
-        <input className={field} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
+        <input
+          className={field}
+          inputMode="decimal"
+          value={amount}
+          onChange={(e) => {
+            setAmount(e.target.value);
+            setPicked(null);
+          }}
+        />
       </label>
       {fill && (
         <fieldset className="min-w-0">
@@ -206,8 +227,8 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
             <>
               <p className="mb-1.5 text-xs text-muted">{t('paymentsPage.entryRowsHint')}</p>
               <ul className="space-y-1.5">
-                {fill.rows.map((r, i) => (
-                  <EntryRowCard key={r.key} row={r} onTap={() => setAmount(paisaToDecimal(amountForTap(fill.rows, i)))} />
+                {fill.rows.map((r) => (
+                  <EntryRowCard key={r.key} row={r} onTap={() => tap(r.key)} />
                 ))}
               </ul>
             </>
@@ -260,7 +281,7 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
 /**
  * One month (or fine) in the entry sheet, smaller than the pay page's card. Ticked when the amount
  * pays it in full; a part payment says how much lands and how much stays open. Tapping it sets the
- * amount (see `amountForTap`).
+ * row on or off and sets the amount to what the ticked rows cost (see `togglePick`).
  */
 function EntryRowCard({ row, onTap }: { row: EntryRow; onTap: () => void }) {
   const { t } = useTranslation();

@@ -82,6 +82,17 @@ const PAIRS: Array<[string, string, number]> = [
   ['on-hero', 'hero-alert-icon', 3],
   ['on-hero-alert-action', 'hero-alert-action', 4.5],
   ['hero-alert-action', 'hero-alert', 3],
+  // the same card in gold, while the member has paid ahead (a gradient between hero-gold and hero-gold-2)
+  ['on-hero', 'hero-gold', 4.5],
+  ['on-hero', 'hero-gold-2', 4.5],
+  ['on-hero-muted', 'hero-gold-2', 4.5],
+  ['on-hero', 'hero-gold-chip', 4.5],
+  ['on-hero', 'hero-gold-icon', 3],
+  ['hero-gold-edge', 'hero-gold-2', 3],
+  ['on-hero-gold-action', 'hero-gold-action', 4.5],
+  ['on-hero-gold-action', 'hero-gold-action-2', 4.5],
+  ['hero-gold-action', 'hero-gold-2', 4.5], // also the advance line's text
+  ['hero-action', 'hero', 4.5],
   // keyboard focus ring and the brand fill must be visible against the page
   ['ring', 'background', 3],
   ['ring', 'card', 3],

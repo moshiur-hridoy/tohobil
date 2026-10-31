@@ -129,6 +129,8 @@ export interface MatrixCell {
   paid_on: string | null;
   /** Paid in full before the month began, without a fine. */
   advance: boolean;
+  /** No due yet: paid from the member's advance credit, so it is not in the totals. */
+  projected?: boolean;
 }
 
 export interface MatrixResponse {

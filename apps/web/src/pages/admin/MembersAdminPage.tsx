@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Link } from 'react-router-dom';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Menu from '@radix-ui/react-dropdown-menu';
@@ -14,11 +15,17 @@ import { Icon, DateInput } from '../../components/ui';
 import { StatusPill } from '../../components/StatusPill';
 import { Avatar, PhotoSheet } from '../../components/MemberPhoto';
 import { api, ApiError } from '../../lib/api';
+import { errorMessage } from '../../lib/errors';
 import { useAuth } from '../../lib/auth';
 import { fmtDate, fmtInstant, todayDhaka } from '../../lib/dates';
 import { formatCount } from '../../lib/format';
 import { arrearsOf, paisaToDecimal, parseAmountInput, taka } from '../../lib/money';
 import type { ContactLogItem, MemberRow, MemberStatusEvent } from '../../lib/types';
+
+/** A server problem in Bengali (by its code); a check made on this screen keeps its own text. */
+function errorText(t: TFunction, err: unknown): string {
+  return err instanceof Error && !(err instanceof ApiError) ? err.message : errorMessage(t, err).message;
+}
 
 type Kind = 'status' | 'suspension' | 'reinstatement' | 'settlement' | 'contact' | 'pin';
 type Filter = 'all' | 'active' | 'arrears' | 'suspended' | 'leaving';
@@ -365,7 +372,7 @@ function SuspensionDialog({ member, open, onClose }: { member: MemberRow; open: 
     setBusy(true);
     setError(null);
     try {
-      if (!reason.trim()) throw new ApiError(400, 'request.invalid', 'Reason required');
+      if (!reason.trim()) throw new Error('Reason required');
       await api('/proposals', {
         method: 'POST',
         body: {
@@ -399,7 +406,7 @@ function SuspensionDialog({ member, open, onClose }: { member: MemberRow; open: 
         {t('proposal.clauseRef')}
         <input className="field mt-1 w-full" value={clause} onChange={(e) => setClause(e.target.value)} />
       </label>
-      {error != null && <p className="mt-2 text-bad">{error instanceof ApiError ? error.message : String(error)}</p>}
+      {error != null && <p className="mt-2 text-bad">{errorText(t, error)}</p>}
       <div className="mt-4 flex gap-2">
         <button type="button" disabled={busy} onClick={() => void submit()} className={`${BTN_PRIMARY} flex-1`}>{busy ? t('common.working') : t('common.submit')}</button>
         <Dialog.Close className={`${BTN_SECONDARY} flex-1`}>{t('common.cancel')}</Dialog.Close>
@@ -438,7 +445,7 @@ function IssuePinDialog({ member, open, onClose }: { member: MemberRow; open: bo
       {pin === null ? (
         <>
           <p className="mb-3 text-sm text-muted">{t('membersAdmin.issuePinHint')}</p>
-          {error != null && <p className="mb-2 text-bad">{error instanceof ApiError ? error.message : String(error)}</p>}
+          {error != null && <p className="mb-2 text-bad">{errorText(t, error)}</p>}
           <div className="flex gap-2">
             <button type="button" disabled={busy} onClick={() => void issue()} className={`${BTN_PRIMARY} flex-1`}>{busy ? t('common.working') : t('membersAdmin.issuePin')}</button>
             <Dialog.Close className={`${BTN_SECONDARY} flex-1`}>{t('common.cancel')}</Dialog.Close>
@@ -494,7 +501,7 @@ function ReinstatementDialog({ member, open, onClose }: { member: MemberRow; ope
         {t('proposal.terms')}
         <textarea className="field mt-1 min-h-20 w-full" value={terms} onChange={(e) => setTerms(e.target.value)} />
       </label>
-      {error != null && <p className="mt-2 text-bad">{error instanceof ApiError ? error.message : String(error)}</p>}
+      {error != null && <p className="mt-2 text-bad">{errorText(t, error)}</p>}
       <div className="mt-4 flex gap-2">
         <button type="button" disabled={busy} onClick={() => void submit()} className={`${BTN_PRIMARY} flex-1`}>{busy ? t('common.working') : t('common.submit')}</button>
         <Dialog.Close className={`${BTN_SECONDARY} flex-1`}>{t('common.cancel')}</Dialog.Close>
@@ -531,7 +538,7 @@ function SettlementDialog({ member, open, onClose }: { member: MemberRow; open: 
     setError(null);
     try {
       const paisa = parseAmountInput(amount);
-      if (!paisa) throw new ApiError(400, 'request.invalid', t('pay.invalidAmount'));
+      if (!paisa) throw new Error(t('pay.invalidAmount'));
       const payload = {
         member_id: member.id,
         kind,
@@ -576,7 +583,7 @@ function SettlementDialog({ member, open, onClose }: { member: MemberRow; open: 
         {t('membersAdmin.settlementDueDate')}
         <DateInput className="field mt-1 w-full" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
       </label>
-      {error != null && <p className="mt-2 text-bad">{error instanceof ApiError ? error.message : String(error)}</p>}
+      {error != null && <p className="mt-2 text-bad">{errorText(t, error)}</p>}
       <div className="mt-4 flex gap-2">
         <button type="button" disabled={busy} onClick={() => void submit()} className={`${BTN_PRIMARY} flex-1`}>{busy ? t('common.working') : t('common.submit')}</button>
         <Dialog.Close className={`${BTN_SECONDARY} flex-1`}>{t('common.cancel')}</Dialog.Close>
@@ -704,7 +711,7 @@ function ContactLogDialog({ member, open, onClose, isCashier }: { member: Member
         </div>
       )}
 
-      {error != null && <p className="mb-2 text-bad">{error instanceof ApiError ? error.message : String(error)}</p>}
+      {error != null && <p className="mb-2 text-bad">{errorText(t, error)}</p>}
 
       {q.error ? <LoadError error={q.error} /> : !q.data ? <ListSkeleton rows={3} /> : q.data.items.length === 0 ? <Empty text={t('membersAdmin.noContactLog')} /> : (
         <ul className="divide-y divide-border text-sm">

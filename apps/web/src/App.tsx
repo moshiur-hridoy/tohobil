@@ -40,6 +40,7 @@ import { AdminNotificationsPage } from './pages/admin/AdminNotificationsPage';
 import { ChangePinPage } from './pages/member/ChangePinPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { UpdatePrompt } from './components/UpdatePrompt';
+import { StepUpPrompt } from './components/StepUpPrompt';
 
 /** Everything except /activate and /login needs a session. */
 function RequireAuth() {
@@ -117,6 +118,7 @@ export function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <UpdatePrompt />
+      <StepUpPrompt />
     </>
   );
 }

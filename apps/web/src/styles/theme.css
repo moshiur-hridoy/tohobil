@@ -133,6 +133,15 @@
   --hero-alert-icon: var(--ref-red-800);
   --hero-alert-action: var(--ref-coral-400);
   --on-hero-alert-action: var(--ref-red-ink);
+  /* The same card in gold, while the member has paid ahead (.hero-gold below) */
+  --hero-gold: #2a1e04;
+  --hero-gold-2: #4a3507;
+  --hero-gold-chip: #6b4f0e;
+  --hero-gold-icon: #6b4f0e;
+  --hero-gold-edge: #c9a227;
+  --hero-gold-action: #f5cf5b;
+  --hero-gold-action-2: #d9a521;
+  --on-hero-gold-action: #2a1e04;
 
   /* Radii */
   --radius-sm: 0.25rem;
@@ -251,4 +260,19 @@ body {
   --hero-icon: var(--hero-alert-icon);
   --hero-action: var(--hero-alert-action);
   --on-hero-action: var(--on-hero-alert-action);
+}
+
+/* The outstanding card in gold while the member has paid ahead: a deep bronze gradient, a thin gold
+   edge and a gold button. Same token swap as .hero-alert. */
+.hero-gold {
+  --hero: var(--hero-gold);
+  --hero-chip: var(--hero-gold-chip);
+  --hero-icon: var(--hero-gold-icon);
+  --hero-action: var(--hero-gold-action);
+  --on-hero-action: var(--on-hero-gold-action);
+  background-image: linear-gradient(135deg, var(--hero-gold) 0%, var(--hero-gold-2) 55%, var(--hero-gold) 100%);
+  box-shadow: inset 0 0 0 1px var(--hero-gold-edge), 0 10px 28px -14px var(--hero-gold-edge);
+}
+.hero-gold .bg-hero-action {
+  background-image: linear-gradient(135deg, var(--hero-gold-action) 0%, var(--hero-gold-action-2) 100%);
 }

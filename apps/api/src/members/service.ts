@@ -148,7 +148,7 @@ export async function getMember(
   const member = memberRes.rows[0] as (MemberRow & Record<string, unknown>) | undefined;
   if (!member) throw notFound('member.not_found', 'Member not found');
 
-  const [holdings, register, dues, fines, payments, ledger] = await Promise.all([
+  const [holdings, register, dues, fines, payments, ledger, credit] = await Promise.all([
     deps.pool.query(
       `SELECT id, shares, effective_from::text AS effective_from, effective_to::text AS effective_to, source
        FROM share_holdings WHERE member_id = $1 ORDER BY effective_from DESC, id`,
@@ -184,6 +184,11 @@ export async function getMember(
        FROM ledger_entries WHERE member_id = $1 ORDER BY seq DESC LIMIT $2`,
       [memberId, DETAIL_LIMIT + 1],
     ),
+    // Advance money not yet spent on a due: the dues job uses it on the coming months.
+    deps.pool.query(
+      `SELECT COALESCE(SUM(unallocated_paisa), 0) AS c FROM payments WHERE member_id = $1 AND status = 'confirmed'`,
+      [memberId],
+    ),
   ]);
 
   const showPaymentDetail = canSeePaymentDetail(viewer, memberId);
@@ -194,6 +199,7 @@ export async function getMember(
     ...publicMember(member, viewer),
     shares: member['shares'],
     capital_paisa: paisaOut(member['capital_paisa']),
+    ...(showPaymentDetail ? { credit_paisa: paisaOut((credit.rows[0] as { c: unknown }).c) } : {}),
     share_holdings: holdings.rows,
     share_register: register.rows,
     dues: (dues.rows as Array<Record<string, unknown>>).map((r) => ({

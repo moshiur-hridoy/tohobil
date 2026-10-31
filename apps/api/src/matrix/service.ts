@@ -25,6 +25,8 @@ interface Cell {
   /** Asia/Dhaka date of the latest confirmed payment to this cell's dues. */
   paid_on: string | null;
   advance: boolean;
+  /** No due exists yet: the month is paid from the member's advance credit (shown, not in the totals). */
+  projected: boolean;
 }
 
 /** The worst status wins when a period has more than one due (monthly plus start boost). */
@@ -64,7 +66,7 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
     }
   }
 
-  const [members, dues, fines, pending] = await Promise.all([
+  const [members, dues, fines, pending, latestMonthly, credits] = await Promise.all([
     deps.pool.query(`SELECT id, code, full_name, status, photo_file_id FROM members ORDER BY code`),
     deps.pool.query(
       `SELECT v.member_id, v.period, v.status, v.amount_paisa, v.allocated_paisa, v.outstanding_paisa,
@@ -92,7 +94,47 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
       [from, to],
     ),
     deps.pool.query(`SELECT member_id, for_periods FROM payments WHERE status = 'pending'`),
+    // Money paid ahead of any due waits as credit; the dues job spends it on the next months in order.
+    deps.pool.query(
+      `SELECT DISTINCT ON (member_id) member_id, period, amount_paisa FROM dues
+       WHERE kind = 'monthly' ORDER BY member_id, period DESC`,
+    ),
+    deps.pool.query(
+      `SELECT member_id, SUM(unallocated_paisa) AS credit FROM payments
+       WHERE status = 'confirmed' AND unallocated_paisa > 0 GROUP BY member_id`,
+    ),
   ]);
+
+  // The months after a member's last monthly due that their credit pays, at that due's amount:
+  // whole months as paid ahead, the rest as a part-paid month.
+  const lastDue = new Map(
+    (latestMonthly.rows as Array<{ member_id: string; period: string; amount_paisa: unknown }>).map((r) => [r.member_id, { period: r.period, price: toBigInt(r.amount_paisa) }]),
+  );
+  const projected = new Map<string, bigint>();
+  for (const r of credits.rows as Array<{ member_id: string; credit: unknown }>) {
+    const last = lastDue.get(r.member_id);
+    if (!last || last.price <= 0n) continue;
+    let held = toBigInt(r.credit);
+    for (let p = addMonths(last.period, 1); held > 0n && p <= to; p = addMonths(p, 1)) {
+      const take = held < last.price ? held : last.price;
+      held -= take;
+      if (p >= from) projected.set(`${r.member_id}|${p}`, take);
+    }
+  }
+  const projectedCell = (memberId: string, period: string, paid: bigint): Cell => {
+    const due = (lastDue.get(memberId) as { price: bigint }).price;
+    return {
+      status: paid >= due ? 'paid' : 'partial',
+      due,
+      paid,
+      fine: 0n,
+      fine_paid: 0n,
+      pending: false,
+      paid_on: null,
+      advance: paid >= due,
+      projected: true,
+    };
+  };
 
   // A waiting payment marks the months it can be for: those already due, or the ones it names.
   const waiting = pending.rows as Array<{ member_id: string; for_periods: string[] | null }>;
@@ -133,7 +175,8 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
           app_paid_on: d.app_paid_on,
         }));
         if (list.length === 0) {
-          cells[period] = null;
+          const ahead = projected.get(key);
+          cells[period] = ahead ? cellOut(projectedCell(m.id, period, ahead)) : null;
           continue;
         }
         const due = list.reduce((a, d) => a + d.amount, 0n);
@@ -158,6 +201,7 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
           // Paid in full, without a fine, before the month began (or a month still to come is
           // already paid): the member paid in advance.
           advance: outstanding <= 0n && fine.fine === 0n && (period > current || (appPaidOn !== null && appPaidOn < `${period}-01`)),
+          projected: false,
         };
         cells[period] = cellOut(cell);
         totals.due += cell.due;
@@ -218,5 +262,6 @@ function cellOut(c: Cell) {
     pending: c.pending,
     paid_on: c.paid_on,
     advance: c.advance,
+    projected: c.projected,
   };
 }

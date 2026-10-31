@@ -15,6 +15,8 @@ import { fmtClock, fmtDate, fmtPeriod, todayDhaka } from '../../lib/dates';
 import { arrearsOf, taka } from '../../lib/money';
 import { charityBalance, interimNetAssets } from '../../lib/nav';
 import { useCountdown } from '../../lib/countdown';
+import { advanceOf } from '../../lib/advance';
+import { formatCount } from '../../lib/format';
 import type { AccountBalance, DueRow, MatrixResponse, MeetingRow, MemberRow, ProposalSummary } from '../../lib/types';
 
 const AVATAR = ['bg-primary-soft text-primary', 'bg-blue-bg text-blue', 'bg-vio-bg text-vio', 'bg-warn-bg text-warn'];
@@ -30,6 +32,13 @@ export function HomePage() {
     queryKey: ['dues', 'me', me?.member_id],
     enabled: !!me,
     queryFn: () => api<{ items: DueRow[] }>(`/dues?member_id=${me?.member_id}&limit=60`),
+  });
+
+  // Own detail: carries the advance credit not yet spent on a due.
+  const myDetail = useQuery({
+    queryKey: ['member', me?.member_id],
+    enabled: !!me?.member_id,
+    queryFn: () => api<{ credit_paisa?: string; dues: Array<{ period: string; kind: string; amount_paisa: string; outstanding_paisa: string; due_date: string }> }>(`/members/${me?.member_id}`),
   });
 
   const proposals = useQuery({
@@ -51,12 +60,15 @@ export function HomePage() {
     .filter((d) => BigInt(d.outstanding_paisa) > 0n)
     .map((d) => d.due_date)
     .sort()[0];
+  const advance = myDetail.data ? advanceOf(myDetail.data.dues, myDetail.data.credit_paisa ?? '0', todayDhaka()) : null;
+  const gold = owed === 0n && !!advance && advance.months > 0;
 
   const refresh = () =>
     Promise.all([
       qc.invalidateQueries({ queryKey: ['members'] }),
       qc.invalidateQueries({ queryKey: ['balances'] }),
       qc.invalidateQueries({ queryKey: ['dues'] }),
+      qc.invalidateQueries({ queryKey: ['member', me?.member_id] }),
       qc.invalidateQueries({ queryKey: ['matrix'] }),
       qc.invalidateQueries({ queryKey: ['meetings', 'next'] }),
     ]);
@@ -67,8 +79,8 @@ export function HomePage() {
     <PullToRefresh onRefresh={refresh}>
       <div className="flex flex-col gap-3 px-4 pb-4 pt-1">
         {/* Outstanding hero card */}
-        <section className={`relative overflow-hidden rounded-3xl bg-hero p-5 text-on-hero ${owed > 0n ? 'hero-alert' : ''}`} aria-labelledby="home-outstanding">
-          <svg aria-hidden="true" width="200" height="200" viewBox="0 0 200 200" className="absolute -right-[50px] -top-[60px] opacity-[0.14]">
+        <section className={`relative overflow-hidden rounded-3xl bg-hero p-5 text-on-hero ${owed > 0n ? 'hero-alert' : gold ? 'hero-gold' : ''}`} aria-labelledby="home-outstanding">
+          <svg aria-hidden="true" width="200" height="200" viewBox="0 0 200 200" className={`absolute -right-[50px] -top-[60px] ${gold ? 'text-hero-action opacity-[0.28]' : 'opacity-[0.14]'}`}>
             <circle cx="100" cy="100" r="96" fill="none" stroke="currentColor" strokeWidth="2" />
             <circle cx="100" cy="100" r="66" fill="none" stroke="currentColor" strokeWidth="2" />
             <circle cx="100" cy="100" r="36" fill="none" stroke="currentColor" strokeWidth="2" />
@@ -79,6 +91,11 @@ export function HomePage() {
                 <Icon d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M3 10h18 M16 14.5h2" size={18} />
               </span>
               {t('home.myOutstanding')}
+              {gold && (
+                <span className="ml-auto rounded-full border border-hero-action px-2.5 py-0.5 text-xs font-semibold text-hero-action">
+                  ★ {t('home.advanceBadge')}
+                </span>
+              )}
             </h2>
             {!mine ? (
               <Skeleton className="mt-3 h-10 w-40" />
@@ -88,6 +105,16 @@ export function HomePage() {
                 {owed === 0n ? (
                   <>
                     <p className="mt-2.5 text-sm">{t('home.outstandingNone')}</p>
+                    {advance && advance.months > 0 && advance.through && (
+                      <p className="mt-1.5 text-[0.9375rem] font-semibold text-hero-action">
+                        {t('home.advanceMonths', { months: formatCount(advance.months), month: fmtPeriod(advance.through) })}
+                      </p>
+                    )}
+                    {advance && advance.extra > 0n && (
+                      <p className="mt-1 text-[0.8125rem]">
+                        {t(advance.months > 0 ? 'home.advanceExtra' : 'home.advanceCredit', { amount: taka(advance.extra) })}
+                      </p>
+                    )}
                     {nextDue && (
                       <div className="mt-2.5 flex flex-wrap gap-2 text-[0.8125rem]">
                         <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.nextDueOn', { date: fmtDate(nextDue) })}</span>
@@ -177,6 +204,8 @@ export function HomePage() {
 
 /** The whole fund term is three years (the matrix's limit too), so one request covers every month and switching is instant. */
 const HISTORY_MONTHS = 36;
+/** Years after this one that can be browsed: months paid ahead show there before their dues exist. */
+const YEARS_AHEAD = 2;
 
 /**
  * Everyone's standing for any month (the matrix is readable by every member), plus what each member
@@ -186,12 +215,32 @@ function EveryoneStanding({ members }: { members?: MemberRow[] }) {
   const { t } = useTranslation();
   const { me } = useAuth();
   const current = todayDhaka().slice(0, 7);
-  // Up to December, so months already paid in advance can be seen.
-  const last = `${current.slice(0, 4)}-12`;
-  const from = addMonths(last, -(HISTORY_MONTHS - 1));
+  // History up to this December, then the next years in a second request (one request is at most 36
+  // months): months already paid ahead show there, from the advance, before their dues exist.
+  const yearEnd = `${current.slice(0, 4)}-12`;
+  const from = addMonths(yearEnd, -(HISTORY_MONTHS - 1));
+  const last = addMonths(yearEnd, 12 * YEARS_AHEAD);
   const [period, setPeriod] = useState(current);
 
-  const matrix = useQuery({ queryKey: ['matrix', from, last], queryFn: () => api<MatrixResponse>(`/matrix?from=${from}&to=${last}`) });
+  const past = useQuery({ queryKey: ['matrix', from, yearEnd], queryFn: () => api<MatrixResponse>(`/matrix?from=${from}&to=${yearEnd}`) });
+  const coming = useQuery({
+    queryKey: ['matrix', addMonths(yearEnd, 1), last],
+    queryFn: () => api<MatrixResponse>(`/matrix?from=${addMonths(yearEnd, 1)}&to=${last}`),
+  });
+  const matrix = {
+    error: past.error ?? coming.error,
+    refetch: () => Promise.all([past.refetch(), coming.refetch()]),
+    data:
+      past.data && coming.data
+        ? {
+            periods: [...past.data.periods, ...coming.data.periods],
+            members: past.data.members.map((m) => ({
+              ...m,
+              cells: { ...m.cells, ...coming.data.members.find((c) => c.member_id === m.member_id)?.cells },
+            })),
+          }
+        : undefined,
+  };
 
   // Months before the fund's first due are not offered.
   const first = matrix.data?.periods.find((p) => matrix.data?.members.some((m) => m.cells[p])) ?? current;
@@ -230,7 +279,7 @@ function EveryoneStanding({ members }: { members?: MemberRow[] }) {
         )}
       </div>
 
-      {/* Month switcher: from the fund's first month up to December of this year */}
+      {/* Month switcher: from the fund's first month up to December two years ahead */}
       <div className="flex items-center gap-2 border-b border-border px-4 py-3">
         {arrow('M15 5l-7 7 7 7', t('home.prevMonth'), addMonths(period, -1), !matrix.data || period <= first)}
         <p className="flex-1 text-center text-[0.9375rem] font-bold" aria-live="polite">{fmtPeriod(period)}</p>

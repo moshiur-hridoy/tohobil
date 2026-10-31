@@ -86,6 +86,7 @@ function CellDetails({ data }: { data: MatrixCell }) {
       <InfoRow label={t('matrixPage.due')} value={taka(data.due_paisa)} />
       <InfoRow label={t('matrixPage.paid')} value={taka(data.paid_paisa)} />
       {data.paid_on && <InfoRow label={t('matrixPage.paidOn')} value={fmtDate(data.paid_on)} />}
+      {data.projected && <p className="py-1.5 text-xs text-muted">{t('matrixPage.fromAdvance')}</p>}
       {owed.due > 0n && <InfoRow label={t('matrixPage.outstanding')} value={taka(owed.due)} valueClass="text-bad" />}
       {fine > 0n && <InfoRow label={t('matrixPage.fine')} value={taka(fine)} />}
       {fine > 0n && (
@@ -118,6 +119,7 @@ export function MatrixPage() {
     ['matrixPage.last6', addMonths(current, -5), current],
     ['matrixPage.last12', addMonths(current, -11), current],
     ['matrixPage.thisYear', addMonths(yearEnd, -12), yearEnd],
+    ['matrixPage.nextYear', addMonths(yearEnd, 1), addMonths(yearEnd, 12)],
   ];
 
   const q = useQuery({
@@ -162,8 +164,9 @@ export function MatrixPage() {
     setHover({ member, period, data, x: r.left + r.width / 2, top: r.top, bottom: r.bottom });
   };
 
-  const cells = q.data?.members.flatMap((m) => Object.values(m.cells).filter((c): c is MatrixCell => c !== null)) ?? [];
-  const empty = q.data && cells.length === 0;
+  // Months paid from advance credit (no due yet) are shown in the grid but not counted in the tiles.
+  const cells = q.data?.members.flatMap((m) => Object.values(m.cells).filter((c): c is MatrixCell => c !== null && !c.projected)) ?? [];
+  const empty = q.data && !q.data.members.some((m) => Object.values(m.cells).some((c) => c !== null));
   const overdueCells = cells.filter((c) => c.status === 'overdue');
   const hoverCol = hover?.period;
 

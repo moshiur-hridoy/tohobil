@@ -2,7 +2,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PAYMENT_METHOD_LABELS, addMonths, type PaymentMethod } from '@barakah/shared';
+import { PAYMENT_METHOD_LABELS, type PaymentMethod } from '@barakah/shared';
 import { Icon, Optional, PageHeader, DateInput, FilePicker } from '../../components/ui';
 import { ConfirmSheet, SheetRow } from '../../components/ConfirmSheet';
 import { CopyButton } from '../../components/CopyButton';
@@ -16,6 +16,7 @@ import { useAuth } from '../../lib/auth';
 import { dayToIso, fmtDate, fmtInstant, fmtPeriod, todayDhaka } from '../../lib/dates';
 import { formatCount } from '../../lib/format';
 import { taka } from '../../lib/money';
+import { monthsAhead } from '../../lib/advance';
 import type { DueRow, FineRow, Page, PaymentDetail, PaymentInstructions, PaymentRow } from '../../lib/types';
 
 const NEEDS_TRX: PaymentMethod[] = ['bkash', 'nagad', 'bank'];
@@ -46,7 +47,19 @@ export function PayPage() {
     enabled: !!me,
     queryFn: () => api<Page<FineRow>>(`/fines?member_id=${me?.member_id}&limit=60`),
   });
-  const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ['dues'] }), qc.invalidateQueries({ queryKey: ['fines'] }), qc.invalidateQueries({ queryKey: ['payments'] }), qc.invalidateQueries({ queryKey: ['members'] })]);
+  // Advance already accepted (credit) and payments still with the cashier: the months they pay are
+  // not offered again.
+  const detail = useQuery({
+    queryKey: ['member', me?.member_id],
+    enabled: !!me?.member_id,
+    queryFn: () => api<{ credit_paisa?: string }>(`/members/${me?.member_id}`),
+  });
+  const pending = useQuery({
+    queryKey: ['payments', 'me', 'pending', me?.member_id],
+    enabled: !!me?.member_id,
+    queryFn: () => api<Page<PaymentRow>>(`/payments?member_id=${me?.member_id}&status=pending&limit=50`),
+  });
+  const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ['member', me?.member_id] }), qc.invalidateQueries({ queryKey: ['dues'] }), qc.invalidateQueries({ queryKey: ['fines'] }), qc.invalidateQueries({ queryKey: ['payments'] }), qc.invalidateQueries({ queryKey: ['members'] })]);
 
   const openDues = (dues.data?.items ?? []).filter((d) => BigInt(d.outstanding_paisa) > 0n).sort((a, b) => a.due_date.localeCompare(b.due_date));
   const openFines = (fines.data?.items ?? []).filter((f) => BigInt(f.outstanding_paisa) > 0n && f.status !== 'waived');
@@ -69,12 +82,19 @@ export function PayPage() {
           <LoadError error={dues.error} onRetry={() => void dues.refetch()} />
         ) : fines.error ? (
           <LoadError error={fines.error} onRetry={() => void fines.refetch()} />
-        ) : !dues.data || !fines.data ? (
+        ) : !dues.data || !fines.data || !detail.data || !pending.data ? (
           <div className="rounded-[20px] border border-border bg-card p-4"><ListSkeleton rows={3} /></div>
         ) : (
           // Mounted once the dues are in, so the default ticks see them. Not re-keyed on refresh: coming
           // back from the bKash app refetches, and that must not wipe what the member has typed.
-          <SendMoneyForm allDues={dues.data.items} openDues={openDues} openFines={openFines} onSent={() => void refresh()} />
+          <SendMoneyForm
+            allDues={dues.data.items}
+            openDues={openDues}
+            openFines={openFines}
+            creditPaisa={detail.data.credit_paisa ?? '0'}
+            pendingPeriods={new Set(pending.data.items.flatMap((p) => p.for_periods ?? []))}
+            onSent={() => void refresh()}
+          />
         )}
         <History memberId={me?.member_id} />
       </div>
@@ -108,7 +128,21 @@ const PURPOSE_LABEL: Record<Purpose, string> = { dues: 'pay.purposeDues', levy: 
  * from the dues, so a mistyped figure (or one that includes the bKash charge) cannot unbalance the books.
  * Months are paid oldest first: ticking a month ticks every earlier one, unticking it unticks the later ones.
  */
-function SendMoneyForm({ allDues, openDues, openFines, onSent }: { allDues: DueRow[]; openDues: DueRow[]; openFines: FineRow[]; onSent: () => void }) {
+function SendMoneyForm({
+  allDues,
+  openDues,
+  openFines,
+  creditPaisa,
+  pendingPeriods,
+  onSent,
+}: {
+  allDues: DueRow[];
+  openDues: DueRow[];
+  openFines: FineRow[];
+  creditPaisa: string;
+  pendingPeriods: ReadonlySet<string>;
+  onSent: () => void;
+}) {
   const { t } = useTranslation();
   const { me } = useAuth();
   const today = todayDhaka();
@@ -157,17 +191,18 @@ function SendMoneyForm({ allDues, openDues, openFines, onSent }: { allDues: DueR
   // Paying ahead (ASSUMPTIONS 99): the next months, whose dues do not exist yet, are listed unticked
   // at the latest monthly due's amount, and more can be added one at a time. The server keeps the
   // money as credit and applies it when the dues job creates that month, so nothing here has to match a due exactly.
+  // Advance already accepted pays the first of those months, so they are not offered again; a month
+  // named in a payment still with the cashier is shown as waiting, like an existing due.
   const lastMonthly = allDues.filter((d) => d.kind === 'monthly').sort((a, b) => b.period.localeCompare(a.period))[0];
   const lastPeriod = [lastMonthly?.period ?? currentPeriod, currentPeriod].sort().at(-1)!;
   const owed = months.length;
   const [ahead, setAhead] = useState(SHOWN_AHEAD);
   if (purpose === 'dues' && lastMonthly) {
-    for (let i = 1; i <= ahead; i++) {
-      const period = addMonths(lastPeriod, i);
-      months.push({ period, list: [], fine: 0n, principal: BigInt(lastMonthly.amount_paisa), dueDate: `${period}-01`, verifying: false, status: 'advance' });
+    for (const { period, need } of monthsAhead(lastPeriod, BigInt(lastMonthly.amount_paisa), creditPaisa, ahead)) {
+      months.push({ period, list: [], fine: 0n, principal: need, dueDate: `${period}-01`, verifying: pendingPeriods.has(period), status: 'advance' });
     }
   }
-  const nextAhead = lastMonthly && purpose === 'dues' && ahead < MAX_AHEAD ? addMonths(lastPeriod, ahead + 1) : null;
+  const nextAhead = lastMonthly && purpose === 'dues' && ahead < MAX_AHEAD;
   const payable = months.filter((m) => !m.verifying);
   const looseFines = fines.filter((f) => !f.period || !months.some((m) => m.period === f.period));
 

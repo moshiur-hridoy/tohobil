@@ -111,6 +111,26 @@ describe('matrix and objections', () => {
     expect(again.json().members.find((m: { member_code: string }) => m.member_code === 'M03').cells['2026-11'].fine_paisa).toBe('0');
   });
 
+  dbIt('money paid ahead of any due shows in the months it will pay, outside the totals', async () => {
+    // M07's last due is November; one and a half months of advance credit cover December and half of January
+    const [nov] = (await q(`SELECT amount_paisa::text AS amount FROM dues WHERE member_id=$1 AND period='2026-11'`, [fund.members.M07])) as Array<{ amount: string }>;
+    const price = BigInt(nov!.amount);
+    await q(
+      `INSERT INTO payments (member_id, amount_paisa, method, paid_at, status, source, confirmed_at, unallocated_paisa)
+       VALUES ($1, $2, 'cash', '2026-11-01T06:00:00Z', 'confirmed', 'cashier_entry', '2026-11-01T06:00:00Z', $2)`,
+      [fund.members.M07, (price + price / 2n).toString()],
+    );
+    const body = (await call('GET', '/matrix?from=2026-11&to=2027-02', s.M02.access_token)).json();
+    const row = body.members.find((m: { member_code: string }) => m.member_code === 'M07');
+    expect(row.cells['2026-12']).toMatchObject({ status: 'paid', advance: true, projected: true, paid_paisa: price.toString() });
+    expect(row.cells['2027-01']).toMatchObject({ status: 'partial', advance: false, projected: true, paid_paisa: (price / 2n).toString() });
+    expect(row.cells['2027-02']).toBeNull();
+    expect(row.cells['2026-11'].projected).toBe(false);
+    // no due exists for them yet, so they stay out of the totals
+    expect(body.totals_by_period['2026-12'].paid_paisa).toBe('0');
+    expect(BigInt(row.totals.paid_paisa)).toBeLessThan(price);
+  });
+
   dbIt('rejects an inverted range, a malformed period and more than 36 periods', async () => {
     expect((await call('GET', '/matrix?from=2026-11&to=2026-09', s.M02.access_token)).json().code).toBe('matrix.invalid_range');
     expect((await call('GET', '/matrix?from=2026-13', s.M02.access_token)).statusCode).toBe(400);

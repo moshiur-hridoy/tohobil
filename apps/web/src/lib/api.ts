@@ -29,6 +29,18 @@ export function setRefresher(fn: (() => Promise<boolean>) | null): void {
   refresher = fn;
 }
 
+let stepUpAsker: (() => Promise<boolean>) | null = null;
+let inflightStepUp: Promise<boolean> | null = null;
+
+/**
+ * The step-up prompt registers how to ask for the authenticator code. When a privileged request
+ * answers `auth.step_up_required`, the client asks right there and sends the same request again,
+ * so the cashier never has to leave the open dialog. A 403 means nothing was done, so the retry is safe.
+ */
+export function setStepUpAsker(fn: (() => Promise<boolean>) | null): void {
+  stepUpAsker = fn;
+}
+
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   /** JSON body, or a FormData for an upload (the browser then sets the multipart boundary). */
@@ -82,6 +94,16 @@ async function sendWithRefresh(path: string, opts: RequestOptions): Promise<Resp
         inflightRefresh = null;
       });
       if (await inflightRefresh) res = await send(path, opts);
+    }
+  }
+
+  if (res.status === 403 && stepUpAsker) {
+    const body = (await res.clone().json().catch(() => null)) as { code?: string } | null;
+    if (body?.code === 'auth.step_up_required') {
+      inflightStepUp ??= stepUpAsker().finally(() => {
+        inflightStepUp = null;
+      });
+      if (await inflightStepUp) res = await send(path, opts);
     }
   }
   return res;

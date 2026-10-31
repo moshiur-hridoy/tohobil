@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { amountForTap, entryRows, type EntryPreview, type PreviewItem } from './entryRows';
+import { allocationsFor, entryRows, pickedTotal, togglePick, type EntryPreview, type PreviewItem } from './entryRows';
 
 const TODAY = '2026-10-22';
 const due = (period: string, outstanding: string, extra: Partial<PreviewItem> = {}): PreviewItem => ({
@@ -47,18 +47,35 @@ describe('entryRows', () => {
     expect(leftover).toBe(0n);
   });
 
-  it('overdue months, then fines, then the months not due yet', () => {
+  it("each month's fine sits right under that month and is paid with it", () => {
+    // M06 in the owner's report: July and October open, each with a 500 taka fine
+    const fine = (period: string): PreviewItem => ({ fine_id: `f-${period}`, period, kind: 'fine', due_date: null, ahead: false, amount_paisa: '50000', outstanding_paisa: '50000' });
     const preview: EntryPreview = {
-      items: [due('2026-09', '500000'), { fine_id: 'f1', period: '2026-09', kind: 'fine', due_date: null, ahead: false, amount_paisa: '50000', outstanding_paisa: '50000' }, due('2026-11', '500000')],
+      items: [due('2026-07', '500000'), due('2026-10', '500000'), fine('2026-07'), fine('2026-10'), due('2026-11', '500000')],
       credit_paisa: '0',
       monthly: { period: '2026-11', amount_paisa: '500000' },
     };
     const { rows } = entryRows(preview, 550000n, TODAY);
-    expect(rows.slice(0, 3).map((r) => [r.kind, r.status, r.covered])).toEqual([
-      ['monthly', 'overdue', 500000n],
-      ['fine', 'overdue', 50000n],
-      ['monthly', 'advance', 0n],
+    expect(rows.slice(0, 5).map((r) => [r.kind, r.period, r.status, r.covered])).toEqual([
+      ['monthly', '2026-07', 'overdue', 500000n],
+      ['fine', '2026-07', 'overdue', 50000n],
+      ['monthly', '2026-10', 'overdue', 0n],
+      ['fine', '2026-10', 'overdue', 0n],
+      ['monthly', '2026-11', 'advance', 0n],
     ]);
+    expect(allocationsFor(rows)).toEqual([
+      { due_id: 'd-2026-07', amount_paisa: '500000' },
+      { fine_id: 'f-2026-07', amount_paisa: '50000' },
+    ]);
+  });
+
+  it('a fine whose month is already paid keeps its place', () => {
+    const preview: EntryPreview = {
+      items: [due('2026-10', '500000'), { fine_id: 'f1', period: '2026-08', kind: 'fine', due_date: null, ahead: false, amount_paisa: '50000', outstanding_paisa: '50000' }],
+      credit_paisa: '0',
+      monthly: null,
+    };
+    expect(entryRows(preview, 0n, TODAY).rows.map((r) => r.key)).toEqual(['d-2026-10', 'f1']);
   });
 
   it('credit already held pays the months ahead first, so they ask only for the rest', () => {
@@ -74,14 +91,38 @@ describe('entryRows', () => {
   });
 });
 
-describe('amountForTap', () => {
-  it('tapping a month pays everything up to it; tapping a paid one stops just before it', () => {
-    const { rows } = entryRows(m01, 0n, TODAY);
-    expect(amountForTap(rows, 2)).toBe(3000000n);
-    const filled = entryRows(m01, 3000000n, TODAY).rows;
-    expect(amountForTap(filled, 1)).toBe(1000000n);
-    // a half-paid month is completed, not cleared
-    const half = entryRows(m01, 1500000n, TODAY).rows;
-    expect(amountForTap(half, 1)).toBe(2000000n);
+describe('togglePick', () => {
+  const fine: PreviewItem = { fine_id: 'f-2026-07', period: '2026-07', kind: 'fine', due_date: null, ahead: false, amount_paisa: '50000', outstanding_paisa: '50000' };
+  const preview: EntryPreview = {
+    items: [due('2026-07', '500000'), due('2026-10', '500000'), fine],
+    credit_paisa: '0',
+    monthly: { period: '2026-10', amount_paisa: '500000' },
+  };
+
+  it('ticks a month or a fine on its own, and only those are paid', () => {
+    const { rows } = entryRows(preview, 0n, TODAY);
+    const onlyOct = togglePick(rows, null, 'd-2026-10');
+    expect([...onlyOct]).toEqual(['d-2026-10']);
+    const withFine = togglePick(rows, onlyOct, 'f-2026-07');
+    expect(pickedTotal(rows, withFine)).toBe(550000n);
+    const shown = entryRows(preview, 550000n, TODAY, withFine).rows;
+    expect(allocationsFor(shown)).toEqual([
+      { fine_id: 'f-2026-07', amount_paisa: '50000' },
+      { due_id: 'd-2026-10', amount_paisa: '500000' },
+    ]);
+  });
+
+  it('the first tap starts from what the typed amount already pays in full', () => {
+    const { rows } = entryRows(preview, 550000n, TODAY); // July and its fine
+    expect([...togglePick(rows, null, 'f-2026-07')]).toEqual(['d-2026-07']);
+  });
+
+  it('months ahead stay a run from the first one', () => {
+    const { rows } = entryRows(preview, 0n, TODAY);
+    const two = togglePick(rows, new Set(), 'ahead-2026-12');
+    expect([...two].sort()).toEqual(['ahead-2026-11', 'ahead-2026-12']);
+    expect([...togglePick(rows, two, 'ahead-2026-11')]).toEqual([]);
+    // months ahead have no due yet: their money is credit, not an allocation line
+    expect(allocationsFor(entryRows(preview, 1000000n, TODAY, two).rows)).toEqual([]);
   });
 });

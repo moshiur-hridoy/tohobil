@@ -252,4 +252,18 @@ describe('serving the built web app', () => {
       'public, max-age=31536000, immutable',
     );
   });
+
+  it('serves the Android app-links file from the dot folder, and only that one', async () => {
+    const dir = webRoot();
+    mkdirSync(join(dir, '.well-known'));
+    writeFileSync(join(dir, '.well-known', 'assetlinks.json'), '[{"relation":[]}]');
+    writeFileSync(join(dir, '.well-known', 'other.txt'), 'secret');
+    const a = await make({ env: { WEB_DIST_DIR: dir } });
+
+    const links = await a.inject('/.well-known/assetlinks.json');
+    expect(links.statusCode).toBe(200);
+    expect(links.headers['content-type']).toContain('application/json');
+    expect(links.json()).toEqual([{ relation: [] }]);
+    expect((await a.inject('/.well-known/other.txt')).statusCode).toBe(404);
+  });
 });

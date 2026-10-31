@@ -1,5 +1,15 @@
 # Android release
 
+## What members install today: the PWABuilder APK
+
+The APK given to members was made with pwabuilder.com from `https://app.moshiur.space` (a Trusted Web Activity, package `space.moshiur.app.twa`). It is only a shell around the live site, so every deploy updates it; a new APK is needed only if the domain, name or icon changes.
+
+- Download link for members: `https://github.com/moshiur-hridoy/tohobil/raw/apk/barakah.apk` (the `apk` branch holds only that file; `*.apk` is git-ignored on main).
+- `apps/web/public/.well-known/assetlinks.json` carries the APK's signing fingerprint. With it the APK opens full screen; without it Android shows an address bar. A new APK signed with a different key needs its fingerprint added there.
+- The signing key from the PWABuilder zip stays outside the repo, backed up with the recovery kit. Losing it means members must uninstall and install a new APK.
+
+The Capacitor build below is the later route (Play Store).
+
 The Android app is a Capacitor shell that loads the production URL (`CAPACITOR_SERVER_URL`), so UI changes ship without a new APK. Package id: `app.barakah.fund`.
 
 ## One-time setup

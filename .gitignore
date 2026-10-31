@@ -16,6 +16,9 @@ service-account*.json
 *.key
 *.jks
 *.keystore
+# Built Android packages are published on the `apk` branch, never on main (docs/ANDROID.md)
+*.apk
+*.aab
 
 # Group-private documents and real legacy data (spec 18: the repo ships only the example constitution)
 /private/*

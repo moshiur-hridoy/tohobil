@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "space.moshiur.app.twa",
+      "sha256_cert_fingerprints": [
+        "EA:5C:BC:53:06:DA:5D:FA:EF:ED:89:AC:D3:35:3D:DA:97:9A:3A:B2:A5:ED:4B:2C:C2:78:1E:E2:3C:74:F6:7D"
+      ]
+    }
+  }
+]

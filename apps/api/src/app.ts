@@ -333,6 +333,12 @@ export async function buildApp({
         }
       },
     });
+
+    // Android app links for the PWABuilder APK (docs/ANDROID.md): with this file the APK opens full
+    // screen instead of showing an address bar. The static plugin skips dot folders, so it gets a route.
+    if (existsSync(resolve(webRoot, '.well-known', 'assetlinks.json'))) {
+      app.get('/.well-known/assetlinks.json', (_request, reply) => reply.sendFile('.well-known/assetlinks.json'));
+    }
   }
 
   app.setNotFoundHandler((request, reply) => {

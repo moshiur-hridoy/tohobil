@@ -16,6 +16,7 @@ import { arrearsOf, taka } from '../../lib/money';
 import { charityBalance, interimNetAssets } from '../../lib/nav';
 import { useCountdown } from '../../lib/countdown';
 import { advanceOf } from '../../lib/advance';
+import { thisMonthOf } from '../../lib/thisMonth';
 import { formatCount } from '../../lib/format';
 import type { AccountBalance, DueRow, MatrixResponse, MeetingRow, MemberRow, ProposalSummary } from '../../lib/types';
 
@@ -52,16 +53,31 @@ export function HomePage() {
   const remaining = useCountdown(firstOpen?.closes_at ?? null);
 
   const mine = members.data?.items.find((m) => m.id === me?.member_id);
-  // Only dues past their due date count as owed; dues generated ahead of time are shown as the next due date.
+  // Dues past their due date and unpaid fines are arrears (the red card). This month's dues are open
+  // from the 1st and shown with their due date; dues made for a later month only as the next due date.
   const principal = BigInt(mine?.overdue_paisa ?? '0');
   const fines = BigInt(mine?.outstanding_fines_paisa ?? '0');
   const owed = principal + fines;
+  const today = todayDhaka();
+  const now = thisMonthOf(myDues.data?.items ?? [], today);
+  const toPay = owed + now.amount;
   const nextDue = myDues.data?.items
     .filter((d) => BigInt(d.outstanding_paisa) > 0n)
     .map((d) => d.due_date)
     .sort()[0];
-  const advance = myDetail.data ? advanceOf(myDetail.data.dues, myDetail.data.credit_paisa ?? '0', todayDhaka()) : null;
-  const gold = owed === 0n && !!advance && advance.months > 0;
+  const advance = myDetail.data ? advanceOf(myDetail.data.dues, myDetail.data.credit_paisa ?? '0', today) : null;
+  const gold = toPay === 0n && !!advance && advance.months > 0;
+  const dueChip =
+    now.dueDate === null || now.daysLeft === null
+      ? null
+      : now.daysLeft > 0
+        ? t('home.dueOnLeft', { date: fmtDate(now.dueDate), days: formatCount(now.daysLeft) })
+        : now.daysLeft === 0
+          ? t('home.dueOnToday', { date: fmtDate(now.dueDate) })
+          : t('home.dueOnPassed', { date: fmtDate(now.dueDate) });
+  // The shorter form beside arrears, where the chips already fill the line.
+  const daysChip =
+    now.daysLeft === null ? null : now.daysLeft > 0 ? t('home.daysLeft', { days: formatCount(now.daysLeft) }) : t(now.daysLeft === 0 ? 'home.lastDayToday' : 'home.datePassed');
 
   const refresh = () =>
     Promise.all([
@@ -90,7 +106,7 @@ export function HomePage() {
               <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-hero-icon">
                 <Icon d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M3 10h18 M16 14.5h2" size={18} />
               </span>
-              {t('home.myOutstanding')}
+              {t(owed > 0n ? (now.amount > 0n ? 'home.toPayTotal' : 'home.myOutstanding') : now.amount > 0n ? 'home.toPayThisMonth' : 'home.myOutstanding')}
               {gold && (
                 <span className="ml-auto rounded-full border border-hero-action px-2.5 py-0.5 text-xs font-semibold text-hero-action">
                   ★ {t('home.advanceBadge')}
@@ -101,8 +117,12 @@ export function HomePage() {
               <Skeleton className="mt-3 h-10 w-40" />
             ) : (
               <>
-                <p className="mt-2.5 text-[2.625rem] font-bold leading-[1.15]">{taka(owed)}</p>
-                {owed === 0n ? (
+                <p className="mt-2.5 text-[2.625rem] font-bold leading-[1.15]">{taka(toPay)}</p>
+                {owed === 0n && now.amount > 0n ? (
+                  <div className="mt-2.5 flex flex-wrap gap-2 text-[0.8125rem]">
+                    <span className={`rounded-full px-2.5 py-1 ${now.daysLeft !== null && now.daysLeft <= 3 ? 'bg-hero-action font-semibold text-on-hero-action' : 'bg-hero-chip'}`}>{dueChip}</span>
+                  </div>
+                ) : owed === 0n ? (
                   <>
                     <p className="mt-2.5 text-sm">{t('home.outstandingNone')}</p>
                     {advance && advance.months > 0 && advance.through && (
@@ -123,12 +143,14 @@ export function HomePage() {
                   </>
                 ) : (
                   <div className="mt-2.5 flex flex-wrap gap-2 text-[0.8125rem]">
-                    <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.fines')} {taka(fines)}</span>
-                    {nextDue && <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.nextDueOn', { date: fmtDate(nextDue) })}</span>}
+                    {principal > 0n && <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.overdue')} {taka(principal)}</span>}
+                    {fines > 0n && <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.fines')} {taka(fines)}</span>}
+                    {now.amount > 0n ? (
+                      <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.thisMonthPart', { amount: taka(now.amount) })} · {daysChip}</span>
+                    ) : (
+                      nextDue && <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.nextDueOn', { date: fmtDate(nextDue) })}</span>
+                    )}
                   </div>
-                )}
-                {principal > 0n && fines > 0n && (
-                  <p className="mt-2 text-[0.8125rem]">{t('home.principal')}: {taka(principal)}</p>
                 )}
                 {mine.under_verification && (
                   <p role="status" className="mt-3 rounded-xl bg-warn-bg p-2.5 text-sm text-warn">
@@ -136,7 +158,7 @@ export function HomePage() {
                   </p>
                 )}
                 <Link to="/pay" className="mt-[18px] flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-hero-action text-[1.0625rem] font-bold text-on-hero-action">
-                  {owed === 0n ? t('home.payAdvance') : t('home.payNow')}
+                  {toPay === 0n ? t('home.payAdvance') : t('home.payNow')}
                   <Icon d="M5 12h14 M13 6l6 6-6 6" size={20} sw={2} />
                 </Link>
               </>
@@ -209,7 +231,7 @@ const YEARS_AHEAD = 2;
 
 /**
  * Everyone's standing for any month (the matrix is readable by every member), plus what each member
- * owes in total right now: overdue dues and unpaid fines, the same figure as the hero card.
+ * owes in total right now: overdue dues and unpaid fines (the hero card adds this month's open dues).
  */
 function EveryoneStanding({ members }: { members?: MemberRow[] }) {
   const { t } = useTranslation();

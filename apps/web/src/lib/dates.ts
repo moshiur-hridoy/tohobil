@@ -17,6 +17,15 @@ export function todayDhaka(): string {
   return toDhakaDate(new Date());
 }
 
+/** Whole days from one YYYY-MM-DD business date to another. */
+export function daysBetween(from: string, to: string): number {
+  const utc = (d: string) => {
+    const [y, m, day] = d.split('-').map(Number) as [number, number, number];
+    return Date.UTC(y, m - 1, day);
+  };
+  return Math.round((utc(to) - utc(from)) / 86_400_000);
+}
+
 /** Dhaka midnight-based ISO timestamp for a chosen day at the current time of day. */
 export function dayToIso(date: string): string {
   const now = new Date();

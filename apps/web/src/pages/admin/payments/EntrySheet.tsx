@@ -10,7 +10,7 @@ import { dayToIso, fmtDate, fmtPeriod, todayDhaka } from '../../../lib/dates';
 import { paisaToDecimal, parseAmountInput, taka } from '../../../lib/money';
 import { formatCount } from '../../../lib/format';
 import type { MemberRow, ParsedSms, PaymentInstructions } from '../../../lib/types';
-import { DateInput } from '../../../components/ui';
+import { DateInput, Optional } from '../../../components/ui';
 import { StatusPill } from '../../../components/StatusPill';
 import { MAX_AHEAD, allocationsFor, entryRows, pickedTotal, togglePick, type EntryPreview, type EntryRow } from './entryRows';
 
@@ -55,6 +55,7 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
   const enabled = instructions.data?.methods?.length ? instructions.data.methods : PAYMENT_METHODS;
   const methodChoices = PAYMENT_METHODS.filter((m) => enabled.includes(m) || m === method);
   const [trx, setTrx] = useState('');
+  const [note, setNote] = useState('');
   const [date, setDate] = useState(todayDhaka());
   const [purpose, setPurpose] = useState<Purpose>('dues');
   const [requoteError, setRequoteError] = useState<unknown>(null);
@@ -73,6 +74,7 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
     setAmount(p?.amount_paisa ? paisaToDecimal(p.amount_paisa) : '');
     setMethod(p?.method ?? 'cash');
     setTrx(p?.trx_id ?? '');
+    setNote('');
     setDate(p?.paid_at ? p.paid_at.slice(0, 10) : todayDhaka());
     setPicked(null);
   }, [open, prefill, members.data]);
@@ -147,6 +149,7 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
         amount_paisa: paisa,
         method,
         ...(trx.trim() ? { trx_id: trx.trim() } : {}),
+        ...(note.trim() ? { note: note.trim() } : {}),
         paid_at: dayToIso(date),
         ...(purpose !== 'dues' ? { purpose } : {}),
         ...(forPeriods.length > 0 ? { for_periods: forPeriods.slice(0, 24) } : {}),
@@ -251,6 +254,12 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
         <input className={field} value={trx} onChange={(e) => setTrx(e.target.value)} autoComplete="off" />
       </label>
       <label className="field-label">
+        {t('common.note')}
+        <Optional />
+        <textarea className={`${field} min-h-20`} value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} placeholder={t('paymentsPage.entryNoteExample')} />
+        <span className="mt-1 block text-xs font-normal text-muted">{t('paymentsPage.entryNoteHint')}</span>
+      </label>
+      <label className="field-label">
         {t('paymentsPage.entryPaidAt')}
         <DateInput className={field} max={todayDhaka()} value={date} onChange={(e) => setDate(e.target.value)} />
       </label>
@@ -260,6 +269,7 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
           {purpose !== 'dues' && <SheetRow label={t('pay.purposeLabel')} value={t(PURPOSE_LABEL[purpose])} />}
           <SheetRow label={t('payment.method')} value={PAYMENT_METHOD_LABELS[method].bn} />
           <SheetRow label={t('paymentsPage.paidAt')} value={fmtDate(date)} />
+          {note.trim() && <p className="mt-1 whitespace-pre-line text-sm text-muted">{note.trim()}</p>}
         </div>
       )}
       {valid && fill && (aheadPaid > 0n || fill.leftover > 0n) && (

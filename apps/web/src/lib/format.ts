@@ -25,8 +25,9 @@ export function setDigits(digits: DigitSystem): void {
 
 /** "৳৫,০০০" or "৳5,000": money always goes through formatBDT (lakh/crore grouping, no floats). */
 export function formatTaka(paisa: bigint, digits: DigitSystem = getDigits()): string {
+  if (isPrivate()) return mask();
   const text = formatBDT(paisa, { digits });
-  return isPrivate() ? mask(text) : '৳' + text;
+  return '৳' + text;
 }
 
 /** A plain count ("৩" or "3") in the user's numerals. */

@@ -2,8 +2,13 @@ import { useSyncExternalStore } from 'react';
 
 const KEY = 'barakah.privacy';
 
-/** What an amount shows while privacy mode is on: one wave per digit, so a bigger amount is a longer wave. */
-export const mask = (formatted: string): string => '৳' + '∿'.repeat(formatted.replace(/[^\d০-৯]/g, '').length);
+/**
+ * What an amount shows while privacy mode is on. The length is fixed, so ৳৫০০ and ৳৫,০০,০০০ look the
+ * same and the size of an amount does not leak; the real digits never reach the page. `privacyBlur`
+ * blurs these dots where the browser can; elsewhere they stay plain dots.
+ */
+export const MASK_DOTS = '•••••';
+export const mask = (): string => '৳' + MASK_DOTS;
 
 const listeners = new Set<() => void>();
 

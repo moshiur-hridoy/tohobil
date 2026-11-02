@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { paisaToDecimal, parseAmountInput, sumPaisa } from './money';
+import { afterEach, describe, expect, it } from 'vitest';
+import { paisaToDecimal, parseAmountInput, sumPaisa, taka } from './money';
+import { MASK_DOTS, setPrivate } from './privacy';
 import { toCsv } from './csv';
 
 describe('parseAmountInput', () => {
@@ -33,5 +34,16 @@ describe('toCsv', () => {
     expect(csv.startsWith('﻿')).toBe(true);
     expect(csv).toContain('a,"b,c"');
     expect(csv).toContain('"say ""hi""","x\ny"');
+  });
+});
+
+describe('taka in privacy mode', () => {
+  afterEach(() => setPrivate(false));
+  it('shows the same dots for every amount, so neither the digits nor the size leak', () => {
+    setPrivate(true);
+    expect(taka('50000')).toBe('৳' + MASK_DOTS);
+    expect(taka(5000000000n)).toBe('৳' + MASK_DOTS);
+    setPrivate(false);
+    expect(taka('50000')).not.toContain(MASK_DOTS);
   });
 });

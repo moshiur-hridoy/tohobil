@@ -15,7 +15,9 @@ for (const [name, viewport, who] of [
     const { context, page } = await newPage(browser, viewport);
     await activate(page, who.ref, who.code);
     await expect(page).toHaveURL(/\/home/);
-    await expect(page.getByRole('heading', { name: tr('home.myOutstanding') })).toBeVisible();
+    // The hero card's heading names what is owed: arrears, this month's dues, or both.
+    const heroHeading = new RegExp(['home.myOutstanding', 'home.toPayThisMonth', 'home.toPayTotal'].map((k) => tr(k)).join('|'));
+    await expect(page.getByRole('heading', { name: heroHeading })).toBeVisible();
 
     // Log out, then sign back in with the PIN pad on the registered device.
     await page.goto('/menu');

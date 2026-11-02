@@ -10,6 +10,7 @@ import '@fontsource/noto-sans-bengali/700.css';
 import { i18n } from './lib/i18n';
 import { App } from './App';
 import { usePrivacy } from './lib/privacy';
+import { usePrivacyBlur } from './lib/privacyBlur';
 import { AuthProvider } from './lib/auth';
 import { DemoBanner, IS_DEMO } from './demo/DemoUi';
 import './styles/theme.css';
@@ -26,6 +27,7 @@ const queryClient = new QueryClient({
 
 /** The amounts are plain text, so a privacy switch re-draws the screen (the route and data stay). */
 function PrivateApp() {
+  usePrivacyBlur();
   return <App key={String(usePrivacy())} />;
 }
 

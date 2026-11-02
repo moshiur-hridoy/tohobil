@@ -11,7 +11,7 @@ import { Skeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
 import { StatusPill } from '../../components/StatusPill';
 import { api } from '../../lib/api';
-import { fmtDate, fmtInstant, fmtPeriod, todayDhaka } from '../../lib/dates';
+import { daysBetween, fmtDate, fmtInstant, fmtPeriod, todayDhaka } from '../../lib/dates';
 import { formatCount } from '../../lib/format';
 import { useCashByMethod } from '../../lib/useCashByMethod';
 import { arrearsOf, negClass, taka } from '../../lib/money';
@@ -44,15 +44,6 @@ function addMonths(period: string, n: number): string {
   const [y, m] = period.split('-').map(Number) as [number, number];
   const index = y * 12 + (m - 1) + n;
   return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, '0')}`;
-}
-
-/** Whole days from one YYYY-MM-DD business date to another. */
-function daysBetween(from: string, to: string): number {
-  const utc = (d: string) => {
-    const [y, m, day] = d.split('-').map(Number) as [number, number, number];
-    return Date.UTC(y, m - 1, day);
-  };
-  return Math.round((utc(to) - utc(from)) / 86_400_000);
 }
 
 /** Integer percent of two paisa amounts, without going through floating point money. */

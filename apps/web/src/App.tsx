@@ -16,6 +16,7 @@ import { ActivationPage } from './pages/auth/ActivationPage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { TotpPage } from './pages/auth/TotpPage';
 import { useAuth } from './lib/auth';
+import { LoadError } from './components/StateViews';
 import { AdminDashboard } from './pages/admin/DashboardPage';
 import { MatrixPage } from './pages/admin/MatrixPage';
 import { PaymentsPage } from './pages/admin/PaymentsPage';
@@ -44,9 +45,20 @@ import { StepUpPrompt } from './components/StepUpPrompt';
 
 /** Everything except /activate and /login needs a session. */
 function RequireAuth() {
-  const { status } = useAuth();
+  const { status, bootError, retryBoot } = useAuth();
   if (status === 'loading') return null;
   if (status === 'anonymous') return <Navigate to="/login" replace />;
+  if (status === 'unavailable') {
+    // The stored session is intact; the server just could not be reached. Offer a retry rather than
+    // the PIN screen.
+    return (
+      <div className="mx-auto flex min-h-screen max-w-md items-center p-5">
+        <div className="w-full">
+          <LoadError error={bootError} onRetry={retryBoot} />
+        </div>
+      </div>
+    );
+  }
   return <Outlet />;
 }
 

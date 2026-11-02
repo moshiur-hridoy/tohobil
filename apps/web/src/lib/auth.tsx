@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ApiError, api, setAccessToken, setRefresher } from './api';
+import { isTransientError, retryTransient } from './session';
 import { uuid } from './uuid';
 
 export interface Me {
@@ -59,13 +60,21 @@ function installId(): string {
   return id;
 }
 
-let inflightRefresh: Promise<boolean> | null = null;
+/** 'ok': new tokens applied. 'rejected': no usable session. Transient failures throw instead. */
+type RefreshOutcome = 'ok' | 'rejected';
 
-type Status = 'loading' | 'anonymous' | 'authenticated';
+let inflightRefresh: Promise<RefreshOutcome> | null = null;
+
+/** 'unavailable': a stored session exists but the server could not be reached to resume it. */
+type Status = 'loading' | 'anonymous' | 'authenticated' | 'unavailable';
 
 interface AuthContextValue {
   status: Status;
   me: Me | null;
+  /** Why the session could not be resumed, while `status` is 'unavailable'. */
+  bootError: unknown;
+  /** Try resuming the stored session again (the retry button on the 'unavailable' screen). */
+  retryBoot(): void;
   /** Member reference remembered on this device (e.g. "M03"), for the PIN screen. */
   memberRef: string | null;
   /** True when this install has a registered device and can sign in with a PIN. */
@@ -112,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('anonymous');
   }, []);
 
-  const refreshSession = useCallback((): Promise<boolean> => {
+  const refreshOutcome = useCallback((): Promise<RefreshOutcome> => {
     // Single flight: the refresh token rotates on every use and a replayed one revokes the device.
     // React StrictMode runs the boot effect twice in development, which would send the same token
     // twice and log the user out on every reload.
@@ -121,10 +130,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     return inflightRefresh;
 
-    async function doRefresh(): Promise<boolean> {
+    async function doRefresh(): Promise<RefreshOutcome> {
       const refresh_token = read(KEYS.refresh);
       const device_id = read(KEYS.device);
-      if (!refresh_token || !device_id) return false;
+      if (!refresh_token || !device_id) return 'rejected';
       try {
         applySession(
           await api<Session>('/auth/refresh', {
@@ -133,40 +142,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             body: { refresh_token, device_id },
           }),
         );
-        return true;
+        return 'ok';
       } catch (err) {
-        // A revoked device must not keep a stale id around: the login screen explains what to do.
-        if (!(err instanceof ApiError && err.status === 0)) write(KEYS.refresh, null);
-        return false;
+        // A rate limit, a server error or no network says nothing about the token: keep it, or a
+        // hiccup would send the member back to the PIN screen. Only a rejection drops it (a revoked
+        // device must not keep a stale token around: the login screen explains what to do).
+        if (isTransientError(err)) throw err;
+        write(KEYS.refresh, null);
+        return 'rejected';
       }
     }
   }, [applySession]);
 
-  // Boot: resume the session from the stored refresh token, if any.
+  /** For the API client's refresh-and-retry: any failure just means "not refreshed". */
+  const refreshSession = useCallback(
+    (): Promise<boolean> =>
+      refreshOutcome().then(
+        (outcome) => outcome === 'ok',
+        () => false,
+      ),
+    [refreshOutcome],
+  );
+
+  const [bootError, setBootError] = useState<unknown>(null);
+  const [bootAttempt, setBootAttempt] = useState(0);
+  const retryBoot = useCallback(() => setBootAttempt((n) => n + 1), []);
+
+  // Boot: resume the session from the stored refresh token, if any. Transient failures are retried
+  // a few times; if the server still cannot be reached the member sees a retry screen, not a logout.
   useEffect(() => {
     setRefresher(refreshSession);
     let cancelled = false;
+    setStatus('loading');
     void (async () => {
-      if (await refreshSession()) {
-        try {
-          await loadMe();
+      try {
+        if ((await retryTransient(refreshOutcome)) === 'ok') {
+          // Only /me is retried here: refreshing again would spend another rotation for nothing.
+          const profile = await retryTransient(() => api<Me>('/me'));
+          if (cancelled) return;
+          setMe(profile);
+          setStatus('authenticated');
           return;
-        } catch {
-          /* fall through to anonymous */
+        }
+        if (!cancelled) setStatus('anonymous');
+      } catch (err) {
+        if (cancelled) return;
+        if (isTransientError(err)) {
+          setBootError(err);
+          setStatus('unavailable');
+        } else {
+          setStatus('anonymous');
         }
       }
-      if (!cancelled) setStatus('anonymous');
     })();
     return () => {
       cancelled = true;
       setRefresher(null);
     };
-  }, [refreshSession, loadMe]);
+  }, [refreshSession, refreshOutcome, bootAttempt]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       status,
       me,
+      bootError,
+      retryBoot,
       memberRef,
       hasDevice: deviceId !== null,
       async activate({ member_ref, code, pin }) {
@@ -229,7 +269,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       refreshMe: loadMe,
     }),
-    [status, me, memberRef, deviceId, applySession, clearSession, loadMe],
+    [status, me, bootError, retryBoot, memberRef, deviceId, applySession, clearSession, loadMe],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

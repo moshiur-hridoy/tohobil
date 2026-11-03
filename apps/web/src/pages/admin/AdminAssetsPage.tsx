@@ -6,13 +6,14 @@ import { ConfirmSheet } from '../../components/ConfirmSheet';
 import { ListSkeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
 import {
-  AdminHeader, AdminPage, BTN_PRIMARY, BTN_SM, BTN_SM_PRIMARY, Card, CardHead, EmptyCard, FieldLabel, ICONS, Segmented, SplitLayout, StatGrid, StatTile,
+  AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, BTN_SM, BTN_SM_PRIMARY, Card, CardHead, EmptyCard, FieldLabel, ICONS, Segmented, SplitLayout, StatGrid, StatTile,
 } from '../../components/admin';
 import { Chip, FilePicker, Icon } from '../../components/ui';
 import { formatCount } from '../../lib/format';
 import { holdingTotals } from '../../lib/holding';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
+import { errorMessage } from '../../lib/errors';
 import { useAuth } from '../../lib/auth';
 import { taka, parseAmountInput } from '../../lib/money';
 import type { AssetRow, NavResponse, PartnerRow } from '../../lib/types';
@@ -43,6 +44,8 @@ export function AdminAssetsPage() {
   const navigate = useNavigate();
   const [partnerName, setPartnerName] = useState('');
   const [partnerKind, setPartnerKind] = useState<AssetRow['kind']>('gold');
+  const [partnerOpen, setPartnerOpen] = useState(false);
+  const [partnerError, setPartnerError] = useState<unknown>(null);
 
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ['assets-admin'] });
@@ -62,8 +65,16 @@ export function AdminAssetsPage() {
   };
 
   const addPartner = async () => {
-    const created = await api<{ partner: PartnerRow }>('/partners', { method: 'POST', body: { kind: partnerKind, name: partnerName.trim() } });
+    setPartnerError(null);
+    let created: { partner: PartnerRow };
+    try {
+      created = await api<{ partner: PartnerRow }>('/partners', { method: 'POST', body: { kind: partnerKind, name: partnerName.trim() } });
+    } catch (err) {
+      setPartnerError(err);
+      return;
+    }
     setPartnerName('');
+    setPartnerOpen(false);
     void qc.invalidateQueries({ queryKey: ['partners'] });
     void navigate(`/admin/assets/investment/${created.partner.id}`);
   };
@@ -140,28 +151,9 @@ export function AdminAssetsPage() {
     </Card>
   );
 
-  const partnerForm = isCashier && (
-    <Card className="p-5">
-      <CardHead icon={ICONS.plus} title={t('assetsAdmin.addPartnerTitle')} sub={t('assetsAdmin.partnerHint')} />
-      <div className="space-y-3">
-        <FieldLabel label={t('assetsAdmin.kind')}>
-          <select className="field w-full" value={partnerKind} onChange={(e) => setPartnerKind(e.target.value as AssetRow['kind'])}>
-            {(['gold', 'land', 'house', 'other'] as const).map((k) => <option key={k} value={k}>{t(`assets.${k}`)}</option>)}
-          </select>
-        </FieldLabel>
-        <FieldLabel label={t('assetsAdmin.partnerName')}>
-          <input className="field w-full" value={partnerName} onChange={(e) => setPartnerName(e.target.value)} />
-        </FieldLabel>
-        <button type="button" disabled={partnerName.trim().length === 0} onClick={() => void addPartner()} className={`${BTN_PRIMARY} w-full`}>
-          {t('assetsAdmin.addPartner')}
-        </button>
-      </div>
-    </Card>
-  );
-
   const looseTotals = holdingTotals(looseGold);
   const partnerCards = (
-    <ul className="grid gap-3.5 md:grid-cols-2">
+    <ul className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-3">
       {looseGold.length > 0 && (
         // Gold bought before shops were recorded: one investment card that only needs the shop's name.
         <li className="flex flex-col rounded-[18px] border border-warn bg-card p-[18px] shadow-card" data-testid="partner-row">
@@ -223,6 +215,16 @@ export function AdminAssetsPage() {
           </li>
         );
       })}
+      {isCashier && (
+        // A card the size of a shop's card: the form opens in a dialog.
+        <li>
+          <button type="button" onClick={() => { setPartnerError(null); setPartnerOpen(true); }} data-testid="add-partner"
+            className="flex h-full min-h-[11.5rem] w-full flex-col items-center justify-center gap-2.5 rounded-[18px] border-2 border-dashed border-border bg-card p-[18px] text-muted outline-none transition hover:border-input hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-primary-soft text-primary"><Icon d={ICONS.plus} size={26} /></span>
+            <span className="font-semibold">{t('assetsAdmin.addSector')}</span>
+          </button>
+        </li>
+      )}
     </ul>
   );
 
@@ -261,7 +263,7 @@ export function AdminAssetsPage() {
             <div className="space-y-3.5">
             {partners.error ? <LoadError error={partners.error} onRetry={() => void partners.refetch()} />
             : !partners.data ? <ListSkeleton rows={3} />
-            : partnerList.length === 0 && looseGold.length === 0 ? <Card className="p-5"><EmptyCard text={t('assetsAdmin.noPartners')} icon={ICONS.home} /></Card>
+            : partnerList.length === 0 && looseGold.length === 0 && !isCashier ? <Card className="p-5"><EmptyCard text={t('assetsAdmin.noPartners')} icon={ICONS.home} /></Card>
             : partnerCards}
             </div>
           ) : assets.error ? (
@@ -304,7 +306,7 @@ export function AdminAssetsPage() {
             </ul>
           )
         }
-        side={(tab === 'investments' ? partnerForm : addForm) || null}
+        side={(tab === 'investments' ? null : addForm) || null}
       />
 
       <ConfirmSheet
@@ -346,6 +348,23 @@ export function AdminAssetsPage() {
           </>
         )}
       </ConfirmSheet>
+      <AdminDialog open={partnerOpen} onClose={() => setPartnerOpen(false)} title={t('assetsAdmin.addSector')}>
+        <p className="mb-3 text-sm text-muted">{t('assetsAdmin.partnerHint')}</p>
+        <div className="space-y-3">
+          <FieldLabel label={t('assetsAdmin.kind')}>
+            <select className="field w-full" value={partnerKind} onChange={(e) => setPartnerKind(e.target.value as AssetRow['kind'])}>
+              {(['gold', 'land', 'house', 'other'] as const).map((k) => <option key={k} value={k}>{t(`assets.${k}`)}</option>)}
+            </select>
+          </FieldLabel>
+          <FieldLabel label={t('assetsAdmin.partnerName')}>
+            <input className="field w-full" value={partnerName} onChange={(e) => setPartnerName(e.target.value)} autoFocus />
+          </FieldLabel>
+          {partnerError != null && <p className="text-sm text-bad">{errorMessage(t, partnerError).message}</p>}
+          <button type="button" disabled={partnerName.trim().length === 0} onClick={() => void addPartner()} className={`${BTN_PRIMARY} w-full`}>
+            {t('assetsAdmin.addPartner')}
+          </button>
+        </div>
+      </AdminDialog>
     </AdminPage>
   );
 }

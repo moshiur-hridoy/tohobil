@@ -460,7 +460,8 @@
     },
     "partner": {
       "withdrawal_exceeds_value": "This is the whole value or more: withdraw everything instead.",
-      "nothing_held": "Nothing is held with this shop."
+      "nothing_held": "Nothing is held with this shop.",
+      "custodian_inactive": "Only an active member can look after an investment."
     },
     "meeting": {
       "not_found": "Meeting not found.",
@@ -498,6 +499,17 @@
     "demo": {
       "read_only": "This is a demo: changes are not saved.",
       "not_recorded": "This part has no sample data in the demo."
+    },
+    "valuation": {
+      "not_responsible": "Only the member who looks after this investment, or the cashier, can send its value.",
+      "future_date": "The date cannot be in the future.",
+      "proof_missing": "Attach the shop statement.",
+      "proof_not_yours": "Attach a statement you uploaded.",
+      "already_pending": "An update for this investment is already waiting.",
+      "nothing_to_value": "This investment has no purchase to value.",
+      "base_changed": "The value changed after this update was sent. Decline it and ask for a new one.",
+      "reason_required": "Write why it is declined.",
+      "not_found": "Value update not found."
     }
   },
   "common": {
@@ -576,7 +588,11 @@
     "charity_year_end": "Year end: fines and other money still to donate: ৳{amount}.",
     "zakat_info": "Your paid-in capital and estimated current value are attached. You calculate your own zakat.",
     "device_event": "{code} {name}: {event}",
-    "ledger_verify_failed": "The ledger chain has a problem (entry {seq}). Do not change anything; look at it now."
+    "ledger_verify_failed": "The ledger chain has a problem (entry {seq}). Do not change anything; look at it now.",
+    "valuation_review": "New value for {partner}: {new_value} (was {old_value}) is waiting for approval. Sent by {by}. See Payments → Approvals in the app.",
+    "valuation_updated": "New value for {partner}: {new_value} (was {old_value}). Approved by the auditor.",
+    "valuation_rejected": "The value update for {partner} was not approved. Reason: {reason}",
+    "custodian_assigned": "You now look after {partner}. You can send its new value from Assets in the app."
   },
   "tg": {
     "title": "🔔 Payment to check",
@@ -1026,7 +1042,7 @@
     "todo": "Today's tasks",
     "taskPayments": "{{n}} payments to verify",
     "taskPaymentsSub": "Oldest submitted {{date}}",
-    "taskApprovals": "{{n}} cancellation requests waiting",
+    "taskApprovals": "{{n}} approvals waiting",
     "taskApprovalsSub": "Needs a second person's approval",
     "taskObjections": "{{n}} open objections",
     "taskObjectionsSub": "Members questioning ledger entries",
@@ -1092,7 +1108,7 @@
   "paymentsPage": {
     "title": "Payments",
     "queue": "Queue",
-    "approvals": "Reversal requests",
+    "approvals": "Approvals",
     "filterStatus": "Status",
     "pasteSms": "Paste SMS",
     "pasteHint": "Paste one or more bank or mobile-money messages. Separate messages with an empty line.",
@@ -2315,5 +2331,51 @@
     "or": "or sign in with a member ID",
     "badge": "Demo · sample data",
     "switchRole": "Switch role"
+  },
+  "valuation": {
+    "sendTitle": "{{name}}: send new value",
+    "send": "Send new value",
+    "current": "Current value: {{value}}",
+    "newValue": "Total value the shop reports",
+    "asOf": "As of",
+    "note": "Note (optional)",
+    "notePlaceholder": "For example: Minar Jewellers statement, 31 October",
+    "statement": "Photo of the shop statement",
+    "gain": "Gain",
+    "loss": "Loss",
+    "toAuditor": "It takes effect once the auditor approves it.",
+    "toVote": {
+      "fall": "A loss needs everyone's vote: open 3 days, passes with more than half the members.",
+      "big_rise": "A rise of more than 10% needs everyone's vote: open 3 days, passes with more than half the members.",
+      "auditor": "The auditor is involved in this investment, so it needs everyone's vote: open 3 days.",
+      "no_auditor": "There is no auditor now, so it needs everyone's vote: open 3 days."
+    },
+    "sentAuditor": "Sent. The new value takes effect once the auditor approves it.",
+    "sentVote": "The vote is open for 3 days. If it passes, the cashier carries it out.",
+    "custodian": "Looked after by",
+    "custodianNone": "Nobody",
+    "custodianHint": "This member can send the shop's new value from the app.",
+    "requests": "Value updates",
+    "noneSent": "No value update has been sent yet.",
+    "sentBy": "Sent by {{code}}",
+    "decidedBy": "decided by {{code}}",
+    "reason": "Reason: {{reason}}",
+    "viewStatement": "View statement",
+    "viewVote": "View vote",
+    "status": {
+      "waitAuditor": "Waiting for the auditor",
+      "approved": "Approved",
+      "rejected": "Declined",
+      "voting": "Vote open",
+      "passed": "Passed, not yet carried out",
+      "executed": "Carried out",
+      "failed": "Did not pass",
+      "cancelled": "Cancelled"
+    },
+    "approvalTitle": "{{name}}: new value",
+    "approve": "Approve",
+    "reject": "Decline",
+    "approveEffect": "Approving sets the new value, changes the fund's net assets, and notifies everyone.",
+    "rejectHint": "Write why it is declined; the sender will see it."
   }
 }

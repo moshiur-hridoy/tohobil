@@ -6,30 +6,8 @@ with the owner, then record them in `docs/ASSUMPTIONS.md`.
 
 ## 1. Responsible member per investment, value updates reviewed by the auditor
 
-Today every value update of a shop (investment partner) is a `valuation_update` proposal that the
-members vote on (Doc.md 18.3, constitution 4.2 and 12.2).
-
-- The cashier picks a **responsible member** for each investment partner (partner terms edit; audited;
-  all members notified).
-- That member sees "my investments" on the Assets page and can send a **value / profit update** with
-  the shop's statement attached. The shop keeps its profit, so profit is a value increase (ASSUMPTIONS 84);
-  profit paid out in cash stays an ordinary cashier entry.
-- The **auditor** sees old value → new value, gain or loss and the statement, and approves (step-up)
-  or rejects with a reason. NAV changes only after approval; then every member is notified and can object.
-- The cashier's own "update value" button takes the same path. Nobody approves their own request.
-- Needs: a request table (append-only, status transitions guarded like `payments`), a new approval
-  kind, `investment_partners.custodian_member_id`, a link from `asset_valuations` to the request,
-  three screens (partner page, member Assets page, auditor queue), tests.
-
-Open decisions:
-1. A large change (more than 10%) still goes to a vote? **Suggested: yes, 10%.**
-2. If the auditor is the responsible member, who approves? **Suggested: it goes to a vote.**
-3. Statement photo required? **Suggested: required.**
-4. Shops only, or the fund's own land and buildings too? **Suggested: shops only for now.**
-
-Prerequisite: an active auditor. Check in the `db` container with
-`psql -U barakah_migrator -d barakah -c "SELECT m.code, u.roles FROM users u JOIN members m ON m.id = u.member_id WHERE u.roles && '{cashier,auditor}';"`.
-This overrides the share/member vote for valuations, so it is an owner decision the group should agree.
+**Built** (ASSUMPTIONS 115): a rise of up to 10% is approved by the auditor; a fall, a larger rise, or an
+update that concerns the auditor goes to a 3-day vote; the statement photo is required; shops only.
 
 ## 2. Hard and easy approval modes per decision (settings)
 

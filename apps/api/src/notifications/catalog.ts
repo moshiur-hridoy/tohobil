@@ -41,7 +41,11 @@ export type NotificationTemplate =
   | 'absence_fine'
   | 'charity_year_end'
   | 'zakat_info'
-  | 'device_event';
+  | 'device_event'
+  | 'valuation_review'
+  | 'valuation_updated'
+  | 'valuation_rejected'
+  | 'custodian_assigned';
 
 interface TemplateMeta {
   channels: readonly ('push' | 'sms')[];
@@ -115,6 +119,11 @@ export const TEMPLATE_META: Record<NotificationTemplate, TemplateMeta> = {
   charity_year_end: { channels: ['push'], roleRecipients: ['cashier', 'auditor'] },
   zakat_info: { channels: ['push'], roleRecipients: ['member'] },
   device_event: { channels: ['push'], roleRecipients: ['auditor'] },
+  // A shop's value update (ASSUMPTIONS 115): the auditor reviews a rise, everyone hears the result.
+  valuation_review: { channels: ['push'], roleRecipients: ['auditor'] },
+  valuation_updated: { channels: ['push'], roleRecipients: ['member'] },
+  valuation_rejected: { channels: ['push'], roleRecipients: ['member'] },
+  custodian_assigned: { channels: ['push'], roleRecipients: ['member'] },
 };
 
 function dhakaDateParts(date: Date): { hour: number; date: Date } {

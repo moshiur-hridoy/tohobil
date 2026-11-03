@@ -150,11 +150,12 @@ Legend: `[x]` done, `[ ]` to do.
 - [x] Special contribution (constitution 1.4 boosting, `docs/ASSUMPTIONS.md` 90): a unanimous proposal sets an amount per share and a due date; paid into capital from Pay; no fine, no warning; listed on Admin → Obligations
 - [x] New member entry from the app: the cashier entry sheet records an entry payment (and special contribution or levy cash); an entry quote lapses after 7 days and the cashier makes a new one at today's price (`docs/ASSUMPTIONS.md` 91)
 - [x] Approve payments from Telegram (`docs/ASSUMPTIONS.md` 101): Settings → Telegram (bot token, identify your Telegram, switch on); new payments reach the cashier with Approve / Reject buttons
+- [x] Responsible member per investment; a shop's value rise approved by the auditor, a fall or a rise over 10% voted on (`docs/ASSUMPTIONS.md` 115)
 
 ---
 
 ## Planned, not built
-See `docs/BACKLOG.md`: responsible member per investment with auditor-reviewed value updates; hard and easy approval modes; member correction requests; more shares for an existing member. Build only when the owner asks.
+See `docs/BACKLOG.md`: hard and easy approval modes; member correction requests; more shares for an existing member. Build only when the owner asks.
 
 ---
 

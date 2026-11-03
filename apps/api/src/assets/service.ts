@@ -5,6 +5,7 @@ import { badRequest, conflict, notFound } from '../lib/errors';
 import { audit } from '../lib/audit';
 import { inTransaction, type Db } from '../lib/tx';
 import { postEntries } from '../ledger/service';
+import { queueMembersAlert } from '../notifications/role-alert';
 
 export interface AssetDeps {
   pool: pg.Pool;
@@ -342,9 +343,11 @@ export async function listDocuments(db: Db, assetId: string): Promise<Record<str
 
 export async function listPartners(db: Db): Promise<Record<string, unknown>[]> {
   const res = await db.query(
-    `SELECT id, kind, name, contract_date::text AS contract_date, rate_percent::float8 AS rate_percent, period_months,
-            sharing_policy, contract_note, created_at
-     FROM investment_partners ORDER BY created_at, name`,
+    `SELECT p.id, p.kind, p.name, p.contract_date::text AS contract_date, p.rate_percent::float8 AS rate_percent, p.period_months,
+            p.sharing_policy, p.contract_note, p.created_at,
+            p.custodian_member_id, cm.code AS custodian_code, cm.full_name AS custodian_name
+     FROM investment_partners p LEFT JOIN members cm ON cm.id = p.custodian_member_id
+     ORDER BY p.created_at, p.name`,
   );
   return res.rows as Record<string, unknown>[];
 }
@@ -371,7 +374,13 @@ export async function updatePartner(deps: AssetDeps, actor: AssetActor, id: stri
     if (before.rowCount === 0) throw notFound('partner.not_found', 'Investment partner not found');
     const set: string[] = [];
     const values: unknown[] = [];
-    for (const key of ['name', 'contract_date', 'rate_percent', 'period_months', 'sharing_policy', 'contract_note'] as const) {
+    if (input.custodian_member_id) {
+      const m = await tx.query(`SELECT status FROM members WHERE id = $1`, [input.custodian_member_id]);
+      const status = (m.rows[0] as { status: string } | undefined)?.status;
+      if (!status) throw notFound('member.not_found', 'Member not found');
+      if (status !== 'active' && status !== 'warning') throw badRequest('partner.custodian_inactive', 'Only an active member can look after an investment');
+    }
+    for (const key of ['name', 'contract_date', 'rate_percent', 'period_months', 'sharing_policy', 'contract_note', 'custodian_member_id'] as const) {
       if (input[key] === undefined) continue;
       values.push(input[key]);
       set.push(`${key} = $${values.length}`);
@@ -384,6 +393,11 @@ export async function updatePartner(deps: AssetDeps, actor: AssetActor, id: stri
     await tx.query(`UPDATE investment_partners SET ${set.join(', ')} WHERE id = $${values.length + 1}`, [...values, id]);
     const after = await tx.query(`SELECT * FROM investment_partners WHERE id = $1`, [id]);
     await audit(tx, { actor: actor.userId, action: 'partner.update', entityType: 'partner', entityId: id, before: before.rows[0] as Record<string, unknown>, after: after.rows[0] as Record<string, unknown>, ip: actor.ip, deviceId: actor.deviceId });
+    const was = (before.rows[0] as { custodian_member_id: string | null }).custodian_member_id;
+    const now = (after.rows[0] as { custodian_member_id: string | null; name: string }).custodian_member_id;
+    if (now && now !== was) {
+      await queueMembersAlert(tx, deps.clock, [now], 'custodian_assigned', { partner: (after.rows[0] as { name: string }).name }, `${id}:${now}`);
+    }
   });
 }
 
@@ -462,8 +476,26 @@ export async function getPartner(db: Db, id: string): Promise<Record<string, unk
      ORDER BY p.created_at DESC`,
     [id],
   );
+  // Value updates sent for this shop, newest first, with where each one stands (ASSUMPTIONS 115).
+  const requests = await db.query(
+    `SELECT r.id, r.base_value_paisa::text AS base_value_paisa, r.new_value_paisa::text AS new_value_paisa,
+            r.as_of::text AS as_of, r.note, r.proof_file_id, r.route, r.proposal_id, r.created_at,
+            rm.code AS requested_by_code,
+            CASE WHEN r.route = 'auditor' THEN a.status ELSE p.status END AS status,
+            a.decision_note, a.decided_at, dm.code AS decided_by_code
+     FROM valuation_requests r
+     LEFT JOIN users ru ON ru.id = r.requested_by LEFT JOIN members rm ON rm.id = ru.member_id
+     LEFT JOIN approvals a ON r.route = 'auditor' AND a.kind = 'valuation_update' AND a.ref_id = r.id::text
+     LEFT JOIN users du ON du.id = a.decided_by LEFT JOIN members dm ON dm.id = du.member_id
+     LEFT JOIN proposals p ON p.id = r.proposal_id
+     WHERE r.partner_id = $1
+     ORDER BY r.created_at DESC
+     LIMIT 20`,
+    [id],
+  );
   return {
     partner,
+    valuation_requests: requests.rows,
     assets: assets.rows.map((r) => serializeBigints(r as Record<string, unknown>)),
     entries: entries.rows,
     documents: documents.rows,

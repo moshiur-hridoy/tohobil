@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ASSET_KINDS, ASSET_STATUSES, ASSET_UNITS, LEVY_EXPENSE_CATEGORIES, PAYMENT_METHODS } from '../enums';
-import { cashAccountSchema, dateSchema, paginationSchema, positivePaisaSchema, uuidSchema } from './common';
+import { cashAccountSchema, dateSchema, paginationSchema, paisaSchema, positivePaisaSchema, uuidSchema } from './common';
 
 export const assetListQuerySchema = z.object({
   status: z.enum(ASSET_STATUSES).optional(),
@@ -139,5 +139,63 @@ const partnerFields = {
 };
 export const partnerCreateSchema = z.object(partnerFields).strict();
 export type PartnerCreate = z.infer<typeof partnerCreateSchema>;
-export const partnerUpdateSchema = z.object(partnerFields).omit({ kind: true }).partial().strict();
+export const partnerUpdateSchema = z
+  .object({
+    ...partnerFields,
+    /** The member who looks after the investment and sends its value updates; `null` clears it. */
+    custodian_member_id: uuidSchema.nullable().optional(),
+  })
+  .omit({ kind: true })
+  .partial()
+  .strict();
 export type PartnerUpdate = z.infer<typeof partnerUpdateSchema>;
+
+/**
+ * `POST /partners/:id/valuation-requests`: the responsible member (or the cashier) sends the shop's
+ * new total value with its statement. A rise goes to the auditor, a fall or a large rise to a vote.
+ */
+export const valuationRequestSchema = z
+  .object({
+    new_value_paisa: paisaSchema,
+    as_of: dateSchema,
+    note: z.string().trim().max(500).optional(),
+    proof_file_id: uuidSchema,
+  })
+  .strict();
+export type ValuationRequestInput = z.infer<typeof valuationRequestSchema>;
+
+/** A rise of more than this share of the current value goes to a vote instead of the auditor. */
+export const VALUATION_AUDITOR_MAX_RISE_PERCENT = 10n;
+
+/** Why an update goes to the members' vote rather than the auditor, or null when the auditor decides it. */
+export type ValuationVoteReason = 'fall' | 'big_rise' | 'auditor' | 'no_auditor';
+
+/**
+ * Which way a value update goes (owner decision, ASSUMPTIONS 115): a rise of at most 10% is for the
+ * auditor; a fall, a larger rise, an update that concerns the auditor, or a fund with no auditor goes
+ * to the members' vote. The server decides; the app shows the same answer before sending.
+ */
+export function valuationVoteReason(input: { base: bigint; next: bigint; concernsAuditor: boolean; hasAuditor: boolean }): ValuationVoteReason | null {
+  const rise = input.next - input.base;
+  if (rise < 0n) return 'fall';
+  if (!input.hasAuditor) return 'no_auditor';
+  if (input.concernsAuditor) return 'auditor';
+  const bigRise = input.base === 0n ? rise > 0n : rise * 100n > input.base * VALUATION_AUDITOR_MAX_RISE_PERCENT;
+  return bigRise ? 'big_rise' : null;
+}
+
+/**
+ * Spreads one total value over the purchases in proportion to what each cost, so the sum is exact:
+ * the last purchase takes the rounding remainder. Purchases that cost nothing get no valuation.
+ */
+export function splitByCost(total: bigint, assets: ReadonlyArray<{ id: string; cost_paisa: string | bigint }>): Array<{ asset_id: string; value_paisa: bigint }> {
+  const priced = assets.filter((a) => BigInt(a.cost_paisa) > 0n);
+  const weight = priced.reduce((a, x) => a + BigInt(x.cost_paisa), 0n);
+  if (weight === 0n) return [];
+  let given = 0n;
+  return priced.map((a, i) => {
+    const value = i === priced.length - 1 ? total - given : (total * BigInt(a.cost_paisa)) / weight;
+    given += value;
+    return { asset_id: a.id, value_paisa: value };
+  });
+}

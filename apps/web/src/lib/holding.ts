@@ -10,18 +10,4 @@ export function holdingTotals(assets: AssetRow[]) {
   return { invested, value, profit: value - invested, lastValued, count: live.length };
 }
 
-/**
- * Spreads one total value over the purchases in proportion to what each cost, so the sum is exact:
- * the last purchase takes the rounding remainder. Purchases that cost nothing get no valuation.
- */
-export function splitByCost(total: bigint, assets: Array<{ id: string; cost_paisa: string }>): Array<{ asset_id: string; value_paisa: bigint }> {
-  const priced = assets.filter((a) => BigInt(a.cost_paisa) > 0n);
-  const weight = priced.reduce((a, x) => a + BigInt(x.cost_paisa), 0n);
-  if (weight === 0n) return [];
-  let given = 0n;
-  return priced.map((a, i) => {
-    const value = i === priced.length - 1 ? total - given : (total * BigInt(a.cost_paisa)) / weight;
-    given += value;
-    return { asset_id: a.id, value_paisa: value };
-  });
-}
+export { splitByCost } from '@barakah/shared';

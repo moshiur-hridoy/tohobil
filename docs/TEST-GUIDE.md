@@ -64,6 +64,11 @@ Tick each line when it behaves as described. "Cashier" means signed in as M01, "
 ### Assets, rent and levies (Phase 4)
 - [ ] **Cashier:** Admin → Proposals → New → "Investment purchase" (for example gold). Tick every compliance box, attach any PDF as the feasibility file, set a maximum amount. Try opening it with one box unticked: it is refused. Tick all, vote, execute with the real cost: the asset appears under **Admin → Assets** and tbhe cash goes down.
 - [ ] **Cashier:** Admin → Proposals → "Valuation update" for that asset, vote, execute: the **value per share** on the Assets screen changes.
+- [ ] **Shop value through the responsible member (ASSUMPTIONS 115):** Admin → Assets → open the shop (for example Minar Jewellers) → **Edit terms** → choose a **responsible member** (for example M02). M02 gets a notification and, on their phone, **Assets → the shop** shows **Send new value**.
+  - As M02, send a value a little above the current one (up to 10% more) with a photo of the statement. The box says the auditor will approve it. The shop's value does not change yet.
+  - As the auditor: **Payments → Approvals** shows "Minar Jewellers: new value" with old → new and the statement. **Approve** (authenticator code): the shop's value changes and everyone is notified. Try **Decline** without a reason: it asks for one; with a reason, M02 sees it under "Value updates".
+  - As M02, send a value **below** the current one (a loss), or more than 10% above: a vote opens at once for 3 days. Five of eight members vote yes, then the cashier **Executes** it under Proposals.
+  - A member who is not responsible for the shop sees no send button; only one update per shop can wait at a time.
 - [not need now ] **Land in stages:** purchase "Land": it shows *Being acquired*. Use **Pay instalment**, **Attach document** (type "Deed") and **Complete**. It is refused until the deed is attached and the ownership split covers every share.
 - [ not need now] **Rent:** Admin → Rent: add a rent stream, press "Generate this month", then **Receive rent**.
 - [ not need now] **Levy:** propose "Levy (asset cost)", vote, execute. Each member gets a levy due. A member pays it from **Pay** (choose "Levy"). Admin → Obligations shows the money held for the registrar; **Hand to the registrar** pays it out. The fund's value per share does not change.

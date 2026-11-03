@@ -240,11 +240,25 @@ export async function openProposal(
   ctx: ClientCtx,
 ): Promise<void> {
   const closesAt = parseTimestamp(input.closes_at);
-  if (closesAt.getTime() < deps.clock.now().getTime() + MIN_OPEN_WINDOW_MS) {
+  await inTransaction(deps.pool, (db) => openProposalTx(db, deps.clock, user, proposalId, closesAt, ctx));
+}
+
+/**
+ * Open a draft for voting inside the caller's transaction: snapshot the voters, copy the policy and
+ * threshold, audit. `openProposal` uses it, and so does a value update that has to go to a vote.
+ */
+export async function openProposalTx(
+  db: Db,
+  clock: Clock,
+  user: AuthUser,
+  proposalId: string,
+  closesAt: Date,
+  ctx: ClientCtx,
+): Promise<void> {
+  if (closesAt.getTime() < clock.now().getTime() + MIN_OPEN_WINDOW_MS) {
     throw badRequest('proposal.closes_too_soon', 'Voting must remain open for at least one hour');
   }
-
-  await inTransaction(deps.pool, async (db) => {
+  {
     const proposal = await loadProposal(db, proposalId);
     if (proposal.status !== 'draft') {
       throw conflict('proposal.not_draft', 'Proposal can only be opened from draft status');
@@ -252,7 +266,7 @@ export async function openProposal(
 
     const policy = await getPolicy(db, proposal.type);
     assertReadyToOpen(proposal, policy.requires_feasibility);
-    const today = deps.clock.todayDhaka();
+    const today = clock.todayDhaka();
     const excludedSubject = proposal.subject_member_id ? [proposal.subject_member_id] : [];
 
     if (policy.basis === 'share') {
@@ -346,7 +360,7 @@ export async function openProposal(
       ip: ctx.ip,
       deviceId: user.device_id,
     });
-  });
+  }
 }
 
 async function recomputeVoteTotals(db: Db, proposalId: string): Promise<void> {

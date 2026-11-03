@@ -44,6 +44,8 @@ const ROUTES: Array<{ method: 'GET' | 'POST' | 'PATCH'; url: string; body?: unkn
   { method: 'POST', url: `/proposals/${id}/cancel`, body: {}, allowed: ['cashier', 'auditor'] },
   { method: 'POST', url: `/proposals/${id}/vote`, body: { choice: 'yes' }, allowed: ACTIVE },
   { method: 'POST', url: `/proposals/${id}/execute`, body: {}, allowed: ['cashier'] },
+  // Members pass the guard; the service then checks that they look after this shop (made-up id: 404).
+  { method: 'POST', url: `/partners/${id}/valuation-requests`, body: { new_value_paisa: '100', as_of: '2026-01-01', proof_file_id: id }, allowed: ACTIVE },
 ];
 
 describe('role table for payments, approvals, objections, matrix', () => {

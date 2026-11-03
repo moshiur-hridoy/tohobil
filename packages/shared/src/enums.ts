@@ -223,6 +223,7 @@ export const APPROVAL_KINDS = [
   'annual_audit',
   'inactive_declaration',
   'death_surrender',
+  'valuation_update',
 ] as const;
 export type ApprovalKind = (typeof APPROVAL_KINDS)[number];
 

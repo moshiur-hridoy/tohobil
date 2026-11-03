@@ -182,6 +182,15 @@ export interface ApprovalRow {
   payment_method: string | null;
   payment_trx_id: string | null;
   created_at: string;
+  /** Why the auditor declined (shown to whoever sent it). */
+  decision_note?: string | null;
+  /** A shop's value update (kind `valuation_update`). */
+  partner_id?: string | null;
+  partner_name?: string | null;
+  base_value_paisa?: string | null;
+  new_value_paisa?: string | null;
+  valuation_as_of?: string | null;
+  valuation_proof_file_id?: string | null;
 }
 
 export interface ParsedSms {
@@ -244,6 +253,29 @@ export interface PartnerRow {
   period_months: number | null;
   sharing_policy: string | null;
   contract_note: string | null;
+  /** The member who looks after this investment and sends its value updates. */
+  custodian_member_id?: string | null;
+  custodian_code?: string | null;
+  custodian_name?: string | null;
+}
+
+/** A value update sent for a shop, and where it stands (auditor's decision, or the vote). */
+export interface ValuationRequestRow {
+  id: string;
+  base_value_paisa: string;
+  new_value_paisa: string;
+  as_of: string;
+  note: string | null;
+  proof_file_id: string;
+  route: 'auditor' | 'vote';
+  proposal_id: string | null;
+  created_at: string;
+  requested_by_code: string | null;
+  /** The approval's status (`pending`/`approved`/`rejected`) or the proposal's. */
+  status: string;
+  decision_note: string | null;
+  decided_at: string | null;
+  decided_by_code: string | null;
 }
 
 export interface HoldingEntry {
@@ -277,6 +309,7 @@ export interface HoldingValuation {
 
 export interface HoldingResponse {
   partner: PartnerRow;
+  valuation_requests?: ValuationRequestRow[];
   assets: AssetRow[];
   entries: HoldingEntry[];
   documents: HoldingDocument[];

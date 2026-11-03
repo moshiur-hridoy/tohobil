@@ -11,7 +11,9 @@ import {
   partnerCreateSchema,
   partnerUpdateSchema,
   uuidSchema,
+  valuationRequestSchema,
 } from '@barakah/shared';
+import { submitValuationRequest } from '../assets/valuation-requests';
 import { requireAuth, type Guards } from '../auth/guards';
 import { notFound } from '../lib/errors';
 import type { AuthUser } from '../auth/service';
@@ -43,7 +45,7 @@ function actorFrom(user: AuthUser, req: FastifyRequest): AssetActor {
 export function assetRoutes(deps: AssetDeps, guards: Guards) {
   return async function register(instance: FastifyInstance): Promise<void> {
     const app = instance.withTypeProvider<ZodTypeProvider>();
-    const { authenticate, requireRole, requireStepUp } = guards;
+    const { authenticate, requireRole, requireStepUp, requireWritable } = guards;
     const cashier = [authenticate, requireRole('cashier')];
     const cashierStepUp = [authenticate, requireRole('cashier'), requireStepUp];
 
@@ -136,6 +138,16 @@ export function assetRoutes(deps: AssetDeps, guards: Guards) {
       if (!found) throw notFound('partner.not_found', 'Investment partner not found');
       return found;
     });
+
+    // The member who looks after the shop (or the cashier) sends its new value for review (ASSUMPTIONS 115).
+    app.post(
+      '/partners/:id/valuation-requests',
+      { preHandler: [authenticate, requireWritable], schema: { params: idParams, body: valuationRequestSchema } },
+      async (req, reply) => {
+        const out = await submitValuationRequest(deps, requireAuth(req), req.params.id, req.body, { ip: req.ip });
+        return reply.status(201).send(out);
+      },
+    );
 
     app.post('/partners/:id/adopt', { preHandler: cashier, schema: { params: idParams } }, async (req) =>
       adoptAssets(deps, actorFrom(requireAuth(req), req), req.params.id),

@@ -18,6 +18,7 @@ import { activateProspectiveMember, assertEntryQuoteValid } from '../members/ent
 import { LEDGER_REF, postEntries, reverseReference } from '../ledger/service';
 import { paymentPostings } from '../ledger/postings';
 import { audit } from '../lib/audit';
+import { applyApprovedValuation, notifyValuationRejected } from '../assets/valuation-requests';
 import { decodeCursor, encodeCursor, tsKey } from '../lib/cursor';
 import { AppError, badRequest, conflict, forbidden, notFound } from '../lib/errors';
 import { paisaOut, toBigInt } from '../lib/money';
@@ -575,7 +576,7 @@ async function lockApproval(tx: pg.PoolClient, id: string, actor: AuthUser): Pro
   if (a.requested_by === actor.id) {
     throw forbidden('approval.self_decision', 'You cannot decide your own request');
   }
-  if (a.kind !== 'payment_reversal') {
+  if (a.kind !== 'payment_reversal' && a.kind !== 'valuation_update') {
     throw badRequest('approval.kind_unsupported', `Approvals of kind ${a.kind} are not available yet`);
   }
   return a;
@@ -588,9 +589,14 @@ export async function approveApproval(
   approvalId: string,
   note: string | undefined,
   ctx: ClientCtx,
-): Promise<{ id: string; status: 'approved'; payment_id: string; reversal_seqs: string[] }> {
+): Promise<{ id: string; status: 'approved'; payment_id?: string; reversal_seqs?: string[]; valuation_ids?: string[] }> {
   return inTransaction(deps.pool, async (tx) => {
     const a = await lockApproval(tx, approvalId, actor);
+    // A shop's value update (ASSUMPTIONS 115): the new value goes on its purchases.
+    if (a.kind === 'valuation_update') {
+      const out = await applyApprovedValuation(tx, deps.clock, actor, a, note, ctx);
+      return { id: approvalId, status: 'approved' as const, ...out };
+    }
     const paymentId = a.ref_id;
 
     const res = await tx.query(`SELECT status FROM payments WHERE id = $1 FOR UPDATE`, [paymentId]);
@@ -656,10 +662,15 @@ export async function rejectApproval(
 ): Promise<{ id: string; status: 'rejected' }> {
   return inTransaction(deps.pool, async (tx) => {
     const a = await lockApproval(tx, approvalId, actor);
+    // The member who sent a value update reads why it was declined.
+    if (a.kind === 'valuation_update' && !note) {
+      throw badRequest('valuation.reason_required', 'Say why the value update is declined');
+    }
     await tx.query(
-      `UPDATE approvals SET status = 'rejected', decided_by = $2, decided_at = $3 WHERE id = $1`,
-      [approvalId, actor.id, deps.clock.now()],
+      `UPDATE approvals SET status = 'rejected', decided_by = $2, decided_at = $3, decision_note = $4 WHERE id = $1`,
+      [approvalId, actor.id, deps.clock.now(), note ?? null],
     );
+    if (a.kind === 'valuation_update' && note) await notifyValuationRejected(tx, deps.clock, a.ref_id, note);
     await audit(tx, {
       actor: actor.id,
       action: 'approval.reject',
@@ -680,7 +691,9 @@ export async function listApprovals(
 ): Promise<{ items: unknown[]; next_cursor: string | null }> {
   const cursor = decodeCursor(q.cursor, 2); // [created_at, id]
   const res = await deps.pool.query(
-    `SELECT a.id, a.kind, a.ref_id, a.reason, a.status, a.created_at, a.decided_at,
+    `SELECT a.id, a.kind, a.ref_id, a.reason, a.status, a.created_at, a.decided_at, a.decision_note,
+            vr.partner_id, vp.name AS partner_name, vr.base_value_paisa, vr.new_value_paisa,
+            vr.as_of::text AS valuation_as_of, vr.proof_file_id AS valuation_proof_file_id,
             ${tsKey('a.created_at')} AS created_key,
             rm.code AS requested_by_code, dm.code AS decided_by_code,
             p.member_id AS payment_member_id, pm.code AS payment_member_code,
@@ -691,6 +704,8 @@ export async function listApprovals(
      LEFT JOIN users du ON du.id = a.decided_by LEFT JOIN members dm ON dm.id = du.member_id
      LEFT JOIN payments p ON a.kind = 'payment_reversal' AND p.id::text = a.ref_id
      LEFT JOIN members pm ON pm.id = p.member_id
+     LEFT JOIN valuation_requests vr ON a.kind = 'valuation_update' AND vr.id::text = a.ref_id
+     LEFT JOIN investment_partners vp ON vp.id = vr.partner_id
      WHERE ($1::text IS NULL OR a.status = $1) AND ($2::text IS NULL OR a.kind = $2)
        AND ($3::timestamptz IS NULL OR (a.created_at, a.id) < ($3::timestamptz, $4::uuid))
      ORDER BY a.created_at DESC, a.id DESC
@@ -701,9 +716,11 @@ export async function listApprovals(
   const page = rows.slice(0, q.limit);
   const last = page[page.length - 1];
   return {
-    items: page.map(({ created_key: _k, payment_amount_paisa, ...r }) => ({
+    items: page.map(({ created_key: _k, payment_amount_paisa, base_value_paisa, new_value_paisa, ...r }) => ({
       ...r,
       payment_amount_paisa: payment_amount_paisa === null ? null : paisaOut(payment_amount_paisa),
+      base_value_paisa: base_value_paisa === null || base_value_paisa === undefined ? null : paisaOut(base_value_paisa),
+      new_value_paisa: new_value_paisa === null || new_value_paisa === undefined ? null : paisaOut(new_value_paisa),
     })),
     next_cursor: rows.length > q.limit && last ? encodeCursor([last.created_key, last.id]) : null,
   };

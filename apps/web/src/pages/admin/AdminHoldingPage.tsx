@@ -5,17 +5,17 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { ConfirmSheet } from '../../components/ConfirmSheet';
 import { ListSkeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
-import { AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, BTN_SM, BTN_SM_PRIMARY, Card, ICONS, InfoRow, StatGrid, StatTile } from '../../components/admin';
+import { AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, BTN_SM, BTN_SM_PRIMARY, Card, ICONS, InfoRow, Notice, StatGrid, StatTile } from '../../components/admin';
 import { Icon, DateInput, FilePicker } from '../../components/ui';
 import { api, apiBlob } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtDate } from '../../lib/dates';
 import { formatCount } from '../../lib/format';
-import { holdingTotals, splitByCost } from '../../lib/holding';
+import { holdingTotals } from '../../lib/holding';
 import { paisaToDecimal, parseAmountInput, taka } from '../../lib/money';
-import { todayDhaka } from '../../lib/dates';
-import type { AssetRow, HoldingDocument, HoldingEntry, HoldingResponse, HoldingWithdrawal } from '../../lib/types';
+import type { AssetRow, HoldingDocument, HoldingEntry, HoldingResponse, HoldingWithdrawal, MemberRow } from '../../lib/types';
 import { CreateProposalForm } from './ProposalsPage';
+import { ValuationRequestList, ValuationRequestSheet } from '../../components/ValuationUpdate';
 
 /** A withdrawal's stage: waiting on someone (amber), voting (blue), money due (amber), done (green). */
 const STAGE_TONE: Record<HoldingWithdrawal['status'], string> = {
@@ -60,9 +60,7 @@ function HoldingView({ id }: { id: string }) {
   const [file, setFile] = useState<File | null>(null);
   const [buyOpen, setBuyOpen] = useState(false);
   const [valueOpen, setValueOpen] = useState(false);
-  const [total, setTotal] = useState('');
-  const [asOf, setAsOf] = useState(todayDhaka());
-  const [basis, setBasis] = useState('');
+  const [sent, setSent] = useState<string | null>(null);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [everything, setEverything] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
@@ -76,6 +74,7 @@ function HoldingView({ id }: { id: string }) {
     select: (r) => r.items.filter((a) => !a.partner_id && a.kind === kind && a.status !== 'planned'),
   });
   const [terms, setTerms] = useState<Record<string, string>>({});
+  const members = useQuery({ queryKey: ['members'], queryFn: () => api<{ items: MemberRow[] }>('/members'), enabled: isCashier });
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ['holding', id] });
     void qc.invalidateQueries({ queryKey: ['partners'] });
@@ -101,6 +100,7 @@ function HoldingView({ id }: { id: string }) {
           period_months: num(terms.period_months),
           sharing_policy: (terms.sharing_policy ?? '').trim() || null,
           contract_note: (terms.contract_note ?? '').trim() || null,
+          custodian_member_id: terms.custodian_member_id || null,
         },
       });
     } else if (action.kind === 'complete') {
@@ -134,20 +134,6 @@ function HoldingView({ id }: { id: string }) {
   // One line per valuation date: the sum of what each purchase was valued at that day.
   const history = [...valuations.reduce((m, v) => m.set(v.as_of, { total: (m.get(v.as_of)?.total ?? 0n) + BigInt(v.value_paisa), basis: m.get(v.as_of)?.basis ?? v.basis }), new Map<string, { total: bigint; basis: string | null }>())]
     .sort((a, b) => (a[0] < b[0] ? 1 : -1));
-
-  const newTotal = parseAmountInput(total);
-  const submitValue = async () => {
-    if (newTotal === null) return;
-    const items = splitByCost(BigInt(newTotal), assets.filter((a) => a.status !== 'sold')).map((p) => ({
-      asset_id: p.asset_id,
-      value_paisa: p.value_paisa.toString(),
-      as_of: asOf,
-      ...(basis.trim() ? { basis: basis.trim() } : {}),
-    }));
-    await api('/proposals', { method: 'POST', body: { type: 'valuation_update', title: t('holding.valueProposalTitle', { name: partner.name }), payload: { items } } });
-    setTotal('');
-    setBasis('');
-  };
 
   // A withdrawal is an asset sale of the shop: a part (`amount_paisa`) or everything (`min_price_paisa`).
   const withdrawPaisa = parseAmountInput(withdrawAmount);
@@ -213,12 +199,14 @@ function HoldingView({ id }: { id: string }) {
                 period_months: partner.period_months?.toString() ?? '',
                 sharing_policy: partner.sharing_policy ?? '',
                 contract_note: partner.contract_note ?? '',
+                custodian_member_id: partner.custodian_member_id ?? '',
               });
               setAction({ kind: 'contract' });
             }}>{t('holding.editTerms')}</button>
           )}
         </div>
         <dl>
+          <InfoRow label={t('valuation.custodian')} value={partner.custodian_code ? `${partner.custodian_code} ${partner.custodian_name ?? ''}` : t('valuation.custodianNone')} />
           <InfoRow label={t('holding.contractDate')} value={partner.contract_date ? fmtDate(partner.contract_date) : '—'} />
           <InfoRow label={t('holding.rate')} value={partner.rate_percent !== null ? `${formatCount(partner.rate_percent)}%${partner.period_months ? ` / ${t('holding.everyMonths', { n: formatCount(partner.period_months) })}` : ''}` : '—'} />
         </dl>
@@ -329,6 +317,12 @@ function HoldingView({ id }: { id: string }) {
       )}
 
       <Card className="p-5">
+        <h2 className="card-head mb-3 pb-3 text-base font-bold">{t('valuation.requests')}</h2>
+        <Notice text={sent} className="mb-3" />
+        <ValuationRequestList requests={q.data.valuation_requests ?? []} voteLink={() => '/admin/proposals'} />
+      </Card>
+
+      <Card className="p-5">
         <h2 className="card-head mb-3 pb-3 text-base font-bold">{t('holding.history')}</h2>
         {history.length === 0 ? <p className="text-sm text-muted">{t('holding.neverValued')}</p> : (
           <ul className="divide-y divide-border text-sm">
@@ -360,20 +354,13 @@ function HoldingView({ id }: { id: string }) {
         />
       </AdminDialog>
 
-      <ConfirmSheet
+      <ValuationRequestSheet
         open={valueOpen}
         onClose={() => setValueOpen(false)}
-        title={t('holding.updateValue')}
-        confirmLabel={t('common.submit')}
-        canConfirm={newTotal !== null}
-        onConfirm={submitValue}
-      >
-        <p className="text-sm text-muted">{t('holding.valueHint', { value: taka(totals.value) })}</p>
-        <Field label={t('holding.newValue')}><input className="field mt-1 w-full" inputMode="decimal" value={total} onChange={(e) => setTotal(e.target.value)} /></Field>
-        <Field label={t('holding.asOf')}><DateInput className="field mt-1 w-full" value={asOf} max={todayDhaka()} onChange={(e) => setAsOf(e.target.value)} /></Field>
-        <Field label={t('holding.basis')}><input className="field mt-1 w-full" value={basis} onChange={(e) => setBasis(e.target.value)} /></Field>
-        {newTotal !== null && <p className="text-sm">{t('holding.resultProfit')}: <Profit paisa={BigInt(newTotal) - totals.invested} className="font-bold" /></p>}
-      </ConfirmSheet>
+        partner={partner}
+        currentValue={totals.value}
+        onSent={(route) => { setSent(t(route === 'auditor' ? 'valuation.sentAuditor' : 'valuation.sentVote')); refresh(); }}
+      />
 
       <ConfirmSheet
         open={withdrawOpen}
@@ -434,6 +421,15 @@ function HoldingView({ id }: { id: string }) {
           <>
             <Field label={t('holding.partnerName')}><input className="field mt-1 w-full" value={terms.name ?? ''} onChange={(e) => setTerms({ ...terms, name: e.target.value })} /></Field>
             <Field label={t('holding.contractDate')}><DateInput className="field mt-1 w-full" value={terms.contract_date ?? ''} onChange={(e) => setTerms({ ...terms, contract_date: e.target.value })} /></Field>
+            <Field label={t('valuation.custodian')}>
+              <select className="field mt-1 w-full" value={terms.custodian_member_id ?? ''} onChange={(e) => setTerms({ ...terms, custodian_member_id: e.target.value })}>
+                <option value="">{t('valuation.custodianNone')}</option>
+                {(members.data?.items ?? []).filter((m) => m.status === 'active' || m.status === 'warning' || m.id === terms.custodian_member_id).map((m) => (
+                  <option key={m.id} value={m.id}>{m.code} {m.full_name}</option>
+                ))}
+              </select>
+              <span className="mt-1 block text-xs font-normal text-muted">{t('valuation.custodianHint')}</span>
+            </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label={t('holding.rate')}><input className="field mt-1 w-full" inputMode="decimal" value={terms.rate_percent ?? ''} onChange={(e) => setTerms({ ...terms, rate_percent: e.target.value })} /></Field>
               <Field label={t('holding.periodMonths')}><input className="field mt-1 w-full" inputMode="numeric" value={terms.period_months ?? ''} onChange={(e) => setTerms({ ...terms, period_months: e.target.value })} /></Field>

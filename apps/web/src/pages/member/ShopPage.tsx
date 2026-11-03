@@ -1,9 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { ListSkeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
+import { ValuationRequestList, ValuationRequestSheet } from '../../components/ValuationUpdate';
 import { api, apiBlob } from '../../lib/api';
+import { useAuth } from '../../lib/auth';
 import { fmtDate } from '../../lib/dates';
 import { formatCount } from '../../lib/format';
 import { holdingTotals } from '../../lib/holding';
@@ -12,9 +15,10 @@ import type { HoldingDocument, HoldingResponse } from '../../lib/types';
 import { ASSET_META } from './AssetsPage';
 
 /**
- * The member's read-only view of one shop the fund invests with: what was put in, what it is worth,
- * the contract terms and every purchase with its papers. The cashier edits all of this on the admin
- * holding page; members see the same numbers.
+ * The member's view of one shop the fund invests with: what was put in, what it is worth, the
+ * contract terms and every purchase with its papers. The cashier edits all of this on the admin
+ * holding page; members see the same numbers. The member who looks after the shop sends its new
+ * value from here (ASSUMPTIONS 115), and everyone sees the updates sent and what became of them.
  */
 export function ShopPage() {
   const { id } = useParams();
@@ -24,7 +28,11 @@ export function ShopPage() {
 
 function ShopView({ id }: { id: string }) {
   const { t } = useTranslation();
+  const { me } = useAuth();
+  const qc = useQueryClient();
   const q = useQuery({ queryKey: ['holding', id], queryFn: () => api<HoldingResponse>(`/partners/${id}`) });
+  const [sendOpen, setSendOpen] = useState(false);
+  const [sent, setSent] = useState<string | null>(null);
 
   const openPaper = async (d: HoldingDocument) => {
     window.open(URL.createObjectURL(await apiBlob(`/files/${d.file_id}`)), '_blank', 'noopener');
@@ -41,6 +49,8 @@ function ShopView({ id }: { id: string }) {
   const shown = entries.filter((e) => !e.reversed).sort((a, b) => (a.entry_date < b.entry_date ? 1 : -1));
   const contractPapers = documents.filter((d) => d.entity_type === 'partner');
   const papersOf = (assetId: string) => documents.filter((d) => d.entity_type === 'asset' && d.entity_id === assetId);
+  // Only the member who looks after this shop sends its value from here.
+  const mine = !!me?.member_id && partner.custodian_member_id === me.member_id;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -76,11 +86,28 @@ function ShopView({ id }: { id: string }) {
           <p className="mt-1 text-xs text-muted">
             {totals.lastValued ? t('holding.valuedOn', { date: fmtDate(totals.lastValued) }) : t('holding.neverValued')}
           </p>
+          {mine && (
+            <button type="button" onClick={() => { setSent(null); setSendOpen(true); }} className="mt-3 h-12 w-full rounded-2xl bg-primary font-bold text-primary-foreground">
+              {t('valuation.send')}
+            </button>
+          )}
+          {sent && <p role="status" className="mt-2 rounded-xl bg-ok-bg p-2.5 text-sm text-ok">{sent}</p>}
+        </section>
+
+        <section className="rounded-[20px] border border-border bg-card p-4 shadow-sm">
+          <h2 className="card-head pb-3 text-base font-bold">{t('valuation.requests')}</h2>
+          <div className="mt-2">
+            <ValuationRequestList requests={q.data.valuation_requests ?? []} voteLink={(pid) => `/votes/${pid}`} />
+          </div>
         </section>
 
         <section className="overflow-clip rounded-[20px] border border-border bg-card p-4 shadow-sm">
           <h2 className="card-head pb-3 text-base font-bold">{t('holding.contract')}</h2>
           <dl className="mt-3 space-y-2 text-sm">
+            <div className="flex justify-between gap-3">
+              <dt className="text-muted">{t('valuation.custodian')}</dt>
+              <dd className="font-semibold">{partner.custodian_code ? `${partner.custodian_code} ${partner.custodian_name ?? ''}` : t('valuation.custodianNone')}</dd>
+            </div>
             <div className="flex justify-between gap-3">
               <dt className="text-muted">{t('holding.contractDate')}</dt>
               <dd className="font-semibold">{partner.contract_date ? fmtDate(partner.contract_date) : '—'}</dd>
@@ -156,6 +183,16 @@ function ShopView({ id }: { id: string }) {
           )}
         </section>
       </main>
+      <ValuationRequestSheet
+        open={sendOpen}
+        onClose={() => setSendOpen(false)}
+        partner={partner}
+        currentValue={totals.value}
+        onSent={(route) => {
+          setSent(t(route === 'auditor' ? 'valuation.sentAuditor' : 'valuation.sentVote'));
+          void qc.invalidateQueries({ queryKey: ['holding', id] });
+        }}
+      />
     </div>
   );
 }

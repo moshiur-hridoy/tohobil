@@ -33,3 +33,27 @@ export async function queueRoleAlert(
     );
   }
 }
+
+/** Queue one notification for each of the given members, in the caller's transaction (deduplicated by `label`). */
+export async function queueMembersAlert(
+  db: Db,
+  clock: Clock,
+  memberIds: readonly string[],
+  template: NotificationTemplate,
+  vars: Record<string, string>,
+  label: string,
+): Promise<void> {
+  const rendered = renderNotification(template, vars);
+  const payload: Record<string, unknown> = { ...vars, sent_on: clock.todayDhaka(), _body: rendered.body };
+  for (const memberId of new Set(memberIds)) {
+    await repo.queueForMember(
+      db,
+      memberId,
+      template,
+      [...TEMPLATE_META[template].channels],
+      payload,
+      dedupeKey(template, memberId, label),
+      clock.now(),
+    );
+  }
+}

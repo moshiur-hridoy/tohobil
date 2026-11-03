@@ -16,6 +16,7 @@ import { formatCount } from '../../lib/format';
 import { useCashByMethod } from '../../lib/useCashByMethod';
 import { arrearsOf, negClass, taka } from '../../lib/money';
 import { charityBalance, interimNetAssets } from '../../lib/nav';
+import { RoleBadges } from '../../components/RoleBadge';
 import type { AccountBalance, ApprovalRow, MatrixCell, MatrixResponse, MemberRow, ObjectionRow, Page, PaymentRow, ProposalSummary, SettlementView } from '../../lib/types';
 
 const ALL = 200;
@@ -381,6 +382,7 @@ interface StatusRow {
   code: string;
   photo: string | null;
   name: string;
+  roles: string[] | undefined;
   cell: MatrixCell | null;
   /** Arrears across all months (overdue dues + unpaid fines), not just this one. */
   owes: bigint;
@@ -414,7 +416,7 @@ function MemberStatus({ matrix, members, period, settlements }: { matrix?: Matri
         : cell?.status === 'paid' || cell?.status === 'paid_late' ? 'paid'
         : cell?.status === 'overdue' ? 'overdue'
         : 'open';
-      return { id: m.member_id, code: m.member_code, photo: m.member_photo_file_id, name: m.member_name, cell, owes, month, settling: settlingBy.get(m.member_id) ?? null };
+      return { id: m.member_id, code: m.member_code, photo: m.member_photo_file_id, name: m.member_name, roles: member?.roles, cell, owes, month, settling: settlingBy.get(m.member_id) ?? null };
     })
     .sort((a, b) => rank(a) - rank(b) || (b.owes > a.owes ? 1 : b.owes < a.owes ? -1 : 0) || a.code.localeCompare(b.code));
 
@@ -485,9 +487,9 @@ function StatusTable({ rows }: { rows: StatusRow[] }) {
           return (
             <div role="row" key={r.id} className={`${COLS} flex min-h-[3.5rem] border-b border-border py-2 last:border-b-0 ${r.settling ? 'opacity-55' : ''}`}>
               <div role="cell" className="flex min-w-0 flex-1 items-center gap-3">
-                <Avatar fileId={r.photo} fallback={r.code} className="h-8 w-8 bg-soft text-[0.6875rem] font-bold text-ink2" />
+                <Avatar fileId={r.photo} fallback={r.name.trim().charAt(0)} className="h-8 w-8 bg-soft text-sm font-bold text-ink2" />
                 <div className="min-w-0">
-                  <p className="truncate text-[0.9375rem] font-semibold">{r.name}</p>
+                  <p className="flex min-w-0 items-center gap-1.5 text-[0.9375rem] font-semibold"><span className="shrink-0 text-xs text-muted tabular-nums">{r.code}</span><span className="truncate">{r.name}</span><RoleBadges roles={r.roles} /></p>
                   {r.cell && <p className="truncate text-xs text-muted tabular-nums sm:hidden">{taka(paid)} / {taka(due)}</p>}
                   {r.owes > 0n && !r.settling && <p className="truncate text-xs text-bad">{t('adminDash.owesTotal', { amount: taka(r.owes) })}</p>}
                 </div>

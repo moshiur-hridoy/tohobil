@@ -185,6 +185,14 @@ describe('GET /members', () => {
     }
   });
 
+  dbIt('tells every member who the cashier and the auditor are', async () => {
+    const { items } = (await get('/members', token.M03)).json() as { items: Array<{ code: string; roles: string[] }> };
+    const roles = Object.fromEntries(items.map((i) => [i.code, i.roles]));
+    expect(roles['M01']).toEqual(['cashier']);
+    expect(roles['M07']).toEqual(['auditor']);
+    expect(items.filter((i) => i.code !== 'M01' && i.code !== 'M07').every((i) => i.roles.length === 0)).toBe(true);
+  });
+
   dbIt("hides other members' phone numbers from a regular member but shows their own", async () => {
     const { items } = (await get('/members', token.M03)).json() as {
       items: Array<{ code: string; phone: string | null }>;

@@ -82,7 +82,10 @@ export async function listMembers(
             -- A member stays in their status until the settlement is fully paid (members/settlement.ts),
             -- so screens use this to show them as leaving.
             (SELECT s.status FROM settlements s WHERE s.member_id = m.id AND s.status <> 'completed'
-              ORDER BY s.created_at DESC LIMIT 1) AS settlement_status
+              ORDER BY s.created_at DESC LIMIT 1) AS settlement_status,
+            -- Who is the cashier and who the auditor is public, so every member can see it.
+            (SELECT COALESCE(array_agg(r ORDER BY r), '{}') FROM users u, unnest(u.roles) r
+              WHERE u.member_id = m.id AND u.status <> 'disabled' AND r <> 'member') AS roles
      FROM members m
      LEFT JOIN v_member_balances b ON b.member_id = m.id
      LEFT JOIN LATERAL (
@@ -120,6 +123,7 @@ export async function listMembers(
       current_period_status: row['current_period_status'],
       under_verification: row['under_verification'],
       settlement_status: row['settlement_status'] ?? null,
+      roles: row['roles'],
     })),
   };
 }

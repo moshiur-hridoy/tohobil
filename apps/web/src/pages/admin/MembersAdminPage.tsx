@@ -13,12 +13,14 @@ import { ListSkeleton, Skeleton } from '../../components/Skeleton';
 import { Empty, LoadError } from '../../components/StateViews';
 import { Icon, DateInput } from '../../components/ui';
 import { StatusPill } from '../../components/StatusPill';
+import { RoleBadges } from '../../components/RoleBadge';
 import { Avatar, PhotoSheet } from '../../components/MemberPhoto';
 import { api, ApiError } from '../../lib/api';
 import { errorMessage } from '../../lib/errors';
 import { useAuth } from '../../lib/auth';
 import { fmtDate, fmtInstant, todayDhaka } from '../../lib/dates';
-import { formatCount } from '../../lib/format';
+import { formatCount, localDigits } from '../../lib/format';
+import { phoneForInput, phoneFromInput } from '../../lib/phone';
 import { arrearsOf, paisaToDecimal, parseAmountInput, taka } from '../../lib/money';
 import type { ContactLogItem, MemberRow, MemberStatusEvent } from '../../lib/types';
 
@@ -27,7 +29,7 @@ function errorText(t: TFunction, err: unknown): string {
   return err instanceof Error && !(err instanceof ApiError) ? err.message : errorMessage(t, err).message;
 }
 
-type Kind = 'status' | 'suspension' | 'reinstatement' | 'settlement' | 'contact' | 'pin';
+type Kind = 'status' | 'suspension' | 'reinstatement' | 'settlement' | 'contact' | 'pin' | 'edit';
 type Filter = 'all' | 'active' | 'arrears' | 'suspended' | 'leaving';
 
 const STATUS_TONE: Record<string, string> = {
@@ -148,10 +150,12 @@ export function MembersAdminPage() {
                         <tr key={m.id} aria-selected={isSel} onClick={() => choose(m)} className={`cursor-pointer transition-colors ${isSel ? 'bg-primary-soft' : 'hover:bg-hover'} ${(gone || isLeaving(m)) && !isSel ? 'opacity-55' : ''}`}>
                           <td className="border-b border-border px-2 py-2.5">
                             <button type="button" onClick={(e) => { e.stopPropagation(); choose(m); }} className="flex min-w-0 items-center gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                              <Avatar fileId={m.photo_file_id} fallback={m.code} className="h-8 w-8 bg-soft text-[0.6875rem] font-bold text-ink2" />
+                              <Avatar fileId={m.photo_file_id} fallback={m.full_name.trim().charAt(0)} className="h-8 w-8 bg-soft text-sm font-bold text-ink2" />
                               <span className="min-w-0">
                                 <span className="flex items-center gap-1.5">
+                                  <span className="shrink-0 text-xs font-semibold text-muted tabular-nums">{m.code}</span>
                                   <span className="truncate font-semibold">{m.full_name}</span>
+                                  <RoleBadges roles={m.roles} />
                                   {DOT_TONE[status] && <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${DOT_TONE[status]}`} />}
                                 </span>
                                 {status !== 'active' ? (
@@ -187,6 +191,7 @@ export function MembersAdminPage() {
           <StatusHistoryDialog member={active.member} open={active.kind === 'status'} onClose={() => setActive(null)} />
           <SuspensionDialog member={active.member} open={active.kind === 'suspension'} onClose={() => setActive(null)} />
           <IssuePinDialog member={active.member} open={active.kind === 'pin'} onClose={() => setActive(null)} />
+          <EditContactDialog member={active.member} open={active.kind === 'edit'} onClose={() => setActive(null)} />
           <ReinstatementDialog member={active.member} open={active.kind === 'reinstatement'} onClose={() => setActive(null)} />
           <SettlementDialog member={active.member} open={active.kind === 'settlement'} onClose={() => setActive(null)} />
           <ContactLogDialog member={active.member} open={active.kind === 'contact'} onClose={() => setActive(null)} isCashier={isCashier} />
@@ -221,6 +226,7 @@ function MemberPanel({ member: m, totalShares, loading, isCashier, onAction }: {
   const notice = leaving ? 'leavingNotice' : m.status === 'suspended' ? 'suspendedNotice' : m.status === 'warning' ? 'warningNotice' : null;
 
   const actions: Array<[Kind, string, boolean]> = [
+    ['edit', t('membersAdmin.editContact'), isCashier],
     ['contact', t('membersAdmin.addContactLog'), true],
     ['pin', t('membersAdmin.issuePin'), isCashier],
     ['reinstatement', t('membersAdmin.reinstate'), isCashier && m.status === 'suspended'],
@@ -238,16 +244,16 @@ function MemberPanel({ member: m, totalShares, loading, isCashier, onAction }: {
       <div className="flex items-center gap-3">
         {isCashier ? (
           <button type="button" onClick={() => setPhotoOpen(true)} aria-label={t('photo.edit')} className="relative shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            <Avatar fileId={m.photo_file_id} fallback={m.code} className="h-11 w-11 bg-soft text-sm font-bold text-ink2" />
+            <Avatar fileId={m.photo_file_id} fallback={m.full_name.trim().charAt(0)} className="h-11 w-11 bg-soft text-base font-bold text-ink2" />
             <span aria-hidden="true" className="absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full border-2 border-card bg-foreground text-background">
               <Icon d="M4 8h3l2-3h6l2 3h3v11H4z M12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" size={11} sw={2.2} />
             </span>
           </button>
         ) : (
-          <Avatar fileId={m.photo_file_id} fallback={m.code} className="h-11 w-11 bg-soft text-sm font-bold text-ink2" />
+          <Avatar fileId={m.photo_file_id} fallback={m.full_name.trim().charAt(0)} className="h-11 w-11 bg-soft text-base font-bold text-ink2" />
         )}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-lg font-bold">{m.full_name}</p>
+          <p className="flex min-w-0 items-center gap-1.5 text-lg font-bold"><span className="shrink-0 text-sm font-semibold text-muted tabular-nums">{m.code}</span><span className="truncate">{m.full_name}</span><RoleBadges roles={m.roles} /></p>
           <span className={`mt-0.5 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[status] ?? 'bg-soft text-muted'}`}>
             {t(`status.member.${status}`, { defaultValue: status })}
           </span>
@@ -458,6 +464,81 @@ function IssuePinDialog({ member, open, onClose }: { member: MemberRow; open: bo
           <button type="button" onClick={close} className={`${BTN_SECONDARY} w-full`}>{t('common.close')}</button>
         </>
       )}
+    </AdminDialog>
+  );
+}
+
+/**
+ * The cashier corrects a member's name or phone number (`PATCH /members/:id/contact`). The server
+ * keeps the old and new values in the audit log; the old → new line here is read before saving,
+ * because the number is how a bKash or Nagad SMS is matched to the member.
+ */
+function EditContactDialog({ member, open, onClose }: { member: MemberRow; open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const [name, setName] = useState(member.full_name);
+  const [phone, setPhone] = useState(phoneForInput(member.phone ?? ''));
+  // The "not a valid number" line waits until the cashier leaves the field, not while they type.
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    setName(member.full_name);
+    setPhone(phoneForInput(member.phone ?? ''));
+    setPhoneTouched(false);
+    setError(null);
+  }, [open, member]);
+
+  const nextPhone = phoneFromInput(phone);
+  const nextName = name.trim();
+  const phoneChanged = nextPhone !== null && nextPhone !== member.phone;
+  const nameChanged = nextName !== '' && nextName !== member.full_name;
+  const valid = nextPhone !== null && nextName !== '' && (phoneChanged || nameChanged);
+
+  const submit = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await api(`/members/${member.id}/contact`, {
+        method: 'PATCH',
+        body: { ...(phoneChanged ? { phone: nextPhone } : {}), ...(nameChanged ? { full_name: nextName } : {}) },
+      });
+      void qc.invalidateQueries({ queryKey: ['members'] });
+      void qc.invalidateQueries({ queryKey: ['member', member.id] });
+      onClose();
+    } catch (err) {
+      setError(err);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <AdminDialog open={open} onClose={onClose} title={t('membersAdmin.editContact')}>
+      <p className="mb-3 text-muted">{member.code} {member.full_name}</p>
+      <label className="field-label">
+        {t('membersAdmin.fullName')}
+        <input className="field mt-1 w-full" value={name} maxLength={100} onChange={(e) => setName(e.target.value)} autoComplete="off" />
+      </label>
+      <label className="field-label mt-2">
+        {t('admin.members.phone')}
+        <input className="field mt-1 w-full" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={() => setPhoneTouched(true)} placeholder="01712345678" autoComplete="off" />
+      </label>
+      {phoneTouched && phone.trim() !== '' && nextPhone === null && <p className="mt-1 text-sm text-bad">{t('membersAdmin.phoneInvalid')}</p>}
+      {valid && (
+        <div className="mt-3 space-y-1 rounded-xl bg-soft p-3 text-sm">
+          {nameChanged && <p>{member.full_name} → <strong>{nextName}</strong></p>}
+          {phoneChanged && <p className="tabular-nums">{member.phone ? localDigits(phoneForInput(member.phone)) : '—'} → <strong>{localDigits(phoneForInput(nextPhone))}</strong></p>}
+        </div>
+      )}
+      <p className="mt-3 text-sm text-muted">{t('membersAdmin.editContactHint')}</p>
+      {error != null && <p className="mt-2 text-bad">{errorText(t, error)}</p>}
+      <div className="mt-4 flex gap-2">
+        <button type="button" disabled={busy || !valid} onClick={() => void submit()} className={`${BTN_PRIMARY} flex-1`}>{busy ? t('common.working') : t('common.save')}</button>
+        <Dialog.Close className={`${BTN_SECONDARY} flex-1`}>{t('common.cancel')}</Dialog.Close>
+      </div>
     </AdminDialog>
   );
 }

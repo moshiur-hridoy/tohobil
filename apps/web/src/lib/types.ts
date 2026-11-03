@@ -25,6 +25,8 @@ export interface MemberRow {
   under_verification: boolean;
   /** Set while an approved settlement is not fully paid: the member is leaving (still in their old status). */
   settlement_status: 'approved' | 'paying' | null;
+  /** 'cashier' and/or 'auditor'; empty for a plain member. */
+  roles?: string[];
   joined_on: string | null;
 }
 
@@ -105,6 +107,8 @@ export interface LedgerRow {
   reverses_seq: string | null;
   reversed_by_seq: string | null;
   posted_by_code: string | null;
+  /** The payment's note, only for the payer, the cashier and the auditor (null for everyone else). */
+  note: string | null;
   open_objections: number;
 }
 

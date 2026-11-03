@@ -434,6 +434,26 @@ describe('payments', () => {
     expect(JSON.stringify(list.json())).not.toContain('the raw text');
   });
 
+  dbIt('the ledger shows a payment note to the payer, cashier and auditor only', async () => {
+    const entry = await call('POST', '/payments/cashier-entry', s.M01.access_token, {
+      member_id: m.M03,
+      amount_paisa: '1500',
+      method: 'cash',
+      paid_at: '2026-09-02T10:00:00+06:00',
+      note: 'paid ahead earlier, now the rest',
+    });
+    expect(entry.statusCode, entry.body).toBe(201);
+    const id = entry.json().id as string;
+    const notes = async (who: string) =>
+      ((await call('GET', `/ledger?ref_type=payment&ref_id=${id}`, who)).json() as { items: Array<{ note: string | null }> }).items.map((r) => r.note);
+    for (const who of [s.M03, s.M01, s.M07]) {
+      const seen = await notes(who.access_token);
+      expect(seen.length).toBeGreaterThan(0);
+      expect(seen.every((n) => n === 'paid ahead earlier, now the rest')).toBe(true);
+    }
+    expect((await notes(s.M02.access_token)).every((n) => n === null)).toBe(true);
+  });
+
   dbIt('the list pages with a cursor and filters by status and member', async () => {
     const all = await call('GET', '/payments?limit=3', s.M02.access_token);
     expect(all.json().items).toHaveLength(3);

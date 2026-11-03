@@ -8,6 +8,7 @@ import { PullToRefresh } from '../../components/PullToRefresh';
 import { LoadError } from '../../components/StateViews';
 import { Chip, Icon } from '../../components/ui';
 import { StatusPill } from '../../components/StatusPill';
+import { RoleBadges } from '../../components/RoleBadge';
 import { Avatar } from '../../components/MemberPhoto';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -267,6 +268,7 @@ function EveryoneStanding({ members }: { members?: MemberRow[] }) {
   // Months before the fund's first due are not offered.
   const first = matrix.data?.periods.find((p) => matrix.data?.members.some((m) => m.cells[p])) ?? current;
   const owedById = new Map(members?.map((m) => [m.id, arrearsOf(m)]));
+  const rolesById = new Map(members?.map((m) => [m.id, m.roles]));
   const rows = (matrix.data?.members ?? []).filter((m) => m.cells[period]);
   const paidCount = rows.filter((m) => {
     const s = m.cells[period]?.status;
@@ -326,7 +328,7 @@ function EveryoneStanding({ members }: { members?: MemberRow[] }) {
                 <li key={m.member_id} className={`flex min-h-[58px] items-center gap-3 border-border px-4 py-2 ${i ? 'border-t' : ''} ${isMe ? 'bg-primary-soft' : ''}`}>
                   <Avatar fileId={m.member_photo_file_id} fallback={m.member_name.trim().charAt(0)} className={`h-[34px] w-[34px] text-sm font-bold ${isMe ? 'bg-primary text-primary-foreground' : AVATAR[i % AVATAR.length]}`} />
                   <div className="min-w-0 flex-1">
-                    <div className={`truncate text-[0.9375rem] ${isMe ? 'font-bold' : 'font-medium'}`}>{m.member_name}</div>
+                    <div className={`flex min-w-0 items-center gap-1.5 text-[0.9375rem] ${isMe ? 'font-bold' : 'font-medium'}`}><span className="shrink-0 text-xs font-normal text-muted tabular-nums">{m.member_code}</span><span className="truncate">{m.member_name}</span><RoleBadges roles={rolesById.get(m.member_id)} /></div>
                     {owed !== undefined && (
                       <div className={`text-xs ${owed > 0n ? 'font-semibold text-bad' : 'text-muted'}`}>
                         {owed > 0n ? t('home.totalOwed', { amount: taka(owed) }) : t('home.noArrears')}

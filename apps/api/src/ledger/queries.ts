@@ -15,6 +15,7 @@ const SELECT = `
          le.amount_paisa, le.member_id, m.code AS member_code, le.ref_type, le.ref_id, le.memo,
          le.hash, le.reverses_seq::text AS reverses_seq, rv.seq::text AS reversed_by_seq,
          pc.code AS posted_by_code,
+         CASE WHEN $9::boolean OR pay.member_id = $10::uuid THEN pay.note END AS note,
          (SELECT count(*)::int FROM objections o WHERE o.ledger_seq = le.seq AND o.status = 'open')
            AS open_objections
   FROM ledger_entries le
@@ -22,6 +23,7 @@ const SELECT = `
   LEFT JOIN ledger_entries rv ON rv.reverses_seq = le.seq
   LEFT JOIN users pu ON pu.id = le.created_by
   LEFT JOIN members pc ON pc.id = pu.member_id
+  LEFT JOIN payments pay ON le.ref_type = 'payment' AND pay.id = le.ref_id
   WHERE ($1::date IS NULL OR le.entry_date >= $1::date)
     AND ($2::date IS NULL OR le.entry_date <= $2::date)
     AND ($3::text IS NULL OR le.debit_account = $3 OR le.credit_account = $3)
@@ -33,9 +35,14 @@ const SELECT = `
  * The ledger as every member sees it (spec 7): rows with their hash, who posted them, the link to
  * their reversal (either way) and a badge counting open objections. Keyset paging on `seq`
  * (newest first unless `order=asc`), so a page never repeats or skips a row even while new entries
- * arrive.
+ * arrive. A payment's note (the cashier's or the payer's) goes only to the payer, the cashier and the
+ * auditor, as in the payment detail (ASSUMPTIONS 49); everyone else gets `note: null`.
  */
-export async function listLedger(db: Db, q: LedgerQuery): Promise<LedgerPage> {
+export async function listLedger(
+  db: Db,
+  q: LedgerQuery,
+  viewer: { member_id: string; roles: readonly string[] },
+): Promise<LedgerPage> {
   const cursor = decodeCursor(q.cursor, 1);
   if (cursor && !/^\d{1,18}$/.test(cursor[0] as string)) {
     throw badRequest('request.invalid_cursor', 'The cursor is not valid');
@@ -55,6 +62,8 @@ export async function listLedger(db: Db, q: LedgerQuery): Promise<LedgerPage> {
       q.ref_id ?? null,
       cursor?.[0] ?? null,
       q.limit + 1,
+      viewer.roles.includes('cashier') || viewer.roles.includes('auditor'),
+      viewer.member_id,
     ],
   );
   const rows = res.rows as Array<Record<string, unknown> & { seq: string }>;

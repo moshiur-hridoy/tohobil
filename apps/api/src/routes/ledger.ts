@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type pg from 'pg';
 import { auditLogQuerySchema, ledgerQuerySchema } from '@barakah/shared';
-import type { Guards } from '../auth/guards';
+import { requireAuth, type Guards } from '../auth/guards';
 import { listAuditLog } from '../audit/queries';
 import { listLedger, verifyLedger } from '../ledger/queries';
 
@@ -20,7 +20,7 @@ export function ledgerRoutes(deps: { pool: pg.Pool }, guards: Guards) {
     app.get(
       '/ledger',
       { preHandler: authenticate, schema: { querystring: ledgerQuerySchema } },
-      (req) => listLedger(deps.pool, req.query),
+      (req) => listLedger(deps.pool, req.query, requireAuth(req)),
     );
 
     // Walks every row, so keep it from being hammered.

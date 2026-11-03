@@ -86,8 +86,8 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
 
   const exportCsv = () =>
     downloadCsv('ledger.csv', [
-      ['seq', 'date', 'debit', 'credit', 'amount_taka', 'member', 'ref_type', 'memo', 'hash'],
-      ...rows.map((r) => [r.seq, r.entry_date, r.debit_account, r.credit_account, paisaToDecimal(r.amount_paisa), r.member_code ?? '', r.ref_type ?? '', r.memo ?? '', r.hash]),
+      ['seq', 'date', 'debit', 'credit', 'amount_taka', 'member', 'ref_type', 'memo', 'note', 'hash'],
+      ...rows.map((r) => [r.seq, r.entry_date, r.debit_account, r.credit_account, paisaToDecimal(r.amount_paisa), r.member_code ?? '', r.ref_type ?? '', r.memo ?? '', r.note ?? '', r.hash]),
     ]);
 
   const submitObjection = async () => {
@@ -181,7 +181,7 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
           <Empty text={t('ledgerPage.empty')} />
         ) : (
           <Card className="overflow-x-auto">
-            <table className="w-full min-w-[56rem] border-separate border-spacing-0 text-left text-sm">
+            <table className="w-full min-w-[64rem] border-separate border-spacing-0 text-left text-sm">
               <thead>
                 <tr className="text-xs font-semibold text-muted">
                   <th className="border-b border-border px-4 py-3">#</th>
@@ -191,6 +191,7 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
                   {running && <th className="border-b border-border px-3 py-3 text-right">{t('ledgerPage.runningBalance')}</th>}
                   <th className="border-b border-border px-3 py-3">{t('common.member')}</th>
                   <th className="border-b border-border px-3 py-3">{t('ledger.memo')}</th>
+                  <th className="border-b border-border px-3 py-3">{t('ledger.note')}</th>
                   <th className="border-b border-border px-4 py-3">{t('ledgerPage.hash')}</th>
                 </tr>
               </thead>
@@ -209,6 +210,7 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
                       {r.memo}
                       <Flags r={r} />
                     </td>
+                    <td className="max-w-64 whitespace-pre-line border-b border-border px-3 py-2.5 text-ink2">{r.note ?? ''}</td>
                     <td className="border-b border-border px-4 py-2.5 font-mono text-xs text-muted" title={r.hash}>{r.hash.slice(0, 10)}…</td>
                   </tr>
                 ))}
@@ -349,6 +351,7 @@ function EntryBody({ r }: { r: LedgerRow }) {
       </div>
       <p className="text-sm">{r.debit_account} → {r.credit_account}{r.member_code ? ` · ${r.member_code}` : ''}</p>
       {r.memo && <p className="text-sm text-muted">{r.memo}</p>}
+      {r.note && <p className="whitespace-pre-line text-sm">{t('ledger.note')}: {r.note}</p>}
       <Flags r={r} />
       <p className="mt-1 break-all font-mono text-xs text-muted">{t('ledgerPage.hash')}: {r.hash.slice(0, 16)}…</p>
     </>

@@ -310,6 +310,7 @@
     "credit": "Credit",
     "amount": "Amount",
     "memo": "Description",
+    "note": "Note",
     "objection": "Objection"
   },
   "errors": {
@@ -1480,7 +1481,11 @@
     "noMembers": "No members.",
     "issuePin": "Issue PIN",
     "issuePinHint": "A new random PIN will be created and the member is signed out of every device.",
-    "issuePinOnce": "The PIN is shown only now. Tell the member in person; they can change it later."
+    "issuePinOnce": "The PIN is shown only now. Tell the member in person; they can change it later.",
+    "editContact": "Change name and phone",
+    "fullName": "Full name",
+    "phoneInvalid": "Enter a valid mobile number, such as 01712345678.",
+    "editContactHint": "The old and new details stay in the audit log. bKash and Nagad SMS find the member by this number, so check it before saving."
   },
   "contactKind": {
     "call": "Call",

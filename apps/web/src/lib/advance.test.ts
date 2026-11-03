@@ -28,6 +28,12 @@ describe('advanceOf', () => {
     expect(advanceOf([due('2026-11'), due('2026-12', '500000')], '0', TODAY)).toEqual({ months: 1, through: '2026-11', extra: 0n });
   });
 
+  it('this month paid before its due date is on time, not ahead', () => {
+    // 3 November: November (due the 20th) is paid, December is not generated yet
+    expect(advanceOf([due('2026-10'), due('2026-11')], '0', '2026-11-03')).toEqual({ months: 0, through: null, extra: 0n });
+    expect(advanceOf([due('2026-11'), due('2026-12')], '0', '2026-11-03')).toEqual({ months: 1, through: '2026-12', extra: 0n });
+  });
+
   it('levy and other dues are not months ahead', () => {
     expect(advanceOf([due('2026-10'), { ...due('2026-12'), kind: 'levy' }], '0', TODAY).months).toBe(0);
   });

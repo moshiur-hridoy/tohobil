@@ -126,3 +126,13 @@ describe('togglePick', () => {
     expect(allocationsFor(entryRows(preview, 1000000n, TODAY, two).rows)).toEqual([]);
   });
 });
+
+describe('entryRows on a day early in the month', () => {
+  it('this month before its due date is unpaid, not ahead; only later months are ahead', () => {
+    const today = '2026-11-03';
+    const nov: PreviewItem = { due_id: 'd-2026-11', period: '2026-11', kind: 'monthly', due_date: '2026-11-20', ahead: true, amount_paisa: '2000000', outstanding_paisa: '2000000' };
+    const { rows } = entryRows({ items: [nov], credit_paisa: '0', monthly: { period: '2026-11', amount_paisa: '2000000' } }, 0n, today);
+    expect(rows[0]).toMatchObject({ period: '2026-11', status: 'unpaid' });
+    expect(rows.slice(1).every((r) => r.status === 'advance' && (r.period ?? '') > '2026-11')).toBe(true);
+  });
+});

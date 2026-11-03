@@ -85,7 +85,8 @@ export function entryRows(
       period: i.period,
       kind: i.kind,
       dueDate: i.due_date,
-      status: late ? 'overdue' : i.ahead || (i.period ?? '') > currentPeriod ? 'advance' : need < BigInt(i.amount_paisa) ? 'partial' : 'unpaid',
+      // Ahead means a month that has not begun; this month before its due date is simply on time.
+      status: late ? 'overdue' : (i.period ?? '') > currentPeriod ? 'advance' : need < BigInt(i.amount_paisa) ? 'partial' : 'unpaid',
       need,
       projected: false,
       covered: 0n,

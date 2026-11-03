@@ -18,8 +18,9 @@ export interface Advance {
 }
 
 /**
- * How far ahead a member has paid, for the home card. Monthly dues whose date has not come yet and
- * are fully paid count first, in month order; if none of those is still open, the credit the member
+ * How far ahead a member has paid, for the home card. Monthly dues for a month that has not begun
+ * yet and are fully paid count first, in month order (the current month paid before its due date is
+ * simply paid on time, not ahead); if none of those is still open, the credit the member
  * holds is turned into whole months at the latest monthly price (the dues job spends it that way,
  * ASSUMPTIONS 99).
  */
@@ -27,7 +28,8 @@ export function advanceOf(dues: readonly AdvanceDue[], creditPaisa: string, toda
   const monthly = dues.filter((d) => d.kind === 'monthly').sort((a, b) => a.period.localeCompare(b.period));
   let months = 0;
   let through: string | null = null;
-  for (const d of monthly.filter((m) => m.due_date > today)) {
+  const month = today.slice(0, 7);
+  for (const d of monthly.filter((m) => m.period > month)) {
     // a month ahead still open gets the money first, so the credit is not counted beyond it
     if (BigInt(d.outstanding_paisa) > 0n) return { months, through, extra: 0n };
     months++;

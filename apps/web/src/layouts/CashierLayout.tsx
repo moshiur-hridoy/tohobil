@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Link, Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { todayDhaka } from '../lib/dates';
+import { APP_VERSION } from '../lib/changelog';
+import { localDigits } from '../lib/format';
 import { useAuth } from '../lib/auth';
 import { useSyncPush } from '../lib/push';
 import { OwnerConflictBanner } from '../components/OwnerConflictBanner';
@@ -191,7 +193,10 @@ export function CashierLayout() {
             <ExtraLink to="/totp" label={t('totp.title')} icon={TOTP_ICON} />
           </div>
         </nav>
-        <div className="flex items-center gap-1 border-t border-border p-2">
+        <Link to="/menu/whats-new" className="border-t border-border px-4 pt-2 text-xs text-muted hover:text-foreground">
+          {t('whatsNew.version', { version: localDigits(APP_VERSION) })} · {t('whatsNew.title')}
+        </Link>
+        <div className="flex items-center gap-1 p-2">
           <LogoutButton />
           <LanguageToggle />
           <PrivacyToggle />

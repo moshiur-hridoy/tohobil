@@ -7,6 +7,7 @@ import { LoadError } from '../../components/StateViews';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { downloadFile } from '../../lib/download';
+import { APP_VERSION } from '../../lib/changelog';
 import { localDigits } from '../../lib/format';
 import { fmtInstant } from '../../lib/dates';
 import { PrivacyToggle } from '../../components/PrivacyToggle';
@@ -140,6 +141,10 @@ export function MenuPage() {
         </ul>
       </div>
 
+      <Link to="/menu/whats-new" className={CARD + ' flex items-center justify-between gap-3'}>
+        <span className="font-medium">{t('whatsNew.title')}</span>
+        <span className="text-sm text-muted">{t('whatsNew.version', { version: localDigits(APP_VERSION) })}</span>
+      </Link>
       </div>
     </div>
   );

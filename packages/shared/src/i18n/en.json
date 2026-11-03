@@ -1851,7 +1851,8 @@
     "claimLoose": "Create shop and move all",
     "noShopYet": "Shop not named yet",
     "statInvested": "Investment",
-    "statInvestedSub": "{{shops}} shops · {{assets}} own assets"
+    "statInvestedSub": "{{shops}} shops · {{assets}} own assets",
+    "addSector": "Add an investment"
   },
   "rentAdmin": {
     "title": "Rent",
@@ -2377,5 +2378,13 @@
     "reject": "Decline",
     "approveEffect": "Approving sets the new value, changes the fund's net assets, and notifies everyone.",
     "rejectHint": "Write why it is declined; the sender will see it."
+  },
+  "whatsNew": {
+    "title": "What's new",
+    "version": "Version {{version}}",
+    "current": "You are running version {{version}}",
+    "thisOne": "Running now",
+    "updated": "The app was updated: version {{version}}.",
+    "see": "See what's new"
   }
 }

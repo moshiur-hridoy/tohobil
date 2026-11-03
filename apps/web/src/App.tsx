@@ -9,6 +9,7 @@ import { ShopPage } from './pages/member/ShopPage';
 import { MenuPage } from './pages/member/MenuPage';
 import { LedgerPage } from './pages/member/LedgerPage';
 import { MembersPage } from './pages/member/MembersPage';
+import { WhatsNewPage } from './pages/member/WhatsNewPage';
 import { ConstitutionPage } from './pages/member/ConstitutionPage';
 import { NoticesPage } from './pages/member/NoticesPage';
 import { SettlementPage } from './pages/member/SettlementPage';
@@ -41,6 +42,7 @@ import { AdminNotificationsPage } from './pages/admin/AdminNotificationsPage';
 import { ChangePinPage } from './pages/member/ChangePinPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { UpdatePrompt } from './components/UpdatePrompt';
+import { WhatsNewBanner } from './components/WhatsNewBanner';
 import { StepUpPrompt } from './components/StepUpPrompt';
 
 /** Everything except /activate and /login needs a session. */
@@ -93,6 +95,7 @@ export function App() {
           <Route path="/menu" element={<MenuPage />} />
           <Route path="/menu/ledger" element={<LedgerPage />} />
           <Route path="/menu/members" element={<MembersPage />} />
+          <Route path="/menu/whats-new" element={<WhatsNewPage />} />
           <Route path="/menu/pin" element={<ChangePinPage />} />
           <Route path="/menu/constitution" element={<ConstitutionPage />} />
           <Route path="/menu/notices" element={<NoticesPage />} />
@@ -130,6 +133,7 @@ export function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <UpdatePrompt />
+      <WhatsNewBanner />
       <StepUpPrompt />
     </>
   );

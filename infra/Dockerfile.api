@@ -16,7 +16,8 @@ COPY apps/web/package.json apps/web/
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 
-COPY tsconfig.base.json .eslintrc.cjs ./
+# CHANGELOG.md is read by the web build (the app's "কী নতুন" page).
+COPY tsconfig.base.json .eslintrc.cjs CHANGELOG.md ./
 COPY packages/ packages/
 COPY apps/ apps/
 COPY db/ db/

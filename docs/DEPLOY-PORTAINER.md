@@ -19,7 +19,7 @@ Vercel and Cloudflare Pages are not used: the API serves the web app itself, and
 ## 1. Build the images on GitHub
 
 1. Push to `main` (already done for the app). The workflow `build-images` (`.github/workflows/build-images.yml`) builds three images: `tohobil-api`, `tohobil-backup`, `tohobil-db`.
-2. On GitHub open the repo, **Actions**, the latest `build-images` run. The summary shows `Deploy tag: abc1234`. That 7-character id is your `TAG`.
+2. On GitHub open the repo, **Actions**, the latest `build-images` run. The summary shows `Deploy tag - v1.8.0 (or abc1234)`. The version (`v1.8.0`) is your `TAG`; the 7-character commit id works too (`docs/RELEASES.md`).
 3. First run only: the images are private. Create a read-only token so the server can pull them: GitHub, Settings, Developer settings, Personal access tokens (classic), scope **read:packages** only. Copy it.
 
 ## 2. Make the secrets file
@@ -34,7 +34,7 @@ This writes `private/prod.env` with random passwords and keys. Open it and fill 
 
 | Line | Value |
 |---|---|
-| `TAG` | the id from step 1 |
+| `TAG` | the version from step 1 (for example `v1.8.0`) |
 | `TUNNEL_TOKEN` | from step 3 |
 | `BACKUP_AGE_RECIPIENTS` | from step 4 |
 
@@ -129,12 +129,12 @@ Read the dry-run report first (counts, warnings, opening-balance adjustments). T
 
 ## 8. Updating later
 
-1. Push to `main`, wait for the green `build-images` run, note the new `Deploy tag`.
-2. Portainer, the stack, **Editor**, change `TAG` in the environment variables to the new id, **Update the stack**. Tick **Re-pull image**.
+1. Release with `pnpm release minor` (or `patch`, see `docs/RELEASES.md`), wait for the green `build-images` run, note the new `Deploy tag`.
+2. Portainer, the stack, **Editor**, change `TAG` in the environment variables to the new version (for example `v1.8.0`), **Update the stack**. Tick **Re-pull image**.
 3. The `migrate` step runs first, so database changes apply automatically.
 4. Check `/api/v1/health` and the System screen.
 
-Roll back by setting `TAG` back to the previous id. Migrations are forward-only, so for a rollback after a schema change, restore from backup (`docs/RUNBOOK.md`).
+Roll back by setting `TAG` back to the previous version. Migrations are forward-only, so for a rollback after a schema change, restore from backup (`docs/RUNBOOK.md`).
 
 ## 9. Before real money
 

@@ -10,6 +10,7 @@
 - **Phases**: build one phase at a time (Doc.md section 15), finish it with green tests and a `docs/PHASE-N.md`. Phases 0 to 6 are built (the owner chose to build everything first and test afterwards, so there were no review stops between them). Progress is in [`checkbox.md`](./checkbox.md); the owner's step-by-step test plan is [`docs/TEST-GUIDE.md`](./docs/TEST-GUIDE.md); what is left is the optional Android app and the owner-side items listed at the end of `checkbox.md`.
 - **The owner is not a developer.** Prefer the simplest safe option, explain in plain words, and give exact commands when they must run something.
 - **Members sign in with member ID + PIN from any device** (owner decision, `docs/ASSUMPTIONS.md` 80); there is no device cap. The cashier issues PINs (`POST /members/:id/pin`).
+- **Releases**: work happens on `dev`; merging into `main` is always `pnpm release minor|patch` (never a plain merge). Each change someone can see goes, in plain Bengali, under `## অপ্রকাশিত` in [`CHANGELOG.md`](./CHANGELOG.md); members read it in the app (Menu → কী নতুন). Deploy is `TAG=vX.Y.Z` in Portainer. See [`docs/RELEASES.md`](./docs/RELEASES.md).
 - Where the spec is silent, choose the conservative option, make it a rule or adapter, and record it in `docs/ASSUMPTIONS.md`. Never run against production from a dev session.
 
 ## Commands
@@ -59,6 +60,9 @@ pnpm perf
 
 # Public UI demo with no server (docs/DEMO.md): record fictional data from the e2e stack, then build the static site
 pnpm demo:record && pnpm demo:build
+
+# Release dev to main as the next version (writes the CHANGELOG heading, bumps versions, tags vX.Y.Z)
+pnpm release minor      # or patch / major (docs/RELEASES.md)
 
 # Rewrite docs/BENGALI-REVIEW.md (every Bengali string next to its English, doubtful ones first)
 pnpm i18n:report

@@ -153,6 +153,11 @@ Legend: `[x]` done, `[ ]` to do.
 
 ---
 
+## Planned, not built
+See `docs/BACKLOG.md`: responsible member per investment with auditor-reviewed value updates; hard and easy approval modes; member correction requests; more shares for an existing member. Build only when the owner asks.
+
+---
+
 ## Outside the phases (owner or manual)
 Work through `docs/TEST-GUIDE.md` first (testing), then `docs/GO-LIVE.md` (launch).
 - [ ] Test everything with `docs/TEST-GUIDE.md`

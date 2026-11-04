@@ -24,10 +24,13 @@ export const charityBalance = (accounts: AccountBalance[]): bigint =>
  * Where the fund's money is, from `GET /nav`: cash in every cash account, held assets at their latest
  * value, and what is owed to others. `cash + invested - owed` is exactly the server's net assets.
  */
-export function fundSplit(nav: NavResponse): { cash: bigint; invested: bigint; owed: bigint; net: bigint } {
+export function fundSplit(nav: NavResponse): { cash: bigint; invested: bigint; owed: bigint; charity: bigint; otherOwed: bigint; net: bigint } {
   const sum = (rows: Array<{ balance_paisa: string } | { valuation_paisa: string }>) =>
     rows.reduce((s, r) => s + BigInt('balance_paisa' in r ? r.balance_paisa : r.valuation_paisa), 0n);
-  return { cash: sum(nav.cash), invested: sum(nav.assets), owed: sum(nav.deductions), net: BigInt(nav.net_assets_paisa) };
+  const owed = sum(nav.deductions);
+  // The sadaqah fund (CHARITY_PAYABLE) is shown on its own line; everything else owed to others stays together.
+  const charity = sum(nav.deductions.filter((d) => d.account === 'CHARITY_PAYABLE'));
+  return { cash: sum(nav.cash), invested: sum(nav.assets), owed, charity, otherOwed: owed - charity, net: BigInt(nav.net_assets_paisa) };
 }
 
 /**

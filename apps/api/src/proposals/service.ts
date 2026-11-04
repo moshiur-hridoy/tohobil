@@ -104,6 +104,17 @@ async function ensureMemberCanPropose(db: Db, memberId: string): Promise<void> {
   }
 }
 
+/**
+ * The constitution clause each proposal type rests on, from proposal_policies. The proposal form uses it to
+ * preselect the clause; it never changes how a vote is counted.
+ */
+export async function listProposalPolicies(db: Db): Promise<{ items: Array<{ type: string; clause_ref: string | null }> }> {
+  const res = await db.query<{ type: string; clause_ref: string | null }>(
+    `SELECT type, clause_ref FROM proposal_policies ORDER BY type`,
+  );
+  return { items: res.rows };
+}
+
 async function getPolicy(
   db: Db,
   type: ProposalType,

@@ -280,11 +280,18 @@ function FundCard({ nav }: { nav: NavResponse | undefined }) {
               <dt className="flex-1 text-muted">{t('home.split.invested')}</dt>
               <dd className="font-semibold">{taka(split.invested)}</dd>
             </div>
-            {split.owed !== 0n && (
+            {split.charity !== 0n && (
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full border border-border" aria-hidden="true" />
+                <dt className="flex-1 text-muted">{t('home.split.charity')}</dt>
+                <dd className="font-semibold">−{taka(split.charity)}</dd>
+              </div>
+            )}
+            {split.otherOwed !== 0n && (
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full border border-border" aria-hidden="true" />
                 <dt className="flex-1 text-muted">{t('home.split.owed')}</dt>
-                <dd className="font-semibold">−{taka(split.owed)}</dd>
+                <dd className="font-semibold">−{taka(split.otherOwed)}</dd>
               </div>
             )}
           </dl>

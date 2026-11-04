@@ -47,6 +47,15 @@ function dbIt(name: string, fn: () => Promise<void>): void {
 }
 
 describe('proposals lifecycle', () => {
+  dbIt('lists the clause each proposal type rests on', async () => {
+    const res = await call('GET', '/proposals/policies', s.M02.access_token);
+    expect(res.statusCode).toBe(200);
+    const items = (res.json() as { items: Array<{ type: string; clause_ref: string | null }> }).items;
+    expect(items.find((p) => p.type === 'investment_purchase')?.clause_ref).toBe('4.2');
+    expect(items.find((p) => p.type === 'constitution_amendment')?.clause_ref).toBeNull();
+    expect((await call('GET', '/proposals/policies')).statusCode).toBe(401);
+  });
+
   dbIt('creates a general proposal as an active member', async () => {
     const res = await call('POST', '/proposals', s.M02.access_token, {
       type: 'general',

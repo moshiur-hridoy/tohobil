@@ -18,6 +18,7 @@ import { useAuth } from '../../lib/auth';
 import { useCountdown } from '../../lib/countdown';
 import { fmtInstant } from '../../lib/dates';
 import { formatCount, localDigits } from '../../lib/format';
+import { ClauseLink, ClauseSelect, usePolicyClause } from '../../components/ClauseSelect';
 import { parseAmountInput, taka } from '../../lib/money';
 import type { ProposalDetail } from '../../lib/types';
 import { FORM_TYPES, ProposalFields, buildPayload, emptyForm, type FormState } from './proposalForms';
@@ -468,6 +469,7 @@ export function CreateProposalForm({
   const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [clauseRef, setClauseRef] = useState('');
+  const policyClause = usePolicyClause(type);
   const fresh = (): FormState => ({ ...emptyForm(), values: { ...initialValues } });
   const [form, setForm] = useState<FormState>(fresh);
   const [busy, setBusy] = useState(false);
@@ -522,10 +524,7 @@ export function CreateProposalForm({
             ))}
           </select>
         </label>}
-        <label className="field-label">
-          {t('proposal.clauseRef')}
-          <input className="field mt-1 w-full" value={clauseRef} onChange={(e) => setClauseRef(e.target.value)} />
-        </label>
+        <ClauseSelect value={clauseRef} onChange={setClauseRef} suggested={policyClause} />
       </div>
       <label className="field-label">
         {t('proposal.title')}
@@ -576,7 +575,7 @@ function ProposalPanel({ id, loading }: { id: string | null; loading: boolean })
 
       <dl>
         {d.subject && <InfoRow label={t('proposal.subject')} value={`${d.subject.code} ${d.subject.full_name}`} />}
-        {d.clause_ref && <InfoRow label={t('proposal.clauseRef')} value={d.clause_ref} />}
+        {d.clause_ref && <InfoRow label={t('proposal.clauseRef')} value={<ClauseLink clause={d.clause_ref} />} />}
         {tally.counted && <InfoRow label={t('proposal.yesVotes')} value={tally.yes ?? t('votes.hiddenUntilClose')} />}
         {tally.counted && (
           <InfoRow

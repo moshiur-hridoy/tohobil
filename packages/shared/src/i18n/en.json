@@ -56,7 +56,8 @@
     "split": {
       "cash": "Cash (bank, bKash, in hand)",
       "invested": "Invested (latest value)",
-      "owed": "Owed to others (charity etc.)"
+      "charity": "Sadaqah fund",
+      "owed": "Owed to others"
     },
     "shareAfterDues": "After dues",
     "sharesCount": "{{count}} shares",
@@ -295,6 +296,9 @@
     "cancelReasonHint": "For example: the voting rules changed; we will vote again under the new rules.",
     "executeBody": "The approved decision will be carried out. Money actions need an authenticator code.",
     "clauseRef": "Clause",
+    "clauseNone": "— No clause —",
+    "clauseSearch": "Search clauses by number or word",
+    "clauseNoMatch": "No clause matches this.",
     "byShares": "By share weight",
     "countShares": "{{n}} shares",
     "countMembers": "{{n}} members",

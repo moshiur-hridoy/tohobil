@@ -21,6 +21,7 @@ import {
   createProposal,
   executeProposal,
   getProposal,
+  listProposalPolicies,
   listProposals,
   openProposal,
   remindNonVoters,
@@ -68,6 +69,8 @@ export function proposalRoutes(deps: ProposalRouteDeps, guards: Guards) {
       { preHandler: authenticate, schema: { querystring: proposalsQuerySchema } },
       (req) => listProposals(serviceDeps, requireAuth(req), req.query),
     );
+
+    app.get('/proposals/policies', { preHandler: authenticate }, () => listProposalPolicies(deps.pool));
 
     app.get('/proposals/:id', { preHandler: authenticate, schema: { params: z.object({ id: uuidSchema }) } }, (req) =>
       getProposal(serviceDeps, requireAuth(req), req.params.id),

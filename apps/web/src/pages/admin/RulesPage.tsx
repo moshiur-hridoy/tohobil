@@ -13,6 +13,7 @@ import { errorMessage } from '../../lib/errors';
 import { useAuth } from '../../lib/auth';
 import { fmtDate, todayDhaka } from '../../lib/dates';
 import { formatCount } from '../../lib/format';
+import { ClauseSelect } from '../../components/ClauseSelect';
 import { paisaToDecimal } from '../../lib/money';
 import { RULE_GROUPS, ruleHint, ruleKind, ruleName, ruleValueText } from '../../lib/ruleText';
 import type { RuleRow, RulesResponse } from '../../lib/types';
@@ -321,10 +322,7 @@ function CreateRuleChange({ open, presetKey, onClose, current, clauses }: {
         {t('rulesPage.validFrom')}
         <DateInput className="field mt-1 w-full" value={validFrom} onChange={(e) => setValidFrom(e.target.value)} />
       </label>
-      <label className="field-label mt-2">
-        {t('proposal.clauseRef')}
-        <input className="field mt-1 w-full" value={clause} onChange={(e) => setClause(e.target.value)} />
-      </label>
+      <ClauseSelect className="mt-2" value={clause} onChange={setClause} />
       {key && <p className="mt-2 text-xs text-muted">{t('rulesPage.technicalKey')}: <span className="font-mono">{key}</span></p>}
       {error != null && <p className="mt-2 text-sm text-bad">{errorMessage(t, error).message}</p>}
     </ConfirmSheet>

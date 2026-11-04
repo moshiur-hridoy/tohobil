@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../components/ui';
+import { ClauseLink } from '../../components/ClauseSelect';
 import { ProposalDetails } from '../../components/ProposalDetails';
 import { ListSkeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
@@ -78,6 +79,8 @@ export function VoteDetailPage() {
                 {t('proposal.subject')}: {proposal.data.subject.code} {proposal.data.subject.full_name}
               </p>
             )}
+
+            {proposal.data.clause_ref && <ClauseLink clause={proposal.data.clause_ref} className="mt-2 inline-block text-sm" />}
 
             <div className="mt-3">
               <ProposalDetails type={proposal.data.type} payload={proposal.data.payload} />

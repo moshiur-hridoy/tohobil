@@ -20,6 +20,7 @@ import { errorMessage } from '../../lib/errors';
 import { useAuth } from '../../lib/auth';
 import { fmtDate, fmtInstant, todayDhaka } from '../../lib/dates';
 import { formatCount, localDigits } from '../../lib/format';
+import { ClauseSelect, usePolicyClause } from '../../components/ClauseSelect';
 import { phoneForInput, phoneFromInput } from '../../lib/phone';
 import { arrearsOf, paisaToDecimal, parseAmountInput, taka } from '../../lib/money';
 import type { ContactLogItem, MemberRow, MemberStatusEvent } from '../../lib/types';
@@ -371,6 +372,7 @@ function SuspensionDialog({ member, open, onClose }: { member: MemberRow; open: 
   const qc = useQueryClient();
   const [reason, setReason] = useState('');
   const [clause, setClause] = useState('');
+  const suspensionClause = usePolicyClause('suspension');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
@@ -408,10 +410,7 @@ function SuspensionDialog({ member, open, onClose }: { member: MemberRow; open: 
         {t('common.reason')}
         <textarea className="field mt-1 min-h-20 w-full" value={reason} onChange={(e) => setReason(e.target.value)} />
       </label>
-      <label className="field-label mt-2">
-        {t('proposal.clauseRef')}
-        <input className="field mt-1 w-full" value={clause} onChange={(e) => setClause(e.target.value)} />
-      </label>
+      <ClauseSelect className="mt-2" value={clause} onChange={setClause} suggested={suspensionClause} />
       {error != null && <p className="mt-2 text-bad">{errorText(t, error)}</p>}
       <div className="mt-4 flex gap-2">
         <button type="button" disabled={busy} onClick={() => void submit()} className={`${BTN_PRIMARY} flex-1`}>{busy ? t('common.working') : t('common.submit')}</button>

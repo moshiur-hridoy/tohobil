@@ -24,7 +24,7 @@ const nav: NavResponse = {
 describe('fundSplit', () => {
   it('adds up to the server net assets', () => {
     const s = fundSplit(nav);
-    expect(s).toEqual({ cash: 13000000n, invested: 40000000n, owed: 3000000n, net: 50000000n });
+    expect(s).toEqual({ cash: 13000000n, invested: 40000000n, owed: 3000000n, charity: 2500000n, otherOwed: 500000n, net: 50000000n });
     expect(s.cash + s.invested - s.owed).toBe(s.net);
   });
 });

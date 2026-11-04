@@ -20,9 +20,9 @@
     "payAdvance": "Pay in Advance",
     "underVerification": "Under Verification",
     "fundNetAssets": "Fund Net Assets",
-    "myShareValue": "My Share Value",
+    "myShareValue": "My share value",
     "openVotes": "Open Votes",
-    "charityToDonate": "Charity to Donate",
+    "charityToDonate": "Sadaqah fund",
     "outstandingNone": "You are all paid up.",
     "advanceBadge": "Paid ahead",
     "advanceMonths": "You have paid {{months}} months in advance (up to {{month}}).",
@@ -41,7 +41,6 @@
     "datePassed": "past the due date",
     "underVerificationHint": "The cashier is checking your payment. Reminders are paused.",
     "myCapital": "My paid-in capital",
-    "netAssetsHint": "Cash and assets at cost, after money owed to others (interim figure)",
     "reachCashier": "Open the payments page",
     "memberDueOwes": "owes {{amount}}",
     "memberAllPaid": "paid",
@@ -53,7 +52,18 @@
     "noArrears": "Nothing owed",
     "groupOwed": "Owed by everyone",
     "noDuesInMonth": "No one had a due this month.",
-    "duesNotYetCreated": "This month's dues are not created yet. Money paid in advance is kept as credit and goes to them once they are."
+    "duesNotYetCreated": "This month's dues are not created yet. Money paid in advance is kept as credit and goes to them once they are.",
+    "split": {
+      "cash": "Cash (bank, bKash, in hand)",
+      "invested": "Invested (latest value)",
+      "owed": "Owed to others (charity etc.)"
+    },
+    "shareAfterDues": "After dues",
+    "sharesCount": "{{count}} shares",
+    "shareToPay": "{{amount}} left to pay",
+    "approvalsWaiting": "{{count}} approvals waiting for you",
+    "approvalsWaitingSub": "Value updates or reversals, tap to open",
+    "approvalsPageHint": "New shop values and reversals. Check them, then approve or decline."
   },
   "payment": {
     "title": "Payment",
@@ -145,6 +155,10 @@
     "staleCount": "{{count}} asset valuations are stale",
     "vori": "vori",
     "gram": "gram",
+    "cash": "Cash",
+    "perShareLine": "{{value}} per share · {{shares}} shares",
+    "allocation": "Where the fund's money is",
+    "investments": "Investments",
     "status": {
       "planned": "Planned",
       "acquiring": "Acquiring",
@@ -216,7 +230,8 @@
       "settlements": "Settlements",
       "needsAction": "Needs action",
       "meetings": "Meetings"
-    }
+    },
+    "backToMember": "Member app"
   },
   "proposalType": {
     "fine_waiver": "Fine waiver",
@@ -356,7 +371,8 @@
       "totp_enrollment_required": "Set up the authenticator app first.",
       "step_up_required": "Enter your authenticator code for this action.",
       "totp_already_enrolled": "The authenticator is already set up.",
-      "pin_unchanged": "Choose a different PIN."
+      "pin_unchanged": "Choose a different PIN.",
+      "pin_required": "Enter your PIN to confirm this action."
     },
     "pageNotFound": "This page does not exist.",
     "requestId": "Reference",
@@ -589,7 +605,7 @@
     "zakat_info": "Your paid-in capital and estimated current value are attached. You calculate your own zakat.",
     "device_event": "{code} {name}: {event}",
     "ledger_verify_failed": "The ledger chain has a problem (entry {seq}). Do not change anything; look at it now.",
-    "valuation_review": "New value for {partner}: {new_value} (was {old_value}) is waiting for approval. Sent by {by}. See Payments → Approvals in the app.",
+    "valuation_review": "New value for {partner}: {new_value} (was {old_value}) is waiting for approval. Sent by {by}. Tap the “approvals” card on the app's home page.",
     "valuation_updated": "New value for {partner}: {new_value} (was {old_value}). Approved by the auditor.",
     "valuation_rejected": "The value update for {partner} was not approved. Reason: {reason}",
     "custodian_assigned": "You now look after {partner}. You can send its new value from Assets in the app."
@@ -699,11 +715,21 @@
     "securityFeedHint": "Everyone can see when a member's device was added or switched off.",
     "noEvents": "No events.",
     "deviceEvent": {
-      "registered": "new device activated",
-      "revoked": "device switched off",
-      "reset": "device reset"
+      "registered": "New device activated",
+      "revoked": "Device switched off",
+      "reset": "Device reset"
     },
-    "logout": "Log out"
+    "logout": "Log out",
+    "settings": "Settings",
+    "security": "Security",
+    "hideAmountsHint": "Covers every taka amount. Handy when someone is next to you.",
+    "darkMode": "Dark mode",
+    "devicesHint": "Phones and computers where your account is open",
+    "devicesCount": "{{count}}",
+    "logoutConfirmTitle": "Log out?",
+    "logoutConfirmBody": "You will need your PIN to sign in again.",
+    "adminPanel": "Admin panel",
+    "adminPanelHint": "Approvals, payment checks and fund work"
   },
   "totp": {
     "title": "Authenticator code",
@@ -718,6 +744,14 @@
     "active": "Active for 12 hours",
     "needed": "Enter a code",
     "notEnrolled": "Not set up yet"
+  },
+  "pinStepUp": {
+    "title": "Confirm with your PIN",
+    "hint": "Type your 6-digit PIN. Once it is accepted, the action finishes by itself. Five wrong tries lock the account for 15 minutes.",
+    "pin": "PIN",
+    "confirm": "Confirm",
+    "wrong": "The PIN is incorrect.",
+    "wrongLeft": "The PIN is incorrect. {{n}} tries left before the account locks."
   },
   "roles": {
     "member": "Member",
@@ -753,13 +787,11 @@
     }
   },
   "pay": {
-    "senderDigitsPhone": "Last 4 digits of the number you sent from",
-    "senderDigitsBank": "Last 4 digits of the account you sent from",
-    "senderDigitsHint": "If you send from abroad and have no transaction ID, this is enough.",
+    "senderDigitsPhone": "Last 4 digits of the sending number",
+    "senderDigitsBank": "Last 4 digits of the sending account",
     "senderDigitsInvalid": "Enter exactly 4 digits (numbers only).",
     "senderNotePhone": "Sender number, last 4 digits: {{digits}}",
     "senderNoteBank": "Sender account, last 4 digits: {{digits}}",
-    "trxHintOptional": "Add the transaction ID if the message has one; otherwise leave it empty.",
     "withFine": "Dues {{due}} + fine {{fine}}",
     "payableTotal": "You sent in total",
     "pickSomething": "Pick at least one month.",
@@ -831,10 +863,13 @@
     "bankName": "Bank name",
     "bankBranch": "Branch",
     "trxExample": "e.g. 9JK7A2B4CD",
-    "digitsExample": "e.g. 4567",
+    "digitsExample": "e.g. 4939",
     "addAhead": "Add one more month ahead",
     "aheadHint": "Money paid ahead is held in your name and taken automatically when that month's due is created.",
-    "noDuesAhead": "Nothing is owed now. You can pay upcoming months ahead."
+    "noDuesAhead": "Nothing is owed now. You can pay upcoming months ahead.",
+    "cashNote": "How you paid",
+    "cashNotePlaceholder": "e.g. handed to the cashier at the meeting",
+    "cashNoteHint": "Write whom you gave the money to, where or how. The cashier uses it to match the payment."
   },
   "ledgerPage": {
     "title": "Ledger",
@@ -1389,9 +1424,6 @@
   "notices": {
     "title": "Notices",
     "subtitle": "Fund and member notices",
-    "filterLabel": "Show",
-    "unreadTab": "Unread",
-    "allTab": "All",
     "unreadCount": "Unread notices: {{count}}",
     "tags": {
       "finalNotice": "Final notice",
@@ -1425,7 +1457,10 @@
       "title": "Zakat info",
       "body": "Current share value is attached.",
       "action": ""
-    }
+    },
+    "newCount": "{{n}} new",
+    "markAllRead": "Mark all as read",
+    "new": "New"
   },
   "settlement": {
     "title": "Settlement",
@@ -1951,7 +1986,13 @@
     "items": "Items",
     "partner_id": "Shop (investment partner)",
     "payout_plan": "Payout plan",
-    "category": "Kind of cost (for the levy fund)"
+    "category": "Kind of cost (for the levy fund)",
+    "viewFile": "View file",
+    "fineCount": "{{n}} fines",
+    "fine_ids": "Fines",
+    "document_file_id": "Document",
+    "terms": "Terms",
+    "nominees": "Nominees"
   },
   "proposalOptions": {
     "receive": "Receive (member lends to the fund)",
@@ -2256,7 +2297,7 @@
   },
   "file": {
     "add": "Add a photo or receipt",
-    "hint": "Pick a screenshot, photo or PDF from your phone",
+    "hint": "Photo or PDF",
     "attached": "Attached",
     "change": "Change",
     "remove": "Remove"
@@ -2386,5 +2427,109 @@
     "thisOne": "Running now",
     "updated": "The app was updated: version {{version}}.",
     "see": "See what's new"
+  },
+  "accountName": {
+    "CASH": "Cash in hand",
+    "BANK": "Bank",
+    "BKASH": "bKash",
+    "NAGAD": "Nagad",
+    "INVESTMENTS_AT_COST": "Investments (at cost)",
+    "MEMBER_CAPITAL": "Member capital",
+    "OPENING_ADJUSTMENT": "Opening adjustment",
+    "SETTLEMENT_PAYABLE": "Owed to leaving members",
+    "MEMBER_ESCROW": "Member escrow",
+    "CHARITY_PAYABLE": "Charity fund",
+    "LEVY_CLEARING": "Levy fund",
+    "INACTIVE_HELD": "Held for inactive members",
+    "MEMBER_QARD": "Member qard (interest-free loan)",
+    "DEFERRED_PURCHASE_PAYABLE": "Owed on instalment purchases",
+    "FINE_INCOME": "Fine income (old)",
+    "RENT_INCOME": "Rent income",
+    "BANK_PROFIT": "Bank profit",
+    "ASSET_GAIN": "Gain on investments",
+    "OTHER_INCOME": "Other income",
+    "EXIT_FEE_INCOME": "Early exit charge",
+    "BANK_CHARGE": "Bank charge",
+    "SMS_CHARGE": "SMS charge",
+    "MAINTENANCE": "Maintenance",
+    "ASSET_LOSS": "Loss on investments",
+    "OTHER_EXPENSE": "Other expense",
+    "DISTRIBUTIONS": "Profit distribution"
+  },
+  "accountGroup": {
+    "money": "Money and investments",
+    "members": "Members and amounts owed",
+    "income": "Income",
+    "expense": "Expenses and distribution"
+  },
+  "ledgerEntry": {
+    "reversal": "Reversal",
+    "memberDeposit": "Member deposit",
+    "memberAdvance": "Advance deposit",
+    "fineToCharity": "Fine (to the charity fund)",
+    "ribaToCharity": "Bank interest (to the charity fund)",
+    "toCharity": "Into the charity fund",
+    "charityDonation": "Donation",
+    "levyIn": "Levy deposit",
+    "levyMoved": "Cost moved to the levy fund",
+    "levyExpense": "{{name}} (from the levy fund)",
+    "investmentBuy": "Investment bought",
+    "investmentOut": "Back from an investment",
+    "settlement": "Leaving member's account",
+    "settlementPayout": "Paid to a leaving member",
+    "escrowPayout": "Paid out of escrow",
+    "inactiveHeld": "Inactive member's money set aside",
+    "qardIn": "Qard taken from a member",
+    "qardOut": "Qard repaid",
+    "deferredInstalment": "Instalment paid (instalment purchase)",
+    "transfer": "Between the fund's accounts",
+    "other": "Entry",
+    "memoReversal": "#{{seq}} reversed: {{reason}}",
+    "memoLevyMoved": "Entry #{{seq}} moved to the levy fund",
+    "legacy": "from the old sheet",
+    "assetProceeds": "{{label}}: sale price",
+    "assetGain": "{{label}}: gain",
+    "assetLoss": "{{label}}: loss",
+    "assetCost": "{{label}}: cost returned",
+    "details": "Details",
+    "clearFilters": "Clear filters",
+    "memoDistribution": "By shares ({{n}})",
+    "memoRent": "Rent for {{period}}"
+  },
+  "devices": {
+    "title": "My devices",
+    "hint": "Phones and computers where your account is open. If you see one you do not recognise, remove it.",
+    "lastUsed": "Last used: {{when}}",
+    "added": "Added: {{date}}",
+    "idle": "Not used for {{days}} days",
+    "remove": "Remove",
+    "removeTitle": "Remove this device?",
+    "removeBody": "Your account will be signed out on {{name}}. Signing in there again needs your member ID and PIN.",
+    "removeOthers": "Log out everywhere except this device",
+    "removeOthersTitle": "Log out of all other devices?",
+    "removeOthersBody": "Your account will be signed out on the other {{count}} devices.",
+    "removeOthersConfirm": "Log out of all",
+    "onlyThis": "Your account is open only on this device.",
+    "pinTip": "If you did not recognise a device, change your PIN after removing it.",
+    "os": {
+      "Android": "Android phone",
+      "iPhone": "iPhone",
+      "iPad": "iPad",
+      "Windows": "Windows computer",
+      "Mac": "Mac computer",
+      "Linux": "Linux computer",
+      "androidApp": "Android app"
+    },
+    "old": {
+      "android": "Android phone browser",
+      "web": "Computer or iPhone browser"
+    }
+  },
+  "securityFeed": {
+    "you": "You"
+  },
+  "relDay": {
+    "today": "Today",
+    "yesterday": "Yesterday"
   }
 }

@@ -12,7 +12,7 @@ export function WhatsNewPage() {
   useEffect(markVersionSeen, []);
   return (
     <div>
-      <PageHeader title={t('whatsNew.title')} subtitle={t('whatsNew.current', { version: localDigits(APP_VERSION) })} />
+      <PageHeader title={t('whatsNew.title')} subtitle={t('whatsNew.current', { version: localDigits(APP_VERSION) })} back="/menu" />
       <div className="flex flex-col gap-3 px-4 pb-4 pt-1">
         {RELEASES.map((r) => (
           <section key={r.version} className="rounded-[18px] border border-border bg-card p-4">

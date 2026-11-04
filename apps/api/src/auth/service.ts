@@ -523,10 +523,52 @@ export function hasRecentStepUp(user: AuthUser, clock: Clock): boolean {
   return !!user.step_up_at && clock.now().getTime() - user.step_up_at.getTime() < STEP_UP_TTL_MS;
 }
 
+/**
+ * Per-action step-up for an auditor: the PIN typed again (owner decision, ASSUMPTIONS.md 117).
+ * Nothing is remembered, so the next action asks again. A wrong PIN counts towards the same lockout
+ * as a login; a good one is audited and resets the counter. Throws on anything but a good PIN.
+ */
+export async function verifyStepUpPin(
+  deps: AuthDeps,
+  user: AuthUser,
+  pin: string,
+  client: ClientInfo,
+): Promise<void> {
+  const res = await deps.pool.query(
+    `SELECT id, pin_hash, failed_attempts, locked_until FROM users WHERE id=$1`,
+    [user.id],
+  );
+  const row = res.rows[0] as
+    | { id: string; pin_hash: string | null; failed_attempts: number; locked_until: Date | null }
+    | undefined;
+  if (!row?.pin_hash) throw INVALID_CREDENTIALS();
+  const now = deps.clock.now();
+  if (row.locked_until && row.locked_until > now) {
+    throw new AppError(423, 'auth.locked', 'Account is locked', {
+      locked_until: row.locked_until.toISOString(),
+    });
+  }
+  const ok = await verifyPin(row.pin_hash, pin, deps.env).catch(() => false);
+  if (!ok) await failPin(deps, row, client, user.device_id);
+  await inTransaction(deps.pool, async (tx) => {
+    if (row.failed_attempts > 0) {
+      await tx.query(`UPDATE users SET failed_attempts=0 WHERE id=$1`, [user.id]);
+    }
+    await audit(tx, {
+      actor: user.id,
+      action: 'auth.pin_step_up',
+      entityType: 'user',
+      entityId: user.id,
+      ip: client.ip,
+      deviceId: user.device_id,
+    });
+  });
+}
+
 // ---- TOTP ---------------------------------------------------------------------------------
 
-const PRIVILEGED = ['cashier', 'auditor'];
-const isPrivileged = (u: AuthUser) => u.roles.some((r) => PRIVILEGED.includes(r));
+/** Only the cashier uses the authenticator; an auditor confirms with the PIN instead. */
+const isPrivileged = (u: AuthUser) => u.roles.includes('cashier');
 
 export async function totpEnroll(
   deps: AuthDeps,

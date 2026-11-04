@@ -10,6 +10,9 @@ import { MenuPage } from './pages/member/MenuPage';
 import { LedgerPage } from './pages/member/LedgerPage';
 import { MembersPage } from './pages/member/MembersPage';
 import { WhatsNewPage } from './pages/member/WhatsNewPage';
+import { ApprovalsPage } from './pages/member/ApprovalsPage';
+import { DevicesPage } from './pages/member/DevicesPage';
+import { SecurityFeedPage } from './pages/member/SecurityFeedPage';
 import { ConstitutionPage } from './pages/member/ConstitutionPage';
 import { NoticesPage } from './pages/member/NoticesPage';
 import { SettlementPage } from './pages/member/SettlementPage';
@@ -43,6 +46,7 @@ import { ChangePinPage } from './pages/member/ChangePinPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { UpdatePrompt } from './components/UpdatePrompt';
 import { WhatsNewBanner } from './components/WhatsNewBanner';
+import { PinStepUpPrompt } from './components/PinStepUpPrompt';
 import { StepUpPrompt } from './components/StepUpPrompt';
 
 /** Everything except /activate and /login needs a session. */
@@ -96,6 +100,9 @@ export function App() {
           <Route path="/menu/ledger" element={<LedgerPage />} />
           <Route path="/menu/members" element={<MembersPage />} />
           <Route path="/menu/whats-new" element={<WhatsNewPage />} />
+          <Route path="/approvals" element={<ApprovalsPage />} />
+          <Route path="/menu/devices" element={<DevicesPage />} />
+          <Route path="/menu/security" element={<SecurityFeedPage />} />
           <Route path="/menu/pin" element={<ChangePinPage />} />
           <Route path="/menu/constitution" element={<ConstitutionPage />} />
           <Route path="/menu/notices" element={<NoticesPage />} />
@@ -135,6 +142,7 @@ export function App() {
       <UpdatePrompt />
       <WhatsNewBanner />
       <StepUpPrompt />
+      <PinStepUpPrompt />
     </>
   );
 }

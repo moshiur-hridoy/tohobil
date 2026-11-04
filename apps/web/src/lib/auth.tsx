@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from 'react';
 import { ApiError, api, setAccessToken, setRefresher } from './api';
 import { isTransientError, retryTransient } from './session';
+import { deviceLabel } from './device';
 import { uuid } from './uuid';
 
 export interface Me {
@@ -210,7 +211,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       memberRef,
       hasDevice: deviceId !== null,
       async activate({ member_ref, code, pin }) {
-        const ua = navigator.userAgent;
         const session = await api<Session>('/auth/activate', {
           method: 'POST',
           auth: false,
@@ -219,7 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             code,
             pin,
             device: {
-              label: /Android/i.test(ua) ? 'Android browser' : 'Web browser',
+              label: deviceLabel(navigator.userAgent),
               platform: 'web',
               install_id: installId(),
             },
@@ -235,7 +235,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!member_ref) throw new ApiError(401, 'auth.invalid_credentials', 'No member ID');
         // A stored device id resumes that device; otherwise the server registers this one.
         const device_id = refOverride && refOverride.trim().toUpperCase() !== read(KEYS.ref) ? null : read(KEYS.device);
-        const ua = navigator.userAgent;
         applySession(
           await api<Session>('/auth/login', {
             method: 'POST',
@@ -245,7 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               pin,
               ...(device_id ? { device_id } : {}),
               device: {
-                label: /Android/i.test(ua) ? 'Android browser' : 'Web browser',
+                label: deviceLabel(navigator.userAgent),
                 platform: 'web',
                 install_id: installId(),
               },

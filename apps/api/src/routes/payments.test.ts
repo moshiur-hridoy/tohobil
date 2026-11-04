@@ -7,6 +7,7 @@ import { buildApp } from '../app';
 import { generateDues } from '../dues/service';
 import { createTestDb, type TestDb } from '../test/db-harness';
 import {
+  AUDITOR_PIN,
   activateSession,
   seedFund,
   testEnv,
@@ -30,7 +31,8 @@ const call = (method: Method, url: string, who?: string, payload?: unknown, head
   app.inject({
     method,
     url: `/api/v1${url}`,
-    headers: { ...(who ? { authorization: `Bearer ${who}` } : {}), ...headers },
+    // the auditor types their PIN with every privileged request (ASSUMPTIONS 117; tested in periods.test.ts)
+    headers: { ...(who ? { authorization: `Bearer ${who}` } : {}), ...(who && who === s.M07?.access_token ? AUDITOR_PIN : {}), ...headers },
     ...(payload === undefined ? {} : { payload: payload as Record<string, unknown> }),
   });
 
@@ -100,7 +102,6 @@ describe('payments', () => {
       s[code] = await activateSession(app, db, clock, fund, code);
     }
     await enrolStepUp(s.M01);
-    await enrolStepUp(s.M07);
     await generateDues({ pool: db.app, clock: dues }, { period: '2026-08' });
     await generateDues({ pool: db.app, clock: dues }, { period: '2026-09' });
   });

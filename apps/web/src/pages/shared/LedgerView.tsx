@@ -1,10 +1,10 @@
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ACCOUNT_CODES, NAV_CASH_ACCOUNTS } from '@barakah/shared';
+import { NAV_CASH_ACCOUNTS } from '@barakah/shared';
 import { AdminHeader, BTN_SECONDARY, Card, ICONS, StatGrid, StatTile } from '../../components/admin';
 import { ConfirmSheet } from '../../components/ConfirmSheet';
-import { Icon, DateInput } from '../../components/ui';
+import { BackButton, Icon, DateInput } from '../../components/ui';
 import { ListSkeleton } from '../../components/Skeleton';
 import { PullToRefresh } from '../../components/PullToRefresh';
 import { Empty, LoadError } from '../../components/StateViews';
@@ -15,6 +15,7 @@ import { downloadCsv } from '../../lib/csv';
 import { fmtDate } from '../../lib/dates';
 import { formatCount, localDigits } from '../../lib/format';
 import { paisaToDecimal, taka, negClass } from '../../lib/money';
+import { ACCOUNT_GROUPS, accountName, entryTitle, memoText } from '../../lib/ledgerText';
 import type { AccountBalance, LedgerRow, MemberRow, Page } from '../../lib/types';
 
 interface Verify {
@@ -153,9 +154,7 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
             <section aria-label={t('ledgerPage.filters')} className="grid grid-cols-2 gap-2 lg:grid-cols-5">
               <select aria-label={t('ledgerPage.account')} className={field} value={account} onChange={(e) => setAccount(e.target.value)}>
                 <option value="">{t('ledgerPage.anyAccount')}</option>
-                {ACCOUNT_CODES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
+                <AccountOptions />
               </select>
               <select aria-label={t('ledgerPage.memberFilter')} className={field} value={memberId} onChange={(e) => setMemberId(e.target.value)}>
                 <option value="">{t('ledgerPage.anyMember')}</option>
@@ -200,14 +199,15 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
                   <tr key={r.seq} className={`align-top transition-colors hover:bg-hover ${r.open_objections > 0 ? 'bg-bad-bg' : ''}`}>
                     <td className="border-b border-border px-4 py-2.5 text-muted tabular-nums">{localDigits(r.seq)}</td>
                     <td className="whitespace-nowrap border-b border-border px-3 py-2.5">{fmtDate(r.entry_date)}</td>
-                    <td className="whitespace-nowrap border-b border-border px-3 py-2.5 font-mono text-xs">
-                      {r.debit_account}<span className="px-1 text-muted">→</span>{r.credit_account}
+                    <td className="whitespace-nowrap border-b border-border px-3 py-2.5" title={`${r.debit_account} → ${r.credit_account}`}>
+                      {accountName(t, r.debit_account)}<span className="px-1 text-muted">→</span>{accountName(t, r.credit_account)}
                     </td>
                     <td className="whitespace-nowrap border-b border-border px-3 py-2.5 text-right font-semibold tabular-nums">{taka(r.amount_paisa)}</td>
                     {running && <td className="whitespace-nowrap border-b border-border px-3 py-2.5 text-right tabular-nums text-ink2">{taka(running.get(r.seq) ?? 0n)}</td>}
                     <td className="border-b border-border px-3 py-2.5">{r.member_code ?? ''}</td>
-                    <td className="border-b border-border px-3 py-2.5">
-                      {r.memo}
+                    <td className="border-b border-border px-3 py-2.5" title={r.memo ?? undefined}>
+                      <span className="font-medium">{entryTitle(t, r)}</span>
+                      {memoText(t, r.memo) && <span className="block text-ink2">{memoText(t, r.memo)}</span>}
                       <Flags r={r} />
                     </td>
                     <td className="max-w-64 whitespace-pre-line border-b border-border px-3 py-2.5 text-ink2">{r.note ?? ''}</td>
@@ -251,36 +251,69 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
   return (
     <PullToRefresh onRefresh={refresh}>
       <div className="space-y-3 p-4">
-        <header>
-          <h2 className="text-2xl font-bold">{t('ledgerPage.title')}</h2>
-          <p className="text-muted">{t('ledgerPage.subtitle')}</p>
+        <header className="flex items-start justify-between gap-3">
+          <BackButton fallback="/menu" />
+          <div className="min-w-0 flex-1">
+            <h2 className="text-2xl font-bold">{t('ledgerPage.title')}</h2>
+            <p className="text-muted">{t('ledgerPage.subtitle')}</p>
+          </div>
+          <button
+            type="button"
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm font-semibold"
+            onClick={() => void verify.refetch()}
+            disabled={verify.isFetching}
+          >
+            <Icon d={ICONS.shield} size={16} />
+            {t('ledgerPage.verify')}
+          </button>
         </header>
 
-        <section aria-label={t('ledgerPage.filters')} className="grid grid-cols-2 gap-2 lg:grid-cols-6">
-          <select aria-label={t('ledgerPage.account')} className={field} value={account} onChange={(e) => setAccount(e.target.value)}>
-            <option value="">{t('ledgerPage.anyAccount')}</option>
-            {ACCOUNT_CODES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-          <select aria-label={t('ledgerPage.memberFilter')} className={field} value={memberId} onChange={(e) => setMemberId(e.target.value)}>
-            <option value="">{t('ledgerPage.anyMember')}</option>
-            {members.data?.items.map((m) => (
-              <option key={m.id} value={m.id}>{m.code} {m.full_name}</option>
-            ))}
-          </select>
-          <DateInput aria-label={t('common.from')} className={field} value={from} onChange={(e) => setFrom(e.target.value)} />
-          <DateInput aria-label={t('common.to')} className={field} value={to} onChange={(e) => setTo(e.target.value)} />
-          <select aria-label={t('ledgerPage.date')} className={field} value={order} onChange={(e) => setOrder(e.target.value as 'asc' | 'desc')}>
-            <option value="desc">{t('ledgerPage.newestFirst')}</option>
-            <option value="asc">{t('ledgerPage.oldestFirst')}</option>
-          </select>
-          <div className="flex gap-2">
-            <button type="button" className="h-11 flex-1 rounded-md border border-border px-2" onClick={() => void verify.refetch()} disabled={verify.isFetching}>
-              {t('ledgerPage.verify')}
-            </button>
-          </div>
+        {/* Always two columns, so no label is ever cut short. */}
+        <section aria-label={t('ledgerPage.filters')} className="grid grid-cols-2 gap-x-2 gap-y-3">
+          <label className="min-w-0 text-xs font-medium text-muted">
+            {t('ledgerPage.memberFilter')}
+            <select className={`${field} mt-1 w-full`} value={memberId} onChange={(e) => setMemberId(e.target.value)}>
+              <option value="">{t('ledgerPage.anyMember')}</option>
+              {members.data?.items.map((m) => (
+                <option key={m.id} value={m.id}>{m.code} {m.full_name}</option>
+              ))}
+            </select>
+          </label>
+          <label className="min-w-0 text-xs font-medium text-muted">
+            {t('ledgerPage.account')}
+            <select className={`${field} mt-1 w-full`} value={account} onChange={(e) => setAccount(e.target.value)}>
+              <option value="">{t('ledgerPage.anyAccount')}</option>
+              <AccountOptions />
+            </select>
+          </label>
+          <label className="min-w-0 text-xs font-medium text-muted">
+            {t('common.from')}
+            <DateInput className={`${field} mt-1`} value={from} onChange={(e) => setFrom(e.target.value)} />
+          </label>
+          <label className="min-w-0 text-xs font-medium text-muted">
+            {t('common.to')}
+            <DateInput className={`${field} mt-1`} value={to} onChange={(e) => setTo(e.target.value)} />
+          </label>
         </section>
+        <div className="flex items-center justify-between gap-2">
+          {account || memberId || from || to ? (
+            <button
+              type="button"
+              className="h-9 rounded-xl px-2 text-sm font-semibold text-primary"
+              onClick={() => { setAccount(''); setMemberId(''); setFrom(''); setTo(''); }}
+            >
+              {t('ledgerEntry.clearFilters')}
+            </button>
+          ) : <span />}
+          <button
+            type="button"
+            className="flex h-9 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm"
+            onClick={() => setOrder(order === 'desc' ? 'asc' : 'desc')}
+          >
+            {order === 'desc' ? t('ledgerPage.newestFirst') : t('ledgerPage.oldestFirst')}
+            <span aria-hidden="true">⇅</span>
+          </button>
+        </div>
 
         {verify.data && (
           <p role="status" className={verify.data.ok ? 'text-ok' : 'text-bad'}>
@@ -299,13 +332,18 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
         ) : (
           <ul className="space-y-2">
             {rows.map((r) => (
-              <li key={r.seq} className="rounded-[18px] border border-border bg-card p-3.5">
-                <EntryBody r={r} />
-                {canObject && (
-                  <button type="button" onClick={() => { attempt.current = uuid(); setNotice(null); setObjectTo(r); }} className="mt-2 h-10 rounded-md border border-border px-3 text-sm">
-                    {t('ledgerPage.objectButton')}
-                  </button>
-                )}
+              <li key={r.seq} className={`rounded-[18px] border border-border p-3.5 ${r.open_objections > 0 ? 'bg-bad-bg' : 'bg-card'}`}>
+                <EntryBody
+                  r={r}
+                  details
+                  action={
+                    canObject && (
+                      <button type="button" onClick={() => { attempt.current = uuid(); setNotice(null); setObjectTo(r); }} className="h-9 shrink-0 rounded-xl border border-border px-3 text-sm">
+                        {t('ledgerPage.objectButton')}
+                      </button>
+                    )
+                  }
+                />
               </li>
             ))}
           </ul>
@@ -341,31 +379,67 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
   );
 }
 
-function EntryBody({ r }: { r: LedgerRow }) {
+/** The account picker: Bengali names in four groups, never the raw codes. */
+function AccountOptions() {
   const { t } = useTranslation();
   return (
     <>
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="font-semibold">{taka(r.amount_paisa)}</span>
-        <span className="text-sm text-muted">#{localDigits(r.seq)} · {fmtDate(r.entry_date)}</span>
-      </div>
-      <p className="text-sm">{r.debit_account} → {r.credit_account}{r.member_code ? ` · ${r.member_code}` : ''}</p>
-      {r.memo && <p className="text-sm text-muted">{r.memo}</p>}
-      {r.note && <p className="whitespace-pre-line text-sm">{t('ledger.note')}: {r.note}</p>}
-      <Flags r={r} />
-      <p className="mt-1 break-all font-mono text-xs text-muted">{t('ledgerPage.hash')}: {r.hash.slice(0, 16)}…</p>
+      {ACCOUNT_GROUPS.map((g) => (
+        <optgroup key={g.id} label={t(`accountGroup.${g.id}`)}>
+          {g.codes.map((c) => (
+            <option key={c} value={c}>{accountName(t, c)}</option>
+          ))}
+        </optgroup>
+      ))}
     </>
   );
 }
 
-function Flags({ r }: { r: LedgerRow }) {
+/**
+ * One entry in plain words: what it was, the amount, where the money went, any note. The hash and who
+ * posted it sit under "details" (`details`), since few members need them every time.
+ */
+function EntryBody({ r, details = false, action }: { r: LedgerRow; details?: boolean; action?: ReactNode }) {
+  const { t } = useTranslation();
+  const memo = memoText(t, r.memo);
+  return (
+    <>
+      <div className="flex items-start justify-between gap-3">
+        <p className="min-w-0 font-semibold [overflow-wrap:anywhere]">
+          {entryTitle(t, r)}
+          {r.member_code && <span className="font-normal text-muted"> · {r.member_code}</span>}
+        </p>
+        <span className="shrink-0 font-bold tabular-nums">{taka(r.amount_paisa)}</span>
+      </div>
+      <p className="mt-0.5 text-sm text-ink2" title={`${r.debit_account} → ${r.credit_account}`}>
+        {accountName(t, r.credit_account)} → {accountName(t, r.debit_account)}
+      </p>
+      {memo && <p className="mt-1 text-sm text-muted [overflow-wrap:anywhere]">{memo}</p>}
+      {r.note && <p className="mt-1 whitespace-pre-line text-sm [overflow-wrap:anywhere]">{t('ledger.note')}: {r.note}</p>}
+      <Flags r={r} postedBy={!details} />
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <span className="text-xs text-muted tabular-nums">#{localDigits(r.seq)} · {fmtDate(r.entry_date)}</span>
+        {action}
+      </div>
+      {details && (
+        <details className="mt-1 text-xs text-muted">
+          <summary className="cursor-pointer py-1">{t('ledgerEntry.details')}</summary>
+          {r.posted_by_code && <p>{t('ledgerPage.postedBy', { code: r.posted_by_code })}</p>}
+          <p className="break-all font-mono">{t('ledgerPage.hash')}: {r.hash}</p>
+        </details>
+      )}
+    </>
+  );
+}
+
+function Flags({ r, postedBy = true }: { r: LedgerRow; postedBy?: boolean }) {
   const { t } = useTranslation();
   return (
     <span className="block text-xs">
       {r.reverses_seq && <span className="mr-2 text-warn">{t('ledgerPage.reversal', { seq: localDigits(r.reverses_seq) })}</span>}
       {r.reversed_by_seq && <span className="mr-2 text-warn">{t('ledgerPage.reversedBy', { seq: localDigits(r.reversed_by_seq) })}</span>}
       {r.open_objections > 0 && <span className="mr-2 text-bad">⚑ {t('ledgerPage.objectionBadge', { n: formatCount(r.open_objections) })}</span>}
-      {r.posted_by_code && <span className="text-muted">{t('ledgerPage.postedBy', { code: r.posted_by_code })}</span>}
+      {postedBy && r.posted_by_code && <span className="text-muted">{t('ledgerPage.postedBy', { code: r.posted_by_code })}</span>}
     </span>
   );
 }

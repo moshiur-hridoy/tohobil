@@ -1,10 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ListSkeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
 import { api } from '../../lib/api';
+import { daysBetween, dhakaTime, fmtClock, fmtDate, todayDhaka } from '../../lib/dates';
+import { formatCount } from '../../lib/format';
+import { toDhakaDate } from '@barakah/shared';
 
 type NoticeKind = 'final_notice' | 'fine' | 'payment_received' | 'meeting' | 'zakat_info';
 
@@ -13,6 +16,7 @@ interface InboxItem {
   template: string;
   payload: { _body?: string; [k: string]: unknown };
   scheduled_for: string;
+  sent_at: string | null;
   opened_at: string | null;
 }
 
@@ -102,20 +106,30 @@ export function NoticesPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
-  const [filter, setFilter] = useState<'unread' | 'all'>('unread');
 
   const inbox = useQuery({
     queryKey: ['notifications'],
     queryFn: () => api<{ items: InboxItem[] }>('/notifications?channel=push&limit=50'),
   });
+  // Reading a notice only clears its dot: it stays where it is in the list (newest first), so nothing
+  // jumps away under the member's finger. The cache is updated at once, then refreshed from the server.
+  const markRead = (ids: string[] | 'all') =>
+    qc.setQueryData<{ items: InboxItem[] }>(['notifications'], (old) =>
+      old && { ...old, items: old.items.map((n) => (!n.opened_at && (ids === 'all' || ids.includes(n.id)) ? { ...n, opened_at: new Date().toISOString() } : n)) },
+    );
   const open = useMutation({
     mutationFn: (id: string) => api(`/notifications/${id}/open`, { method: 'POST' }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
+    onMutate: (id) => markRead([id]),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
+  });
+  const openAll = useMutation({
+    mutationFn: () => api('/notifications/open-all', { method: 'POST' }),
+    onMutate: () => markRead('all'),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
   });
 
   const all = inbox.data?.items ?? [];
   const unreadCount = useMemo(() => all.filter((n) => !n.opened_at).length, [all]);
-  const visible = useMemo(() => (filter === 'unread' ? all.filter((n) => !n.opened_at) : all), [filter, all]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -144,45 +158,28 @@ export function NoticesPage() {
       </header>
 
       <main className="flex-1 space-y-3 overflow-y-auto px-4 py-1 pb-4">
-        {/* Unread / All segments */}
-        <div className="flex rounded-2xl border border-border bg-card p-1" role="tablist" aria-label={t('notices.filterLabel', { defaultValue: 'নোটিস ফিল্টার' })}>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={filter === 'unread'}
-            onClick={() => setFilter('unread')}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2 text-sm font-bold transition-colors ${
-              filter === 'unread' ? 'bg-primary-soft text-primary' : 'text-muted'
-            }`}
-          >
-            {t('notices.unreadTab', { defaultValue: 'অপঠিত' })}
-            {unreadCount > 0 && (
-              <span className="grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-bad px-1.5 text-[0.6875rem] font-bold text-on-bad">
-                {unreadCount}
-              </span>
-            )}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={filter === 'all'}
-            onClick={() => setFilter('all')}
-            className={`flex-1 rounded-xl py-2 text-sm font-bold transition-colors ${
-              filter === 'all' ? 'bg-primary-soft text-primary' : 'text-muted'
-            }`}
-          >
-            {t('notices.allTab', { defaultValue: 'সব' })}
-          </button>
-        </div>
+        {unreadCount > 0 && (
+          <div className="flex items-center justify-between gap-3 px-1">
+            <span className="text-sm font-semibold text-primary">{t('notices.newCount', { n: formatCount(unreadCount) })}</span>
+            <button
+              type="button"
+              disabled={openAll.isPending}
+              onClick={() => openAll.mutate()}
+              className="h-9 rounded-xl border border-border bg-card px-3 text-sm font-semibold"
+            >
+              {t('notices.markAllRead')}
+            </button>
+          </div>
+        )}
 
         {inbox.error ? (
           <LoadError error={inbox.error} onRetry={() => void inbox.refetch()} />
         ) : !inbox.data ? (
           <ListSkeleton rows={4} />
-        ) : visible.length === 0 ? (
+        ) : all.length === 0 ? (
           <p className="py-8 text-center text-muted">{t('common.noData')}</p>
         ) : (
-          visible.map((item) => (
+          all.map((item) => (
             <NoticeCard key={item.id} item={item} onOpen={() => !item.opened_at && open.mutate(item.id)} />
           ))
         )}
@@ -191,24 +188,39 @@ export function NoticesPage() {
   );
 }
 
+/** "আজ, সকাল ১০:১২" / "গতকাল, রাত ৯:৩০" / "২ নভেম্বর ২০২৬" for when the notice came. */
+function whenText(t: ReturnType<typeof useTranslation>['t'], iso: string): string {
+  const day = toDhakaDate(new Date(iso));
+  const ago = daysBetween(day, todayDhaka());
+  const clock = fmtClock(t, dhakaTime(iso));
+  if (ago <= 0) return `${t('relDay.today')}, ${clock}`;
+  if (ago === 1) return `${t('relDay.yesterday')}, ${clock}`;
+  return fmtDate(day);
+}
+
 function NoticeCard({ item, onOpen }: { item: InboxItem; onOpen: () => void }) {
   const { t } = useTranslation();
   const kind = KIND_BY_TEMPLATE[item.template] ?? 'zakat_info';
   const meta = kindMeta(kind);
   const known = item.template in KIND_BY_TEMPLATE;
+  const unread = !item.opened_at;
 
   return (
     <article
       onClick={onOpen}
-      className={`rounded-[18px] border bg-card p-4 shadow-sm ${meta.borderClass} ${item.opened_at ? '' : 'ring-1 ring-primary'}`}
+      className={`rounded-[18px] border bg-card p-4 shadow-sm transition-opacity ${meta.borderClass} ${unread ? 'ring-1 ring-primary' : 'opacity-75'}`}
     >
       <div className="flex items-center gap-2.5">
         <span className={`grid h-9 w-9 flex-none place-items-center rounded-[11px] ${meta.chipClass}`}>{meta.icon}</span>
         <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${meta.chipClass}`}>
           {known ? t(TAG_KEY[kind]) : t('notices.tags.general')}
         </span>
+        <span className="ml-auto flex items-center gap-2 text-xs text-muted">
+          {whenText(t, item.sent_at ?? item.scheduled_for)}
+          {unread && <span aria-label={t('notices.new')} className="h-2.5 w-2.5 rounded-full bg-primary" />}
+        </span>
       </div>
-      <p className="mt-2.5 text-sm leading-relaxed text-foreground">{item.payload._body ?? ''}</p>
+      <p className={`mt-2.5 text-sm leading-relaxed text-foreground ${unread ? 'font-medium' : ''}`}>{item.payload._body ?? ''}</p>
     </article>
   );
 }

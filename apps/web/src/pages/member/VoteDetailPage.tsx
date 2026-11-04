@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../components/ui';
+import { ProposalDetails } from '../../components/ProposalDetails';
 import { ListSkeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
 import { api, ApiError } from '../../lib/api';
@@ -9,7 +10,6 @@ import { useAuth } from '../../lib/auth';
 import { useCountdown } from '../../lib/countdown';
 import { fmtInstant } from '../../lib/dates';
 import type { ProposalDetail } from '../../lib/types';
-import { PROPOSAL_TYPES } from '@barakah/shared';
 import { formatCount, localDigits } from '../../lib/format';
 
 const CHOICES = ['yes', 'no', 'abstain'] as const;
@@ -79,9 +79,11 @@ export function VoteDetailPage() {
               </p>
             )}
 
-            <PayloadPreview type={proposal.data.type as (typeof PROPOSAL_TYPES)[number]} payload={proposal.data.payload} />
+            <div className="mt-3">
+              <ProposalDetails type={proposal.data.type} payload={proposal.data.payload} />
+            </div>
 
-            <div className="mt-4 rounded-2xl bg-background p-3.5">
+            <div className="mt-4 rounded-2xl bg-soft p-3.5">
               {(() => {
                 const d = proposal.data;
                 const byShare = d.basis === 'share';
@@ -196,30 +198,6 @@ export function VoteDetailPage() {
           </section>
         </>
       )}
-    </div>
-  );
-}
-
-function PayloadPreview({ type, payload }: { type: (typeof PROPOSAL_TYPES)[number]; payload: Record<string, unknown> }) {
-  const { t } = useTranslation();
-  if (type === 'general' || type === 'dissolution' || type === 'wind_up' || type === 'land_selection' || type === 'project_closure') {
-    const text = payload.text as string | undefined;
-    return text ? <p className="mt-2 rounded-md bg-background p-2 text-sm">{text}</p> : null;
-  }
-
-  const entries = Object.entries(payload).filter(([, v]) => v !== undefined && v !== null);
-  if (entries.length === 0) return null;
-
-  return (
-    <div className="mt-2 rounded-md border border-border p-2 text-sm">
-      {entries.map(([k, v]) => (
-        <div key={k} className="grid grid-cols-[8rem_1fr] gap-2 py-1">
-          <span className="text-muted">{t(`proposal.payload.${k}`, { defaultValue: k })}</span>
-          <span className="break-words">
-            {typeof v === 'object' ? JSON.stringify(v) : typeof v === 'boolean' ? (v ? t('common.yes') : t('common.no')) : String(v)}
-          </span>
-        </div>
-      ))}
     </div>
   );
 }

@@ -694,7 +694,7 @@ function SettlementBreakdown({ e }: { e: SettlementEstimate }) {
     );
   const net = BigInt(e.net_paisa);
   return (
-    <div className="mt-2 space-y-1 rounded-xl bg-background p-3 text-sm">
+    <div className="mt-2 space-y-1 rounded-xl bg-soft p-3 text-sm">
       <div className="flex justify-between gap-3">
         <span className="text-muted">{t('membersAdmin.estPaidIn')}</span>
         <span className="tabular-nums">{taka(e.gross_paisa)}</span>

@@ -1,5 +1,5 @@
 import { tryParseBDT } from '@barakah/shared';
-import { formatTaka } from './format';
+import { formatTaka, localDigits } from './format';
 
 /** A paisa string from the API as "৳৫,০০০". */
 /** Red for any amount below zero, so a negative balance is never missed. */
@@ -31,3 +31,11 @@ export function paisaToDecimal(paisa: string | bigint): string {
  *  ahead of time that are not due yet are not arrears. */
 export const arrearsOf = (m: { overdue_paisa: string; outstanding_fines_paisa: string }): bigint =>
   BigInt(m.overdue_paisa) + BigInt(m.outstanding_fines_paisa);
+
+/** Profit as a share of the money put in, one decimal, from bigint paisa ("১.৯%"). Unsigned: the caller shows + or -. */
+export function profitPercent(profit: bigint, invested: bigint): string | null {
+  if (invested <= 0n) return null;
+  const abs = profit < 0n ? -profit : profit;
+  const tenths = (abs * 1000n + invested / 2n) / invested;
+  return localDigits(`${tenths / 10n}.${tenths % 10n}%`);
+}

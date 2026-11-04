@@ -1,9 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRef, useState, type ReactNode } from 'react';
+import { useRef, useState } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { PROPOSAL_STATUSES, PROPOSAL_TYPES, COMPLIANCE_CHECKLIST_FIELDS, type ProposalType } from '@barakah/shared';
+import { PROPOSAL_STATUSES, PROPOSAL_TYPES, type ProposalType } from '@barakah/shared';
 import {
   AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, BTN_SM, BTN_SM_PRIMARY, Card, CardHead, EmptyCard, ICONS, InfoRow, MemberBadge, SplitLayout, StatGrid, StatTile,
 } from '../../components/admin';
@@ -12,13 +12,14 @@ import { ListSkeleton, Skeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
 import { Icon } from '../../components/ui';
 import { StatusPill } from '../../components/StatusPill';
+import { ProposalDetails } from '../../components/ProposalDetails';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useCountdown } from '../../lib/countdown';
-import { fmtDate, fmtInstant } from '../../lib/dates';
+import { fmtInstant } from '../../lib/dates';
 import { formatCount, localDigits } from '../../lib/format';
 import { parseAmountInput, taka } from '../../lib/money';
-import type { MemberRow, ProposalDetail } from '../../lib/types';
+import type { ProposalDetail } from '../../lib/types';
 import { FORM_TYPES, ProposalFields, buildPayload, emptyForm, type FormState } from './proposalForms';
 
 const CREATE_TYPES: ProposalType[] = FORM_TYPES;
@@ -587,8 +588,7 @@ function ProposalPanel({ id, loading }: { id: string | null; loading: boolean })
       </dl>
 
       <div className="mt-3 space-y-3 text-sm">
-        <ComplianceChecklist type={d.type} payload={d.payload} />
-        <PayloadPreview payload={d.payload} />
+        <ProposalDetails type={d.type} payload={d.payload} />
       </div>
 
       <div className="mb-1 mt-4 flex items-center justify-between">
@@ -618,84 +618,6 @@ function ProposalPanel({ id, loading }: { id: string | null; loading: boolean })
       </ul>
       </div>
     </Card>
-  );
-}
-
-function ComplianceChecklist({ type, payload }: { type: ProposalType; payload: Record<string, unknown> }) {
-  const { t } = useTranslation();
-  if (type !== 'investment_purchase') return null;
-  const compliance = (payload.compliance ?? {}) as Record<string, boolean>;
-  const allTrue = COMPLIANCE_CHECKLIST_FIELDS.every((f) => compliance[f] === true);
-  return (
-    <div className={`rounded-xl p-3 ${allTrue ? 'bg-ok-bg' : 'bg-warn-bg'}`}>
-      <p className="mb-1 font-medium">{t('proposalsPage.compliance')}</p>
-      <ul className="space-y-1">
-        {COMPLIANCE_CHECKLIST_FIELDS.map((f) => (
-          <li key={f} className="flex items-center gap-2">
-            <span className={compliance[f] ? 'text-ok' : 'text-bad'}>{compliance[f] ? '✓' : '✗'}</span>
-            <span>{t(`compliance.${f}`)}</span>
-          </li>
-        ))}
-      </ul>
-      {!allTrue && <p className="mt-2 text-bad">{t('proposalsPage.complianceIncomplete')}</p>}
-    </div>
-  );
-}
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const DAY = /^\d{4}-\d{2}-\d{2}$/;
-
-/**
- * The proposal's own details in words: member ids become names, dates and amounts are formatted, a
- * plan (a list of instalments) becomes one line per instalment. Nothing is shown as raw JSON.
- */
-function PayloadPreview({ payload }: { payload: Record<string, unknown> }) {
-  const { t } = useTranslation();
-  const members = useQuery({ queryKey: ['members'], queryFn: () => api<{ items: MemberRow[] }>('/members') });
-  const entries = Object.entries(payload).filter(([k, v]) => v !== undefined && v !== null && v !== '' && k !== 'compliance');
-  if (entries.length === 0) return null;
-
-  const label = (k: string) => t(`proposalFields.${k}`, { defaultValue: k.replace(/_/g, ' ') });
-  const value = (k: string, v: unknown): ReactNode => {
-    if (typeof v === 'boolean') return v ? t('common.yes') : t('common.no');
-    if (typeof v === 'number') return formatCount(v);
-    if (Array.isArray(v)) {
-      return (
-        <ul className="space-y-1">
-          {v.map((item, i) => (
-            <li key={i} className="tabular-nums">
-              {item && typeof item === 'object' ? Object.entries(item as Record<string, unknown>).map(([ik, iv]) => value(ik, iv)).filter(Boolean).reduce<ReactNode[]>((acc, part, j) => (j ? [...acc, ' · ', part] : [part]), []) : value(k, item)}
-            </li>
-          ))}
-        </ul>
-      );
-    }
-    if (typeof v === 'object' && v) {
-      return Object.entries(v as Record<string, unknown>).map(([ik, iv]) => <span key={ik} className="block">{label(ik)}: {value(ik, iv)}</span>);
-    }
-    const text = String(v);
-    if (/amount|paisa/i.test(k)) return taka(text);
-    if (UUID.test(text)) {
-      const m = members.data?.items.find((x) => x.id === text);
-      return m ? `${m.code} ${m.full_name}` : '…';
-    }
-    if (DAY.test(text)) return fmtDate(text);
-    if (k === 'kind') return t(`settlementKind.${text}`, { defaultValue: text });
-    return text;
-  };
-
-  return (
-    <div className="rounded-xl bg-soft p-3">
-      <p className="mb-1 font-medium">{t('proposal.payload')}</p>
-      <dl>
-        {entries.map(([k, v]) => (
-          <div key={k} className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)] gap-3 border-t border-border py-2 first:border-t-0">
-            <dt className="text-muted">{label(k)}</dt>
-            <dd className="min-w-0 [overflow-wrap:anywhere]">{value(k, v)}</dd>
-          </div>
-        ))}
-      </dl>
-    </div>
   );
 }
 

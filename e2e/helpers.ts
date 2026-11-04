@@ -73,7 +73,7 @@ export async function activate(page: Page, ref: string, code: string): Promise<S
   return session;
 }
 
-/** Cashier and auditor: enrol the authenticator (or enter a code) and open the 12 h step-up window. */
+/** Cashier: enrol the authenticator (or enter a code) and open the 12 h step-up window. The auditor uses their PIN instead. */
 export async function stepUp(page: Page): Promise<void> {
   await page.goto('/totp');
   const start = page.getByRole('button', { name: tr('totp.startEnrol') });
@@ -111,7 +111,7 @@ export async function shot(page: Page, name: string): Promise<void> {
 
 /** Issue a fresh activation code via the server CLI (replaces any existing devices by default). */
 export function issueCode(ref: string, mode: 'replace' | 'add' = 'replace'): string {
-  const out = execFileSync('pnpm', ['activation-code', ref.toUpperCase(), `--mode=${mode}`], {
+  const out = execFileSync('pnpm', ['activation-code', ref.toUpperCase(), ...(mode === 'add' ? ['--add'] : [])], {
     encoding: 'utf8',
     stdio: ['pipe', 'pipe', 'inherit'],
     env: { ...process.env, DATABASE_URL: E2E_APP_URL },

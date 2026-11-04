@@ -13,6 +13,8 @@ export function createLogger(level: string = process.env.LOG_LEVEL ?? 'info'): p
         'req.headers.cookie',
         'headers.authorization',
         'headers.cookie',
+        'req.headers["x-step-up-pin"]',
+        'headers["x-step-up-pin"]',
         '*.phone',
         '*.pin',
         '*.otp',

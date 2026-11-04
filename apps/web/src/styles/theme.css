@@ -51,6 +51,7 @@
   --ref-night-500: #617369;
   --ref-night-700: #2a362f;
   --ref-night-800: #222d27;
+  --ref-night-820: #1e2722; /* card outlines: barely there, the card is told apart by its lighter fill */
   --ref-night-850: #1b241f;
   --ref-night-900: #131a16;
   --ref-night-950: #0b100d;
@@ -90,6 +91,7 @@
   --hover: var(--ref-gray-100);
   --soft: var(--ref-gray-150);
   --border: var(--ref-gray-200);
+  --track: var(--ref-gray-200); /* empty part of toggles, progress bars, step lines */
   --input: var(--ref-gray-400); /* field outlines need 3:1 against the page (WCAG 1.4.11) */
 
   /* Text */
@@ -169,7 +171,8 @@
     --card: var(--ref-night-900);
     --hover: var(--ref-night-800);
     --soft: var(--ref-night-850);
-    --border: var(--ref-night-700);
+    --border: var(--ref-night-820);
+    --track: var(--ref-night-700);
     --input: var(--ref-night-500);
 
     --foreground: var(--ref-night-50);
@@ -208,7 +211,8 @@
     --card: var(--ref-night-900);
     --hover: var(--ref-night-800);
     --soft: var(--ref-night-850);
-    --border: var(--ref-night-700);
+    --border: var(--ref-night-820);
+    --track: var(--ref-night-700);
     --input: var(--ref-night-500);
 
     --foreground: var(--ref-night-50);

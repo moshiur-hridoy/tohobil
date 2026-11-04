@@ -5,7 +5,7 @@ import type { FastifyInstance } from 'fastify';
 import { systemClock } from '@barakah/shared';
 import { buildApp } from '../app';
 import { createTestDb, type TestDb } from '../test/db-harness';
-import { activateSession, seedFund, testEnv, type Fund } from '../test/fund-fixture';
+import { AUDITOR_PIN, activateSession, seedFund, testEnv, type Fund } from '../test/fund-fixture';
 
 /**
  * Table-driven role check over the slice 4 and 5 routes (spec 14.3, Auth): each route is called as
@@ -68,7 +68,6 @@ describe('role table for payments, approvals, objections, matrix', () => {
     };
     const [m1, m2, m4, m7] = [await login('M01'), await login('M02'), await login('M04'), await login('M07')];
     await stepUp(m1);
-    await stepUp(m7);
     await db.admin.query(`UPDATE members SET status = 'suspended', suspended_on = '2026-09-01' WHERE id = $1`, [fund.members.M04]);
     token.cashier = m1.access_token;
     token.member = m2.access_token;
@@ -87,7 +86,7 @@ describe('role table for payments, approvals, objections, matrix', () => {
         const res = await app.inject({
           method: route.method,
           url: `/api/v1${route.url}`,
-          headers: token[who] ? { authorization: `Bearer ${token[who]}` } : {},
+          headers: token[who] ? { authorization: `Bearer ${token[who]}`, ...(who === 'auditor' ? AUDITOR_PIN : {}) } : {},
           ...(route.body === undefined ? {} : { payload: route.body as Record<string, unknown> }),
         });
         const refused = res.statusCode === 401 || res.statusCode === 403;

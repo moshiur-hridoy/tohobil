@@ -50,3 +50,8 @@ export function fmtClock(t: TFunction, time: string): string {
   const h12 = h % 12 === 0 ? 12 : h % 12;
   return t('meetings.clock', { part: t(`meetings.dayPart.${part}`), time: localDigits(`${h12}:${String(m).padStart(2, '0')}`) });
 }
+
+/** An ISO timestamp's Asia/Dhaka time of day as "HH:MM" (24-hour), for `fmtClock`. */
+export function dhakaTime(iso: string): string {
+  return new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Dhaka', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(iso));
+}

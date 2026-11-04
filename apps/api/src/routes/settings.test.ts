@@ -111,7 +111,6 @@ describe('settings routes', () => {
   });
 
   dbIt('auditor cannot update settings', async () => {
-    await enrolStepUp(s.M07);
     const res = await call('PATCH', '/settings', s.M07.access_token, {
       key: 'fund_name',
       value: 'Auditor Fund',

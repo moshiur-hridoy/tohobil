@@ -174,7 +174,7 @@ export async function buildApp({
     credentials: false,
     // @fastify/cors defaults to GET,HEAD,POST, which would fail the preflight for PATCH/DELETE.
     methods: ['GET', 'HEAD', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['authorization', 'content-type', 'idempotency-key'],
+    allowedHeaders: ['authorization', 'content-type', 'idempotency-key', 'x-step-up-pin'],
     exposedHeaders: ['x-request-id'],
     maxAge: 600,
   });

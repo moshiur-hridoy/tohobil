@@ -1,5 +1,6 @@
 import { useRef, type InputHTMLAttributes, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { fmtDate } from '../lib/dates';
 
 /** Small building blocks shared by the screens (design: icon chips, outline icons). */
@@ -20,15 +21,48 @@ export function Chip({ tone, d, size = 36, iconSize = 20 }: { tone: string; d: s
   );
 }
 
-/** Page heading used at the top of every member tab (design: 24px title + muted subtitle). */
-export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
+/**
+ * Back arrow for pages opened from another page. Goes back to wherever the member came from; when the
+ * page was opened first (a push, a typed address) there is no history, so it goes to `fallback`.
+ */
+export function BackButton({ fallback }: { fallback: string }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
   return (
-    <header className="px-4 pb-2 pt-4">
+    <Link
+      to={fallback}
+      onClick={(e) => {
+        if (location.key !== 'default') {
+          e.preventDefault();
+          void navigate(-1);
+        }
+      }}
+      aria-label={t('common.back')}
+      className="grid h-11 w-11 shrink-0 place-items-center rounded-[14px] border border-border bg-card text-foreground"
+    >
+      <Icon d="M15 5l-7 7 7 7" size={22} sw={2} />
+    </Link>
+  );
+}
+
+/** Page heading used at the top of every member tab (design: 24px title + muted subtitle). */
+export function PageHeader({ title, subtitle, action, back }: { title: string; subtitle?: string; action?: ReactNode; back?: string }) {
+  const text = (
+    <>
       <div className="flex flex-wrap items-center justify-between gap-x-3">
         <h1 className="text-2xl font-bold">{title}</h1>
         {action}
       </div>
       {subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}
+    </>
+  );
+  if (!back) return <header className="px-4 pb-2 pt-4">{text}</header>;
+  // A sub-page: the back arrow sits left of the title, the subtitle under the title.
+  return (
+    <header className="flex items-start gap-3 px-4 pb-2 pt-4">
+      <BackButton fallback={back} />
+      <div className="min-w-0 flex-1">{text}</div>
     </header>
   );
 }
@@ -69,8 +103,9 @@ export function DateInput({ className = 'field w-full', value, onClick, ...rest 
           onClick?.(e);
         }}
       />
-      <span aria-hidden="true" className={`pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 ${large ? 'text-[1.0625rem]' : 'text-[0.9375rem]'} ${value ? '' : 'text-muted'}`}>
-        {value ? fmtDate(value) : t('common.pickDate')}
+      {/* Stops short of the calendar icon on the right, so a narrow box cuts the text instead of covering the icon. */}
+      <span aria-hidden="true" className={`pointer-events-none absolute inset-y-0 left-0 right-10 flex items-center overflow-hidden pl-3.5 ${large ? 'text-[1.0625rem]' : 'text-[0.9375rem]'} ${value ? '' : 'text-muted'}`}>
+        <span className="truncate">{value ? fmtDate(value) : t('common.pickDate')}</span>
       </span>
     </span>
   );
@@ -129,5 +164,22 @@ export function FilePicker({ file, onChange, accept = 'image/*,application/pdf',
       <button type="button" onClick={pick} className="min-h-11 rounded-xl px-2 text-sm font-semibold text-primary hover:bg-hover">{t('file.change')}</button>
       <button type="button" onClick={() => onChange(null)} className="min-h-11 rounded-xl px-2 text-sm font-semibold text-bad hover:bg-hover">{t('file.remove')}</button>
     </div>
+  );
+}
+
+/** On/off switch for a settings row. The visible label sits beside it; pass the same text as `label`. */
+export function Switch({ checked, onChange, label, disabled = false }: { checked: boolean; onChange: (next: boolean) => void; label: string; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={`relative h-7 w-12 shrink-0 rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 ${checked ? 'bg-primary' : 'bg-input'}`}
+    >
+      <span aria-hidden="true" className={`absolute top-0.5 h-6 w-6 rounded-full shadow transition-[left] ${checked ? 'left-[1.375rem] bg-card' : 'left-0.5 bg-white'}`} />
+    </button>
   );
 }

@@ -63,43 +63,48 @@ export function ApprovalsTab() {
       ) : (
         <ul>
           {rows.map((a) => (
-            <li key={a.id} className="flex flex-wrap items-center gap-3 border-b border-border py-3 last:border-b-0">
-              <MemberBadge code={isValue(a) ? (a.requested_by_code ?? '?') : (a.payment_member_code ?? '?')} />
-              <div className="min-w-0 flex-1">
-                {isValue(a) ? (
-                  <>
-                    <p className="font-semibold">{t('valuation.approvalTitle', { name: a.partner_name ?? '' })}</p>
-                    <p className="text-sm tabular-nums">
-                      {taka(a.base_value_paisa ?? '0')} → <strong>{taka(a.new_value_paisa ?? '0')}</strong> <Change paisa={valueChange(a)} className="text-xs" />
-                      {a.valuation_as_of && <span className="text-muted"> · {fmtDate(a.valuation_as_of)}</span>}
+            <li key={a.id} className="border-b border-border py-3 last:border-b-0">
+              {/* Details on top, status and buttons below, so the text keeps its width on a phone. */}
+              <div className="flex items-start gap-3">
+                <MemberBadge code={isValue(a) ? (a.requested_by_code ?? '?') : (a.payment_member_code ?? '?')} />
+                <div className="min-w-0 flex-1">
+                  {isValue(a) ? (
+                    <>
+                      <p className="font-semibold">{t('valuation.approvalTitle', { name: a.partner_name ?? '' })}</p>
+                      <p className="text-sm tabular-nums">
+                        {taka(a.base_value_paisa ?? '0')} → <strong>{taka(a.new_value_paisa ?? '0')}</strong> <Change paisa={valueChange(a)} className="text-xs" />
+                        {a.valuation_as_of && <span className="text-muted"> · {fmtDate(a.valuation_as_of)}</span>}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="font-semibold">
+                      {a.payment_amount_paisa ? taka(a.payment_amount_paisa) : ''}
+                      {a.payment_method && <span className="font-normal text-muted"> · {PAYMENT_METHOD_LABELS[a.payment_method as keyof typeof PAYMENT_METHOD_LABELS].bn}</span>}
                     </p>
-                  </>
-                ) : (
-                  <p className="font-semibold">
-                    {a.payment_amount_paisa ? taka(a.payment_amount_paisa) : ''}
-                    {a.payment_method && <span className="font-normal text-muted"> · {PAYMENT_METHOD_LABELS[a.payment_method as keyof typeof PAYMENT_METHOD_LABELS].bn}</span>}
-                  </p>
-                )}
-                <p className="text-xs text-muted">{t('paymentsPage.requestedBy', { code: a.requested_by_code ?? '?' })} · {fmtInstant(a.created_at)}</p>
-                {a.reason && <p className="mt-1 text-sm">{a.reason}</p>}
-                {a.status === 'rejected' && a.decision_note && <p className="mt-1 text-sm text-bad">{t('valuation.reason', { reason: a.decision_note })}</p>}
-                {isValue(a) && a.valuation_proof_file_id && (
-                  <button type="button" className="mt-1 text-xs font-semibold text-primary hover:underline" onClick={() => void openStatement(a.valuation_proof_file_id as string)}>
-                    {t('valuation.viewStatement')}
-                  </button>
+                  )}
+                  <p className="text-xs text-muted">{t('paymentsPage.requestedBy', { code: a.requested_by_code ?? '?' })} · {fmtInstant(a.created_at)}</p>
+                  {a.reason && <p className="mt-1 text-sm">{a.reason}</p>}
+                  {a.status === 'rejected' && a.decision_note && <p className="mt-1 text-sm text-bad">{t('valuation.reason', { reason: a.decision_note })}</p>}
+                  {isValue(a) && a.valuation_proof_file_id && (
+                    <button type="button" className="mt-1 text-xs font-semibold text-primary hover:underline" onClick={() => void openStatement(a.valuation_proof_file_id as string)}>
+                      {t('valuation.viewStatement')}
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
+                <StatusPill status={a.status === 'pending' ? 'pending' : a.status === 'approved' ? 'confirmed' : 'rejected'} label={t(a.status === 'pending' ? 'valuation.status.waitAuditor' : a.status === 'approved' ? 'valuation.status.approved' : 'valuation.status.rejected')} />
+                {a.status === 'pending' && isAuditor && (
+                  <div className="flex gap-2">
+                    <button type="button" className={BTN_SM_PRIMARY} onClick={() => { setNotice(null); setTarget({ row: a, action: 'approve' }); }}>
+                      {t(isValue(a) ? 'valuation.approve' : 'paymentsPage.approveReversal')}
+                    </button>
+                    <button type="button" className={BTN_SM} onClick={() => { setNotice(null); setTarget({ row: a, action: 'reject' }); }}>
+                      {t(isValue(a) ? 'valuation.reject' : 'paymentsPage.rejectReversal')}
+                    </button>
+                  </div>
                 )}
               </div>
-              <StatusPill status={a.status === 'pending' ? 'pending' : a.status === 'approved' ? 'confirmed' : 'rejected'} label={t(a.status === 'pending' ? 'valuation.status.waitAuditor' : a.status === 'approved' ? 'valuation.status.approved' : 'valuation.status.rejected')} />
-              {a.status === 'pending' && isAuditor && (
-                <div className="flex basis-full justify-end gap-2 sm:basis-auto">
-                  <button type="button" className={BTN_SM_PRIMARY} onClick={() => { setNotice(null); setTarget({ row: a, action: 'approve' }); }}>
-                    {t(isValue(a) ? 'valuation.approve' : 'paymentsPage.approveReversal')}
-                  </button>
-                  <button type="button" className={BTN_SM} onClick={() => { setNotice(null); setTarget({ row: a, action: 'reject' }); }}>
-                    {t(isValue(a) ? 'valuation.reject' : 'paymentsPage.rejectReversal')}
-                  </button>
-                </div>
-              )}
             </li>
           ))}
         </ul>

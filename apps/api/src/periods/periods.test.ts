@@ -9,7 +9,7 @@ import { createFakeClock } from '@barakah/shared';
 import { buildApp } from '../app';
 import { parseEnv } from '../lib/env';
 import { createTestDb, type TestDb } from '../test/db-harness';
-import { activateSession, seedFund, testEnv, type Fund, type TestSession } from '../test/fund-fixture';
+import { AUDITOR_PIN, activateSession, seedFund, testEnv, type Fund, type TestSession } from '../test/fund-fixture';
 import { runLedgerVerify } from '../system/status';
 
 const clock = createFakeClock(new Date('2027-01-05T04:00:00Z')); // 5 Jan 2027, 10:00 in Dhaka
@@ -69,7 +69,6 @@ beforeAll(async () => {
   Object.assign(member, await activateSession(app, db, clock, fund, 'M02'));
   Object.assign(other, await activateSession(app, db, clock, fund, 'M03'));
   await stepUp(cashier);
-  await stepUp(auditor);
   // some history: opening cash, one confirmed monthly payment for M02 and an asset-free ledger
   await q(`INSERT INTO ledger_entries (entry_date, debit_account, credit_account, amount_paisa, member_id, ref_type, memo)
            VALUES ('2026-12-10','BANK','MEMBER_CAPITAL',2000000,$1,'import','opening'),
@@ -120,17 +119,45 @@ describe('month-end cash count and period lock', () => {
     expect((await call('POST', '/reconciliations', cashier.access_token, { period: '2026-12', entries: count(b) })).json().difference_paisa).toBe('0');
   });
 
+  dbIt('the auditor confirms with their PIN every time: no PIN or a wrong one does nothing (ASSUMPTIONS 117)', async () => {
+    const noPin = await call('POST', '/periods/2026-12/lock', auditor.access_token);
+    expect(noPin.statusCode).toBe(403);
+    expect(noPin.json().code).toBe('auth.pin_required');
+    const wrong = await call('POST', '/periods/2026-12/lock', auditor.access_token, undefined, { 'x-step-up-pin': '111222' });
+    expect(wrong.statusCode).toBe(401);
+    expect(wrong.json()).toMatchObject({ code: 'auth.invalid_credentials', attempts_left: 4 });
+    // a good PIN reaches the action (here refused for its own reason) and resets the counter
+    const before = Number((await q(`SELECT count(*) FROM audit_log WHERE action = 'auth.pin_step_up'`))[0]!.count);
+    expect((await call('POST', '/periods/2026-12/lock', auditor.access_token, undefined, AUDITOR_PIN)).json().code).toBe('period.not_reconciled');
+    expect((await q(`SELECT failed_attempts FROM users WHERE id = $1`, [fund.users.M07]))[0]).toMatchObject({ failed_attempts: 0 });
+    expect(Number((await q(`SELECT count(*) FROM audit_log WHERE action = 'auth.pin_step_up'`))[0]!.count)).toBe(before + 1);
+    // nothing is remembered: the next action asks again
+    expect((await call('POST', '/periods/2026-12/lock', auditor.access_token)).json().code).toBe('auth.pin_required');
+    // the auditor no longer enrols an authenticator
+    expect((await call('POST', '/auth/totp/enroll', auditor.access_token)).statusCode).toBe(403);
+  });
+
+  dbIt('five wrong step-up PINs lock the auditor like five wrong logins', async () => {
+    for (let i = 0; i < 4; i++) {
+      await call('POST', '/periods/2026-12/lock', auditor.access_token, undefined, { 'x-step-up-pin': '111222' });
+    }
+    const fifth = await call('POST', '/periods/2026-12/lock', auditor.access_token, undefined, { 'x-step-up-pin': '111222' });
+    expect(fifth.statusCode).toBe(423);
+    expect((await call('POST', '/periods/2026-12/lock', auditor.access_token, undefined, AUDITOR_PIN)).json().code).toBe('auth.locked');
+    await q(`UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = $1`, [fund.users.M07]);
+  });
+
   dbIt('only the auditor approves, locking needs the approval, and a locked month refuses new entries', async () => {
     expect((await call('POST', '/reconciliations/2026-12/approve', cashier.access_token)).statusCode).toBe(403);
-    expect((await call('POST', '/periods/2026-12/lock', auditor.access_token)).json().code).toBe('period.not_reconciled');
+    expect((await call('POST', '/periods/2026-12/lock', auditor.access_token, undefined, AUDITOR_PIN)).json().code).toBe('period.not_reconciled');
 
-    expect((await call('POST', '/reconciliations/2026-12/approve', auditor.access_token)).statusCode).toBe(204);
-    expect((await call('POST', '/reconciliations/2026-12/approve', auditor.access_token)).json().code).toBe('reconciliation.already_approved');
+    expect((await call('POST', '/reconciliations/2026-12/approve', auditor.access_token, undefined, AUDITOR_PIN)).statusCode).toBe(204);
+    expect((await call('POST', '/reconciliations/2026-12/approve', auditor.access_token, undefined, AUDITOR_PIN)).json().code).toBe('reconciliation.already_approved');
     // an approved month cannot be recounted
     expect((await call('POST', '/reconciliations', cashier.access_token, { period: '2026-12', entries: count(await balances()) })).json().code).toBe('reconciliation.already_approved');
 
-    expect((await call('POST', '/periods/2026-12/lock', auditor.access_token)).statusCode).toBe(204);
-    expect((await call('POST', '/periods/2026-12/lock', auditor.access_token)).json().code).toBe('period.already_locked');
+    expect((await call('POST', '/periods/2026-12/lock', auditor.access_token, undefined, AUDITOR_PIN)).statusCode).toBe(204);
+    expect((await call('POST', '/periods/2026-12/lock', auditor.access_token, undefined, AUDITOR_PIN)).json().code).toBe('period.already_locked');
     await expect(
       q(`INSERT INTO ledger_entries (entry_date, debit_account, credit_account, amount_paisa, ref_type) VALUES ('2026-12-20','CASH','MEMBER_CAPITAL',1,'import')`),
     ).rejects.toThrow(/locked/i);
@@ -145,8 +172,8 @@ describe('month-end cash count and period lock', () => {
     // as of 30 November the books hold only that one entry (the December entries come later)
     const november = { CASH: 0n, BANK: 1000n, BKASH: 0n, NAGAD: 0n };
     expect((await call('POST', '/reconciliations', cashier.access_token, { period: '2026-11', entries: count(november) })).statusCode).toBe(200);
-    expect((await call('POST', '/reconciliations/2026-11/approve', auditor.access_token)).statusCode).toBe(204);
-    const blocked = await call('POST', '/periods/2026-11/lock', auditor.access_token);
+    expect((await call('POST', '/reconciliations/2026-11/approve', auditor.access_token, undefined, AUDITOR_PIN)).statusCode).toBe(204);
+    const blocked = await call('POST', '/periods/2026-11/lock', auditor.access_token, undefined, AUDITOR_PIN);
     expect(blocked.statusCode).toBe(409);
     expect(blocked.json().code).toBe('period.open_objections');
     await q(`UPDATE objections SET status='resolved' WHERE ledger_seq=$1`, [seq]).catch(() => undefined);
@@ -165,7 +192,7 @@ describe('year end: audit sign-off and archive', () => {
     expect((await call('POST', '/periods/2026/audit-request', cashier.access_token)).statusCode).toBe(200);
     expect((await call('POST', '/periods/2026/audit-request', cashier.access_token)).json().code).toBe('audit.already_requested');
     expect((await call('POST', '/periods/2026/audit-signoff', cashier.access_token)).statusCode).toBe(403);
-    expect((await call('POST', '/periods/2026/audit-signoff', auditor.access_token)).statusCode).toBe(204);
+    expect((await call('POST', '/periods/2026/audit-signoff', auditor.access_token, undefined, AUDITOR_PIN)).statusCode).toBe(204);
     expect((await call('GET', '/periods/2026/audit', member.access_token)).json().status).toBe('approved');
 
     const made = await call('POST', '/periods/2026/archive', cashier.access_token);

@@ -3,6 +3,7 @@ import QRCode from 'qrcode';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AuthShell, FieldError } from '../../components/AuthShell';
+import { BackButton } from '../../components/ui';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { errorMessage } from '../../lib/errors';
@@ -38,7 +39,10 @@ export function TotpPage() {
 
   return (
     <AuthShell>
-      <h1 className="text-[1.375rem] font-semibold leading-snug">{t('totp.title')}</h1>
+      <div className="flex items-center gap-3">
+        <BackButton fallback="/menu" />
+        <h1 className="text-[1.375rem] font-semibold leading-snug">{t('totp.title')}</h1>
+      </div>
       {enrolling && !secret && (
         <>
           <p className="text-[0.8125rem] leading-normal text-muted">{t('totp.enrolHint')}</p>

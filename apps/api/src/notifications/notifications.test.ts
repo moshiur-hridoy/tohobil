@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createFakeClock } from '@barakah/shared';
 import { createTestDb, type TestDb } from '../test/db-harness';
 import { notifyMember, sendQueuedNotifications } from './service';
+import { listInbox, openAllNotifications } from './inbox';
 import { createLogger } from '../lib/logger';
 import type { PushSender } from './providers/push';
 import type { SmsProvider } from './providers/sms';
@@ -156,5 +157,33 @@ describe('notification engine', () => {
     ]);
     expect(pushCalls).toHaveLength(0);
     expect(smsCalls).toHaveLength(1);
+  });
+
+  it('marks every unread in-app notice of one member as read, and nobody else\'s', async (ctx) => {
+    if (!db) return ctx.skip();
+
+    const deps = makeDeps(db, [], []);
+    const mine = await db.admin.query(
+      `INSERT INTO members (code, full_name, phone, joined_on) VALUES ('M97', 'Reader', '+8801700000097', '2026-01-01') RETURNING id`,
+    );
+    const other = await db.admin.query(
+      `INSERT INTO members (code, full_name, phone, joined_on) VALUES ('M96', 'Other', '+8801700000096', '2026-01-01') RETURNING id`,
+    );
+    const me = (mine.rows[0] as { id: string }).id;
+    const them = (other.rows[0] as { id: string }).id;
+    // A label per notice, so the engine does not merge them as one repeated notice.
+    for (const [memberId, label] of [[me, 'a'], [me, 'b'], [them, 'c']] as const) {
+      await notifyMember(deps, db.app, { memberId, template: 'payment_confirmed', vars: { name: 'x', amount: '১০' }, dedupeLabel: label });
+    }
+
+    expect(await openAllNotifications(deps, me)).toBe(2);
+    expect(await openAllNotifications(deps, me)).toBe(0);
+
+    const myPush = await listInbox(deps, me, { channel: 'push', limit: 10 });
+    expect(myPush.items.every((n) => n.opened_at !== null)).toBe(true);
+    const mySms = await db.app.query(`SELECT opened_at FROM notifications WHERE member_id = $1 AND channel = 'sms'`, [me]);
+    expect((mySms.rows as Array<{ opened_at: Date | null }>).every((r) => r.opened_at === null)).toBe(true);
+    const theirs = await listInbox(deps, them, { channel: 'push', limit: 10 });
+    expect(theirs.items.every((n) => n.opened_at === null)).toBe(true);
   });
 });

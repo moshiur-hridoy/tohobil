@@ -49,6 +49,9 @@ const PAIRS: Array<[string, string, number]> = [
   ['muted', 'background', 4.5],
   ['muted', 'card', 4.5],
   ['muted', 'soft', 4.5],
+  ['foreground', 'soft', 4.5], // inset tiles inside cards (amounts, details)
+  ['ink2', 'soft', 4.5],
+  ['bad', 'soft', 4.5],
   ['ok', 'background', 4.5],
   ['ok', 'card', 4.5],
   ['ok', 'ok-bg', 4.5],

@@ -94,7 +94,7 @@ function ProposalCard({ proposal }: { proposal: ProposalSummary }) {
             )}
           </span>
         </div>
-        <div className="mt-3 rounded-xl bg-background px-3 py-2 text-sm">
+        <div className="mt-3 rounded-xl bg-soft px-3 py-2 text-sm">
           {proposal.ballots_hidden ? (
             <span className="text-muted">{t('votes.hiddenUntilClose')}</span>
           ) : (

@@ -273,7 +273,7 @@ async function recordExtras(request: APIRequestContext, auth: string, data: Reco
   await get('/approvals?status=pending&limit=50');
 }
 
-const MEMBER_ROUTES = ['/home', '/pay', '/votes', '/assets', '/menu', '/menu/ledger', '/menu/members', '/menu/constitution', '/menu/notices', '/menu/settlement', '/menu/pin'];
+const MEMBER_ROUTES = ['/home', '/pay', '/votes', '/assets', '/menu', '/menu/ledger', '/menu/members', '/menu/constitution', '/menu/notices', '/menu/settlement', '/menu/pin', '/menu/devices', '/menu/security'];
 const ADMIN_ROUTES = ['/admin', '/admin/matrix', '/admin/payments', '/admin/ledger', '/admin/members', '/admin/proposals', '/admin/rules', '/admin/meetings', '/admin/charity', '/admin/settings', '/admin/notifications', '/admin/assets', '/admin/reconcile', '/admin/reports', '/admin/rent', '/admin/obligations', '/admin/settlements', '/admin/system'];
 
 test('record the UI demo data', async ({ browser, request }) => {
@@ -290,7 +290,8 @@ test('record the UI demo data', async ({ browser, request }) => {
     await activate(page, ref, issueCode(ref, 'add'));
     // stepUp() reuses a secret kept on the context when the authenticator is already enrolled.
     if (ref === 'M01') (context as unknown as { _totp?: string })._totp = cashierTotp;
-    if (privileged) await stepUp(page);
+    // Only the cashier has an authenticator; the auditor confirms each action with their PIN (ASSUMPTIONS.md 117).
+    if (ref === 'M01') await stepUp(page);
 
     const data: Record<string, unknown> = {};
     const proposalIds = ((await (await request.get(`${API_BASE}/proposals?limit=200`, { headers: { authorization: await bearer(page) } })).json()) as { items: Array<{ id: string }> }).items.map((p) => p.id);

@@ -56,3 +56,16 @@ export async function openNotification(
   );
   return (res.rowCount ?? 0) > 0;
 }
+
+/**
+ * "Mark all as read" on the notices page: every unopened in-app (push) notice of this member gets the
+ * same opened time. SMS rows are left alone; they are not in the in-app list. Returns how many changed.
+ */
+export async function openAllNotifications(deps: InboxDeps, memberId: string): Promise<number> {
+  const res = await deps.pool.query(
+    `UPDATE notifications SET opened_at = $2
+     WHERE member_id = $1 AND channel = 'push' AND opened_at IS NULL`,
+    [memberId, deps.clock.now()],
+  );
+  return res.rowCount ?? 0;
+}

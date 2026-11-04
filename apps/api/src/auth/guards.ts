@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { AppError, forbidden, unauthorized } from '../lib/errors';
-import { authenticateToken, hasRecentStepUp, type AuthDeps, type AuthUser } from './service';
+import { STEP_UP_PIN_HEADER, usesPinStepUp } from '@barakah/shared';
+import { authenticateToken, hasRecentStepUp, verifyStepUpPin, type AuthDeps, type AuthUser } from './service';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -41,9 +42,20 @@ export function createGuards(deps: AuthDeps) {
     }
   };
 
-  /** Recent TOTP on this device (12 h). Privileged accounts must enrol first. */
+  /**
+   * Cashier: a recent TOTP on this device (12 h); they must enrol first.
+   * Auditor: their PIN with this very request, every time (owner decision, ASSUMPTIONS.md 117).
+   */
   const requireStepUp = async (request: FastifyRequest): Promise<void> => {
     const user = requireAuth(request);
+    if (usesPinStepUp(user.roles)) {
+      const pin = request.headers[STEP_UP_PIN_HEADER];
+      if (typeof pin !== 'string' || !/^\d{6}$/.test(pin)) {
+        throw new AppError(403, 'auth.pin_required', 'Enter your PIN to confirm');
+      }
+      await verifyStepUpPin(deps, user, pin, { ip: request.ip });
+      return;
+    }
     if (!user.totp_enabled) {
       throw new AppError(403, 'auth.totp_enrollment_required', 'Enrol an authenticator app first');
     }

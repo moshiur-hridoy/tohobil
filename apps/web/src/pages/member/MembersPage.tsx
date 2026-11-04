@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ListSkeleton } from '../../components/Skeleton';
 import { Empty, LoadError } from '../../components/StateViews';
+import { BackButton } from '../../components/ui';
 import { api } from '../../lib/api';
 import { formatCount } from '../../lib/format';
 import { arrearsOf, taka } from '../../lib/money';
@@ -27,9 +28,12 @@ export function MembersPage() {
 
   return (
     <div className="space-y-3 p-4">
-      <header>
-        <h2 className="text-lg font-semibold">{t('membersPage.title')}</h2>
-        {register.data && <p className="text-muted">{t('membersPage.total', { total: formatCount(register.data.total) })}</p>}
+      <header className="flex items-start gap-3">
+        <BackButton fallback="/menu" />
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg font-semibold">{t('membersPage.title')}</h2>
+          {register.data && <p className="text-muted">{t('membersPage.total', { total: formatCount(register.data.total) })}</p>}
+        </div>
       </header>
       {!members.data ? (
         <ListSkeleton rows={5} />

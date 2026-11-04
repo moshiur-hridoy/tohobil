@@ -74,7 +74,6 @@ test('(3) a late fine is applied by the scheduler and the member sees the notice
       .toBe(1);
 
     await page.goto('/menu/notices');
-    await page.getByRole('tab').last().click(); // "All": the notice is unread, but do not depend on the default tab
     await expect(page.locator('article').filter({ hasText: /২,০০০/ }).first()).toBeVisible();
 
     await ctx.close();

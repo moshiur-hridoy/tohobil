@@ -118,6 +118,17 @@ export type SettlementKind = (typeof SETTLEMENT_KINDS)[number];
 export const USER_ROLES = ['member', 'cashier', 'auditor'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
+/**
+ * An auditor (who is not also the cashier) confirms each privileged action by typing their PIN again,
+ * instead of an authenticator code (owner decision, docs/ASSUMPTIONS.md 117). The cashier keeps the authenticator.
+ */
+export function usesPinStepUp(roles: readonly string[]): boolean {
+  return roles.includes('auditor') && !roles.includes('cashier');
+}
+
+/** Header that carries the PIN for a per-action step-up. Redacted from logs. */
+export const STEP_UP_PIN_HEADER = 'x-step-up-pin';
+
 export const USER_STATUSES = ['pending_activation', 'active', 'disabled'] as const;
 export type UserStatus = (typeof USER_STATUSES)[number];
 

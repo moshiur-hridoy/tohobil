@@ -6,7 +6,7 @@ import { MOBILE, activate, issueCode } from '../helpers';
  * Accessibility pass on the member screens (Phase 6): axe-core in light and dark mode (real colours, real
  * labels, real landmarks), and text at 200% must still fit a phone without sideways scrolling.
  */
-const SCREENS = ['/home', '/pay', '/votes', '/assets', '/menu', '/menu/ledger', '/menu/members', '/menu/constitution', '/menu/notices', '/menu/settlement', '/menu/pin'];
+const SCREENS = ['/home', '/pay', '/votes', '/assets', '/menu', '/menu/ledger', '/menu/members', '/menu/constitution', '/menu/notices', '/menu/settlement', '/menu/pin', '/menu/devices', '/menu/security'];
 
 async function open(page: Page, path: string): Promise<void> {
   // in-app navigation keeps the session in memory (a full reload would ask for the PIN again)

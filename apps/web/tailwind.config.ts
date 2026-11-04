@@ -31,6 +31,7 @@ export default {
         'blue-bg': 'var(--blue-bg)',
         blue: 'var(--blue)',
         border: 'var(--border)',
+        track: 'var(--track)',
         'on-bad': 'var(--on-bad)',
         hero: 'var(--hero)',
         'on-hero': 'var(--on-hero)',

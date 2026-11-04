@@ -3,6 +3,8 @@
  * access token, RFC 7807 problems surfaced as ApiError with the stable `code` (spec 4, 8).
  */
 
+import { STEP_UP_PIN_HEADER } from '@barakah/shared';
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -41,6 +43,22 @@ export function setStepUpAsker(fn: (() => Promise<boolean>) | null): void {
   stepUpAsker = fn;
 }
 
+/**
+ * Sends the same request again with the PIN typed by the auditor. The prompt calls it once per try,
+ * so a wrong PIN can be shown and retried without losing the request.
+ */
+export type PinAttempt = (pin: string) => Promise<Response>;
+let pinAsker: ((attempt: PinAttempt) => Promise<Response | null>) | null = null;
+
+/**
+ * The auditor confirms each privileged action by typing their PIN again (ASSUMPTIONS.md 117).
+ * When a request answers `auth.pin_required`, the client asks right there; the prompt resolves with
+ * the final response, or null on cancel (the original error is then shown). Nothing is remembered.
+ */
+export function setPinAsker(fn: ((attempt: PinAttempt) => Promise<Response | null>) | null): void {
+  pinAsker = fn;
+}
+
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   /** JSON body, or a FormData for an upload (the browser then sets the multipart boundary). */
@@ -71,7 +89,7 @@ async function send(path: string, opts: RequestOptions): Promise<Response> {
   }
 }
 
-async function toError(res: Response): Promise<ApiError> {
+export async function toError(res: Response): Promise<ApiError> {
   const problem = (await res.json().catch(() => null)) as {
     code?: string;
     title?: string;
@@ -104,6 +122,16 @@ async function sendWithRefresh(path: string, opts: RequestOptions): Promise<Resp
         inflightStepUp = null;
       });
       if (await inflightStepUp) res = await send(path, opts);
+    }
+  }
+
+  if (res.status === 403 && pinAsker) {
+    const body = (await res.clone().json().catch(() => null)) as { code?: string } | null;
+    if (body?.code === 'auth.pin_required') {
+      const answered = await pinAsker((pin) =>
+        send(path, { ...opts, headers: { ...opts.headers, [STEP_UP_PIN_HEADER]: pin } }),
+      );
+      if (answered) res = answered;
     }
   }
   return res;

@@ -14,7 +14,7 @@ import type { Guards } from '../auth/guards';
 import { requireAuth } from '../auth/guards';
 import { AppError, forbidden, notFound } from '../lib/errors';
 import * as repo from '../notifications/repo';
-import { listInbox, openNotification, type InboxDeps } from '../notifications/inbox';
+import { listInbox, openAllNotifications, openNotification, type InboxDeps } from '../notifications/inbox';
 import { listAdminNotifications, listUnreachableByPush, type AdminDeps } from '../notifications/admin';
 import { notifyMember, type NotificationDeps } from '../notifications/service';
 import { TEMPLATE_META } from '../notifications/catalog';
@@ -104,6 +104,11 @@ export function notificationRoutes(deps: NotificationRouteDeps, guards: Guards) 
         });
       },
     );
+
+    app.post('/notifications/open-all', { preHandler: authenticate }, async (req) => {
+      const user = requireAuth(req);
+      return { opened: await openAllNotifications(inboxDeps, user.member_id) };
+    });
 
     app.post('/notifications/:id/open', { preHandler: authenticate }, async (req, reply) => {
       const user = requireAuth(req);

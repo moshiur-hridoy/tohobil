@@ -1,3 +1,4 @@
+import { usesPinStepUp } from '@barakah/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link, Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -158,6 +159,9 @@ export function CashierLayout() {
   const openVotes = open.data?.items.length ?? 0;
   const badgeFor = (to: AdminRoute) => (to === '/admin/proposals' ? openVotes : 0);
   const attention = useNavAttention();
+  // The auditor confirms with their PIN instead of an authenticator (ASSUMPTIONS.md 117).
+  const { me } = useAuth();
+  const usesAuthenticator = !!me && !usesPinStepUp(me.roles);
 
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
@@ -188,10 +192,12 @@ export function CashierLayout() {
               ))}
             </div>
           ))}
-          <div>
-            <div className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wider text-muted">{t('totp.title')}</div>
-            <ExtraLink to="/totp" label={t('totp.title')} icon={TOTP_ICON} />
-          </div>
+          {usesAuthenticator && (
+            <div>
+              <div className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wider text-muted">{t('totp.title')}</div>
+              <ExtraLink to="/totp" label={t('totp.title')} icon={TOTP_ICON} />
+            </div>
+          )}
         </nav>
         <Link to="/menu/whats-new" className="border-t border-border px-4 pt-2 text-xs text-muted hover:text-foreground">
           {t('whatsNew.version', { version: localDigits(APP_VERSION) })} · {t('whatsNew.title')}
@@ -217,7 +223,9 @@ export function CashierLayout() {
             compact
           />
         ))}
-        <ExtraLink to="/totp" label={t('totp.title')} icon={TOTP_ICON} compact />
+        {usesAuthenticator && <ExtraLink to="/totp" label={t('totp.title')} icon={TOTP_ICON} compact />}
+        {/* Back to the member screens; on a phone there is no other way out of the admin pages. */}
+        <ExtraLink to="/home" label={t('admin.backToMember')} icon="M3 11l9-7 9 7M5 10v10h14V10" compact />
         <LogoutButton compact />
         <LanguageToggle />
         <PrivacyToggle />

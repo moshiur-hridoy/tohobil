@@ -22,6 +22,7 @@ for (const [name, viewport, who] of [
     // Log out, then sign back in with the PIN pad on the registered device.
     await page.goto('/menu');
     await page.getByRole('button', { name: tr('menu.logout') }).click();
+    await page.getByRole('dialog').getByRole('button', { name: tr('menu.logout') }).click();
     await expect(page).toHaveURL(/\/login/);
     await expect(page.getByRole('heading', { name: tr('auth.pinTitle') })).toBeVisible();
 

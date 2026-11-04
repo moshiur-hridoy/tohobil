@@ -185,7 +185,7 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
         </label>
       )}
       {prospective && (
-        <div className="rounded-md bg-background p-3 text-sm">
+        <div className="rounded-md bg-soft p-3 text-sm">
           {!q ? (
             <p className="text-muted">{quote.isLoading ? '…' : t('paymentsPage.noQuote')}</p>
           ) : (
@@ -264,7 +264,7 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
         <DateInput className={field} max={todayDhaka()} value={date} onChange={(e) => setDate(e.target.value)} />
       </label>
       {valid && member && (
-        <div className="rounded-md bg-background p-3">
+        <div className="rounded-md bg-soft p-3">
           <SheetRow label={`${member.code} ${member.full_name}`} value={taka(paisa as string)} strong />
           {purpose !== 'dues' && <SheetRow label={t('pay.purposeLabel')} value={t(PURPOSE_LABEL[purpose])} />}
           <SheetRow label={t('payment.method')} value={PAYMENT_METHOD_LABELS[method].bn} />

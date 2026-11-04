@@ -13,13 +13,13 @@ import { Avatar } from '../../components/MemberPhoto';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtClock, fmtDate, fmtPeriod, todayDhaka } from '../../lib/dates';
-import { arrearsOf, taka } from '../../lib/money';
-import { charityBalance, interimNetAssets } from '../../lib/nav';
+import { arrearsOf, negClass, profitPercent, taka } from '../../lib/money';
+import { charityBalance, fundSplit, shareValue } from '../../lib/nav';
 import { useCountdown } from '../../lib/countdown';
 import { advanceOf } from '../../lib/advance';
 import { thisMonthOf } from '../../lib/thisMonth';
 import { formatCount } from '../../lib/format';
-import type { AccountBalance, DueRow, MatrixResponse, MeetingRow, MemberRow, ProposalSummary } from '../../lib/types';
+import type { AccountBalance, ApprovalRow, DueRow, MatrixResponse, MeetingRow, MemberRow, NavResponse, ProposalSummary } from '../../lib/types';
 
 const AVATAR = ['bg-primary-soft text-primary', 'bg-blue-bg text-blue', 'bg-vio-bg text-vio', 'bg-warn-bg text-warn'];
 
@@ -30,6 +30,7 @@ export function HomePage() {
 
   const members = useQuery({ queryKey: ['members'], queryFn: () => api<{ items: MemberRow[] }>('/members') });
   const accounts = useQuery({ queryKey: ['balances'], queryFn: () => api<{ items: AccountBalance[] }>('/accounts/balances') });
+  const nav = useQuery({ queryKey: ['nav'], queryFn: () => api<NavResponse>('/nav') });
   const myDues = useQuery({
     queryKey: ['dues', 'me', me?.member_id],
     enabled: !!me,
@@ -51,6 +52,14 @@ export function HomePage() {
   const firstOpen = openVotes[0];
   const meeting = useQuery({ queryKey: ['meetings', 'next'], queryFn: () => api<{ meeting: MeetingRow | null }>('/meetings/next') });
   const nextMeeting = meeting.data?.meeting;
+  // The auditor decides value updates and reversals; without a computer this card is the way in.
+  const isAuditor = !!me?.roles.includes('auditor');
+  const approvals = useQuery({
+    queryKey: ['approvals', 'pending'],
+    enabled: isAuditor,
+    queryFn: () => api<{ items: ApprovalRow[] }>('/approvals?status=pending&limit=200'),
+  });
+  const waitingApprovals = approvals.data?.items.filter((a) => a.requested_by_code !== me?.member_code).length ?? 0;
   const remaining = useCountdown(firstOpen?.closes_at ?? null);
 
   const mine = members.data?.items.find((m) => m.id === me?.member_id);
@@ -84,6 +93,7 @@ export function HomePage() {
     Promise.all([
       qc.invalidateQueries({ queryKey: ['members'] }),
       qc.invalidateQueries({ queryKey: ['balances'] }),
+      qc.invalidateQueries({ queryKey: ['nav'] }),
       qc.invalidateQueries({ queryKey: ['dues'] }),
       qc.invalidateQueries({ queryKey: ['member', me?.member_id] }),
       qc.invalidateQueries({ queryKey: ['matrix'] }),
@@ -167,21 +177,15 @@ export function HomePage() {
           </div>
         </section>
 
-        {/* Fund summary tiles */}
+        <FundCard nav={nav.data} />
+
         <section className="grid grid-cols-2 gap-3">
-          <div className="min-w-0 rounded-[18px] border border-border bg-card p-3.5">
-            <Chip tone="bg-primary-soft text-primary" d="M3 17l6-6 4 4 8-8 M15 7h6v6" />
-            <h2 className="mt-2.5 text-[0.8125rem] font-normal text-muted">{t('home.fundNetAssets')}</h2>
-            {accounts.data ? (
-              <p className="mt-0.5 text-[1.3125rem] font-bold [overflow-wrap:anywhere]">{taka(interimNetAssets(accounts.data.items))}</p>
-            ) : (
-              <Skeleton className="mt-1 h-7 w-28" />
-            )}
-          </div>
-          <div className="min-w-0 rounded-[18px] border border-border bg-card p-3.5">
+          {mine?.status !== 'inactive' && <MyShareTile nav={nav.data} mine={mine} toPay={toPay} />}
+          <div className={`min-w-0 rounded-[18px] border border-border bg-card p-3.5 ${mine?.status === 'inactive' ? 'col-span-2' : ''}`}>
             <Chip tone="bg-blue-bg text-blue" d="M12 3l9 5-9 5-9-5z M3 13l9 5 9-5" />
             <h2 className="mt-2.5 text-[0.8125rem] font-normal text-muted">{t('home.myCapital')}</h2>
             <p className="mt-0.5 text-[1.3125rem] font-bold [overflow-wrap:anywhere]">{mine ? taka(mine.capital_paisa) : '…'}</p>
+            {mine && <p className="mt-0.5 text-xs text-muted">{t('home.sharesCount', { count: mine.shares })}</p>}
           </div>
           {/* Charity balance (18.2): fines and riba are donated at year end, never fund income */}
           <div className="col-span-2 flex items-center gap-3 rounded-[18px] border border-border bg-card px-3.5 py-3">
@@ -190,7 +194,17 @@ export function HomePage() {
             <p className="text-[1.1875rem] font-bold">{accounts.data ? taka(charityBalance(accounts.data.items)) : '…'}</p>
           </div>
         </section>
-        <p className="px-1 text-xs text-muted">{t('home.netAssetsHint')}</p>
+
+        {isAuditor && waitingApprovals > 0 && (
+          <Link to="/approvals" className="flex items-center gap-3 rounded-[18px] border border-border bg-card p-3.5 text-foreground">
+            <Chip tone="bg-blue-bg text-blue" size={40} iconSize={22} d="M5 12l4 4 10-10" />
+            <div className="min-w-0 flex-1">
+              <div className="text-base font-bold">{t('home.approvalsWaiting', { count: waitingApprovals })}</div>
+              <div className="truncate text-[0.8125rem] text-ink2">{t('home.approvalsWaitingSub')}</div>
+            </div>
+            <span className="text-muted"><Icon d="M9 5l7 7-7 7" sw={2} /></span>
+          </Link>
+        )}
 
         {openVotes.length > 0 && firstOpen && (
           <Link to="/votes" className="flex items-center gap-3 rounded-[18px] border border-border bg-card p-3.5 text-foreground">
@@ -222,6 +236,111 @@ export function HomePage() {
         <EveryoneStanding members={members.data?.items} />
       </div>
     </PullToRefresh>
+  );
+}
+
+/** Display only: a share of a bar as a CSS width. */
+function pct(part: bigint, whole: bigint): string {
+  return whole > 0n ? `${Number((part * 10000n) / whole) / 100}%` : '0%';
+}
+
+/**
+ * The fund's net assets from `GET /nav` (the same figure as the Assets tab, with the latest shop
+ * values), and where the money is: cash, invested, and what is owed to others. Taps through to Assets.
+ */
+function FundCard({ nav }: { nav: NavResponse | undefined }) {
+  const { t } = useTranslation();
+  const split = nav ? fundSplit(nav) : null;
+  const cashBar = split && split.cash > 0n ? split.cash : 0n;
+  const investedBar = split && split.invested > 0n ? split.invested : 0n;
+  return (
+    <Link to="/assets" className="block rounded-[18px] border border-border bg-card p-3.5 text-foreground">
+      <div className="flex items-center gap-2.5">
+        <Chip tone="bg-primary-soft text-primary" d="M3 17l6-6 4 4 8-8 M15 7h6v6" />
+        <h2 className="flex-1 text-[0.8125rem] font-normal text-muted">{t('home.fundNetAssets')}</h2>
+        <span className="text-muted"><Icon d="M9 5l7 7-7 7" sw={2} /></span>
+      </div>
+      {split ? (
+        <>
+          <p className={`mt-2 text-[1.75rem] font-bold leading-tight [overflow-wrap:anywhere] ${negClass(split.net)}`}>{taka(split.net)}</p>
+          {cashBar + investedBar > 0n && (
+            <div className="mt-3 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-background" aria-hidden="true">
+              {cashBar > 0n && <span className="h-full bg-vio" style={{ width: pct(cashBar, cashBar + investedBar) }} />}
+              {investedBar > 0n && <span className="h-full bg-primary" style={{ width: pct(investedBar, cashBar + investedBar) }} />}
+            </div>
+          )}
+          <dl className="mt-3 grid gap-1.5 text-[0.875rem]">
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-vio" aria-hidden="true" />
+              <dt className="flex-1 text-muted">{t('home.split.cash')}</dt>
+              <dd className={`font-semibold ${negClass(split.cash)}`}>{taka(split.cash)}</dd>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-primary" aria-hidden="true" />
+              <dt className="flex-1 text-muted">{t('home.split.invested')}</dt>
+              <dd className="font-semibold">{taka(split.invested)}</dd>
+            </div>
+            {split.owed !== 0n && (
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full border border-border" aria-hidden="true" />
+                <dt className="flex-1 text-muted">{t('home.split.owed')}</dt>
+                <dd className="font-semibold">−{taka(split.owed)}</dd>
+              </div>
+            )}
+          </dl>
+        </>
+      ) : (
+        <>
+          <Skeleton className="mt-2 h-8 w-40" />
+          <Skeleton className="mt-3 h-2.5 w-full" />
+        </>
+      )}
+    </Link>
+  );
+}
+
+/**
+ * What the member's shares are worth today (settlement "gross", Doc.md 5.10). A member who owes money
+ * also sees the value after it is paid, so the figure never looks larger than what they would get;
+ * a member who is up to date sees the rise or fall against what they paid in.
+ */
+function MyShareTile({ nav, mine, toPay }: { nav: NavResponse | undefined; mine: MemberRow | undefined; toPay: bigint }) {
+  const { t } = useTranslation();
+  const value = nav && mine ? shareValue(nav, mine.shares) : null;
+  const capital = mine ? BigInt(mine.capital_paisa) : 0n;
+  const gain = value === null ? 0n : value - capital;
+  const percent = profitPercent(gain, capital);
+  return (
+    <div className="min-w-0 rounded-[18px] border border-border bg-card p-3.5">
+      <Chip tone="bg-ok-bg text-ok" d="M12 2v20 M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+      <h2 className="mt-2.5 text-[0.8125rem] font-normal text-muted">{t('home.myShareValue')}</h2>
+      {value === null ? (
+        <Skeleton className="mt-1 h-7 w-28" />
+      ) : (
+        <>
+          <p className={`mt-0.5 text-[1.3125rem] font-bold [overflow-wrap:anywhere] ${negClass(value)}`}>{taka(value)}</p>
+          {toPay > 0n ? (
+            // Never a minus figure here: a new fund (or a member who has not paid yet) just sees what is left to pay.
+            value - toPay > 0n ? (
+              <p className="mt-0.5 text-xs text-muted">
+                {t('home.shareAfterDues')} <span className="font-semibold">{taka(value - toPay)}</span>
+              </p>
+            ) : (
+              <p className="mt-0.5 text-xs text-warn">{t('home.shareToPay', { amount: taka(toPay) })}</p>
+            )
+          ) : (
+            capital > 0n &&
+            gain !== 0n && (
+              <p className={`mt-0.5 text-xs font-semibold ${gain > 0n ? 'text-ok' : 'text-bad'}`}>
+                {gain > 0n ? '+' : '−'}
+                {taka(gain > 0n ? gain : -gain)}
+                {percent && ` (${gain > 0n ? '+' : '−'}${percent})`}
+              </p>
+            )
+          )}
+        </>
+      )}
+    </div>
   );
 }
 
@@ -295,7 +414,7 @@ function EveryoneStanding({ members }: { members?: MemberRow[] }) {
         <h2 id="home-everyone" className="min-w-0 flex-1 text-base font-bold">{t('home.everyoneInMonth')}</h2>
         {matrix.data && rows.length > 0 && (
           <span className="flex flex-none items-center gap-2">
-            <span aria-hidden="true" className="h-2 w-24 overflow-hidden rounded-full bg-border">
+            <span aria-hidden="true" className="h-2 w-24 overflow-hidden rounded-full bg-track">
               <span className="block h-full bg-primary" style={{ width: `${(paidCount / rows.length) * 100}%` }} />
             </span>
             <span className="text-sm font-bold text-primary">{paidCount}/{rows.length}</span>

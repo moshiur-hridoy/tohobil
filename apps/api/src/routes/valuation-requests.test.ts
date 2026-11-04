@@ -1,11 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { authenticator } from 'otplib';
 import type { FastifyInstance } from 'fastify';
 import { systemClock } from '@barakah/shared';
 import { buildApp } from '../app';
 import { valuationRoute } from '../assets/valuation-requests';
 import { createTestDb, type TestDb } from '../test/db-harness';
-import { activateSession, seedFund, testEnv, type Fund, type TestSession } from '../test/fund-fixture';
+import { AUDITOR_PIN, activateSession, seedFund, testEnv, type Fund, type TestSession } from '../test/fund-fixture';
 
 // The real clock: TOTP codes made here are checked against the app's clock.
 const clock = systemClock;
@@ -20,18 +19,11 @@ const call = (method: 'GET' | 'POST' | 'PATCH', url: string, who?: string, paylo
   app.inject({
     method,
     url: `/api/v1${url}`,
-    headers: who ? { authorization: `Bearer ${who}` } : {},
+    // the auditor types their PIN with every privileged request (ASSUMPTIONS 117; tested in periods.test.ts)
+    headers: who ? { authorization: `Bearer ${who}`, ...(who === s.M07?.access_token ? AUDITOR_PIN : {}) } : {},
     ...(payload === undefined ? {} : { payload: payload as Record<string, unknown> }),
   });
 const q = async (sql: string, params: unknown[] = []) => (await db!.admin.query(sql, params)).rows;
-
-const secrets = new Map<string, string>();
-async function enrolStepUp(session: TestSession): Promise<void> {
-  const enrol = await call('POST', '/auth/totp/enroll', session.access_token);
-  secrets.set(session.device_id, (enrol.json() as { secret: string }).secret);
-  const res = await call('POST', '/auth/totp/verify', session.access_token, { code: authenticator.generate(secrets.get(session.device_id) as string) });
-  if (res.statusCode !== 200) throw new Error(`step-up failed: ${res.body}`);
-}
 
 let fileN = 0;
 async function statement(userId: string): Promise<string> {
@@ -59,7 +51,6 @@ describe('value updates of an investment (ASSUMPTIONS 115)', () => {
     app = await buildApp({ env: testEnv, db: db.app, clock });
     fund = await seedFund(db.admin);
     for (const code of ['M01', 'M02', 'M03', 'M07'] as const) Object.assign((s[code] = {} as TestSession), await activateSession(app, db, clock, fund, code));
-    await enrolStepUp(s.M07);
     const created = await call('POST', '/partners', s.M01.access_token, { kind: 'gold', name: 'Minar Jewellers' });
     partnerId = created.json().partner.id as string;
     // Two purchases: 6,00,000 and 4,00,000 taka at cost, so the shop is worth 10,00,000 until valued.

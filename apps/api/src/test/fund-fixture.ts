@@ -73,6 +73,8 @@ export async function seedFund(admin: pg.Pool): Promise<Fund> {
 }
 
 export const GOOD_PIN = '483917';
+/** Headers an auditor sends with a privileged request: the PIN typed again (ASSUMPTIONS.md 117). */
+export const AUDITOR_PIN = { 'x-step-up-pin': GOOD_PIN };
 
 export interface TestSession {
   access_token: string;

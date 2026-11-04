@@ -65,7 +65,7 @@ export function ActivationPage() {
               {i < stepIndex ? '✓' : i + 1}
             </span>
             <span className={i === stepIndex ? 'font-bold text-foreground' : ''}>{t(`auth.step.${s}`)}</span>
-            {i < steps.length - 1 && <span className="h-0.5 flex-1 rounded bg-border" />}
+            {i < steps.length - 1 && <span className="h-0.5 flex-1 rounded bg-track" />}
           </li>
         ))}
       </ol>

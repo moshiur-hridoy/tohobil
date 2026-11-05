@@ -1,7 +1,7 @@
 import { readFile, statfs } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import type pg from 'pg';
-import type { Clock } from '@barakah/shared';
+import { bn, formatDateDisplay, toBengaliDigits, toDhakaDate, type Clock } from '@barakah/shared';
 import { verifyLedger } from '../ledger/queries';
 import { audit } from '../lib/audit';
 import { inTransaction } from '../lib/tx';
@@ -115,4 +115,78 @@ export async function raiseBackupAlert(pool: pg.Pool, clock: Clock, job: string)
   await inTransaction(pool, (tx) =>
     queueRoleAlert(tx, clock, ['cashier', 'auditor'], 'backup_failed', { job }, `${job}:${clock.now().getTime()}`),
   );
+}
+
+interface BackupStatusFile {
+  ok?: boolean;
+  finished?: string;
+  size?: number;
+}
+
+/** A backup runs at 02:00 every night; anything older than this means at least one night was missed. */
+const BACKUP_MAX_AGE_MS = 26 * 3600_000;
+
+function sizeText(bytes: number | undefined): string {
+  if (!bytes || bytes <= 0) return '?';
+  const mb = bytes / (1024 * 1024);
+  return `${toBengaliDigits(mb >= 10 ? mb.toFixed(0) : mb.toFixed(1))} MB`;
+}
+
+const WATCH_TEXT = (bn as unknown as { backupWatch: Record<'unknown' | 'restoreOk' | 'restoreFailed' | 'restoreNone', string> }).backupWatch;
+
+function dateText(iso: string | undefined): string {
+  if (!iso || Number.isNaN(Date.parse(iso))) return WATCH_TEXT.unknown;
+  return formatDateDisplay(toDhakaDate(new Date(iso)));
+}
+
+/**
+ * The daily backup watch (ASSUMPTIONS 122). The sidecar only reports a backup that fails; one that never
+ * runs (the container stopped, cron died) would stay silent. So every morning the API reads the
+ * sidecar's status file: no successful backup in 26 hours tells the cashier and auditor (push + SMS),
+ * and on Fridays a healthy backup sends them a short push report, so they know the alerts reach them.
+ * Outside production a missing status file just means there is no sidecar, and nothing is sent.
+ */
+export async function runBackupWatch(deps: {
+  pool: pg.Pool;
+  clock: Clock;
+  statusDir: string;
+  production: boolean;
+}): Promise<'ok' | 'weekly_report' | 'missing' | 'no_sidecar'> {
+  const [backup, restore] = (await Promise.all([
+    readJson(join(deps.statusDir, 'status.json')),
+    readJson(join(deps.statusDir, 'restore-status.json')),
+  ])) as [BackupStatusFile | null, BackupStatusFile | null];
+  if (!backup && !deps.production) return 'no_sidecar';
+
+  const today = deps.clock.todayDhaka();
+  const finished = backup?.finished ? Date.parse(backup.finished) : Number.NaN;
+  const fresh = backup?.ok === true && !Number.isNaN(finished) && deps.clock.now().getTime() - finished <= BACKUP_MAX_AGE_MS;
+
+  if (!fresh) {
+    await inTransaction(deps.pool, (tx) =>
+      queueRoleAlert(tx, deps.clock, ['cashier', 'auditor'], 'backup_missing', { last: backup?.ok ? dateText(backup.finished) : WATCH_TEXT.unknown }, today),
+    );
+    return 'missing';
+  }
+
+  // Friday is the weekly holiday in Bangladesh: the report arrives on a quiet morning.
+  const weekday = new Date(`${today}T00:00:00Z`).getUTCDay();
+  if (weekday !== 5) return 'ok';
+  const restoreText =
+    restore?.ok === true
+      ? WATCH_TEXT.restoreOk.replace('{date}', dateText(restore.finished))
+      : restore
+        ? WATCH_TEXT.restoreFailed
+        : WATCH_TEXT.restoreNone;
+  await inTransaction(deps.pool, (tx) =>
+    queueRoleAlert(
+      tx,
+      deps.clock,
+      ['cashier', 'auditor'],
+      'backup_weekly_ok',
+      { date: dateText(backup.finished), size: sizeText(backup.size), restore: restoreText },
+      today,
+    ),
+  );
+  return 'weekly_report';
 }

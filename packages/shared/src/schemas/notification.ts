@@ -63,6 +63,22 @@ export const nudgeSchema = z.object({
 
 export type NudgeInput = z.infer<typeof nudgeSchema>;
 
+/** A notice the cashier writes and sends to every member, or to the members they pick (ASSUMPTIONS 123). */
+export const customNoticeSchema = z
+  .object({
+    title: z.string().trim().min(1).max(60),
+    message: z.string().trim().min(1).max(500),
+    audience: z.enum(['all', 'selected']),
+    member_ids: z.array(z.string().uuid()).max(200).default([]),
+    sms: z.boolean().default(false),
+  })
+  .refine((v) => v.audience === 'all' || v.member_ids.length > 0, {
+    message: 'Pick at least one member',
+    path: ['member_ids'],
+  });
+
+export type CustomNoticeInput = z.infer<typeof customNoticeSchema>;
+
 export const adminNotificationsQuerySchema = z.object({
   period: z
     .string()

@@ -99,6 +99,10 @@ export async function notifyMember(
     dedupeLabel?: string;
     scheduledFor?: Date;
     actor?: AuthUser;
+    /** Replaces the template's channel list (a custom notice adds SMS only when the cashier asks). */
+    channels?: readonly NotificationChannel[];
+    /** SMS even to a member with SMS off (the cashier ticked SMS on a custom notice). */
+    ignoreSmsOptOut?: boolean;
   },
 ): Promise<string[]> {
   const meta = TEMPLATE_META[input.template];
@@ -117,13 +121,14 @@ export async function notifyMember(
   }
 
   const channels: NotificationChannel[] = [];
-  const wantsPush = meta.channels.includes('push');
-  const wantsSms = meta.channels.includes('sms');
+  const wanted = input.channels ?? meta.channels;
+  const wantsPush = wanted.includes('push');
+  const wantsSms = wanted.includes('sms');
   if (wantsPush) channels.push('push');
 
   if (wantsSms) {
     const smsOptOut = await memberSMSOptOut(db, input.memberId);
-    if (!smsOptOut || meta.ignoreSmsOptOut) channels.push('sms');
+    if (!smsOptOut || meta.ignoreSmsOptOut || input.ignoreSmsOptOut) channels.push('sms');
   }
 
   return repo.queueForMember(
@@ -171,7 +176,9 @@ export async function sendQueuedNotifications(deps: NotificationDeps, batchSize 
       list.push({ rowId: row.id, body, title, memberId: row.member_id, tokens: devices.map((d) => ({ deviceId: d.id, token: d.token })) });
       pushByMember.set(row.member_id, list);
     } else if (row.channel === 'sms') {
-      smsRows.push({ rowId: row.id, memberId: row.member_id, body });
+      // An SMS has no title line, so a custom notice carries its title in front of the text.
+      const smsBody = row.template === 'custom_notice' && title ? `${title}: ${body}` : body;
+      smsRows.push({ rowId: row.id, memberId: row.member_id, body: smsBody });
     }
   }
 

@@ -638,7 +638,10 @@
     "valuation_review": "New value for {partner}: {new_value} (was {old_value}) is waiting for approval. Sent by {by}. Tap the “approvals” card on the app's home page.",
     "valuation_updated": "New value for {partner}: {new_value} (was {old_value}). Approved by the auditor.",
     "valuation_rejected": "The value update for {partner} was not approved. Reason: {reason}",
-    "custodian_assigned": "You now look after {partner}. You can send its new value from Assets in the app."
+    "custodian_assigned": "You now look after {partner}. You can send its new value from Assets in the app.",
+    "backup_missing": "No successful backup in the last 24 hours. Last successful backup: {last}. Check the server's backup now.",
+    "backup_weekly_ok": "Weekly backup report: backups are running. Last backup {date}, size {size}. Restore test: {restore}.",
+    "custom_notice": "{message}"
   },
   "tg": {
     "title": "🔔 Payment to check",
@@ -1464,7 +1467,8 @@
       "paymentReceived": "Payment received",
       "meeting": "Meeting",
       "zakatInfo": "Zakat info",
-      "general": "General"
+      "general": "General",
+      "announcement": "Announcement"
     },
     "finalNotice": {
       "title": "Final notice",
@@ -2564,5 +2568,40 @@
   "relDay": {
     "today": "Today",
     "yesterday": "Yesterday"
+  },
+  "backupWatch": {
+    "unknown": "unknown",
+    "restoreOk": "passed ({date})",
+    "restoreFailed": "failed, see the system page",
+    "restoreNone": "not run yet"
+  },
+  "noticeCompose": {
+    "title": "Send a notice",
+    "sub": "Write it yourself and send it to every member or the ones you pick.",
+    "heading": "Title",
+    "headingHint": "e.g. Meeting time changed",
+    "message": "Message",
+    "messageHint": "What members will read",
+    "to": "Send to",
+    "toAll": "All members",
+    "toSelected": "Chosen members",
+    "sms": "Also send SMS",
+    "smsHint": "For urgent notices. Members with SMS off get it too, and every SMS costs money.",
+    "quietHours": "Sent between 9 pm and 8 am, the notice goes out at 8 am.",
+    "send": "Send",
+    "confirmTitle": "Send this notice?",
+    "confirmBody": "This notice goes to {{n}} members' phones.",
+    "confirmBodySms": "A notification and an SMS go to {{n}} members.",
+    "sent": "Notice sent to {{n}} members."
+  },
+  "pushPrompt": {
+    "title": "Turn on notifications",
+    "turnOn": "Turn on",
+    "later": "Remind me later",
+    "body": {
+      "off": "Turn them on to get dues, votes, payments and urgent fund notices on this phone at once. When the phone asks, tap \"Allow\".",
+      "blocked": "Notifications are blocked on this phone, so urgent notices will not arrive. Turn them on in the phone's Settings → Apps → Barakah (or Chrome) → Notifications. In a browser, the lock next to the address also lets you set \"Allow\".",
+      "needs-install": "On iPhone, first add the app to the Home Screen: Share, then Add to Home Screen. Open it from there and turn notifications on."
+    }
   }
 }

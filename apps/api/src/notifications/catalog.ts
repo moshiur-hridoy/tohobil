@@ -35,6 +35,9 @@ export type NotificationTemplate =
   | 'rent_overdue'
   | 'reconciliation_mismatch'
   | 'backup_failed'
+  | 'backup_missing'
+  | 'backup_weekly_ok'
+  | 'custom_notice'
   | 'ledger_verify_failed'
   | 'final_notice'
   | 'meeting_reminder'
@@ -98,6 +101,16 @@ export const TEMPLATE_META: Record<NotificationTemplate, TemplateMeta> = {
     ignoreQuietHours: true,
     roleRecipients: ['cashier', 'auditor'],
   },
+  // The daily check found no successful backup in the last 26 hours (the sidecar may not be running at all).
+  backup_missing: {
+    channels: ['push', 'sms'],
+    ignoreSmsOptOut: true,
+    roleRecipients: ['cashier', 'auditor'],
+  },
+  // Every Friday, when backups are fine, so the cashier and auditor know the alerts would reach them.
+  backup_weekly_ok: { channels: ['push'], roleRecipients: ['cashier', 'auditor'] },
+  // A message the cashier writes (ASSUMPTIONS 123). SMS is added only when the cashier ticks it.
+  custom_notice: { channels: ['push'], roleRecipients: ['member'] },
   ledger_verify_failed: {
     channels: ['push', 'sms'],
     ignoreSmsOptOut: true,
@@ -187,7 +200,9 @@ export function renderNotification(
   const title: string | undefined =
     template === 'cashier_daily_summary'
       ? ((bn as unknown as { app?: { shortName?: string } }).app?.shortName)
-      : undefined;
+      : template === 'custom_notice'
+        ? definedVars.title
+        : undefined;
   return { title, body };
 }
 

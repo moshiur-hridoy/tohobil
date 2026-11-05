@@ -9,12 +9,12 @@ import { daysBetween, dhakaTime, fmtClock, fmtDate, todayDhaka } from '../../lib
 import { formatCount } from '../../lib/format';
 import { toDhakaDate } from '@barakah/shared';
 
-type NoticeKind = 'final_notice' | 'fine' | 'payment_received' | 'meeting' | 'zakat_info';
+type NoticeKind = 'final_notice' | 'fine' | 'payment_received' | 'meeting' | 'zakat_info' | 'announcement';
 
 interface InboxItem {
   id: string;
   template: string;
-  payload: { _body?: string; [k: string]: unknown };
+  payload: { _body?: string; _title?: string; [k: string]: unknown };
   scheduled_for: string;
   sent_at: string | null;
   opened_at: string | null;
@@ -26,6 +26,7 @@ const KIND_BY_TEMPLATE: Record<string, NoticeKind> = {
   payment_confirmed: 'payment_received',
   payment_submitted_ack: 'payment_received',
   meeting_reminder: 'meeting',
+  custom_notice: 'announcement',
 };
 
 const TAG_KEY: Record<NoticeKind, string> = {
@@ -34,6 +35,7 @@ const TAG_KEY: Record<NoticeKind, string> = {
   payment_received: 'notices.tags.paymentReceived',
   meeting: 'notices.tags.meeting',
   zakat_info: 'notices.tags.zakatInfo',
+  announcement: 'notices.tags.announcement',
 };
 
 function kindMeta(kind: NoticeKind): { icon: JSX.Element; borderClass: string; chipClass: string } {
@@ -82,6 +84,18 @@ function kindMeta(kind: NoticeKind): { icon: JSX.Element; borderClass: string; c
             <path d="M4 10h16" />
             <path d="M9 3v4" />
             <path d="M15 3v4" />
+          </svg>
+        ),
+      };
+    case 'announcement':
+      return {
+        borderClass: 'border-border',
+        chipClass: 'bg-primary-soft text-primary',
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1z" />
+            <path d="M16 9a3 3 0 0 1 0 6" />
+            <path d="M19 6a7 7 0 0 1 0 12" />
           </svg>
         ),
       };
@@ -220,7 +234,8 @@ function NoticeCard({ item, onOpen }: { item: InboxItem; onOpen: () => void }) {
           {unread && <span aria-label={t('notices.new')} className="h-2.5 w-2.5 rounded-full bg-primary" />}
         </span>
       </div>
-      {item.payload._body && <p className={`mt-2.5 text-sm leading-relaxed text-foreground ${unread ? 'font-medium' : ''}`}>{item.payload._body}</p>}
+      {item.template === 'custom_notice' && item.payload._title && <p className="mt-2.5 font-bold text-foreground">{item.payload._title}</p>}
+      {item.payload._body && <p className={`whitespace-pre-line ${item.template === 'custom_notice' && item.payload._title ? 'mt-1' : 'mt-2.5'} text-sm leading-relaxed text-foreground ${unread ? 'font-medium' : ''}`}>{item.payload._body}</p>}
     </article>
   );
 }

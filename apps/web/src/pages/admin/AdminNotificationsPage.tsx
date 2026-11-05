@@ -9,6 +9,7 @@ import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtInstant } from '../../lib/dates';
 import type { MemberRow, Page } from '../../lib/types';
+import { NoticeComposer } from './NoticeComposer';
 
 interface AdminNotification {
   id: string;
@@ -29,7 +30,7 @@ interface Unreachable {
   reason: 'push_disabled' | 'no_push_token' | 'recent_push_unopened';
 }
 
-const TEMPLATES = ['due_reminder', 'fine_notice', 'payment_confirmed', 'payment_rejected', 'final_notice', 'device_event'];
+const TEMPLATES = ['custom_notice', 'due_reminder', 'fine_notice', 'payment_confirmed', 'payment_rejected', 'final_notice', 'device_event', 'backup_failed', 'backup_missing', 'backup_weekly_ok'];
 
 /** Cashier and auditor: who cannot be reached by push, and what the system has sent. */
 export function AdminNotificationsPage() {
@@ -83,6 +84,7 @@ export function AdminNotificationsPage() {
       <AdminHeader title={t('adminNotifications.title')} subtitle={t('adminUi.sub.notifications')} />
 
       <SplitLayout
+        sideFirst
         main={
           <Card className="px-5 pb-3 pt-5 sm:px-6">
             <CardHead
@@ -143,6 +145,10 @@ export function AdminNotificationsPage() {
           </Card>
         }
         side={
+          <div className="space-y-4">
+          {isCashier && members.data && (
+            <NoticeComposer members={members.data.items} onSent={() => void qc.invalidateQueries({ queryKey: ['notifications-admin'] })} />
+          )}
           <Card className="px-5 pb-3 pt-5">
             <CardHead
               icon={ICONS.alert}
@@ -183,6 +189,7 @@ export function AdminNotificationsPage() {
             )}
             {nudge.error && <div className="mt-3"><LoadError error={nudge.error} /></div>}
           </Card>
+          </div>
         }
       />
     </AdminPage>

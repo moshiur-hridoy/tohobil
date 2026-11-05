@@ -7,6 +7,7 @@ import {
   deviceRegisterSchema,
   notificationsQuerySchema,
   nudgeSchema,
+  customNoticeSchema,
   adminNotificationsQuerySchema,
   type DeviceRegister,
 } from '@barakah/shared';
@@ -18,6 +19,7 @@ import { listInbox, openAllNotifications, openNotification, type InboxDeps } fro
 import { listAdminNotifications, listUnreachableByPush, type AdminDeps } from '../notifications/admin';
 import { notifyMember, type NotificationDeps } from '../notifications/service';
 import { TEMPLATE_META } from '../notifications/catalog';
+import { sendCustomNotice } from '../notifications/notice';
 import type { PushSender } from '../notifications/providers/push';
 import type { SmsProvider } from '../notifications/providers/sms';
 
@@ -138,6 +140,23 @@ export function notificationRoutes(deps: NotificationRouteDeps, guards: Guards) 
       '/notifications/admin/unreachable',
       { preHandler: [authenticate, requireRole('cashier', 'auditor')] },
       async () => listUnreachableByPush(adminDeps),
+    );
+
+    // The cashier's own notice to all members or the ones picked (ASSUMPTIONS 123).
+    app.post(
+      '/notifications/notice',
+      { preHandler: [authenticate, requireRole('cashier'), requireWritable], schema: { body: customNoticeSchema } },
+      async (req) => {
+        const user = requireAuth(req);
+        const notificationDeps: NotificationDeps = {
+          pool: deps.pool,
+          clock: deps.clock,
+          log: req.log as unknown as Logger,
+          pushSender: deps.pushSender,
+          smsProvider: deps.smsProvider,
+        };
+        return sendCustomNotice(notificationDeps, user, req.body, req.ip);
+      },
     );
 
     // Manual nudge: rate limited to one per member per template per 6 hours.

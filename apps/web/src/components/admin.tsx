@@ -151,14 +151,14 @@ export function StatTile({ tone, icon, label, value, valueClass = '', sub, to, o
   return body;
 }
 
-/** Main area plus a side panel from `xl` (the panel drops below on smaller screens). */
-export function SplitLayout({ main, side, sideWidth = '380px' }: { main: ReactNode; side?: ReactNode; sideWidth?: string }) {
+/** Main area plus a side panel from `xl` (the panel drops below on smaller screens, or above with `sideFirst`). */
+export function SplitLayout({ main, side, sideWidth = '380px', sideFirst = false }: { main: ReactNode; side?: ReactNode; sideWidth?: string; sideFirst?: boolean }) {
   // no panel (for example a role that cannot act here): the main area takes the full width
   if (!side) return <div className="min-w-0 space-y-5">{main}</div>;
   return (
     <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_var(--side)]" style={{ ['--side' as string]: sideWidth }}>
       <div className="min-w-0 space-y-5">{main}</div>
-      <div className="min-w-0 space-y-5">{side}</div>
+      <div className={`min-w-0 space-y-5 ${sideFirst ? 'order-first xl:order-none' : ''}`}>{side}</div>
     </div>
   );
 }

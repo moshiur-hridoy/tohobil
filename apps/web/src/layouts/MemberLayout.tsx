@@ -7,6 +7,7 @@ import { useAuth } from '../lib/auth';
 import { useSyncPush } from '../lib/push';
 import type { ProposalSummary } from '../lib/types';
 import { Avatar, useMyPhoto } from '../components/MemberPhoto';
+import { PushPrompt } from '../components/PushPrompt';
 
 const TABS = [
   {
@@ -91,6 +92,7 @@ export function MemberLayout() {
       )}
 
       <main className="min-w-0 flex-1 pb-28">
+        <PushPrompt />
         <Outlet />
       </main>
 

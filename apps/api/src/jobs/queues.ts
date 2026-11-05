@@ -12,6 +12,7 @@ export const JOB_QUEUES = [
   'sms-fallback',
   'generate-rent-expected',
   'verify-ledger',
+  'backup-watch',
   'zakat-notice',
   'meeting-draft',
   'meeting-reminders',

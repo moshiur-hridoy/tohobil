@@ -8,6 +8,7 @@ import { APP_VERSION } from '../lib/changelog';
 import { localDigits } from '../lib/format';
 import { useAuth } from '../lib/auth';
 import { useSyncPush } from '../lib/push';
+import { PushPrompt } from '../components/PushPrompt';
 import { OwnerConflictBanner } from '../components/OwnerConflictBanner';
 import { Wordmark } from '../components/Logo';
 import { PrivacyToggle } from '../components/PrivacyToggle';
@@ -234,6 +235,7 @@ export function CashierLayout() {
 
       <main className="min-w-0 flex-1">
         <OwnerConflictBanner />
+        <PushPrompt />
         <div className="p-4 lg:p-6">
           <Outlet />
         </div>

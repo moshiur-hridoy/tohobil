@@ -2,6 +2,7 @@ import { badRequest, conflict, notFound } from '../../lib/errors';
 import { toBigInt } from '../../lib/money';
 import type { ExecutorSignature } from './shared';
 import { serialised } from './shared';
+import { renderNotification } from '../../notifications/catalog';
 
 export const valuationUpdateExecutor: ExecutorSignature = async (db, proposal) => {
   const payload = proposal.payload as {
@@ -63,13 +64,15 @@ export const constitutionAmendmentExecutor: ExecutorSignature = async (db, propo
      JOIN users u ON u.member_id = m.id
      WHERE m.status IN ('active','warning') AND u.status = 'active'`,
   )).rows as Array<{ id: string }>;
+  // The text is rendered now (`_body`): the push and the notices page show only that.
+  const { body } = renderNotification('constitution_updated', { version: String(payload.version) });
   for (const member of members) {
     await db.query(
       `INSERT INTO notifications (member_id, template, channel, payload, dedupe_key)
-       VALUES ($1, 'constitution_published', 'push', $2, $3)`,
+       VALUES ($1, 'constitution_updated', 'push', $2, $3)`,
       [
         member.id,
-        JSON.stringify({ version_id: versionId, version: payload.version, effective_from: payload.effective_from, summary: payload.summary }),
+        JSON.stringify({ version_id: versionId, version: payload.version, effective_from: payload.effective_from, summary: payload.summary, link: '/menu/constitution', _body: body }),
         `constitution:${versionId}:${member.id}`,
       ],
     );

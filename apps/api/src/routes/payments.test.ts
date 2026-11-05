@@ -365,6 +365,12 @@ describe('payments', () => {
     const note = (await q(`SELECT template, payload FROM notifications WHERE member_id=$1 AND template='payment_confirmed'`, [m.M04])) as Array<{ template: string; payload: Record<string, string> }>;
     expect(note).toHaveLength(1);
     expect(note[0]!.payload['objection_link']).toContain(id);
+    // The text the push and the notices page show (it used to be empty).
+    expect(note[0]!.payload['_body']).toMatch(/^আপনার ৳৫,০০০(\.০০)? পেমেন্ট গৃহীত হয়েছে।/);
+    // A notice stored before the text was rendered gets it from the payment when the inbox is read.
+    await q(`UPDATE notifications SET payload = payload - '_body' WHERE member_id=$1 AND template='payment_confirmed'`, [m.M04]);
+    const inbox = (await call('GET', '/notifications?channel=push&limit=50', s.M04.access_token)).json().items as Array<{ template: string; payload: Record<string, string> }>;
+    expect(inbox.find((n) => n.template === 'payment_confirmed')!.payload['_body']).toBe(note[0]!.payload['_body']);
     expect(await balance('CASH')).toBeGreaterThan(0n);
 
     // not for ordinary members or the auditor
@@ -397,7 +403,9 @@ describe('payments', () => {
     expect((await call('POST', `/payments/${p}/reject`, s.M01.access_token, { reason: 'amount does not match SMS' })).statusCode).toBe(200);
     expect(((await q(`SELECT status, reject_reason FROM payments WHERE id=$1`, [p]))[0] as Record<string, string>)).toMatchObject({ status: 'rejected', reject_reason: 'amount does not match SMS' });
     expect((await confirm(p)).json().code).toBe('payment.not_pending');
-    expect(await q(`SELECT 1 FROM notifications WHERE member_id=$1 AND template='payment_rejected'`, [m.M04])).toHaveLength(1);
+    const rejected = (await q(`SELECT payload FROM notifications WHERE member_id=$1 AND template='payment_rejected'`, [m.M04])) as Array<{ payload: Record<string, string> }>;
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0]!.payload['_body']).toContain('কারণ: amount does not match SMS');
     expect(await q(`SELECT 1 FROM ledger_entries WHERE ref_id=$1`, [p])).toHaveLength(0);
   });
 

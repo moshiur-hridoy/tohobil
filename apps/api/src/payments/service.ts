@@ -1,6 +1,7 @@
 import type pg from 'pg';
 import type { Logger } from 'pino';
 import {
+  formatBDT,
   toDhakaDate,
   type CashierEntry,
   type Clock,
@@ -24,6 +25,7 @@ import { AppError, badRequest, conflict, forbidden, notFound } from '../lib/erro
 import { paisaOut, toBigInt } from '../lib/money';
 import { ruleString } from '../lib/rules';
 import { inTransaction, type Db } from '../lib/tx';
+import { renderNotification } from '../notifications/catalog';
 import type { PushSender } from '../notifications/providers/push';
 import type { SmsProvider } from '../notifications/providers/sms';
 import {
@@ -395,24 +397,30 @@ async function confirmInTx(
     amount_paisa: amount.toString(),
     // The member can object to the ledger rows of a payment someone else entered (5.4).
     objection_link: `/menu/ledger?ref_type=payment&ref_id=${p.id}`,
-  });
+  }, { amount: formatBDT(amount, { digits: 'bn' }) });
 
   return { id: p.id, status: 'confirmed', allocation: planOut(plan) };
 }
 
-/** The member's inbox entry; the Phase 2 engine delivers it (push, then SMS if enabled). */
+/**
+ * The member's inbox entry; the Phase 2 engine delivers it as a push. The Bengali text is rendered
+ * now into `_body` (as `notifyMember` does), since both the push and the notices page show only that;
+ * without it the member saw an empty "payment received" card (owner report, 2026-11-05).
+ */
 async function queueNotification(
   tx: pg.PoolClient,
   memberId: string,
-  template: string,
+  template: 'payment_confirmed' | 'payment_rejected',
   dedupeKey: string,
   payload: Record<string, string>,
+  vars: Record<string, string>,
 ): Promise<void> {
+  const { body } = renderNotification(template, vars);
   await tx.query(
     `INSERT INTO notifications (member_id, template, channel, payload, dedupe_key)
      VALUES ($1, $2, 'push', $3::jsonb, $4)
      ON CONFLICT (dedupe_key) DO NOTHING`,
-    [memberId, template, JSON.stringify(payload), dedupeKey],
+    [memberId, template, JSON.stringify({ ...payload, _body: body }), dedupeKey],
   );
 }
 
@@ -479,10 +487,10 @@ export async function rejectPayment(
   ctx: ClientCtx,
 ): Promise<{ id: string; status: 'rejected' }> {
   return inTransaction(deps.pool, async (tx) => {
-    const res = await tx.query(`SELECT member_id, status FROM payments WHERE id = $1 FOR UPDATE`, [
+    const res = await tx.query(`SELECT member_id, status, amount_paisa::text AS amount_paisa FROM payments WHERE id = $1 FOR UPDATE`, [
       paymentId,
     ]);
-    const p = res.rows[0] as { member_id: string; status: string } | undefined;
+    const p = res.rows[0] as { member_id: string; status: string; amount_paisa: string } | undefined;
     if (!p) throw notFound('payment.not_found', 'Payment not found');
     if (p.status !== 'pending') {
       throw conflict('payment.not_pending', `This payment is already ${p.status}`);
@@ -502,8 +510,9 @@ export async function rejectPayment(
     });
     await queueNotification(tx, p.member_id, 'payment_rejected', `payment_rejected:${paymentId}`, {
       payment_id: paymentId,
+      amount_paisa: p.amount_paisa,
       reason: body.reason,
-    });
+    }, { amount: formatBDT(BigInt(p.amount_paisa), { digits: 'bn' }), reason: body.reason });
     return { id: paymentId, status: 'rejected' as const };
   });
 }

@@ -1,6 +1,7 @@
 import type pg from 'pg';
 import type { Logger } from 'pino';
-import type { Clock } from '@barakah/shared';
+import { formatBDT, type Clock } from '@barakah/shared';
+import { renderNotification } from './catalog';
 import * as repo from './repo';
 
 export interface InboxDeps {
@@ -23,6 +24,31 @@ function rowToDto(row: repo.NotificationRow) {
   };
 }
 
+/**
+ * Payment notices queued before 1.11 carry no `_body` (the payments code stored only ids), so the
+ * notices page showed an empty card. Their text is rendered here from the payment, read-only; the
+ * stored row is left as it is.
+ */
+async function withPaymentBodies<T extends { template: string; payload: Record<string, unknown> }>(pool: pg.Pool, items: T[]): Promise<T[]> {
+  const missing = items.filter(
+    (n) => (n.template === 'payment_confirmed' || n.template === 'payment_rejected') && !n.payload._body && typeof n.payload.payment_id === 'string',
+  );
+  if (!missing.length) return items;
+  const res = await pool.query(
+    `SELECT id::text, amount_paisa::text AS amount_paisa, reject_reason FROM payments WHERE id = ANY($1::uuid[])`,
+    [missing.map((n) => n.payload.payment_id as string)],
+  );
+  const byId = new Map((res.rows as Array<{ id: string; amount_paisa: string; reject_reason: string | null }>).map((r) => [r.id, r]));
+  return items.map((n) => {
+    if (!missing.includes(n)) return n;
+    const pay = byId.get(n.payload.payment_id as string);
+    if (!pay) return n;
+    const amount = formatBDT(BigInt(pay.amount_paisa), { digits: 'bn' });
+    const { body } = renderNotification(n.template as 'payment_confirmed' | 'payment_rejected', { amount, reason: pay.reject_reason ?? (n.payload.reason as string | undefined) });
+    return { ...n, payload: { ...n.payload, _body: body } };
+  });
+}
+
 export async function listInbox(
   deps: InboxDeps,
   memberId: string,
@@ -35,7 +61,7 @@ export async function listInbox(
   },
 ) {
   const rows = await repo.listMemberNotifications(deps.pool, memberId, filters);
-  const items = rows.slice(0, filters.limit).map(rowToDto);
+  const items = await withPaymentBodies(deps.pool, rows.slice(0, filters.limit).map(rowToDto));
   const nextCursor =
     rows.length > filters.limit
       ? `${rows[filters.limit]!.scheduled_for.toISOString()}:${rows[filters.limit]!.id}`

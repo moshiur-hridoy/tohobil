@@ -220,7 +220,7 @@ function NoticeCard({ item, onOpen }: { item: InboxItem; onOpen: () => void }) {
           {unread && <span aria-label={t('notices.new')} className="h-2.5 w-2.5 rounded-full bg-primary" />}
         </span>
       </div>
-      <p className={`mt-2.5 text-sm leading-relaxed text-foreground ${unread ? 'font-medium' : ''}`}>{item.payload._body ?? ''}</p>
+      {item.payload._body && <p className={`mt-2.5 text-sm leading-relaxed text-foreground ${unread ? 'font-medium' : ''}`}>{item.payload._body}</p>}
     </article>
   );
 }

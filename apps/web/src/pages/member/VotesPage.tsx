@@ -8,8 +8,9 @@ import { Empty, LoadError } from '../../components/StateViews';
 import { StatusPill } from '../../components/StatusPill';
 import { api } from '../../lib/api';
 import { errorMessage } from '../../lib/errors';
-import { useCountdown } from '../../lib/countdown';
+import { CountdownChip } from '../../components/VoteCountdown';
 import { fmtInstant } from '../../lib/dates';
+import { localDigits } from '../../lib/format';
 import type { ProposalSummary } from '../../lib/types';
 
 const LIMIT = 200;
@@ -70,7 +71,6 @@ export function VotesPage() {
 function ProposalCard({ proposal }: { proposal: ProposalSummary }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
-  const remaining = useCountdown(proposal.closes_at ?? null);
   const vote = useMutation({
     mutationFn: (choice: (typeof CHOICES)[number]) => api(`/proposals/${proposal.id}/vote`, { method: 'POST', body: { choice } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['proposals'] }),
@@ -79,20 +79,23 @@ function ProposalCard({ proposal }: { proposal: ProposalSummary }) {
   return (
     <div data-testid="proposal-card" className="rounded-[20px] border border-border bg-card shadow-card">
       <Link to={`/votes/${proposal.id}`} className="block rounded-[20px] p-4 hover:bg-hover">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-base font-bold leading-snug">{proposal.title}</p>
-            <p className="text-sm text-muted">
-              {t(`proposalType.${proposal.type}`)} · {t('votes.deadline')}: {remaining ?? fmtInstant(proposal.created_at)}
-            </p>
-          </div>
-          <span className="shrink-0">
-            {proposal.status === 'open' ? (
-              <StatusPill status="pending" label={t(`status.proposal.${proposal.status}`)} />
-            ) : (
-              <StatusPill status={proposal.status} label={t(`status.proposal.${proposal.status}`)} />
-            )}
-          </span>
+        <div className="flex items-center justify-between gap-3">
+          <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">{t(`proposalType.${proposal.type}`)}</span>
+          {proposal.status === 'open' ? (
+            <StatusPill status="pending" label={t(`status.proposal.${proposal.status}`)} />
+          ) : (
+            <StatusPill status={proposal.status} label={t(`status.proposal.${proposal.status}`)} />
+          )}
+        </div>
+        <p className="mt-2.5 text-base font-bold leading-snug [overflow-wrap:anywhere]">{proposal.title}</p>
+        <div className="mt-2">
+          {proposal.status === 'open' && proposal.closes_at ? (
+            <CountdownChip closesAt={proposal.closes_at} />
+          ) : (
+            <span className="text-sm text-muted">
+              {t('votes.deadline')}: {fmtInstant(proposal.finalized_at ?? proposal.closes_at ?? proposal.created_at)}
+            </span>
+          )}
         </div>
         <div className="mt-3 rounded-xl bg-soft px-3 py-2 text-sm">
           {proposal.ballots_hidden ? (
@@ -101,9 +104,9 @@ function ProposalCard({ proposal }: { proposal: ProposalSummary }) {
             <>
               <span className="text-muted">{t('votes.result')}:</span>{' '}
               <span className="font-medium">
-                {proposal.basis === 'share'
+                {localDigits(proposal.basis === 'share'
                   ? `${proposal.counts.yes_weight} / ${proposal.threshold_weight}`
-                  : `${proposal.counts.yes} / ${proposal.threshold}`}
+                  : `${proposal.counts.yes} / ${proposal.threshold}`)}
               </span>
             </>
           )}

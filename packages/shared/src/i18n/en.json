@@ -138,7 +138,26 @@
     "youVoted": "You voted: {{choice}}",
     "notVoted": "Not voted",
     "hasVoted": "Voted",
-    "turnout": "{{voted}} of {{total}} have voted"
+    "turnout": "{{voted}} of {{total}} have voted",
+    "yourVote": "Your vote",
+    "changeHint": "You can change your vote until the time is up.",
+    "turnoutTitle": "How many have voted",
+    "totalOf": "Total {{amount}}",
+    "notVotedShort": "Not voted",
+    "you": "you",
+    "countdown": {
+      "title": "Time left to vote",
+      "over": "Voting time is over",
+      "counting": "The result is being prepared. Check again shortly.",
+      "sr": "Voting ends in {{days}} days {{hours}} hours {{minutes}} minutes",
+      "days": "days",
+      "hours": "hours",
+      "minutes": "min",
+      "seconds": "sec",
+      "closesAt": "Ends: {{when}}",
+      "chip": "{{clock}} left",
+      "chipDays": "{{days}} d {{clock}} left"
+    }
   },
   "assets": {
     "title": "Assets",

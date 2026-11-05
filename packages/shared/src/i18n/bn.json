@@ -138,7 +138,26 @@
     "youVoted": "আপনি ভোট দিয়েছেন: {{choice}}",
     "notVoted": "এখনও ভোট হয়নি",
     "hasVoted": "ভোট দিয়েছেন",
-    "turnout": "{{voted}}/{{total}} জন ভোট দিয়েছেন"
+    "turnout": "{{voted}}/{{total}} জন ভোট দিয়েছেন",
+    "yourVote": "আপনার ভোট",
+    "changeHint": "সময় শেষ হওয়ার আগে ভোট বদলানো যাবে।",
+    "turnoutTitle": "কতজন ভোট দিয়েছেন",
+    "totalOf": "মোট {{amount}}",
+    "notVotedShort": "দেননি",
+    "you": "আপনি",
+    "countdown": {
+      "title": "ভোট শেষ হতে বাকি",
+      "over": "ভোটের সময় শেষ",
+      "counting": "ফল তৈরি হচ্ছে, একটু পরে আবার দেখুন।",
+      "sr": "ভোট শেষ হতে বাকি {{days}} দিন {{hours}} ঘণ্টা {{minutes}} মিনিট",
+      "days": "দিন",
+      "hours": "ঘণ্টা",
+      "minutes": "মিনিট",
+      "seconds": "সেকেন্ড",
+      "closesAt": "শেষ হবে: {{when}}",
+      "chip": "{{clock}} বাকি",
+      "chipDays": "{{days}} দিন {{clock}} বাকি"
+    }
   },
   "assets": {
     "title": "সম্পদ",

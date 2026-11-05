@@ -26,7 +26,8 @@ export default defineConfig({
         scope: '/',
         start_url: '/',
         display: 'standalone',
-        theme_color: '#aff900',
+        // The page background: the Android app and installed PWA colour their bars with it (lib/theme.ts).
+        theme_color: '#f6f8f7',
         background_color: '#ffffff',
         icons: [
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },

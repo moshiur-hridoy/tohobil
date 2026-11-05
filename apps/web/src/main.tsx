@@ -14,6 +14,7 @@ import { usePrivacyBlur } from './lib/privacyBlur';
 import { AuthProvider } from './lib/auth';
 import { DemoBanner, IS_DEMO } from './demo/DemoUi';
 import { hideSplash } from './lib/splash';
+import { watchStatusBar } from './lib/theme';
 import './styles/theme.css';
 import './styles/globals.css';
 
@@ -50,4 +51,5 @@ ReactDOM.createRoot(root).render(
   </React.StrictMode>,
 );
 
+watchStatusBar();
 hideSplash();

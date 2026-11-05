@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from './ui';
 import { Wordmark } from './Logo';
+import { useHeroStatusBar } from '../lib/theme';
 
 const TRUST = [
   ['auth.trustLedger', 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4'],
@@ -18,6 +19,7 @@ const MARK = 'M14.6293 56.7565H58.3018V25.4919H79.3712V71.3015H28.3956L14.6293 5
  */
 export function AuthShell({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
   const { t } = useTranslation();
+  useHeroStatusBar();
   return (
     <div className="min-h-screen bg-background lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <aside className="relative overflow-hidden rounded-b-[32px] bg-hero px-6 pb-16 pt-10 text-on-hero lg:flex lg:min-h-screen lg:flex-col lg:rounded-none lg:px-14 lg:py-12">

@@ -6,6 +6,7 @@ The APK given to members was made with pwabuilder.com from `https://app.moshiur.
 
 - Download link for members: `https://github.com/moshiur-hridoy/tohobil/raw/apk/barakah.apk` (the `apk` branch holds only that file; `*.apk` is git-ignored on main).
 - `apps/web/public/.well-known/assetlinks.json` carries the APK's signing fingerprint. With it the APK opens full screen; without it Android shows an address bar. A new APK signed with a different key needs its fingerprint added there.
+- Bar colours: the top status bar follows the page (`<meta name="theme-color">`, kept in step with the light/dark theme by `syncStatusBar()` in `apps/web/src/lib/theme.ts`). The bottom navigation bar colour is fixed inside the APK when PWABuilder builds it. The first APK used the old lime manifest colour `#aff900` for both. For the next APK, in PWABuilder's Android options set "Status bar color" and "Splash screen background color" to `#f6f8f7`, "Navigation bar color" to `#ffffff` (the bottom menu's colour) and "Navigation bar color (dark)" to `#131a16`, and sign it with the **same** key (choose "Use mine" and upload the existing keystore), so members install it over the old one.
 - The signing key from the PWABuilder zip stays outside the repo, backed up with the recovery kit. Losing it means members must uninstall and install a new APK.
 
 The Capacitor build below is the later route (Play Store).

@@ -7,6 +7,13 @@
     var t = localStorage.getItem('barakah.theme');
     if (t === 'light' || t === 'dark') root.dataset.theme = t;
   } catch (e) {}
+  // The phone's status bar (meta theme-color, above in index.html) in the dark background before the
+  // first paint; src/lib/theme.ts keeps it in step from then on.
+  try {
+    var dark = root.dataset.theme === 'dark' ||
+      (root.dataset.theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (dark) document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0b100d');
+  } catch (e) {}
   // The animated splash (#splash, public/splash.css) only when opened from the app icon: the
   // installed PWA or the Android app. `?splash` previews it in a browser tab, and the tab keeps
   // showing it on every reload (the app drops the query when it moves on); `?splash=0` stops that.

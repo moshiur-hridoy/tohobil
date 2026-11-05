@@ -25,8 +25,16 @@ const nav: NavResponse = {
 describe('fundSplit', () => {
   it('adds up to the server net assets', () => {
     const s = fundSplit(nav);
-    expect(s).toEqual({ cash: 13200000n, invested: 40000000n, owed: 3200000n, charity: 2500000n, advance: 200000n, otherOwed: 500000n, net: 50000000n });
-    expect(s.cash + s.invested - s.owed).toBe(s.net);
+    expect(s).toEqual({ cash: 13200000n, ownCash: 10200000n, invested: 40000000n, charity: 2500000n, levy: 0n, otherOwed: 500000n, advance: 200000n, total: 50200000n });
+    // The advance stays in the total: it is the server's net assets plus the advance.
+    expect(s.total).toBe(BigInt(nav.net_assets_paisa) + s.advance);
+  });
+
+  it('takes levy money held off the cash with the sadaqah', () => {
+    const s = fundSplit({ ...nav, deductions: [...nav.deductions, { account: 'LEVY_CLEARING', balance_paisa: '30000' }] });
+    expect(s.levy).toBe(30000n);
+    expect(s.ownCash).toBe(10170000n);
+    expect(s.otherOwed).toBe(500000n);
   });
 });
 

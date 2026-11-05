@@ -58,6 +58,8 @@ export function HomePage() {
   const nextMeeting = meeting.data?.meeting;
   // The auditor decides value updates and reversals; without a computer this card is the way in.
   const isAuditor = !!me?.roles.includes('auditor');
+  const isCashier = !!me?.roles.includes('cashier');
+  const cashSplit = nav.data ? fundSplit(nav.data) : null;
   const approvals = useQuery({
     queryKey: ['approvals', 'pending'],
     enabled: isAuditor,
@@ -196,10 +198,18 @@ export function HomePage() {
             {myCredit !== null && myCredit > 0n && <p className="text-xs font-semibold text-primary">{t('home.capitalAdvance', { amount: taka(myCredit) })}</p>}
           </div>
           {/* Charity balance (18.2): fines and riba are donated at year end, never fund income */}
-          <div className="col-span-2 flex items-center gap-3 rounded-[18px] border border-border bg-card px-3.5 py-3">
-            <Chip tone="bg-vio-bg text-vio" d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />
-            <h2 className="flex-1 text-[0.8125rem] font-normal text-muted">{t('home.charityToDonate')}</h2>
-            <p className="text-[1.1875rem] font-bold">{accounts.data ? <AnimatedTaka paisa={charityBalance(accounts.data.items)} intro={intro} /> : '…'}</p>
+          <div className="col-span-2 rounded-[18px] border border-border bg-card px-3.5 py-3">
+            <div className="flex items-center gap-3">
+              <Chip tone="bg-vio-bg text-vio" d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />
+              <h2 className="flex-1 text-[0.8125rem] font-normal text-muted">{t('home.charityToDonate')}</h2>
+              <p className="text-[1.1875rem] font-bold">{accounts.data ? <AnimatedTaka paisa={charityBalance(accounts.data.items)} intro={intro} /> : '…'}</p>
+            </div>
+            {/* For the cashier, who counts the money: cash without the sadaqah, plus the sadaqah, is all the cash held. */}
+            {isCashier && cashSplit && (
+              <p className="mt-1.5 text-right text-xs text-muted">
+                {t('home.charityCashNote', { cash: taka(cashSplit.cash - cashSplit.charity), charity: taka(cashSplit.charity), total: taka(cashSplit.cash) })}
+              </p>
+            )}
           </div>
         </section>
 
@@ -253,14 +263,22 @@ function pct(part: bigint, whole: bigint): string {
 }
 
 /**
- * The fund's net assets from `GET /nav` (the same figure as the Assets tab, with the latest shop
- * values), and where the money is: cash, invested, and what is owed to others. Taps through to Assets.
+ * The fund's total from `GET /nav` (latest shop values): the fund's own cash plus what is invested.
+ * The sadaqah fund, levy money held and anything owed to others come off the cash, named in small
+ * print under it; the members' advance stays in (docs/ASSUMPTIONS.md 121). Taps through to Assets.
  */
 function FundCard({ nav, intro }: { nav: NavResponse | undefined; intro: boolean }) {
   const { t } = useTranslation();
   const split = nav ? fundSplit(nav) : null;
-  const cashBar = split && split.cash > 0n ? split.cash : 0n;
+  const cashBar = split && split.ownCash > 0n ? split.ownCash : 0n;
   const investedBar = split && split.invested > 0n ? split.invested : 0n;
+  const less = split
+    ? ([
+        ['home.split.lessCharity', split.charity],
+        ['home.split.lessLevy', split.levy],
+        ['home.split.lessOwed', split.otherOwed],
+      ] as const).filter(([, paisa]) => paisa !== 0n)
+    : [];
   return (
     <Link to="/assets" className="block rounded-[18px] border border-border bg-card p-3.5 text-foreground">
       <div className="flex items-center gap-2.5">
@@ -270,7 +288,7 @@ function FundCard({ nav, intro }: { nav: NavResponse | undefined; intro: boolean
       </div>
       {split ? (
         <>
-          <p className={`mt-2 text-[1.75rem] font-bold leading-tight [overflow-wrap:anywhere] ${negClass(split.net)}`}><AnimatedTaka paisa={split.net} intro={intro} /></p>
+          <p className={`mt-2 text-[1.75rem] font-bold leading-tight [overflow-wrap:anywhere] ${negClass(split.total)}`}><AnimatedTaka paisa={split.total} intro={intro} /></p>
           {cashBar + investedBar > 0n && (
             <div className="mt-3 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-background" aria-hidden="true">
               {cashBar > 0n && <span className="h-full bg-vio" style={{ width: pct(cashBar, cashBar + investedBar) }} />}
@@ -278,37 +296,23 @@ function FundCard({ nav, intro }: { nav: NavResponse | undefined; intro: boolean
             </div>
           )}
           <dl className="mt-3 grid gap-1.5 text-[0.875rem]">
-            <div className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-vio" aria-hidden="true" />
-              <dt className="flex-1 text-muted">{t('home.split.cash')}</dt>
-              <dd className={`font-semibold ${negClass(split.cash)}`}>{taka(split.cash)}</dd>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-vio" aria-hidden="true" />
+                <dt className="flex-1 text-muted">{t('home.split.cash')}</dt>
+                <dd className={`font-semibold ${negClass(split.ownCash)}`}>{taka(split.ownCash)}</dd>
+              </div>
+              {less.length > 0 && (
+                <dd className="mt-0.5 text-right text-xs text-muted">
+                  {less.map(([key, paisa]) => t(key, { amount: taka(paisa < 0n ? -paisa : paisa), sign: paisa < 0n ? '+' : '−' })).join(' · ')}
+                </dd>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <span className="h-2.5 w-2.5 rounded-full bg-primary" aria-hidden="true" />
               <dt className="flex-1 text-muted">{t('home.split.invested')}</dt>
               <dd className="font-semibold">{taka(split.invested)}</dd>
             </div>
-            {split.charity !== 0n && (
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full border border-border" aria-hidden="true" />
-                <dt className="flex-1 text-muted">{t('home.split.charity')}</dt>
-                <dd className="font-semibold">−{taka(split.charity)}</dd>
-              </div>
-            )}
-            {split.advance !== 0n && (
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full border border-border" aria-hidden="true" />
-                <dt className="flex-1 text-muted">{t('home.split.advance')}</dt>
-                <dd className="font-semibold">−{taka(split.advance)}</dd>
-              </div>
-            )}
-            {split.otherOwed !== 0n && (
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full border border-border" aria-hidden="true" />
-                <dt className="flex-1 text-muted">{t('home.split.owed')}</dt>
-                <dd className="font-semibold">−{taka(split.otherOwed)}</dd>
-              </div>
-            )}
           </dl>
         </>
       ) : (

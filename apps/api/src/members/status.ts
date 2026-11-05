@@ -3,6 +3,7 @@ import {
   addMonths,
   divRound,
   formatBDT,
+  navDeduction,
   type Clock,
 } from '@barakah/shared';
 import { audit } from '../lib/audit';
@@ -141,7 +142,7 @@ export async function computeMemberFinancials(
     acct('SETTLEMENT_PAYABLE') +
     acct('MEMBER_ESCROW') +
     acct('CHARITY_PAYABLE') +
-    acct('LEVY_CLEARING') +
+    navDeduction('LEVY_CLEARING', acct('LEVY_CLEARING')) +
     acct('INACTIVE_HELD') +
     acct('MEMBER_QARD') +
     acct('DEFERRED_PURCHASE_PAYABLE') +

@@ -236,7 +236,7 @@ describe('levy', () => {
 });
 
 describe('levy fund pays running costs (ASSUMPTIONS 105)', () => {
-  dbIt('takes bank charges even into a deficit, holds other costs to what is held, and never touches NAV', async () => {
+  dbIt('takes bank charges even into a deficit, holds other costs to what is held, and NAV carries only the deficit', async () => {
     const nav0 = await netAssets();
     const levy0 = await balance('LEVY_CLEARING');
     const spend = (body: Record<string, unknown>) =>
@@ -250,7 +250,8 @@ describe('levy fund pays running costs (ASSUMPTIONS 105)', () => {
     const charge = await spend({ category: 'bank_charge', amount_paisa: String(levy0 + 15000n) });
     expect(charge.statusCode).toBe(200);
     expect(await balance('LEVY_CLEARING')).toBe(-15000n);
-    expect(await netAssets()).toBe(nav0); // cash down, levy liability down: members' capital untouched
+    // Cash down, levy liability down; the part below zero is not counted as owed back (ASSUMPTIONS 121).
+    expect(await netAssets()).toBe(nav0 - 15000n);
 
     const row = await q(`SELECT category, payee, proposal_id, amount_paisa::text AS a FROM levy_expenses WHERE ledger_seq = $1`, [charge.json().ledger_seq]);
     expect(row).toEqual([{ category: 'bank_charge', payee: 'Bank', proposal_id: null, a: String(levy0 + 15000n) }]);
@@ -268,6 +269,7 @@ describe('levy fund pays running costs (ASSUMPTIONS 105)', () => {
     expect(paid.statusCode).toBe(201);
     const held = BigInt(owed) - 15000n;
     expect(await balance('LEVY_CLEARING')).toBe(held);
+    expect(await netAssets()).toBe(nav0); // the levy coming in gives the main fund the deficit back
 
     const pid = await approved('expense', { max_amount_paisa: '200000', account: 'LEVY_CLEARING', category: 'photocopy', payee: 'Print shop', purpose: 'Meeting papers' });
     await execute(pid, { actual_amount_paisa: held, account: 'CASH' });
@@ -279,7 +281,7 @@ describe('levy fund pays running costs (ASSUMPTIONS 105)', () => {
 });
 
 describe('moving earlier charges onto the levy fund (ASSUMPTIONS 106)', () => {
-  dbIt('moves each unmoved, unreversed bank or SMS charge once, giving members their capital back', async () => {
+  dbIt('moves each unmoved, unreversed bank or SMS charge once, the main fund carrying any deficit', async () => {
     // An SMS charge from before the levy fund, taken from the main fund.
     await inTransaction(db!.app, async (tx) => {
       await postEntries(tx, [
@@ -299,7 +301,9 @@ describe('moving earlier charges onto the levy fund (ASSUMPTIONS 106)', () => {
     expect(moved.json()).toEqual({ moved: 1, total_paisa: '34500' });
     expect(await balance('LEVY_CLEARING')).toBe(levy0 - 34_500n);
     expect(await balance('SMS_CHARGE')).toBe(0n);
-    expect(await netAssets()).toBe(nav0 + 34_500n); // members' capital gets it back
+    // Only levy money actually held covers it; a deficit stays on the main fund until a levy comes in (ASSUMPTIONS 121).
+    const covered = (levy0 > 0n ? levy0 : 0n) - (levy0 - 34_500n > 0n ? levy0 - 34_500n : 0n);
+    expect(await netAssets()).toBe(nav0 + covered);
 
     // Never twice.
     expect((await call('POST', '/levy/move-old-costs', cashier.access_token)).json()).toEqual({ moved: 0, total_paisa: '0' });

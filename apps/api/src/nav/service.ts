@@ -1,5 +1,5 @@
 import type pg from 'pg';
-import { type Clock, NAV_CASH_ACCOUNTS, NAV_DEDUCTION_ACCOUNTS } from '@barakah/shared';
+import { type Clock, NAV_CASH_ACCOUNTS, NAV_DEDUCTION_ACCOUNTS, navDeduction } from '@barakah/shared';
 import { ruleInt } from '../lib/rules';
 import { unspentAdvance } from '../lib/nav';
 
@@ -63,7 +63,7 @@ export async function computeNav(deps: NavDeps): Promise<NavBreakdown> {
     if (NAV_CASH_ACCOUNTS.includes(row.code as typeof NAV_CASH_ACCOUNTS[number])) {
       balanceMap.set(row.code, BigInt(row.balance_paisa));
     } else if (NAV_DEDUCTION_ACCOUNTS.includes(row.code as typeof NAV_DEDUCTION_ACCOUNTS[number])) {
-      balanceMap.set(row.code, BigInt(row.natural_balance_paisa));
+      balanceMap.set(row.code, navDeduction(row.code, BigInt(row.natural_balance_paisa)));
     }
   }
 

@@ -22,6 +22,7 @@
     "fundNetAssets": "Fund Net Assets",
     "myShareValue": "My share value",
     "openVotes": "Open Votes",
+    "charityCashNote": "Cash without sadaqah {{cash}} + sadaqah {{charity}} = all cash {{total}}",
     "charityToDonate": "Sadaqah fund",
     "outstandingNone": "You are all paid up.",
     "advanceBadge": "Paid ahead",
@@ -56,9 +57,9 @@
     "split": {
       "cash": "Cash (bank, bKash, in hand)",
       "invested": "Invested (latest value)",
-      "charity": "Sadaqah fund",
-      "owed": "Owed to others",
-      "advance": "Members' advance (month not come)"
+      "lessCharity": "{{sign}}sadaqah {{amount}}",
+      "lessLevy": "{{sign}}levy fund {{amount}}",
+      "lessOwed": "{{sign}}owed to others {{amount}}"
     },
     "shareFullAfter": "Pay it and the full value is yours",
     "sharesCount": "{{count}} shares",

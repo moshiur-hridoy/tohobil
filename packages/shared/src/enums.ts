@@ -207,6 +207,15 @@ export const NAV_DEDUCTION_ACCOUNTS = [
   'MEMBER_QARD',
   'DEFERRED_PURCHASE_PAYABLE',
 ] as const satisfies readonly AccountCode[];
+/**
+ * What one NAV deduction account takes off net assets: its natural balance, except a levy fund in
+ * deficit. Bank and SMS charges may take LEVY_CLEARING below zero; that money has already left the
+ * fund's cash and is not counted as owed back, so it counts as 0 and the main fund carries the loss
+ * until a levy comes in (owner decision, docs/ASSUMPTIONS.md 121).
+ */
+export function navDeduction(code: string, naturalBalance: bigint): bigint {
+  return code === 'LEVY_CLEARING' && naturalBalance < 0n ? 0n : naturalBalance;
+}
 /** Asset account that is never counted directly: the asset's valuation replaces it. */
 export const NAV_REPLACED_BY_VALUATION_ACCOUNT = 'INVESTMENTS_AT_COST' as const;
 

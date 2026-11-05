@@ -1,4 +1,4 @@
-import { divRound, NAV_DEDUCTION_ACCOUNTS } from '@barakah/shared';
+import { divRound, NAV_DEDUCTION_ACCOUNTS, navDeduction } from '@barakah/shared';
 import { ruleInt } from './rules';
 import { toBigInt } from './money';
 import type { Db } from './tx';
@@ -54,7 +54,8 @@ export interface NavResult {
  *   cash          = natural balance of CASH, BANK, BKASH, NAGAD
  *   assets        = latest approved valuation of every held asset (cost if no valuation),
  *                   or cost paid so far for assets still being acquired.
- *   deductions    = natural balance of the NAV deduction accounts, plus members' unspent advance
+ *   deductions    = natural balance of the NAV deduction accounts (a levy deficit counts as 0,
+ *                   navDeduction), plus members' unspent advance
  *   net_assets    = cash + assets - deductions
  *   shares        = shares today for active, warning, suspended, deceased members
  *   nav_per_share = divRound(net_assets, shares) (0 if no shares)
@@ -69,14 +70,15 @@ export async function computeNav(db: Db, date: string): Promise<NavResult> {
   );
   const cashPaisa = toBigInt((cashRows.rows[0] as { total: string }).total);
 
-  const deductionRows = await db.query(
-    `SELECT COALESCE(SUM(natural_balance_paisa), 0)::text AS total
+  const deductionRows = (await db.query(
+    `SELECT code, natural_balance_paisa::text AS total
      FROM v_account_balances
      WHERE code = ANY($1::text[])`,
     [NAV_DEDUCTION_ACCOUNTS],
-  );
+  )).rows as Array<{ code: string; total: string }>;
   const advancePaisa = await unspentAdvance(db);
-  const deductionsPaisa = toBigInt((deductionRows.rows[0] as { total: string }).total) + advancePaisa;
+  const deductionsPaisa =
+    deductionRows.reduce((sum, r) => sum + navDeduction(r.code, toBigInt(r.total)), 0n) + advancePaisa;
 
   const assetRows = (await db.query(
     `WITH latest AS (

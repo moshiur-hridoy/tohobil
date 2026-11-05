@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import * as Tabs from '@radix-ui/react-tabs';
-import { NAV_CASH_ACCOUNTS, NAV_DEDUCTION_ACCOUNTS } from '@barakah/shared';
+import { NAV_CASH_ACCOUNTS, NAV_DEDUCTION_ACCOUNTS, navDeduction } from '@barakah/shared';
 import { Chip, Icon } from '../../components/ui';
 import { Avatar } from '../../components/MemberPhoto';
 import { AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, Card } from '../../components/admin';
@@ -50,8 +50,9 @@ function addMonths(period: string, n: number): string {
 /** Integer percent of two paisa amounts, without going through floating point money. */
 const percent = (part: bigint, whole: bigint): number => (whole > 0n ? Number((part * 100n) / whole) : 0);
 
+// A levy deficit counts as 0 among the deductions, as in the NAV (navDeduction, docs/ASSUMPTIONS.md 121).
 const balanceOf = (accounts: AccountBalance[], codes: readonly string[]): bigint =>
-  accounts.filter((a) => codes.includes(a.code)).reduce((sum, a) => sum + BigInt(a.natural_balance_paisa), 0n);
+  accounts.filter((a) => codes.includes(a.code)).reduce((sum, a) => sum + navDeduction(a.code, BigInt(a.natural_balance_paisa)), 0n);
 
 interface SystemStatus {
   backup: { ok: boolean; finished?: string } | null;

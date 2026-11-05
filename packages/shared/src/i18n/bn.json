@@ -22,6 +22,7 @@
     "fundNetAssets": "ফান্ডের মোট সম্পদ",
     "myShareValue": "আমার শেয়ারের মূল্য",
     "openVotes": "চলমান ভোট",
+    "charityCashNote": "সদকা বাদে নগদ {{cash}} + সদকা {{charity}} = মোট নগদ {{total}}",
     "charityToDonate": "সদকা ফান্ড",
     "outstandingNone": "আপনার কোনো বকেয়া নেই।",
     "advanceBadge": "অগ্রিম",
@@ -56,9 +57,9 @@
     "split": {
       "cash": "নগদ (ব্যাংক, বিকাশ, হাতে)",
       "invested": "বিনিয়োগে (সর্বশেষ মূল্যে)",
-      "charity": "সদকা ফান্ড",
-      "owed": "অন্যের পাওনা",
-      "advance": "সদস্যদের অগ্রিম (মাস আসেনি)"
+      "lessCharity": "{{sign}}সদকা {{amount}}",
+      "lessLevy": "{{sign}}লেভি ফান্ড {{amount}}",
+      "lessOwed": "{{sign}}অন্যের পাওনা {{amount}}"
     },
     "shareFullAfter": "দিলে পুরো মূল্যটাই আপনার",
     "sharesCount": "{{count}}টি শেয়ার",

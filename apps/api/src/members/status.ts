@@ -9,6 +9,7 @@ import { audit } from '../lib/audit';
 import { badRequest, notFound } from '../lib/errors';
 import { type Db } from '../lib/tx';
 import { toBigInt } from '../lib/money';
+import { unspentAdvance } from '../lib/nav';
 import { ruleBool, ruleInt, rulePaisa } from '../lib/rules';
 import { type LedgerActor } from '../ledger/service';
 import { notifyMember } from '../notifications/service';
@@ -116,6 +117,8 @@ interface MemberFinancials {
   outstandingPrincipal: bigint;
   outstandingFines: bigint;
   escrow: bigint;
+  /** This member's advance not yet spent on a due (already inside `capital`). */
+  advance: bigint;
 }
 
 /**
@@ -141,7 +144,9 @@ export async function computeMemberFinancials(
     acct('LEVY_CLEARING') +
     acct('INACTIVE_HELD') +
     acct('MEMBER_QARD') +
-    acct('DEFERRED_PURCHASE_PAYABLE');
+    acct('DEFERRED_PURCHASE_PAYABLE') +
+    // every member's unspent advance is owed to them, as in lib/nav.ts (docs/ASSUMPTIONS.md 120)
+    (await unspentAdvance(db));
 
   // asset valuations
   const assetRows = (await db.query(
@@ -188,6 +193,7 @@ export async function computeMemberFinancials(
     [memberId],
   )).rows[0] as { escrow_paisa: string | number | bigint } | undefined;
   const escrow = toBigInt(escrowRow?.escrow_paisa ?? 0);
+  const advance = await unspentAdvance(db, memberId);
 
   // shares
   const sharesRow = (await db.query(`SELECT shares_on($1, $2::date) AS shares`, [memberId, today]))
@@ -214,6 +220,7 @@ export async function computeMemberFinancials(
     outstandingPrincipal,
     outstandingFines,
     escrow,
+    advance,
   };
 }
 

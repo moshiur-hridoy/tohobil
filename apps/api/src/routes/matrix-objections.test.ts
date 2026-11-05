@@ -129,6 +129,9 @@ describe('matrix and objections', () => {
     expect(row.ahead_months).toBe(1);
     const narrow = (await call('GET', '/matrix?from=2026-09&to=2026-11', s.M02.access_token)).json();
     expect(narrow.members.find((m: { member_code: string }) => m.member_code === 'M07').ahead_months).toBe(1);
+    // and every member sees the same count in the member list
+    const list = (await call('GET', '/members', s.M02.access_token)).json();
+    expect(list.items.find((m: { code: string }) => m.code === 'M07').ahead_months).toBe(1);
     expect(row.cells['2026-11'].projected).toBe(false);
     // no due exists for them yet, so they stay out of the totals
     expect(body.totals_by_period['2026-12'].paid_paisa).toBe('0');

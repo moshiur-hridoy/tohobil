@@ -126,7 +126,8 @@ export async function zakatStatementPdf(db: Db, clock: Clock, memberId: string, 
   const date = asOf ?? clock.todayDhaka();
   const fin = await computeMemberFinancials(db, memberId, date);
   const nav = await computeNav(db, date);
-  const estimate = nav.shares_outstanding > 0 ? divRound(nav.net_assets * BigInt(fin.shares), BigInt(nav.shares_outstanding)) : 0n;
+  // The shares' part of NAV, plus the member's own advance, which NAV counts as owed to them (docs/ASSUMPTIONS.md 120).
+  const estimate = (nav.shares_outstanding > 0 ? divRound(nav.net_assets * BigInt(fin.shares), BigInt(nav.shares_outstanding)) : 0n) + fin.advance;
 
   const pdf = new PdfWriter(`${L.zakatTitle} ${m.code}`, bn.app.name);
   pdf.heading(`${bn.app.name} — ${L.zakatTitle}`, 18);

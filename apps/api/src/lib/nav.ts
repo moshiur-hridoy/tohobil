@@ -11,6 +11,25 @@ export interface NavAssetBreakdown {
   basis: 'valuation' | 'cost';
 }
 
+/**
+ * Members' money paid ahead and not yet spent on a due (`payments.unallocated_paisa`): theirs until
+ * the month it pays comes, so NAV counts it as owed to them, like escrow (docs/ASSUMPTIONS.md 120).
+ * The money stays in the fund's accounts and can be spent or invested. With `memberId`, that member's
+ * alone. Members whose settlement was executed are left out: their capital, this credit included, was
+ * moved to SETTLEMENT_PAYABLE (older settlements did not clear the credit).
+ */
+export async function unspentAdvance(db: Db, memberId?: string): Promise<bigint> {
+  const res = await db.query(
+    `SELECT COALESCE(SUM(p.unallocated_paisa), 0)::text AS total
+     FROM payments p
+     WHERE p.status = 'confirmed' AND p.unallocated_paisa > 0
+       AND ($1::uuid IS NULL OR p.member_id = $1::uuid)
+       AND NOT EXISTS (SELECT 1 FROM settlements s WHERE s.member_id = p.member_id AND s.status IN ('paying', 'completed'))`,
+    [memberId ?? null],
+  );
+  return toBigInt((res.rows[0] as { total: string }).total);
+}
+
 export interface NavResult {
   /** Net assets in paisa (spec 5.7). */
   net_assets: bigint;
@@ -22,7 +41,10 @@ export interface NavResult {
   stale_valuations: boolean;
   cash_paisa: bigint;
   assets_paisa: bigint;
+  /** Deductions, the members' unspent advance included. */
   deductions_paisa: bigint;
+  /** Members' unspent advance (part of `deductions_paisa`). */
+  advance_paisa: bigint;
   asset_breakdown: NavAssetBreakdown[];
 }
 
@@ -32,7 +54,7 @@ export interface NavResult {
  *   cash          = natural balance of CASH, BANK, BKASH, NAGAD
  *   assets        = latest approved valuation of every held asset (cost if no valuation),
  *                   or cost paid so far for assets still being acquired.
- *   deductions    = natural balance of the NAV deduction accounts
+ *   deductions    = natural balance of the NAV deduction accounts, plus members' unspent advance
  *   net_assets    = cash + assets - deductions
  *   shares        = shares today for active, warning, suspended, deceased members
  *   nav_per_share = divRound(net_assets, shares) (0 if no shares)
@@ -53,7 +75,8 @@ export async function computeNav(db: Db, date: string): Promise<NavResult> {
      WHERE code = ANY($1::text[])`,
     [NAV_DEDUCTION_ACCOUNTS],
   );
-  const deductionsPaisa = toBigInt((deductionRows.rows[0] as { total: string }).total);
+  const advancePaisa = await unspentAdvance(db);
+  const deductionsPaisa = toBigInt((deductionRows.rows[0] as { total: string }).total) + advancePaisa;
 
   const assetRows = (await db.query(
     `WITH latest AS (
@@ -64,6 +87,7 @@ export async function computeNav(db: Db, date: string): Promise<NavResult> {
      )
      SELECT a.id, a.name, a.status,
             a.cost_paisa::text AS cost_paisa,
+            a.acquired_on::text AS acquired_on,
             COALESCE(lv.value_paisa, a.cost_paisa)::text AS value_paisa,
             lv.as_of::text AS as_of
      FROM assets a
@@ -76,6 +100,7 @@ export async function computeNav(db: Db, date: string): Promise<NavResult> {
     cost_paisa: string;
     value_paisa: string;
     as_of: string | null;
+    acquired_on: string | null;
   }>;
 
   let assetsPaisa = 0n;
@@ -89,12 +114,15 @@ export async function computeNav(db: Db, date: string): Promise<NavResult> {
         : toBigInt(row.value_paisa);
     assetsPaisa += value;
 
+    // A held asset never valued counts its purchase as its valuation (docs/ASSUMPTIONS.md 119):
+    // just bought is not stale. With no purchase date either, it is stale.
     if (row.status === 'held') {
-      if (!row.as_of) {
+      const valuedOn = row.as_of ?? row.acquired_on;
+      if (!valuedOn) {
         stale = true;
       } else {
         const age = Math.floor(
-          (new Date(date).getTime() - new Date(row.as_of).getTime()) /
+          (new Date(date).getTime() - new Date(valuedOn).getTime()) /
             (1000 * 60 * 60 * 24),
         );
         if (age > maxAge) stale = true;
@@ -130,18 +158,17 @@ export async function computeNav(db: Db, date: string): Promise<NavResult> {
     cash_paisa: cashPaisa,
     assets_paisa: assetsPaisa,
     deductions_paisa: deductionsPaisa,
+    advance_paisa: advancePaisa,
     asset_breakdown: assetBreakdown,
   };
 }
 
-/** True if any held asset valuation is older than maxAgeDays or is missing. */
+/**
+ * True if any held asset's valuation is older than the limit (computeNav works it out). An asset never
+ * valued is not stale by itself: its purchase counts as its valuation (docs/ASSUMPTIONS.md 119).
+ */
 export function hasStaleValuations(nav: NavResult, _maxAgeDays: number, _today: string): boolean {
-  return nav.asset_breakdown.some((a) => {
-    if (a.status !== 'held') return false;
-    if (a.basis === 'cost') return true;
-    // The computeNav result already flags staleness; reuse it.
-    return nav.stale_valuations;
-  });
+  return nav.stale_valuations;
 }
 
 /** Entry price for n shares = divRound(net_assets * n, shares_outstanding) (spec 5.9). */

@@ -13,6 +13,7 @@ import { usePrivacy } from './lib/privacy';
 import { usePrivacyBlur } from './lib/privacyBlur';
 import { AuthProvider } from './lib/auth';
 import { DemoBanner, IS_DEMO } from './demo/DemoUi';
+import { hideSplash } from './lib/splash';
 import './styles/theme.css';
 import './styles/globals.css';
 
@@ -48,3 +49,5 @@ ReactDOM.createRoot(root).render(
     </QueryClientProvider>
   </React.StrictMode>,
 );
+
+hideSplash();

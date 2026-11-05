@@ -13,6 +13,7 @@ import { fmtDate, fmtPeriod, fmtPeriodShort, todayDhaka } from '../../lib/dates'
 import { formatCount } from '../../lib/format';
 import { taka } from '../../lib/money';
 import type { DueStatus, MatrixCell, MatrixResponse } from '../../lib/types';
+import { AheadBadge } from '../../components/AheadBadge';
 
 /**
  * Each status is a glyph plus a tint, so it never relies on colour alone. Paid cells stay quiet so
@@ -248,11 +249,7 @@ export function MatrixPage() {
                       <span className="flex items-center gap-2.5">
                         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-soft text-[0.6875rem] font-bold text-ink2">{m.member_code}</span>
                         <span className="font-semibold">{m.member_name}</span>
-                        {ahead > 0 && (
-                          <span title={t('matrixPage.aheadTitle')} className="whitespace-nowrap rounded-full bg-primary-soft px-2 py-0.5 text-[0.6875rem] font-bold text-primary">
-                            ★ {t('matrixPage.ahead', { n: formatCount(ahead) })}
-                          </span>
-                        )}
+                        <AheadBadge months={ahead} />
                       </span>
                     </th>
                     {periods.map((p) => {

@@ -47,6 +47,34 @@ function withFine(status: CellStatus, fine: bigint): CellStatus {
 const str = (v: bigint): string => v.toString();
 
 /**
+ * Months after `current` each member has already paid, for the "★ N months ahead" badge everyone
+ * sees: months whose dues are paid in full, plus the whole months their advance credit pays after
+ * their last monthly due (the dues job spends it that way). Counted over every month, never a range.
+ */
+export async function monthsPaidAhead(db: pg.Pool, current: string): Promise<Map<string, number>> {
+  const [paid, last, credit] = await Promise.all([
+    db.query(
+      `SELECT member_id, COUNT(*)::int AS months FROM (
+         SELECT member_id, period FROM v_due_status
+         WHERE period > $1 AND kind <> 'special'
+         GROUP BY member_id, period HAVING SUM(GREATEST(outstanding_paisa, 0)) = 0
+       ) p GROUP BY member_id`,
+      [current],
+    ),
+    db.query(`SELECT DISTINCT ON (member_id) member_id, amount_paisa FROM dues WHERE kind = 'monthly' ORDER BY member_id, period DESC`),
+    db.query(`SELECT member_id, SUM(unallocated_paisa) AS credit FROM payments WHERE status = 'confirmed' AND unallocated_paisa > 0 GROUP BY member_id`),
+  ]);
+  const out = new Map((paid.rows as Array<{ member_id: string; months: number }>).map((r) => [r.member_id, r.months]));
+  const price = new Map((last.rows as Array<{ member_id: string; amount_paisa: unknown }>).map((r) => [r.member_id, toBigInt(r.amount_paisa)]));
+  for (const r of credit.rows as Array<{ member_id: string; credit: unknown }>) {
+    const p = price.get(r.member_id) ?? 0n;
+    const bought = p > 0n ? Number(toBigInt(r.credit) / p) : 0;
+    if (bought > 0) out.set(r.member_id, (out.get(r.member_id) ?? 0) + bought);
+  }
+  return out;
+}
+
+/**
  * `GET /matrix?from&to` (spec 7): the legacy sheet as data. One row per member in code order, one cell
  * per period (null when the member had no due then), with row and column totals. Every logged-in
  * member may read it: collection status is public inside the group (the home screen shows it too).
@@ -66,7 +94,7 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
     }
   }
 
-  const [members, dues, fines, pending, latestMonthly, credits, paidAhead] = await Promise.all([
+  const [members, dues, fines, pending, latestMonthly, credits, aheadMonths] = await Promise.all([
     deps.pool.query(`SELECT id, code, full_name, status, photo_file_id FROM members ORDER BY code`),
     deps.pool.query(
       `SELECT v.member_id, v.period, v.status, v.amount_paisa, v.allocated_paisa, v.outstanding_paisa,
@@ -103,15 +131,7 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
       `SELECT member_id, SUM(unallocated_paisa) AS credit FROM payments
        WHERE status = 'confirmed' AND unallocated_paisa > 0 GROUP BY member_id`,
     ),
-    // Months after this one already paid in full, whatever range is asked for (the "N months ahead" badge).
-    deps.pool.query(
-      `SELECT member_id, COUNT(*)::int AS months FROM (
-         SELECT member_id, period FROM v_due_status
-         WHERE period > $1 AND kind <> 'special'
-         GROUP BY member_id, period HAVING SUM(GREATEST(outstanding_paisa, 0)) = 0
-       ) paid GROUP BY member_id`,
-      [current],
-    ),
+    monthsPaidAhead(deps.pool, current),
   ]);
 
   // The months after a member's last monthly due that their credit pays, at that due's amount:
@@ -120,14 +140,10 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
     (latestMonthly.rows as Array<{ member_id: string; period: string; amount_paisa: unknown }>).map((r) => [r.member_id, { period: r.period, price: toBigInt(r.amount_paisa) }]),
   );
   const projected = new Map<string, bigint>();
-  const aheadMonths = new Map((paidAhead.rows as Array<{ member_id: string; months: number }>).map((r) => [r.member_id, r.months]));
   for (const r of credits.rows as Array<{ member_id: string; credit: unknown }>) {
     const last = lastDue.get(r.member_id);
     if (!last || last.price <= 0n) continue;
     let held = toBigInt(r.credit);
-    // whole months the credit pays after the last due count as paid ahead too
-    const bought = Number(held / last.price);
-    if (bought > 0) aheadMonths.set(r.member_id, (aheadMonths.get(r.member_id) ?? 0) + bought);
     for (let p = addMonths(last.period, 1); held > 0n && p <= to; p = addMonths(p, 1)) {
       const take = held < last.price ? held : last.price;
       held -= take;

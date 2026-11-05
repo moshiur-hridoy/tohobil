@@ -5,6 +5,7 @@ import { ListSkeleton, Skeleton } from '../../components/Skeleton';
 import { PullToRefresh } from '../../components/PullToRefresh';
 import { LoadError } from '../../components/StateViews';
 import { api } from '../../lib/api';
+import { fmtDate } from '../../lib/dates';
 import { formatCount } from '../../lib/format';
 import { holdingTotals } from '../../lib/holding';
 import { negClass, profitPercent, taka } from '../../lib/money';
@@ -86,7 +87,7 @@ export function AssetsPage() {
     qc.invalidateQueries({ queryKey: ['partners'] }),
   ]);
 
-  const staleCount = nav.data?.stale_valuations.length ?? 0;
+  const stale = nav.data?.stale_valuations ?? [];
 
   const active = (assets.data?.items ?? []).filter((a) => ACTIVE_STATUSES.has(a.status));
 
@@ -116,12 +117,7 @@ export function AssetsPage() {
 
         <main className="flex-1 space-y-3 overflow-y-auto px-4 py-2 pb-4">
           <SummaryCard nav={nav.data} assets={assets.data?.items} />
-          {staleCount > 0 && (
-            <div className="flex items-center gap-2 rounded-xl bg-warn-bg p-2.5 text-xs font-semibold text-warn">
-              <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l10 18H2z" /><path d="M12 10v5" /><path d="M12 18h.01" /></svg>
-              {t('assets.staleCount', { count: staleCount })}
-            </div>
-          )}
+          {stale.length > 0 && <StaleValuations items={stale} />}
 
           {!assets.data || !partners.data ? (
             <ListSkeleton rows={3} />
@@ -268,6 +264,49 @@ function ShopCard({ partner, items }: { partner: PartnerRow; items: AssetRow[] }
         </span>
       </div>
     </Link>
+  );
+}
+
+/** Which assets need a new value, since when, and the way to it: a shop's links to its page (where the responsible member sends one). */
+function StaleValuations({ items }: { items: NavResponse['stale_valuations'] }) {
+  const { t } = useTranslation();
+  return (
+    <section className="rounded-xl bg-warn-bg p-3 text-warn" aria-labelledby="stale-title">
+      <h2 id="stale-title" className="flex items-center gap-2 text-sm font-semibold">
+        <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z" /><path d="M12 10v5" /><path d="M12 18h.01" /></svg>
+        {t('assets.staleCount', { count: items.length })}
+      </h2>
+      <ul className="mt-2 space-y-1.5">
+        {items.map((a) => {
+          const since = a.latest_as_of
+            ? t('assets.staleLastValued', { date: fmtDate(a.latest_as_of) })
+            : a.acquired_on
+              ? t('assets.staleBoughtOnly', { date: fmtDate(a.acquired_on) })
+              : t('assets.staleNoDate');
+          const body = (
+            <>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold text-foreground">{a.name}</span>
+                <span className="block text-xs">{since}</span>
+              </span>
+              {a.partner_id && (
+                <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+              )}
+            </>
+          );
+          return (
+            <li key={a.id}>
+              {a.partner_id ? (
+                <Link to={`/assets/shop/${a.partner_id}`} className="flex items-center gap-2 rounded-lg bg-card px-2.5 py-2">{body}</Link>
+              ) : (
+                <div className="flex items-center gap-2 rounded-lg bg-card px-2.5 py-2">{body}</div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <p className="mt-2 text-xs">{t('assets.staleHow')}</p>
+    </section>
   );
 }
 

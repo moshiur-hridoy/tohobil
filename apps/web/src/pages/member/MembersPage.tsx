@@ -9,6 +9,7 @@ import { arrearsOf, taka } from '../../lib/money';
 import type { MemberRow } from '../../lib/types';
 import { Avatar } from '../../components/MemberPhoto';
 import { RoleBadges } from '../../components/RoleBadge';
+import { AheadBadge } from '../../components/AheadBadge';
 
 interface RegisterRow {
   share_no: number;
@@ -48,7 +49,7 @@ export function MembersPage() {
                 <Avatar fileId={m.photo_file_id} fallback={m.full_name.trim().charAt(0)} className="h-11 w-11 bg-primary-soft font-bold text-primary" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="flex min-w-0 flex-wrap items-center gap-1.5 font-semibold">{m.code} · {m.full_name} <RoleBadges roles={m.roles} /></span>
+                    <span className="flex min-w-0 flex-wrap items-center gap-2 font-semibold">{m.code} · {m.full_name} <RoleBadges roles={m.roles} /><AheadBadge months={m.ahead_months} /></span>
                     <span className="text-sm text-muted">{t(`status.member.${m.status}`, { defaultValue: m.status })}</span>
                   </div>
                   <div className="mt-1 flex flex-wrap gap-x-4 text-sm">

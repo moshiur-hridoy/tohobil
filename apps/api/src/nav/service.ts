@@ -1,6 +1,7 @@
 import type pg from 'pg';
 import { type Clock, NAV_CASH_ACCOUNTS, NAV_DEDUCTION_ACCOUNTS } from '@barakah/shared';
 import { ruleInt } from '../lib/rules';
+import { unspentAdvance } from '../lib/nav';
 
 export interface NavDeps {
   pool: pg.Pool;
@@ -14,7 +15,8 @@ export interface NavBreakdown {
   cash: { account: string; balance_paisa: bigint }[];
   assets: { id: string; name: string; status: string; valuation_paisa: bigint; value_as_of: string | null }[];
   deductions: { account: string; balance_paisa: bigint }[];
-  stale_valuations: { id: string; name: string; latest_as_of: string | null }[];
+  /** `latest_as_of` is the last valuation (null if never valued); `acquired_on` the purchase, which counts as one. */
+  stale_valuations: { id: string; name: string; partner_id: string | null; latest_as_of: string | null; acquired_on: string | null }[];
 }
 
 function divRound(a: bigint, b: bigint): bigint {
@@ -52,7 +54,7 @@ export async function computeNav(deps: NavDeps): Promise<NavBreakdown> {
       [asOf],
     ),
     deps.pool.query(
-      `SELECT id, name, status, cost_paisa FROM assets WHERE status IN ('held','acquiring')`,
+      `SELECT id, name, status, cost_paisa, partner_id, acquired_on::text AS acquired_on FROM assets WHERE status IN ('held','acquiring')`,
     ),
   ]);
 
@@ -91,10 +93,15 @@ export async function computeNav(deps: NavDeps): Promise<NavBreakdown> {
     });
   }
 
-  const deductions = NAV_DEDUCTION_ACCOUNTS.map((account) => ({
-    account,
-    balance_paisa: balanceMap.get(account) ?? 0n,
-  }));
+  // The members' unspent advance is owed to them too (docs/ASSUMPTIONS.md 120). It is not a ledger
+  // account (the money sits in MEMBER_CAPITAL), so it has a row of its own, `MEMBER_ADVANCE`.
+  const deductions: Array<{ account: string; balance_paisa: bigint }> = [
+    ...NAV_DEDUCTION_ACCOUNTS.map((account) => ({
+      account,
+      balance_paisa: balanceMap.get(account) ?? 0n,
+    })),
+    { account: 'MEMBER_ADVANCE', balance_paisa: await unspentAdvance(deps.pool) },
+  ];
   const deductionsTotal = deductions.reduce((sum, d) => sum + d.balance_paisa, 0n);
 
   const net_assets = cashTotal + assetTotal - deductionsTotal;
@@ -105,10 +112,16 @@ export async function computeNav(deps: NavDeps): Promise<NavBreakdown> {
   const stale: NavBreakdown['stale_valuations'] = [];
   const cutoff = new Date(today);
   cutoff.setDate(cutoff.getDate() - maxAgeDays);
+  const assetRows = new Map(
+    (heldAssets.rows as Array<{ id: string; partner_id: string | null; acquired_on: string | null }>).map((r) => [r.id, r]),
+  );
   for (const a of assets) {
     if (a.status !== 'held') continue;
-    if (!a.value_as_of || new Date(a.value_as_of) < cutoff) {
-      stale.push({ id: a.id, name: a.name, latest_as_of: a.value_as_of });
+    // Never valued: the purchase counts as the valuation (docs/ASSUMPTIONS.md 119); no date at all is stale.
+    const row = assetRows.get(a.id);
+    const valuedOn = a.value_as_of ?? row?.acquired_on ?? null;
+    if (!valuedOn || new Date(valuedOn) < cutoff) {
+      stale.push({ id: a.id, name: a.name, partner_id: row?.partner_id ?? null, latest_as_of: a.value_as_of, acquired_on: row?.acquired_on ?? null });
     }
   }
 

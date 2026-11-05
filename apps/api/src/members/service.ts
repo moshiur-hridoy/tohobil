@@ -4,6 +4,7 @@ import type { AuthUser } from '../auth/service';
 import { audit } from '../lib/audit';
 import { badRequest, conflict, notFound } from '../lib/errors';
 import { paisaOut } from '../lib/money';
+import { monthsPaidAhead } from '../matrix/service';
 import { inTransaction, type Db } from '../lib/tx';
 
 export interface MemberDeps {
@@ -106,6 +107,7 @@ export async function listMembers(
      ORDER BY m.code`,
     [today, today.slice(0, 7), q.status ?? null],
   );
+  const ahead = await monthsPaidAhead(deps.pool, today.slice(0, 7));
 
   type Row = MemberRow & Record<string, unknown>;
   return {
@@ -124,6 +126,8 @@ export async function listMembers(
       under_verification: row['under_verification'],
       settlement_status: row['settlement_status'] ?? null,
       roles: row['roles'],
+      // public inside the group, like the matrix: shown as a badge next to the name
+      ahead_months: ahead.get(row.id) ?? 0,
     })),
   };
 }

@@ -8,16 +8,25 @@
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <script>
-      // Apply the saved theme before the first paint (no flash). Without a saved choice the device decides.
-      try {
-        var t = localStorage.getItem('barakah.theme');
-        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
-      } catch (e) {}
-    </script>
+    <link rel="stylesheet" href="/splash.css" />
+    <script src="/boot.js"></script>
     <title>বারাকাহ ফান্ড</title>
   </head>
   <body>
+    <!-- Launch splash, shown when opened from the app icon (public/boot.js, public/splash.css, src/lib/splash.ts) -->
+    <div id="splash" aria-hidden="true">
+      <div class="splash-mark">
+        <span class="splash-ring"></span>
+        <span class="splash-ring r2"></span>
+        <div class="splash-icon">
+          <svg viewBox="0 0 107 107" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M14.6293 56.7565H58.3018V25.4919H79.3712V71.3015H28.3956L14.6293 56.7565Z" fill="#1D2900" />
+            <circle class="splash-dot" cx="53.5" cy="84.6345" r="6.73773" fill="#1D2900" />
+          </svg>
+        </div>
+      </div>
+      <p class="splash-name">বারাকাহ ফান্ড</p>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

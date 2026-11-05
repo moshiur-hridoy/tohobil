@@ -27,6 +27,8 @@ export interface MemberRow {
   settlement_status: 'approved' | 'paying' | null;
   /** 'cashier' and/or 'auditor'; empty for a plain member. */
   roles?: string[];
+  /** Months after this one already paid (dues paid ahead plus whole months of advance credit). */
+  ahead_months?: number;
   joined_on: string | null;
 }
 
@@ -343,7 +345,7 @@ export interface NavResponse {
     value_as_of: string | null;
   }>;
   deductions: Array<{ account: string; balance_paisa: string }>;
-  stale_valuations: Array<{ id: string; name: string; latest_as_of: string | null }>;
+  stale_valuations: Array<{ id: string; name: string; partner_id: string | null; latest_as_of: string | null; acquired_on: string | null }>;
 }
 
 export interface NoticeRow {

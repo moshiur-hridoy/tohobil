@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { Outlet, NavLink, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -12,11 +13,6 @@ const TABS = [
     to: '/home',
     labelKey: 'nav.home',
     icon: 'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
-  },
-  {
-    to: '/pay',
-    labelKey: 'nav.pay',
-    icon: 'M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M3 10h18 M16 14.5h2',
   },
   {
     to: '/votes',
@@ -94,19 +90,56 @@ export function MemberLayout() {
       </header>
       )}
 
-      <main className="min-w-0 flex-1 pb-24">
+      <main className="min-w-0 flex-1 pb-28">
         <Outlet />
       </main>
 
       {/* Bottom tab bar. The padding keeps it clear of the iPhone home indicator (viewport-fit=cover). */}
       <nav className="fixed bottom-0 left-0 right-0 mx-auto max-w-lg border-t border-border bg-card pb-[env(safe-area-inset-bottom)]">
         <div className="flex min-h-16 items-stretch justify-around">
-          {TABS.map(({ to, labelKey, icon }) => (
-            <TabItem key={to} to={to} label={t(labelKey)} icon={icon} badge={to === '/votes' ? openVotes : 0} />
+          {TABS.map(({ to, labelKey, icon }, i) => (
+            <Fragment key={to}>
+              {/* Payment sits in the middle as the main action, a raised green "+" with its name under it. */}
+              {i === 2 && <PayButton label={t('nav.pay')} />}
+              <TabItem to={to} label={t(labelKey)} icon={icon} badge={to === '/votes' ? openVotes : 0} />
+            </Fragment>
           ))}
         </div>
       </nav>
     </div>
+  );
+}
+
+/**
+ * The raised green "+" in the middle of the tab bar: report a payment, with its name under it like the
+ * other tabs. It has the same 30px icon slot as a tab and the circle rises out of it, so the name sits
+ * on exactly the same line as the others whatever the font or screen.
+ */
+function PayButton({ label }: { label: string }) {
+  return (
+    <NavLink
+      to="/pay"
+      className={({ isActive }) =>
+        `group flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-1 text-xs ${isActive ? 'font-bold text-primary' : 'text-muted'}`
+      }
+    >
+      {({ isActive }) => (
+        <>
+          <span className="relative h-[30px] w-[52px]">
+            <span
+              className={`absolute bottom-0 left-1/2 grid h-14 w-14 -translate-x-1/2 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-4 transition-transform group-active:scale-95 motion-reduce:transition-none motion-reduce:group-active:scale-100 ${
+                isActive ? 'ring-primary-soft' : 'ring-card'
+              }`}
+            >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+                <path d="M12 5v14 M5 12h14" />
+              </svg>
+            </span>
+          </span>
+          <span className="max-w-full break-words text-center leading-tight">{label}</span>
+        </>
+      )}
+    </NavLink>
   );
 }
 

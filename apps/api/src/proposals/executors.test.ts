@@ -243,10 +243,10 @@ describe('proposal executors', () => {
   });
 
   dbIt('new_member fails on stale valuations and succeeds after refresh', async () => {
-    // Held asset with no valuation => stale.
+    // Held asset never valued and bought more than a year ago => stale (the purchase counts as a valuation).
     const asset = (await q(
       `INSERT INTO assets (kind, name, cost_paisa, status, acquired_on)
-       VALUES ('gold', 'Test Gold', 1000000, 'held', '2026-01-01') RETURNING id`,
+       VALUES ('gold', 'Test Gold', 1000000, 'held', '2025-06-01') RETURNING id`,
     ))[0] as { id: string };
 
     const stalePid = await approvedProposal('new_member', {

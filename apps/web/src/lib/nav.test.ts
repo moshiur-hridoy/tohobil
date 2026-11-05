@@ -8,7 +8,7 @@ const nav: NavResponse = {
   nav_per_share_paisa: '1666667',
   cash: [
     { account: 'CASH_BANK', balance_paisa: '12000000' },
-    { account: 'CASH_BKASH', balance_paisa: '1000000' },
+    { account: 'CASH_BKASH', balance_paisa: '1200000' },
   ],
   assets: [
     { id: 'a', name: 'Gold shop', status: 'held', valuation_paisa: '30000000', value_as_of: '2026-10-01' },
@@ -17,6 +17,7 @@ const nav: NavResponse = {
   deductions: [
     { account: 'CHARITY_PAYABLE', balance_paisa: '2500000' },
     { account: 'MEMBER_ESCROW', balance_paisa: '500000' },
+    { account: 'MEMBER_ADVANCE', balance_paisa: '200000' },
   ],
   stale_valuations: [],
 };
@@ -24,7 +25,7 @@ const nav: NavResponse = {
 describe('fundSplit', () => {
   it('adds up to the server net assets', () => {
     const s = fundSplit(nav);
-    expect(s).toEqual({ cash: 13000000n, invested: 40000000n, owed: 3000000n, charity: 2500000n, otherOwed: 500000n, net: 50000000n });
+    expect(s).toEqual({ cash: 13200000n, invested: 40000000n, owed: 3200000n, charity: 2500000n, advance: 200000n, otherOwed: 500000n, net: 50000000n });
     expect(s.cash + s.invested - s.owed).toBe(s.net);
   });
 });

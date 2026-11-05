@@ -23,14 +23,21 @@ export const charityBalance = (accounts: AccountBalance[]): bigint =>
 /**
  * Where the fund's money is, from `GET /nav`: cash in every cash account, held assets at their latest
  * value, and what is owed to others. `cash + invested - owed` is exactly the server's net assets.
+ * `advance` is the members' money paid ahead and not yet spent on a due (`MEMBER_ADVANCE`, docs/ASSUMPTIONS.md 120).
  */
-export function fundSplit(nav: NavResponse): { cash: bigint; invested: bigint; owed: bigint; charity: bigint; otherOwed: bigint; net: bigint } {
+export function fundSplit(nav: NavResponse): { cash: bigint; invested: bigint; owed: bigint; charity: bigint; advance: bigint; otherOwed: bigint; net: bigint } {
   const sum = (rows: Array<{ balance_paisa: string } | { valuation_paisa: string }>) =>
     rows.reduce((s, r) => s + BigInt('balance_paisa' in r ? r.balance_paisa : r.valuation_paisa), 0n);
   const owed = sum(nav.deductions);
   // The sadaqah fund (CHARITY_PAYABLE) is shown on its own line; everything else owed to others stays together.
   const charity = sum(nav.deductions.filter((d) => d.account === 'CHARITY_PAYABLE'));
-  return { cash: sum(nav.cash), invested: sum(nav.assets), owed, charity, otherOwed: owed - charity, net: BigInt(nav.net_assets_paisa) };
+  const advance = memberAdvance(nav);
+  return { cash: sum(nav.cash), invested: sum(nav.assets), owed, charity, advance, otherOwed: owed - charity - advance, net: BigInt(nav.net_assets_paisa) };
+}
+
+/** The members' unspent advance in `GET /nav`: in the fund's accounts, but theirs until the month comes. */
+export function memberAdvance(nav: NavResponse): bigint {
+  return BigInt(nav.deductions.find((d) => d.account === 'MEMBER_ADVANCE')?.balance_paisa ?? '0');
 }
 
 /**

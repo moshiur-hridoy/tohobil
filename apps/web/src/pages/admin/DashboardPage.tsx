@@ -15,9 +15,9 @@ import { daysBetween, fmtDate, fmtInstant, fmtPeriod, todayDhaka } from '../../l
 import { formatCount } from '../../lib/format';
 import { useCashByMethod } from '../../lib/useCashByMethod';
 import { arrearsOf, negClass, taka } from '../../lib/money';
-import { charityBalance, interimNetAssets } from '../../lib/nav';
+import { charityBalance, interimNetAssets, memberAdvance } from '../../lib/nav';
 import { RoleBadges } from '../../components/RoleBadge';
-import type { AccountBalance, ApprovalRow, MatrixCell, MatrixResponse, MemberRow, ObjectionRow, Page, PaymentRow, ProposalSummary, SettlementView } from '../../lib/types';
+import type { AccountBalance, ApprovalRow, MatrixCell, MatrixResponse, MemberRow, NavResponse, ObjectionRow, Page, PaymentRow, ProposalSummary, SettlementView } from '../../lib/types';
 
 const ALL = 200;
 const TREND_MONTHS = 6;
@@ -147,12 +147,20 @@ function NetAssetsHero({ accounts, members, matrix }: { accounts?: AccountBalanc
   const active = members?.filter((m) => (m.status === 'active' || m.status === 'warning') && m.settlement_status === null);
   const perMethod = useCashByMethod();
   const cash = accounts ? balanceOf(accounts, NAV_CASH_ACCOUNTS) : null;
+  const owed = accounts ? balanceOf(accounts, NAV_DEDUCTION_ACCOUNTS) : null;
+  // What can be spent or invested now: the cash less what is held for others (charity, escrow, settlements...).
+  const usable = cash === null || owed === null ? null : cash - owed;
+  // Members' money paid ahead: owed to them in the net assets (docs/ASSUMPTIONS.md 120), yet usable cash,
+  // since it pays their coming dues; the usable balance names it.
+  const nav = useQuery({ queryKey: ['nav'], queryFn: () => api<NavResponse>('/nav') });
+  const advance = nav.data ? memberAdvance(nav.data) : null;
+  const net = accounts && advance !== null ? interimNetAssets(accounts) - advance : null;
   // Where the cash sits: one line per account, so a payment through bKash is seen leaving bKash.
   const perAccount = accounts && perMethod ? NAV_CASH_ACCOUNTS.map((code) => [code, balanceOf(accounts, [code])] as const) : [];
   const breakdown: Array<[string, string | null, string]> = [
     [t('adminDash.cashAndBank'), cash === null ? null : taka(cash), negClass(cash)],
     [t('adminDash.assetsAtCost'), accounts ? taka(balanceOf(accounts, ['INVESTMENTS_AT_COST'])) : null, ''],
-    [t('adminDash.owedToOthers'), accounts ? taka(balanceOf(accounts, NAV_DEDUCTION_ACCOUNTS)) : null, ''],
+    [t('adminDash.owedToOthers'), owed === null ? null : taka(owed), ''],
     [
       t('adminDash.membersShares'),
       active ? t('adminDash.membersSharesValue', { members: formatCount(active.length), shares: formatCount(active.reduce((s, m) => s + m.shares, 0)) }) : null,
@@ -167,8 +175,8 @@ function NetAssetsHero({ accounts, members, matrix }: { accounts?: AccountBalanc
       <div className="relative grid gap-8 p-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:p-7">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-ink2">{t('admin.netAssets')}</p>
-          {accounts ? (
-            <p className={`mt-1.5 text-[2.75rem] font-bold leading-tight tracking-tight tabular-nums ${negClass(interimNetAssets(accounts))}`}>{taka(interimNetAssets(accounts))}</p>
+          {net !== null ? (
+            <p className={`mt-1.5 text-[2.75rem] font-bold leading-tight tracking-tight tabular-nums ${negClass(net)}`}>{taka(net)}</p>
           ) : (
             <Skeleton className="mt-2 h-12 w-64" />
           )}
@@ -182,6 +190,14 @@ function NetAssetsHero({ accounts, members, matrix }: { accounts?: AccountBalanc
               </div>
             ))}
           </dl>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl bg-primary-soft px-4 py-3" data-testid="usable-balance">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">{t('adminDash.usableBalance')}</p>
+              <p className="text-xs text-ink2">{t('adminDash.usableBalanceHint')}</p>
+              {advance !== null && advance > 0n && <p className="text-xs text-ink2">{t('adminDash.usableAdvance', { amount: taka(advance) })}</p>}
+            </div>
+            {usable === null ? <Skeleton className="h-7 w-28" /> : <p className={`text-xl font-bold tabular-nums ${negClass(usable) || 'text-primary'}`}>{taka(usable)}</p>}
+          </div>
           {perAccount.length > 0 && (
             <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-[0.8125rem]" data-testid="cash-by-account">
               {perAccount.map(([code, value]) => (

@@ -20,6 +20,8 @@ import { advanceOf } from '../../lib/advance';
 import { thisMonthOf } from '../../lib/thisMonth';
 import { formatCount } from '../../lib/format';
 import type { AccountBalance, ApprovalRow, DueRow, MatrixResponse, MeetingRow, MemberRow, NavResponse, ProposalSummary } from '../../lib/types';
+import { AheadBadge } from '../../components/AheadBadge';
+import { AnimatedTaka, useFirstVisit } from '../../components/AnimatedTaka';
 
 const AVATAR = ['bg-primary-soft text-primary', 'bg-blue-bg text-blue', 'bg-vio-bg text-vio', 'bg-warn-bg text-warn'];
 
@@ -27,6 +29,8 @@ export function HomePage() {
   const { t } = useTranslation();
   const { me } = useAuth();
   const qc = useQueryClient();
+  // The amounts count up on the first visit after the app opens or reloads, not on every return.
+  const intro = useFirstVisit();
 
   const members = useQuery({ queryKey: ['members'], queryFn: () => api<{ items: MemberRow[] }>('/members') });
   const accounts = useQuery({ queryKey: ['balances'], queryFn: () => api<{ items: AccountBalance[] }>('/accounts/balances') });
@@ -76,6 +80,9 @@ export function HomePage() {
     .map((d) => d.due_date)
     .sort()[0];
   const advance = myDetail.data ? advanceOf(myDetail.data.dues, myDetail.data.credit_paisa ?? '0', today) : null;
+  // Paid ahead and not yet spent on a due: inside capital_paisa, but not share capital until its month
+  // comes, and not in the share value either (docs/ASSUMPTIONS.md 120).
+  const myCredit = myDetail.data ? BigInt(myDetail.data.credit_paisa ?? '0') : null;
   const gold = toPay === 0n && !!advance && advance.months > 0;
   const dueChip =
     now.dueDate === null || now.daysLeft === null
@@ -128,7 +135,7 @@ export function HomePage() {
               <Skeleton className="mt-3 h-10 w-40" />
             ) : (
               <>
-                <p className="mt-2.5 text-[2.625rem] font-bold leading-[1.15]">{taka(toPay)}</p>
+                <p className="mt-2.5 text-[2.625rem] font-bold leading-[1.15]"><AnimatedTaka paisa={toPay} intro={intro} /></p>
                 {owed === 0n && now.amount > 0n ? (
                   <div className="mt-2.5 flex flex-wrap gap-2 text-[0.8125rem]">
                     <span className={`rounded-full px-2.5 py-1 ${now.daysLeft !== null && now.daysLeft <= 3 ? 'bg-hero-action font-semibold text-on-hero-action' : 'bg-hero-chip'}`}>{dueChip}</span>
@@ -177,21 +184,22 @@ export function HomePage() {
           </div>
         </section>
 
-        <FundCard nav={nav.data} />
+        <FundCard nav={nav.data} intro={intro} />
 
         <section className="grid grid-cols-2 gap-3">
-          {mine?.status !== 'inactive' && <MyShareTile nav={nav.data} mine={mine} toPay={toPay} />}
+          {mine?.status !== 'inactive' && <MyShareTile nav={nav.data} mine={mine} credit={myCredit} toPay={toPay} intro={intro} />}
           <div className={`min-w-0 rounded-[18px] border border-border bg-card p-3.5 ${mine?.status === 'inactive' ? 'col-span-2' : ''}`}>
             <Chip tone="bg-blue-bg text-blue" d="M12 3l9 5-9 5-9-5z M3 13l9 5 9-5" />
             <h2 className="mt-2.5 text-[0.8125rem] font-normal text-muted">{t('home.myCapital')}</h2>
-            <p className="mt-0.5 text-[1.3125rem] font-bold [overflow-wrap:anywhere]">{mine ? taka(mine.capital_paisa) : '…'}</p>
+            <p className="mt-0.5 text-[1.3125rem] font-bold [overflow-wrap:anywhere]">{mine && myCredit !== null ? <AnimatedTaka paisa={BigInt(mine.capital_paisa) - myCredit} intro={intro} /> : '…'}</p>
             {mine && <p className="mt-0.5 text-xs text-muted">{t('home.sharesCount', { count: mine.shares })}</p>}
+            {myCredit !== null && myCredit > 0n && <p className="text-xs font-semibold text-primary">{t('home.capitalAdvance', { amount: taka(myCredit) })}</p>}
           </div>
           {/* Charity balance (18.2): fines and riba are donated at year end, never fund income */}
           <div className="col-span-2 flex items-center gap-3 rounded-[18px] border border-border bg-card px-3.5 py-3">
             <Chip tone="bg-vio-bg text-vio" d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />
             <h2 className="flex-1 text-[0.8125rem] font-normal text-muted">{t('home.charityToDonate')}</h2>
-            <p className="text-[1.1875rem] font-bold">{accounts.data ? taka(charityBalance(accounts.data.items)) : '…'}</p>
+            <p className="text-[1.1875rem] font-bold">{accounts.data ? <AnimatedTaka paisa={charityBalance(accounts.data.items)} intro={intro} /> : '…'}</p>
           </div>
         </section>
 
@@ -233,7 +241,7 @@ export function HomePage() {
           </section>
         )}
 
-        <EveryoneStanding members={members.data?.items} />
+        <EveryoneStanding members={members.data?.items} intro={intro} />
       </div>
     </PullToRefresh>
   );
@@ -248,7 +256,7 @@ function pct(part: bigint, whole: bigint): string {
  * The fund's net assets from `GET /nav` (the same figure as the Assets tab, with the latest shop
  * values), and where the money is: cash, invested, and what is owed to others. Taps through to Assets.
  */
-function FundCard({ nav }: { nav: NavResponse | undefined }) {
+function FundCard({ nav, intro }: { nav: NavResponse | undefined; intro: boolean }) {
   const { t } = useTranslation();
   const split = nav ? fundSplit(nav) : null;
   const cashBar = split && split.cash > 0n ? split.cash : 0n;
@@ -262,7 +270,7 @@ function FundCard({ nav }: { nav: NavResponse | undefined }) {
       </div>
       {split ? (
         <>
-          <p className={`mt-2 text-[1.75rem] font-bold leading-tight [overflow-wrap:anywhere] ${negClass(split.net)}`}>{taka(split.net)}</p>
+          <p className={`mt-2 text-[1.75rem] font-bold leading-tight [overflow-wrap:anywhere] ${negClass(split.net)}`}><AnimatedTaka paisa={split.net} intro={intro} /></p>
           {cashBar + investedBar > 0n && (
             <div className="mt-3 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-background" aria-hidden="true">
               {cashBar > 0n && <span className="h-full bg-vio" style={{ width: pct(cashBar, cashBar + investedBar) }} />}
@@ -285,6 +293,13 @@ function FundCard({ nav }: { nav: NavResponse | undefined }) {
                 <span className="h-2.5 w-2.5 rounded-full border border-border" aria-hidden="true" />
                 <dt className="flex-1 text-muted">{t('home.split.charity')}</dt>
                 <dd className="font-semibold">−{taka(split.charity)}</dd>
+              </div>
+            )}
+            {split.advance !== 0n && (
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full border border-border" aria-hidden="true" />
+                <dt className="flex-1 text-muted">{t('home.split.advance')}</dt>
+                <dd className="font-semibold">−{taka(split.advance)}</dd>
               </div>
             )}
             {split.otherOwed !== 0n && (
@@ -311,10 +326,11 @@ function FundCard({ nav }: { nav: NavResponse | undefined }) {
  * also sees the value after it is paid, so the figure never looks larger than what they would get;
  * a member who is up to date sees the rise or fall against what they paid in.
  */
-function MyShareTile({ nav, mine, toPay }: { nav: NavResponse | undefined; mine: MemberRow | undefined; toPay: bigint }) {
+function MyShareTile({ nav, mine, credit, toPay, intro }: { nav: NavResponse | undefined; mine: MemberRow | undefined; credit: bigint | null; toPay: bigint; intro: boolean }) {
   const { t } = useTranslation();
-  const value = nav && mine ? shareValue(nav, mine.shares) : null;
-  const capital = mine ? BigInt(mine.capital_paisa) : 0n;
+  const value = nav && mine && credit !== null ? shareValue(nav, mine.shares) : null;
+  // Compared with what bought the shares: money paid ahead is not in the share value yet, so it is left out here too.
+  const capital = mine ? BigInt(mine.capital_paisa) - (credit ?? 0n) : 0n;
   const gain = value === null ? 0n : value - capital;
   const percent = profitPercent(gain, capital);
   return (
@@ -325,16 +341,14 @@ function MyShareTile({ nav, mine, toPay }: { nav: NavResponse | undefined; mine:
         <Skeleton className="mt-1 h-7 w-28" />
       ) : (
         <>
-          <p className={`mt-0.5 text-[1.3125rem] font-bold [overflow-wrap:anywhere] ${negClass(value)}`}>{taka(value)}</p>
+          <p className={`mt-0.5 text-[1.3125rem] font-bold [overflow-wrap:anywhere] ${negClass(value)}`}><AnimatedTaka paisa={value} intro={intro} /></p>
           {toPay > 0n ? (
-            // Never a minus figure here: a new fund (or a member who has not paid yet) just sees what is left to pay.
-            value - toPay > 0n ? (
-              <p className="mt-0.5 text-xs text-muted">
-                {t('home.shareAfterDues')} <span className="font-semibold">{taka(value - toPay)}</span>
-              </p>
-            ) : (
-              <p className="mt-0.5 text-xs text-warn">{t('home.shareToPay', { amount: taka(toPay) })}</p>
-            )
+            // What is left to pay, not the value net of it: that figure is below the headline and read as if
+            // paying took money away (owner feedback).
+            <>
+              <p className="mt-0.5 text-xs font-semibold text-warn">{t('home.shareToPay', { amount: taka(toPay) })}</p>
+              <p className="text-xs text-muted">{t('home.shareFullAfter')}</p>
+            </>
           ) : (
             capital > 0n &&
             gain !== 0n && (
@@ -360,7 +374,7 @@ const YEARS_AHEAD = 2;
  * Everyone's standing for any month (the matrix is readable by every member), plus what each member
  * owes in total right now: overdue dues and unpaid fines (the hero card adds this month's open dues).
  */
-function EveryoneStanding({ members }: { members?: MemberRow[] }) {
+function EveryoneStanding({ members, intro }: { members?: MemberRow[]; intro: boolean }) {
   const { t } = useTranslation();
   const { me } = useAuth();
   const current = todayDhaka().slice(0, 7);
@@ -454,7 +468,7 @@ function EveryoneStanding({ members }: { members?: MemberRow[] }) {
                 <li key={m.member_id} className={`flex min-h-[58px] items-center gap-3 border-border px-4 py-2 ${i ? 'border-t' : ''} ${isMe ? 'bg-primary-soft' : ''}`}>
                   <Avatar fileId={m.member_photo_file_id} fallback={m.member_name.trim().charAt(0)} className={`h-[34px] w-[34px] text-sm font-bold ${isMe ? 'bg-primary text-primary-foreground' : AVATAR[i % AVATAR.length]}`} />
                   <div className="min-w-0 flex-1">
-                    <div className={`flex min-w-0 items-center gap-1.5 text-[0.9375rem] ${isMe ? 'font-bold' : 'font-medium'}`}><span className="shrink-0 text-xs font-normal text-muted tabular-nums">{m.member_code}</span><span className="truncate">{m.member_name}</span><RoleBadges roles={rolesById.get(m.member_id)} /></div>
+                    <div className={`flex min-w-0 items-center gap-1.5 text-[0.9375rem] ${isMe ? 'font-bold' : 'font-medium'}`}><span className="shrink-0 text-xs font-normal text-muted tabular-nums">{m.member_code}</span><span className="truncate">{m.member_name}</span><RoleBadges roles={rolesById.get(m.member_id)} /><AheadBadge months={m.ahead_months} /></div>
                     {owed !== undefined && (
                       <div className={`text-xs ${owed > 0n ? 'font-semibold text-bad' : 'text-muted'}`}>
                         {owed > 0n ? t('home.totalOwed', { amount: taka(owed) }) : t('home.noArrears')}
@@ -469,7 +483,7 @@ function EveryoneStanding({ members }: { members?: MemberRow[] }) {
           {members && (
             <div className="flex items-center justify-between border-t border-border px-4 py-3 text-sm">
               <span className="text-muted">{t('home.groupOwed')}</span>
-              <span className={`font-bold ${groupOwed > 0n ? 'text-bad' : ''}`}>{taka(groupOwed)}</span>
+              <span className={`font-bold ${groupOwed > 0n ? 'text-bad' : ''}`}><AnimatedTaka paisa={groupOwed} intro={intro} /></span>
             </div>
           )}
         </>

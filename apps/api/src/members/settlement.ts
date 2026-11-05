@@ -4,7 +4,7 @@ import { audit } from '../lib/audit';
 import { badRequest, conflict, notFound } from '../lib/errors';
 import { type Db } from '../lib/tx';
 import { toBigInt } from '../lib/money';
-import { accountBalance } from '../lib/nav';
+import { accountBalance, unspentAdvance } from '../lib/nav';
 import { getRule, ruleInt, rulePaisa } from '../lib/rules';
 import { type LedgerActor, LEDGER_REF, postEntries } from '../ledger/service';
 import { notifyMember } from '../notifications/service';
@@ -82,6 +82,9 @@ export async function settlementFigures(db: Db, clock: Clock, memberId: string, 
 
   let gross: bigint;
   let exitFee = 0n;
+  // The member's unspent advance goes back with the settlement (docs/ASSUMPTIONS.md 120). Paid-in
+  // capital already holds it; the NAV share does not (NAV counts it as owed to them), so it is added.
+  let advanceInGross = 0n;
 
   if (kind === 'early_exit') {
     gross = fin.capital;
@@ -91,7 +94,8 @@ export async function settlementFigures(db: Db, clock: Clock, memberId: string, 
     gross = fin.capital;
   } else {
     // death_surrender and wind_up use the share-ratio NAV formula.
-    gross = fin.sharesOutstanding > 0 ? divRound(fin.netAssets * BigInt(fin.shares), BigInt(fin.sharesOutstanding)) : 0n;
+    advanceInGross = fin.advance;
+    gross = (fin.sharesOutstanding > 0 ? divRound(fin.netAssets * BigInt(fin.shares), BigInt(fin.sharesOutstanding)) : 0n) + advanceInGross;
     exitFee = await rulePaisa(db, 'exit_fee_paisa', ruleAsOf).catch(() => 0n);
   }
 
@@ -104,7 +108,7 @@ export async function settlementFigures(db: Db, clock: Clock, memberId: string, 
   const principal = toBigInt(owed.p);
 
   const deductionsTotal = principal + fin.outstandingFines + exitFee;
-  return { today, fin, gross, exitFee, principal, deductionsTotal, net: gross + fin.escrow - deductionsTotal };
+  return { today, fin, gross, advanceInGross, exitFee, principal, deductionsTotal, net: gross + fin.escrow - deductionsTotal };
 }
 
 /** The cashier's suggested net for the settlement form. Nothing is saved. */
@@ -115,6 +119,7 @@ export async function estimateSettlement(db: Db, clock: Clock, memberId: string,
   return {
     kind,
     gross_paisa: f.gross.toString(),
+    advance_in_gross_paisa: f.advanceInGross.toString(),
     escrow_paisa: f.fin.escrow.toString(),
     principal_paisa: f.principal.toString(),
     fines_paisa: f.fin.outstandingFines.toString(),
@@ -145,7 +150,7 @@ export async function computeSettlementQuote(
   if (!member) throw notFound('member.not_found', 'Member not found');
 
   const { kind, payout_plan: plan } = input;
-  const { today, fin, gross, exitFee, principal, deductionsTotal, net } = await settlementFigures(db, deps.clock, memberId, kind);
+  const { today, fin, gross, advanceInGross, exitFee, principal, deductionsTotal, net } = await settlementFigures(db, deps.clock, memberId, kind);
 
   if (plan.length === 0) {
     throw badRequest('settlement.no_payout_plan', 'A payout plan is required');
@@ -171,6 +176,8 @@ export async function computeSettlementQuote(
       fines_paisa: fin.outstandingFines,
       exit_fee_paisa: exitFee,
       total_paisa: deductionsTotal,
+      // not a deduction: the advance paid back inside `gross`, checked again when the settlement executes
+      advance_in_gross_paisa: advanceInGross,
     },
     net,
   });
@@ -251,6 +258,20 @@ export async function executeSettlement(
   const deductionsTotal = toPaisaBig(snap.deductions['total_paisa'] ?? 0);
   const capitalPosting = gross - deductionsTotal;
 
+  // The unspent advance is paid back with this settlement (inside the gross or the paid-in capital),
+  // so it stops being owed separately and NAV stops counting it (docs/ASSUMPTIONS.md 120). A NAV-based
+  // quote added it to the gross: if it changed since (a due spent it), the quote is out of date.
+  const advanceNow = await unspentAdvance(tx, settlement.member_id);
+  const quotedAdvance = snap.deductions['advance_in_gross_paisa'];
+  const navBased = settlement.kind === 'death_surrender' || settlement.kind === 'wind_up';
+  if (navBased && advanceNow !== (quotedAdvance === undefined ? 0n : toPaisaBig(quotedAdvance))) {
+    throw conflict('settlement.advance_changed', 'The member\'s advance changed since the quote; make a new quote');
+  }
+  await tx.query(
+    `UPDATE payments SET unallocated_paisa = 0 WHERE member_id = $1 AND status = 'confirmed' AND unallocated_paisa > 0`,
+    [settlement.member_id],
+  );
+
   const entries = [];
   if (capitalPosting > 0n) {
     entries.push({
@@ -319,6 +340,7 @@ export async function executeSettlement(
       net_paisa: net.toString(),
       capital_posted_paisa: capitalPosting.toString(),
       escrow_posted_paisa: escrow.toString(),
+      advance_cleared_paisa: advanceNow.toString(),
     },
     ip: actor.ip,
     deviceId: actor.deviceId ?? null,

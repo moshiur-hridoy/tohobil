@@ -15,7 +15,7 @@ export default defineConfig({
     VitePWA({
       // `prompt`: a new service worker waits until the user taps "reload" in <UpdatePrompt/>.
       registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon.png', 'offline.html'],
+      includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon.png', 'offline.html', 'boot.js', 'splash.css'],
       manifest: {
         id: '/',
         name: 'বারাকাহ ফান্ড',

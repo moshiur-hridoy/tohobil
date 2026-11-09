@@ -16,6 +16,7 @@ import { paisaToDecimal, parseAmountInput, taka } from '../../lib/money';
 import type { AssetRow, HoldingDocument, HoldingEntry, HoldingResponse, HoldingWithdrawal, MemberRow } from '../../lib/types';
 import { CreateProposalForm } from './ProposalsPage';
 import { ValuationRequestList, ValuationRequestSheet } from '../../components/ValuationUpdate';
+import { RemarkLine } from '../../components/EntryRemarks';
 
 /** A withdrawal's stage: waiting on someone (amber), voting (blue), money due (amber), done (green). */
 const STAGE_TONE: Record<HoldingWithdrawal['status'], string> = {
@@ -258,6 +259,7 @@ function HoldingView({ id }: { id: string }) {
                     <td className="whitespace-nowrap border-b border-border px-4 py-3">{t(`cashAccount.${e.account}`, { defaultValue: e.account })}</td>
                     <td className="border-b border-border px-4 py-3 text-ink2">
                       {e.ref_type === 'import' ? <span className="text-muted">{t('holding.imported')}</span> : (e.memo ?? '—')}
+                      <RemarkLine seq={e.seq} remark={e.remark} count={e.remark_count} onSaved={() => void qc.invalidateQueries({ queryKey: ['partner', id] })} />
                     </td>
                     <td className="border-b border-border px-4 py-3">
                       <div className="flex flex-wrap items-center gap-1.5">
@@ -348,6 +350,7 @@ function HoldingView({ id }: { id: string }) {
           type="investment_purchase"
           lockType
           initialValues={{ kind, name: partner.name, partner_id: partner.id }}
+          defaultTitle={t('holding.buyTitle', { name: partner.name })}
           onTypeChange={() => undefined}
           onCreated={() => { setBuyOpen(false); refresh(); }}
           onCancel={() => setBuyOpen(false)}

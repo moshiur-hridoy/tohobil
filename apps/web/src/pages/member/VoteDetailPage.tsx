@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Avatar } from '../../components/MemberPhoto';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Chip, Icon } from '../../components/ui';
@@ -288,9 +289,7 @@ function VoterList({ d, myId }: { d: ProposalDetail; myId: string | undefined })
               : ['bg-soft text-muted', t('proposal.votedNo')];
           return (
             <li key={v.member_id} className="flex min-h-[52px] items-center gap-3 border-t border-border py-2">
-              <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-bold ${me ? 'bg-primary text-primary-foreground' : 'bg-primary-soft text-primary'}`} aria-hidden="true">
-                {Array.from(v.full_name.trim())[0] ?? '?'}
-              </span>
+              <Avatar fileId={v.photo_file_id} fallback={Array.from(v.full_name.trim())[0] ?? '?'} className={`h-9 w-9 text-sm font-bold ${me ? 'bg-primary text-primary-foreground' : 'bg-primary-soft text-primary'}`} />
               <span className="min-w-0 flex-1">
                 <span className={`block truncate text-[0.9375rem] ${me ? 'font-bold' : 'font-medium'}`}>
                   {v.full_name}

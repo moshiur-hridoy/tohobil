@@ -27,4 +27,13 @@ export const auditLogQuerySchema = paginationSchema.extend({
   to: dateSchema.optional(),
 });
 
+/** `POST /ledger/:seq/remarks`: a remark on an entry, written afterwards (ASSUMPTIONS 128). */
+export const ledgerSeqParamsSchema = z.object({ seq: z.string().regex(/^[1-9]\d{0,17}$/, 'Invalid ledger sequence') });
+
+export const entryRemarkCreateSchema = z.object({
+  text: z.string().trim().min(1).max(500),
+});
+
+export type EntryRemarkCreate = z.infer<typeof entryRemarkCreateSchema>;
+
 export type AuditLogQuery = z.infer<typeof auditLogQuerySchema>;

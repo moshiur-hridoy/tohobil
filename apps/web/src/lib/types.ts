@@ -112,6 +112,9 @@ export interface LedgerRow {
   /** The payment's note, only for the payer, the cashier and the auditor (null for everyone else). */
   note: string | null;
   open_objections: number;
+  /** The newest remark written afterwards (ASSUMPTIONS 128), under the same rule as `note`. */
+  remark: string | null;
+  remark_count: number;
 }
 
 export interface AccountBalance {
@@ -289,6 +292,9 @@ export interface HoldingEntry {
   memo: string | null;
   ref_type: string | null;
   reversed: boolean;
+  /** The newest remark (cashier and auditor only). */
+  remark?: string | null;
+  remark_count?: number;
 }
 
 export interface HoldingDocument {
@@ -398,6 +404,7 @@ export interface ProposalVoter {
   member_id: string;
   full_name: string;
   code: string;
+  photo_file_id?: string | null;
   weight: number;
   /** Has voted (never what): sent even while the ballots are hidden. */
   voted: boolean;

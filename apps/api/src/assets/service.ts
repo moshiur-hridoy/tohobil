@@ -422,9 +422,10 @@ export async function adoptAssets(deps: AssetDeps, actor: AssetActor, partnerId:
  * Everything one partner holds, for a single page: the contract terms and papers, each purchase with
  * its ledger entry (date, amount, paying account, remark) and papers, and every valuation. Gold is
  * bought many times and each purchase is its own asset row, so a partner's page is those rows
- * together. Reversed entries are flagged, never hidden.
+ * together. Reversed entries are flagged, never hidden. `privileged` (cashier or auditor) adds each
+ * purchase's newest remark (ASSUMPTIONS 128); others get none.
  */
-export async function getPartner(db: Db, id: string): Promise<Record<string, unknown> | null> {
+export async function getPartner(db: Db, id: string, privileged = false): Promise<Record<string, unknown> | null> {
   const partner = (await listPartners(db)).find((p) => p.id === id);
   if (!partner) return null;
   const assets = await db.query(
@@ -434,13 +435,17 @@ export async function getPartner(db: Db, id: string): Promise<Record<string, unk
   const entries = await db.query(
     `SELECT l.seq::text AS seq, a.id AS asset_id, l.entry_date::text AS entry_date, l.amount_paisa::text AS amount_paisa,
             l.credit_account AS account, l.memo, l.ref_type,
-            EXISTS (SELECT 1 FROM ledger_entries r WHERE r.reverses_seq = l.seq) AS reversed
+            EXISTS (SELECT 1 FROM ledger_entries r WHERE r.reverses_seq = l.seq) AS reversed,
+            CASE WHEN $2::boolean THEN
+              (SELECT er.text FROM entry_remarks er WHERE er.ledger_seq = l.seq ORDER BY er.created_at DESC, er.id DESC LIMIT 1)
+            END AS remark,
+            CASE WHEN $2::boolean THEN (SELECT count(*)::int FROM entry_remarks er WHERE er.ledger_seq = l.seq) ELSE 0 END AS remark_count
      -- imported purchases point at the asset; a purchase executed from a proposal points at that proposal
      FROM ledger_entries l
      JOIN assets a ON a.id = l.ref_id OR (l.ref_type = 'proposal' AND a.proposal_id = l.ref_id)
      WHERE a.partner_id = $1 AND l.debit_account = 'INVESTMENTS_AT_COST' AND l.reverses_seq IS NULL
      ORDER BY l.entry_date DESC, l.seq DESC`,
-    [id],
+    [id, privileged],
   );
   const documents = await db.query(
     `SELECT d.id, d.entity_type, d.entity_id, d.file_id, d.doc_type, d.title, d.created_at, f.mime

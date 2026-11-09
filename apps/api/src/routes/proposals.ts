@@ -8,6 +8,7 @@ import {
   proposalCreateSchema,
   proposalExecuteSchema,
   proposalOpenSchema,
+  proposalReopenSchema,
   proposalsQuerySchema,
   uuidSchema,
   voteSchema,
@@ -25,6 +26,7 @@ import {
   listProposals,
   openProposal,
   remindNonVoters,
+  reopenProposal,
   voteOnProposal,
   type ProposalDeps,
 } from '../proposals/service';
@@ -107,6 +109,12 @@ export function proposalRoutes(deps: ProposalRouteDeps, guards: Guards) {
       '/proposals/:id/cancel',
       { preHandler: privileged, schema: { params: z.object({ id: uuidSchema }), body: proposalCancelSchema } },
       (req) => cancelProposal(serviceDeps, requireAuth(req), req.params.id, req.body, ctx(req)),
+    );
+
+    app.post(
+      '/proposals/:id/reopen',
+      { preHandler: privileged, schema: { params: z.object({ id: uuidSchema }), body: proposalReopenSchema } },
+      (req) => reopenProposal(serviceDeps, requireAuth(req), req.params.id, req.body, ctx(req)),
     );
 
     app.post(

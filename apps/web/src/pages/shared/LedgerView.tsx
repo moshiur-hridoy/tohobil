@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { NAV_CASH_ACCOUNTS } from '@barakah/shared';
 import { AdminHeader, BTN_SECONDARY, Card, ICONS, StatGrid, StatTile } from '../../components/admin';
 import { ConfirmSheet } from '../../components/ConfirmSheet';
+import { RemarkLine } from '../../components/EntryRemarks';
 import { BackButton, Icon, DateInput } from '../../components/ui';
 import { ListSkeleton } from '../../components/Skeleton';
 import { PullToRefresh } from '../../components/PullToRefresh';
@@ -38,7 +39,7 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
   const [memberId, setMemberId] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
-  const [order, setOrder] = useState<'asc' | 'desc'>(variant === 'admin' ? 'asc' : 'desc');
+  const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const [objectTo, setObjectTo] = useState<LedgerRow | null>(null);
   const [objectText, setObjectText] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
@@ -87,8 +88,8 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
 
   const exportCsv = () =>
     downloadCsv('ledger.csv', [
-      ['seq', 'date', 'debit', 'credit', 'amount_taka', 'member', 'ref_type', 'memo', 'note', 'hash'],
-      ...rows.map((r) => [r.seq, r.entry_date, r.debit_account, r.credit_account, paisaToDecimal(r.amount_paisa), r.member_code ?? '', r.ref_type ?? '', r.memo ?? '', r.note ?? '', r.hash]),
+      ['seq', 'date', 'debit', 'credit', 'amount_taka', 'member', 'ref_type', 'memo', 'note', 'remark', 'hash'],
+      ...rows.map((r) => [r.seq, r.entry_date, r.debit_account, r.credit_account, paisaToDecimal(r.amount_paisa), r.member_code ?? '', r.ref_type ?? '', r.memo ?? '', r.note ?? '', r.remark ?? '', r.hash]),
     ]);
 
   const submitObjection = async () => {
@@ -210,7 +211,10 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
                       {memoText(t, r.memo) && <span className="block text-ink2">{memoText(t, r.memo)}</span>}
                       <Flags r={r} />
                     </td>
-                    <td className="max-w-64 whitespace-pre-line border-b border-border px-3 py-2.5 text-ink2">{r.note ?? ''}</td>
+                    <td className="max-w-64 border-b border-border px-3 py-2.5 text-ink2">
+                      {r.note && <span className="block whitespace-pre-line">{r.note}</span>}
+                      <RemarkLine seq={r.seq} remark={r.remark} count={r.remark_count} />
+                    </td>
                     <td className="border-b border-border px-4 py-2.5 font-mono text-xs text-muted" title={r.hash}>{r.hash.slice(0, 10)}…</td>
                   </tr>
                 ))}
@@ -416,6 +420,7 @@ function EntryBody({ r, details = false, action }: { r: LedgerRow; details?: boo
       </p>
       {memo && <p className="mt-1 text-sm text-muted [overflow-wrap:anywhere]">{memo}</p>}
       {r.note && <p className="mt-1 whitespace-pre-line text-sm [overflow-wrap:anywhere]">{t('ledger.note')}: {r.note}</p>}
+      {details && <RemarkLine seq={r.seq} remark={r.remark} count={r.remark_count} />}
       <Flags r={r} postedBy={!details} />
       <div className="mt-2 flex items-center justify-between gap-3">
         <span className="text-xs text-muted tabular-nums">#{localDigits(r.seq)} · {fmtDate(r.entry_date)}</span>

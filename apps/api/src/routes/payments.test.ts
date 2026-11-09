@@ -581,6 +581,16 @@ describe('payments', () => {
     for (const id of [pending, other]) await call('POST', `/payments/${id}/reject`, s.M01.access_token, { reason: 'test cleanup' });
   });
 
+  dbIt('parse-sms counts an amount match as exact when the note holds the sender\'s last 4 digits', async () => {
+    const byDigits = (await submit(s.M03.access_token, { amount_paisa: '1650000', trx_id: undefined, note: 'Sender number, last 4 digits: 0003', paid_at: '2026-09-04T21:00:00+06:00' })).json().id as string;
+    const sameAmount = (await submit(s.M02.access_token, { amount_paisa: '1650000', trx_id: undefined, note: 'Sender number, last 4 digits: 9999', paid_at: '2026-09-04T20:00:00+06:00' })).json().id as string;
+    const text = 'You have received Tk 16,500.00 from 01700000003. Fee Tk 0.00. Balance Tk 38,486.45. TrxID ZZ99YY88XX at 04/09/2026 22:00';
+    const matches = (await call('POST', '/payments/parse-sms', s.M01.access_token, { text })).json().matches as Array<{ payment_id: string; match_type: string; exact: boolean }>;
+    expect(matches[0]).toMatchObject({ payment_id: byDigits, match_type: 'amount_phone', exact: true });
+    expect(matches.find((x) => x.payment_id === sameAmount)).toMatchObject({ exact: false });
+    for (const id of [byDigits, sameAmount]) await call('POST', `/payments/${id}/reject`, s.M01.access_token, { reason: 'test cleanup' });
+  });
+
   // ---- invariants ---------------------------------------------------------------------------
 
   dbIt('every payment write left an audit row, with no secret in it', async () => {

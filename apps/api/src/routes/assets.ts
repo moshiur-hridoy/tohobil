@@ -121,20 +121,21 @@ export function assetRoutes(deps: AssetDeps, guards: Guards) {
 
     app.post('/partners', { preHandler: cashier, schema: { body: partnerCreateSchema } }, async (req) => {
       const id = await createPartner(deps, actorFrom(requireAuth(req), req), req.body);
-      const found = await getPartner(deps.pool, id);
+      const found = await getPartner(deps.pool, id, true);
       if (!found) throw notFound('partner.not_found', 'Investment partner not found');
       return found;
     });
 
     app.get('/partners/:id', { preHandler: authenticate, schema: { params: idParams } }, async (req) => {
-      const found = await getPartner(deps.pool, req.params.id);
+      const viewer = requireAuth(req);
+      const found = await getPartner(deps.pool, req.params.id, viewer.roles.includes('cashier') || viewer.roles.includes('auditor'));
       if (!found) throw notFound('partner.not_found', 'Investment partner not found');
       return found;
     });
 
     app.patch('/partners/:id', { preHandler: cashier, schema: { params: idParams, body: partnerUpdateSchema } }, async (req) => {
       await updatePartner(deps, actorFrom(requireAuth(req), req), req.params.id, req.body);
-      const found = await getPartner(deps.pool, req.params.id);
+      const found = await getPartner(deps.pool, req.params.id, true);
       if (!found) throw notFound('partner.not_found', 'Investment partner not found');
       return found;
     });

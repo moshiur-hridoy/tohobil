@@ -186,7 +186,11 @@ export async function buildPayload(type: ProposalType, form: FormState): Promise
     else out[f.key] = raw;
   }
 
-  if (type === 'investment_purchase') out.compliance = form.compliance;
+  if (type === 'investment_purchase') {
+    // One declaration stands for every point of the checklist (ASSUMPTIONS 127); the payload keeps them all.
+    if (!COMPLIANCE_CHECKLIST_FIELDS.every((c) => form.compliance[c] === true)) throw bad('halal');
+    out.compliance = form.compliance;
+  }
   if (type === 'valuation_update') {
     const { asset_id, value_paisa, as_of, basis } = out;
     return { payload: { items: [{ asset_id, value_paisa, as_of, ...(basis ? { basis } : {}) }] } };
@@ -207,10 +211,13 @@ export async function buildPayload(type: ProposalType, form: FormState): Promise
 
 const inputClass = 'field mt-1 w-full';
 
-/** The fields for one proposal type. Pure input: the owner of `form` decides when to submit. */
-export function ProposalFields({ type, form, onChange }: { type: ProposalType; form: FormState; onChange: (next: FormState) => void }) {
+/**
+ * The fields for one proposal type. Pure input: the owner of `form` decides when to submit. `hidden`
+ * leaves out fields the caller has already filled (the gold page's kind, name and shop).
+ */
+export function ProposalFields({ type, form, onChange, hidden = [] }: { type: ProposalType; form: FormState; onChange: (next: FormState) => void; hidden?: readonly string[] }) {
   const { t } = useTranslation();
-  const fields = PROPOSAL_FORMS[type] ?? [];
+  const fields = (PROPOSAL_FORMS[type] ?? []).filter((f) => !hidden.includes(f.key));
   const needsMembers = fields.some((f) => f.kind === 'member');
   const needsAssets = fields.some((f) => f.kind === 'asset') || type === 'wind_up';
   const members = useQuery({ queryKey: ['members'], queryFn: () => api<{ items: MemberRow[] }>('/members'), enabled: needsMembers });
@@ -220,7 +227,9 @@ export function ProposalFields({ type, form, onChange }: { type: ProposalType; f
   const partners = useQuery({ queryKey: ['partners'], queryFn: () => api<{ items: PartnerRow[] }>('/partners'), enabled: needsPartners });
 
   const set = (key: string, value: string) => onChange({ ...form, values: { ...form.values, [key]: value } });
-  const label = (key: string, optional?: boolean) => <>{t(`proposalFields.${key}`)}{optional && <Optional />}</>;
+  // A type may word a field more plainly for itself (proposalLabels.<type>.<key>).
+  const label = (key: string, optional?: boolean) => <>{t(`proposalLabels.${type}.${key}`, { defaultValue: t(`proposalFields.${key}`) })}{optional && <Optional />}</>;
+  const halal = COMPLIANCE_CHECKLIST_FIELDS.every((c) => form.compliance[c] === true);
   const activeAssets = assets.data?.items.filter((a) => a.status !== 'sold') ?? [];
 
   return (
@@ -265,15 +274,18 @@ export function ProposalFields({ type, form, onChange }: { type: ProposalType; f
       ))}
 
       {type === 'investment_purchase' && (
-        <fieldset className="rounded-xl border border-border p-3">
-          <legend className="px-1 text-sm font-medium">{t('proposalsPage.compliance')}</legend>
-          {COMPLIANCE_CHECKLIST_FIELDS.map((c) => (
-            <label key={c} className="flex items-center gap-2 py-1 text-sm">
-              <input type="checkbox" checked={form.compliance[c] === true} onChange={(e) => onChange({ ...form, compliance: { ...form.compliance, [c]: e.target.checked } })} />
-              {t(`compliance.${c}`)}
-            </label>
-          ))}
-        </fieldset>
+        <label className="flex items-start gap-3 rounded-xl border border-border p-3 text-sm">
+          <input
+            type="checkbox"
+            className="mt-0.5 size-5 shrink-0"
+            checked={halal}
+            onChange={(e) => onChange({ ...form, compliance: Object.fromEntries(COMPLIANCE_CHECKLIST_FIELDS.map((c) => [c, e.target.checked])) })}
+          />
+          <span>
+            <span className="block font-semibold">{t('proposalsPage.halalPledge')}</span>
+            <span className="mt-0.5 block text-xs text-muted">{t('proposalsPage.halalPledgeHint')}</span>
+          </span>
+        </label>
       )}
 
       {type === 'financing_arrangement' && (

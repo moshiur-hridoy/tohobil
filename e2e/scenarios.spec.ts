@@ -50,8 +50,8 @@ test('(2) member submits, cashier pastes the SMS and approves, member sees it co
   // The amount is never typed: tick the oldest open month and the total is worked out from the dues
   // (member M02 holds 4 shares, so a month is 4 x 5,000 = 20,000).
   await member.page.getByRole('checkbox').first().check();
-  // The 4-digit sender field also mentions the TrxID in its hint, so take the first of the two.
-  await member.page.getByLabel(tr('payment.trxId')).first().fill(trx);
+  // Members give only the last 4 digits of the sending phone (ASSUMPTIONS 126).
+  await member.page.getByLabel(tr('pay.senderDigitsPhone')).fill('0002');
   await member.page.getByRole('button', { name: tr('pay.send') }).click();
   const sheet = member.page.getByRole('dialog');
   await expect(sheet.getByRole('heading', { name: tr('pay.reviewTitle') })).toBeVisible();

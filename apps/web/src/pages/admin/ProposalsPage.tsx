@@ -10,7 +10,7 @@ import {
 import { ConfirmSheet } from '../../components/ConfirmSheet';
 import { ListSkeleton, Skeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
-import { Icon } from '../../components/ui';
+import { Icon, Optional } from '../../components/ui';
 import { StatusPill } from '../../components/StatusPill';
 import { ProposalDetails } from '../../components/ProposalDetails';
 import { api, ApiError } from '../../lib/api';
@@ -243,13 +243,14 @@ function ProposalItem({
         {p.amount_paisa && <div className="flex gap-1.5"><dt className="text-muted">{t('common.amount')}</dt><dd className="font-semibold tabular-nums">{taka(p.amount_paisa)}</dd></div>}
       </dl>
 
-      {privileged && (p.status === 'draft' || p.status === 'open' || p.status === 'approved') && (
+      {privileged && (p.status === 'draft' || p.status === 'open' || p.status === 'approved' || p.status === 'rejected') && (
         <div className="relative z-10 mt-3 flex flex-wrap items-center gap-2">
           {p.status === 'draft' && <OpenButton id={p.id} onDone={onRefresh} />}
           {p.status === 'draft' && <CancelButton id={p.id} onDone={onRefresh} />}
           {p.status === 'open' && <CloseEarlyButton id={p.id} onDone={onRefresh} canClose={p.can_close_early === true} />}
           {p.status === 'open' && <CancelButton id={p.id} running onDone={onRefresh} />}
           {p.status === 'approved' && <ExecuteButton id={p.id} type={p.type} onDone={onRefresh} />}
+          {(p.status === 'approved' || p.status === 'rejected') && <ReopenButton id={p.id} onDone={onRefresh} />}
         </div>
       )}
     </li>
@@ -285,6 +286,48 @@ function OpenButton({ id, onDone }: { id: string; onDone: () => void }) {
         <label className="field-label">
           {t('proposal.closesAt')}
           <input type="datetime-local" className="field mt-1 w-full" value={closesAt} onChange={(e) => setClosesAt(e.target.value)} />
+        </label>
+      </ConfirmSheet>
+    </>
+  );
+}
+
+/** Open a finished, not yet executed vote again with a new close time and a reason (kept in the audit log). */
+function ReopenButton({ id, onDone }: { id: string; onDone: () => void }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState('');
+  const [closesAt, setClosesAt] = useState(() => {
+    const d = new Date();
+    d.setHours(d.getHours() + 72, 0, 0, 0);
+    return d.toISOString().slice(0, 16);
+  });
+  return (
+    <>
+      <button type="button" className={BTN_SM} onClick={() => setOpen(true)}>
+        {t('proposal.reopen')}
+      </button>
+      <ConfirmSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title={t('proposal.reopenTitle')}
+        confirmLabel={t('proposal.reopen')}
+        canConfirm={reason.trim().length >= 3}
+        onConfirm={async () => {
+          await api(`/proposals/${id}/reopen`, { method: 'POST', body: { closes_at: new Date(closesAt).toISOString(), reason: reason.trim() } });
+          setOpen(false);
+          setReason('');
+          onDone();
+        }}
+      >
+        <p className="text-muted">{t('proposal.reopenBody')}</p>
+        <label className="field-label">
+          {t('proposal.closesAt')}
+          <input type="datetime-local" className="field mt-1 w-full" value={closesAt} onChange={(e) => setClosesAt(e.target.value)} />
+        </label>
+        <label className="field-label">
+          {t('proposal.reopenReason')}
+          <textarea className="field mt-1 min-h-20 w-full" value={reason} onChange={(e) => setReason(e.target.value)} />
         </label>
       </ConfirmSheet>
     </>
@@ -456,6 +499,7 @@ export function CreateProposalForm({
   onCancel,
   initialValues,
   lockType = false,
+  defaultTitle,
 }: {
   type: ProposalType;
   onTypeChange: (t: ProposalType) => void;
@@ -463,8 +507,13 @@ export function CreateProposalForm({
   onCancel: () => void;
   /** Fields filled in before the user types anything (the gold page starts a purchase as gold). */
   initialValues?: Record<string, string>;
-  /** Hide the type chooser: the caller already decided what is being proposed. */
+  /**
+   * Hide the type chooser: the caller already decided what is being proposed. The fields it filled in
+   * (`initialValues`) are hidden too, and the form asks what is left first, the clause and title last.
+   */
   lockType?: boolean;
+  /** The title used when none is typed (the type's name otherwise). */
+  defaultTitle?: string;
 }) {
   const { t } = useTranslation();
   const [title, setTitle] = useState('');
@@ -490,7 +539,7 @@ export function CreateProposalForm({
         method: 'POST',
         body: {
           type,
-          title: title.trim() || t(`proposalType.${type}`),
+          title: title.trim() || defaultTitle || t(`proposalType.${type}`),
           payload,
           ...(subject ? { subject_member_id: subject } : {}),
           ...(clauseRef.trim() ? { clause_ref: clauseRef.trim() } : {}),
@@ -507,6 +556,14 @@ export function CreateProposalForm({
     }
   };
 
+  const titleField = (
+    <label className="field-label">
+      {t('proposal.title')}
+      <Optional />
+      <input className="field mt-1 w-full" value={title} placeholder={defaultTitle || t(`proposalType.${type}`)} onChange={(e) => setTitle(e.target.value)} />
+    </label>
+  );
+
   return (
     <form
       className="space-y-3"
@@ -515,22 +572,23 @@ export function CreateProposalForm({
         void submit();
       }}
     >
-      <div className="grid gap-3 sm:grid-cols-2">
-        {!lockType && <label className="field-label">
-          {t('proposalsPage.type')}
-          <select className="field mt-1 w-full" value={type} onChange={(e) => changeType(e.target.value as ProposalType)}>
-            {CREATE_TYPES.map((s) => (
-              <option key={s} value={s}>{t(`proposalType.${s}`)}</option>
-            ))}
-          </select>
-        </label>}
-        <ClauseSelect value={clauseRef} onChange={setClauseRef} suggested={policyClause} />
-      </div>
-      <label className="field-label">
-        {t('proposal.title')}
-        <input className="field mt-1 w-full" value={title} onChange={(e) => setTitle(e.target.value)} />
-      </label>
-      <ProposalFields type={type} form={form} onChange={setForm} />
+      {!lockType && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="field-label">
+            {t('proposalsPage.type')}
+            <select className="field mt-1 w-full" value={type} onChange={(e) => changeType(e.target.value as ProposalType)}>
+              {CREATE_TYPES.map((s) => (
+                <option key={s} value={s}>{t(`proposalType.${s}`)}</option>
+              ))}
+            </select>
+          </label>
+          <ClauseSelect value={clauseRef} onChange={setClauseRef} suggested={policyClause} />
+        </div>
+      )}
+      {!lockType && titleField}
+      <ProposalFields type={type} form={form} onChange={setForm} hidden={lockType ? Object.keys(initialValues ?? {}) : []} />
+      {lockType && <ClauseSelect value={clauseRef} onChange={setClauseRef} suggested={policyClause} />}
+      {lockType && titleField}
       {error != null && <p role="alert" className="rounded-xl bg-bad-bg px-3 py-2 text-sm text-bad">{proposalErrorText(error, t)}</p>}
       <div className="flex gap-2.5 pt-1">
         <button type="submit" disabled={busy} className={`${BTN_PRIMARY} flex-1`}>{busy ? t('common.working') : t('common.submit')}</button>

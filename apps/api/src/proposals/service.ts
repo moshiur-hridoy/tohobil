@@ -5,6 +5,7 @@ import {
   type ProposalExecute,
   type ProposalCancel,
   type ProposalOpen,
+  type ProposalReopen,
   type ProposalsQuery,
   type Vote,
   validateProposalPayload,
@@ -624,6 +625,54 @@ export async function cancelProposal(
 }
 
 /**
+ * Owner request: a vote whose time ran out can be opened again, with a new close time and a reason.
+ * Only a finished vote that has not been acted on (approved or rejected, never executed or cancelled).
+ * The voters stay as they were when it first opened and every ballot already cast stays; members may
+ * change their vote until the new close time. The earlier result is in the audit log.
+ */
+export async function reopenProposal(
+  deps: ProposalDeps,
+  user: AuthUser,
+  proposalId: string,
+  input: ProposalReopen,
+  ctx: ClientCtx,
+): Promise<void> {
+  const closesAt = parseTimestamp(input.closes_at);
+  if (closesAt.getTime() < deps.clock.now().getTime() + 60 * 60 * 1000) {
+    throw badRequest('proposal.close_too_soon', 'Keep the vote open for at least one hour');
+  }
+  await inTransaction(deps.pool, async (db) => {
+    const proposal = (await db.query(`SELECT * FROM proposals WHERE id = $1 FOR UPDATE`, [proposalId])).rows[0] as
+      | ProposalRow
+      | undefined;
+    if (!proposal) throw notFound('proposal.not_found', 'Proposal not found');
+    if (proposal.status !== 'approved' && proposal.status !== 'rejected') {
+      throw conflict('proposal.not_reopenable', 'Only a finished vote that was not carried out can be reopened');
+    }
+    await db.query(
+      `UPDATE proposals SET status = 'open', closes_at = $2, finalized_at = NULL WHERE id = $1`,
+      [proposalId, closesAt],
+    );
+    await audit(db, {
+      actor: user.id,
+      action: 'proposal.reopen',
+      entityType: 'proposal',
+      entityId: proposalId,
+      before: {
+        status: proposal.status,
+        closes_at: proposal.closes_at,
+        yes_count: proposal.yes_count,
+        no_count: proposal.no_count,
+        abstain_count: proposal.abstain_count,
+      },
+      after: { status: 'open', closes_at: closesAt.toISOString(), reason: input.reason },
+      ip: ctx.ip,
+      deviceId: user.device_id,
+    });
+  });
+}
+
+/**
  * Owner decision (overrides Doc.md 5.8 "votes are public"): while a vote is open nobody sees how others
  * voted or the running tally, only their own vote. The tally and each choice appear once it closes.
  * Who has voted (not what) is visible to every voter at all times, so nobody has to ask around (owner request).
@@ -654,7 +703,7 @@ export async function getProposal(
   const [proposal, voters, votes] = await Promise.all([
     deps.pool.query<ProposalRow>(`SELECT * FROM proposals WHERE id = $1`, [proposalId]),
     deps.pool.query(
-      `SELECT pv.member_id, m.full_name, m.code, pv.weight,
+      `SELECT pv.member_id, m.full_name, m.code, m.photo_file_id, pv.weight,
               -- Whether they have voted, never what: shown to everyone even while the ballots are hidden.
               EXISTS (SELECT 1 FROM votes v WHERE v.proposal_id = pv.proposal_id
                         AND v.member_id = pv.member_id AND v.superseded_at IS NULL) AS voted

@@ -31,6 +31,9 @@ interface EntryQuote {
   expired: boolean;
 }
 
+// Bengali digits are accepted and turned into 0-9.
+const toAscii = (v: string): string => v.replace(/[০-৯]/g, (c) => String(c.charCodeAt(0) - 0x09e6));
+
 export interface EntryPrefill {
   parsed?: ParsedSms;
   rawSms?: string;
@@ -54,7 +57,9 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
   const instructions = useQuery({ queryKey: ['payment-instructions'], queryFn: () => api<PaymentInstructions>('/settings/payment-instructions'), staleTime: 5 * 60_000 });
   const enabled = instructions.data?.methods?.length ? instructions.data.methods : PAYMENT_METHODS;
   const methodChoices = PAYMENT_METHODS.filter((m) => enabled.includes(m) || m === method);
-  const [trx, setTrx] = useState('');
+  const [digits, setDigits] = useState('');
+  // A pasted SMS carries its TrxID: sent along unseen, so the same SMS cannot be entered twice.
+  const [smsTrx, setSmsTrx] = useState('');
   const [note, setNote] = useState('');
   const [date, setDate] = useState(todayDhaka());
   const [purpose, setPurpose] = useState<Purpose>('dues');
@@ -73,7 +78,8 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
     setMemberId(byMatch ?? byPhone ?? '');
     setAmount(p?.amount_paisa ? paisaToDecimal(p.amount_paisa) : '');
     setMethod(p?.method ?? 'cash');
-    setTrx(p?.trx_id ?? '');
+    setSmsTrx(p?.trx_id ?? '');
+    setDigits(p?.counterparty_phone ? p.counterparty_phone.replace(/\D/g, '').slice(-4) : '');
     setNote('');
     setDate(p?.paid_at ? p.paid_at.slice(0, 10) : todayDhaka());
     setPicked(null);
@@ -138,7 +144,17 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
   const forPeriods = [...new Set(fill?.rows.flatMap((r) => (r.covered > 0n && r.period ? [r.period] : [])) ?? [])];
   const needsTrx = method === 'bkash' || method === 'nagad' || method === 'bank';
   const entryBlocked = purpose === 'entry' && (!q || date > q.pay_by);
-  const valid = !!paisa && !!memberId && date <= todayDhaka() && (!needsTrx || trx.trim() !== '') && !entryBlocked;
+  // The sender's last 4 digits are the only thing asked for (ASSUMPTIONS 126). They are not a TrxID
+  // (the same phone pays every month and TrxIDs must be unique), so they go in the note, as on the
+  // member's pay page.
+  const senderDigits = /^\d{4}$/.test(toAscii(digits.trim())) ? toAscii(digits.trim()) : '';
+  const digitsBad = digits.trim() !== '' && !senderDigits;
+  const trxId = smsTrx.trim();
+  const valid = !!paisa && !!memberId && date <= todayDhaka() && (!needsTrx || !!senderDigits || !!trxId) && !digitsBad && !entryBlocked;
+  const sentNote = [senderDigits ? t(method === 'bank' ? 'pay.senderNoteBank' : 'pay.senderNotePhone', { digits: senderDigits }) : '', note.trim()]
+    .filter(Boolean)
+    .join('\n')
+    .slice(0, 500);
 
   const submit = async () => {
     await api('/payments/cashier-entry', {
@@ -148,8 +164,8 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
         member_id: memberId,
         amount_paisa: paisa,
         method,
-        ...(trx.trim() ? { trx_id: trx.trim() } : {}),
-        ...(note.trim() ? { note: note.trim() } : {}),
+        ...(trxId ? { trx_id: trxId } : {}),
+        ...(sentNote ? { note: sentNote } : {}),
         paid_at: dayToIso(date),
         ...(purpose !== 'dues' ? { purpose } : {}),
         ...(forPeriods.length > 0 ? { for_periods: forPeriods.slice(0, 24) } : {}),
@@ -250,8 +266,10 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
         </select>
       </label>
       <label className="field-label">
-        {t('payment.trxId')}
-        <input className={field} value={trx} onChange={(e) => setTrx(e.target.value)} autoComplete="off" />
+        {t(method === 'bank' ? 'pay.senderDigitsBank' : 'pay.senderDigitsPhone')}
+        {!needsTrx && <Optional />}
+        <input className={field} inputMode="numeric" maxLength={8} value={digits} onChange={(e) => setDigits(e.target.value)} placeholder={t('pay.digitsExample')} autoComplete="off" />
+        {digitsBad && <span className="mt-1 block text-xs font-normal text-bad">{t('pay.senderDigitsInvalid')}</span>}
       </label>
       <label className="field-label">
         {t('common.note')}
@@ -269,7 +287,8 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
           {purpose !== 'dues' && <SheetRow label={t('pay.purposeLabel')} value={t(PURPOSE_LABEL[purpose])} />}
           <SheetRow label={t('payment.method')} value={PAYMENT_METHOD_LABELS[method].bn} />
           <SheetRow label={t('paymentsPage.paidAt')} value={fmtDate(date)} />
-          {note.trim() && <p className="mt-1 whitespace-pre-line text-sm text-muted">{note.trim()}</p>}
+          {trxId && <SheetRow label={t('payment.trxId')} value={trxId} />}
+          {sentNote && <p className="mt-1 whitespace-pre-line text-sm text-muted">{sentNote}</p>}
         </div>
       )}
       {valid && fill && (aheadPaid > 0n || fill.leftover > 0n) && (

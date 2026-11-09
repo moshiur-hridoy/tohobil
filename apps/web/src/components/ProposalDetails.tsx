@@ -44,8 +44,17 @@ function ComplianceChecklist({ type, payload }: { type: ProposalType; payload: R
   if (type !== 'investment_purchase') return null;
   const compliance = (payload.compliance ?? {}) as Record<string, boolean>;
   const allTrue = COMPLIANCE_CHECKLIST_FIELDS.every((f) => compliance[f] === true);
+  // One declaration on the form ticks every point (ASSUMPTIONS 127), so a complete one reads as one line.
+  if (allTrue) {
+    return (
+      <div className="rounded-xl bg-ok-bg p-3">
+        <p className="flex items-start gap-2 font-medium"><span className="text-ok">✓</span>{t('proposalsPage.halalPledge')}</p>
+        <p className="mt-0.5 pl-5 text-xs text-muted">{t('proposalsPage.halalPledgeHint')}</p>
+      </div>
+    );
+  }
   return (
-    <div className={`rounded-xl p-3 ${allTrue ? 'bg-ok-bg' : 'bg-warn-bg'}`}>
+    <div className="rounded-xl bg-warn-bg p-3">
       <p className="mb-1 font-medium">{t('proposalsPage.compliance')}</p>
       <ul className="space-y-1">
         {COMPLIANCE_CHECKLIST_FIELDS.map((f) => (
@@ -55,7 +64,7 @@ function ComplianceChecklist({ type, payload }: { type: ProposalType; payload: R
           </li>
         ))}
       </ul>
-      {!allTrue && <p className="mt-2 text-bad">{t('proposalsPage.complianceIncomplete')}</p>}
+      <p className="mt-2 text-bad">{t('proposalsPage.complianceIncomplete')}</p>
     </div>
   );
 }

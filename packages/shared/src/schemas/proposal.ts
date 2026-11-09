@@ -43,6 +43,14 @@ export const proposalCancelSchema = z
 
 export type ProposalCancel = z.infer<typeof proposalCancelSchema>;
 
+/** Reopen a finished, not yet executed vote: a new close time and a reason, kept in the audit log. */
+export const proposalReopenSchema = z.object({
+  closes_at: timestampSchema,
+  reason: z.string().trim().min(3).max(500),
+});
+
+export type ProposalReopen = z.infer<typeof proposalReopenSchema>;
+
 export const voteSchema = z.object({
   choice: z.enum(['yes', 'no', 'abstain']),
 });

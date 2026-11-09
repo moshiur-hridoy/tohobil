@@ -238,7 +238,7 @@ describe('ledger', () => {
         /append-only|referenced in a foreign key/,
       );
       await expect(admin.query(`TRUNCATE ledger_entries CASCADE`)).rejects.toThrow(/append-only/);
-      await expect(admin.query(`TRUNCATE ledger_entries, objections`)).rejects.toThrow(
+      await expect(admin.query(`TRUNCATE ledger_entries, objections, entry_remarks`)).rejects.toThrow(
         /append-only/,
       );
       await expect(admin.query(`TRUNCATE accounts CASCADE`)).rejects.toThrow(/append-only/);

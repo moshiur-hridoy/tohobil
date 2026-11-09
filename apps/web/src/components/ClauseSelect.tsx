@@ -48,7 +48,7 @@ const clauseLabel = (c: Clause): string => `${localDigits(c.clause_no)}${c.title
 /**
  * Picks a clause of the constitution for a proposal. `suggested` (the clause the proposal type rests on)
  * is selected until the user picks something themselves, and only if that clause exists. Without a
- * loaded constitution it falls back to a plain text box, as before.
+ * loaded constitution the list holds only the suggested clause.
  */
 export function ClauseSelect({
   value,
@@ -85,12 +85,21 @@ export function ClauseSelect({
     onChange(next);
   };
 
+  // No constitution loaded yet: still a dropdown, offering only the suggested clause (or the one
+  // already set), with a line saying why the list is short.
   if (!loading && clauses.length === 0) {
+    const known = [...new Set([value, suggested ?? ''].filter(Boolean))];
     return (
-      <label className={`field-label ${className}`}>
-        {t('proposal.clauseRef')}
-        <input className="field mt-1 w-full" value={value} onChange={(e) => pick(e.target.value)} />
-      </label>
+      <div className={className}>
+        <label className="field-label">
+          {t('proposal.clauseRef')}
+          <select className="field mt-1 w-full" value={value} onChange={(e) => pick(e.target.value)}>
+            <option value="">{t('proposal.clauseNone')}</option>
+            {known.map((c) => <option key={c} value={c}>{localDigits(c)}</option>)}
+          </select>
+        </label>
+        <p className="mt-1 text-xs text-muted">{t('proposal.clauseNoConstitution')}</p>
+      </div>
     );
   }
 

@@ -290,7 +290,7 @@
   "proposal": {
     "closeEarlyDisabled": "The result is not certain yet, so it cannot be closed early.",
     "turnout": "Voted: {{voted}} of {{total}}",
-    "title": "Proposal",
+    "title": "Proposal name",
     "type": "Type",
     "subject": "Subject",
     "payload": "Details",
@@ -318,11 +318,16 @@
     "cancelBody": "The draft proposal is cancelled. Nobody has voted yet, so nothing else changes.",
     "cancelOpenTitle": "Cancel this running vote?",
     "cancelOpenBody": "Voting stops now and this proposal never takes effect. Ballots already cast stay on record but are not counted. Make a new proposal if needed. Who cancelled it, when and why is kept in the audit log.",
+    "reopen": "Reopen",
+    "reopenTitle": "Reopen this vote?",
+    "reopenBody": "The same voters stay and every vote already cast is kept. Everyone can vote or change their vote until the new close time. The earlier result and the reason are kept in the audit log.",
+    "reopenReason": "Reason for reopening",
     "cancelReason": "Reason for cancelling",
     "cancelReasonHint": "For example: the voting rules changed; we will vote again under the new rules.",
     "executeBody": "The approved decision will be carried out. Money actions need an authenticator code.",
     "clauseRef": "Clause",
     "clauseNone": "— No clause —",
+    "clauseNoConstitution": "The constitution is not in the app yet, so the clause list is short.",
     "clauseSearch": "Search clauses by number or word",
     "clauseNoMatch": "No clause matches this.",
     "byShares": "By share weight",
@@ -373,7 +378,7 @@
     "payment": {
       "duplicate_trx": "This transaction ID has already been submitted.",
       "amount_required": "Please enter an amount.",
-      "trx_required": "Enter the transaction ID or the last 4 digits of the sender number.",
+      "trx_required": "Enter the last 4 digits of the phone the money was sent from.",
       "paid_in_future": "The payment date cannot be in the future.",
       "purpose_unsupported": "This kind of payment is not available yet.",
       "not_pending": "This payment has already been handled.",
@@ -820,8 +825,8 @@
     }
   },
   "pay": {
-    "senderDigitsPhone": "Last 4 digits of the sending number",
-    "senderDigitsBank": "Last 4 digits of the sending account",
+    "senderDigitsPhone": "Last 4 digits of the phone",
+    "senderDigitsBank": "Last 4 digits of the account",
     "senderDigitsInvalid": "Enter exactly 4 digits (numbers only).",
     "senderNotePhone": "Sender number, last 4 digits: {{digits}}",
     "senderNoteBank": "Sender account, last 4 digits: {{digits}}",
@@ -895,7 +900,6 @@
     "bankHolder": "Account name",
     "bankName": "Bank name",
     "bankBranch": "Branch",
-    "trxExample": "e.g. 9JK7A2B4CD",
     "digitsExample": "e.g. 4939",
     "addAhead": "Add one more month ahead",
     "aheadHint": "Money paid ahead is held in your name and taken automatically when that month's due is created.",
@@ -937,6 +941,7 @@
     "back": "All assets",
     "subtitle": "{{n}} purchases",
     "addEntry": "New purchase",
+    "buyTitle": "New purchase from {{name}}",
     "updateValue": "Update value",
     "invested": "Total invested",
     "value": "Current value",
@@ -953,7 +958,7 @@
     "complete": "Mark complete",
     "imported": "Brought in from the old sheet",
     "history": "Value history",
-    "addEntryHint": "A new gold purchase goes to the members as a proposal. Once it passes and the cashier executes it, it appears here as a new line.",
+    "addEntryHint": "This goes to a members' vote. Once it passes and the cashier confirms the purchase, it shows here as a new line.",
     "newValue": "Total value now (what the shop says)",
     "asOf": "As of",
     "basis": "Where this comes from (for example the shop statement)",
@@ -1065,9 +1070,10 @@
   },
   "adminDash": {
     "today": "Today, {{date}}",
-    "netAssetsHint": "Cash and assets at cost, less what is owed to others (interim, before valuation)",
+    "netAssetsHint": "Fund's own cash and investments at their latest value, less what is owed to others. The same total members see; members' advance is included",
     "cashAndBank": "Cash and bank",
-    "assetsAtCost": "Assets (at cost)",
+    "assetsAtValue": "Investments (latest value)",
+    "assetsCostGain": "bought for {{cost}} · {{gain}}",
     "owedToOthers": "Owed to others",
     "usableBalance": "Usable balance",
     "usableBalanceHint": "Cash and bank less what is owed to others",
@@ -1533,6 +1539,8 @@
     "newProposal": "New proposal",
     "count": "Total: {{count}}",
     "compliance": "Compliance checklist",
+    "halalPledge": "I confirm this money is being invested in a fully halal way.",
+    "halalPledgeHint": "That is: no interest, no gambling or speculation, and no fixed profit promised.",
     "complianceIncomplete": "All checklist items must be true before this proposal can be opened.",
     "created": "Created: {{date}}",
     "selected": "Selected proposal",
@@ -1966,11 +1974,23 @@
     "paid": "Paid",
     "payInstalment": "Pay instalment"
   },
+  "proposalLabels": {
+    "investment_purchase": {
+      "name": "What are you buying",
+      "max_amount_paisa": "Most it may cost",
+      "quantity": "How much",
+      "unit": "Vori or gram",
+      "source_account": "Which account pays",
+      "partner_id": "Shop",
+      "feasibility_file_id": "Price paper or photo"
+    }
+  },
   "proposalFields": {
     "invalidFields": "These fields are not valid",
     "phoneHint": "Write the phone number as +8801XXXXXXXXX (for example +8801712345678).",
     "optional": "optional",
     "missing": "Please fill in",
+    "halal": "the halal confirmation tick",
     "chooseAsset": "Choose an asset",
     "instalments": "Instalments",
     "addInstalment": "Add instalment",
@@ -2603,5 +2623,16 @@
       "blocked": "Notifications are blocked on this phone, so urgent notices will not arrive. Turn them on in the phone's Settings → Apps → Barakah (or Chrome) → Notifications. In a browser, the lock next to the address also lets you set \"Allow\".",
       "needs-install": "On iPhone, first add the app to the Home Screen: Share, then Add to Home Screen. Open it from there and turn notifications on."
     }
+  },
+  "remarks": {
+    "title": "Remark",
+    "add": "+ Add a remark",
+    "change": "Change remark",
+    "historyCount": "{{n}} earlier",
+    "sheetTitle": "Entry #{{seq}}: remark",
+    "body": "Write a short note to remember this entry by. The entry itself does not change at all. Changing the remark shows the new one; the earlier ones stay below as history. Who wrote it and when is kept in the audit log.",
+    "placeholder": "For example: paid in cash in front of the shop owner, receipt to follow",
+    "history": "Remark history",
+    "current": "shown now"
   }
 }

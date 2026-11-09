@@ -17,8 +17,24 @@ const SELECT = `
          pc.code AS posted_by_code,
          CASE WHEN $9::boolean OR pay.member_id = $10::uuid THEN pay.note END AS note,
          (SELECT count(*)::int FROM objections o WHERE o.ledger_seq = le.seq AND o.status = 'open')
-           AS open_objections
+           AS open_objections,
+         -- The newest remark (ASSUMPTIONS 128), under the same rule as the note: the cashier, the
+         -- auditor, and the member the entry is about.
+         CASE WHEN $9::boolean OR le.member_id = $10::uuid THEN rk.text END AS remark,
+         CASE WHEN $9::boolean OR le.member_id = $10::uuid THEN rk.created_at END AS remark_at,
+         CASE WHEN $9::boolean OR le.member_id = $10::uuid THEN rk.by_code END AS remark_by_code,
+         CASE WHEN $9::boolean OR le.member_id = $10::uuid THEN COALESCE(rk.total, 0) ELSE 0 END AS remark_count
   FROM ledger_entries le
+  LEFT JOIN LATERAL (
+    SELECT r.text, r.created_at, rm.code AS by_code,
+           (SELECT count(*)::int FROM entry_remarks r2 WHERE r2.ledger_seq = le.seq) AS total
+    FROM entry_remarks r
+    LEFT JOIN users ru ON ru.id = r.created_by
+    LEFT JOIN members rm ON rm.id = ru.member_id
+    WHERE r.ledger_seq = le.seq
+    ORDER BY r.created_at DESC, r.id DESC
+    LIMIT 1
+  ) rk ON true
   LEFT JOIN members m ON m.id = le.member_id
   LEFT JOIN ledger_entries rv ON rv.reverses_seq = le.seq
   LEFT JOIN users pu ON pu.id = le.created_by
@@ -36,7 +52,8 @@ const SELECT = `
  * their reversal (either way) and a badge counting open objections. Keyset paging on `seq`
  * (newest first unless `order=asc`), so a page never repeats or skips a row even while new entries
  * arrive. A payment's note (the cashier's or the payer's) goes only to the payer, the cashier and the
- * auditor, as in the payment detail (ASSUMPTIONS 49); everyone else gets `note: null`.
+ * auditor, as in the payment detail (ASSUMPTIONS 49); everyone else gets `note: null`. The newest
+ * remark follows the same rule, with the entry's own member in place of the payer.
  */
 export async function listLedger(
   db: Db,

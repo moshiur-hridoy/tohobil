@@ -910,7 +910,9 @@ export async function entryPreview(deps: PaymentDeps, input: EntryPreviewQuery):
 
 /**
  * `POST /payments/parse-sms` (cashier): parse and look for the pending payment it belongs to: the
- * same TrxID, or the same amount paid within 3 days of the SMS time. It only suggests (5.4).
+ * same TrxID, or the same amount paid within 3 days of the SMS time. Members give the last 4 digits
+ * of the sending number instead of a TrxID (kept in the note, ASSUMPTIONS 126), so an amount match
+ * whose note holds the SMS sender's last 4 digits counts as exact too. It only suggests (5.4).
  */
 export async function parseSms(deps: PaymentDeps, input: ParseSms): Promise<Record<string, unknown>> {
   const parsed = parsePaymentSms(input.text);
@@ -918,28 +920,33 @@ export async function parseSms(deps: PaymentDeps, input: ParseSms): Promise<Reco
 
   if (parsed.parsed && parsed.amount_paisa !== null) {
     const when = parsed.paid_at ? new Date(parsed.paid_at) : deps.clock.now();
+    const senderDigits = parsed.counterparty_phone?.replace(/\D/g, '');
+    const last4 = senderDigits && senderDigits.length >= 4 ? senderDigits.slice(-4) : null;
     const res = await deps.pool.query(
       `SELECT p.id, p.member_id, m.code AS member_code, p.amount_paisa,
               COALESCE($1::text IS NOT NULL AND upper(trim(p.trx_id)) = upper($1::text), false)
-                AS trx_match
+                AS trx_match,
+              COALESCE($5::text IS NOT NULL AND p.note ~ ('(^|[^0-9])' || $5::text || '([^0-9]|$)'), false)
+                AS phone_match
        FROM payments p JOIN members m ON m.id = p.member_id
        WHERE p.status = 'pending'
          AND (($1::text IS NOT NULL AND upper(trim(p.trx_id)) = upper($1::text))
               OR (p.amount_paisa = $2::bigint
                   AND abs(extract(epoch FROM (p.paid_at - $3::timestamptz))) <= $4::int * 86400))
-       ORDER BY trx_match DESC, p.submitted_at`,
-      [parsed.trx_id, parsed.amount_paisa.toString(), when, SMS_MATCH_WINDOW_DAYS],
+       ORDER BY trx_match DESC, phone_match DESC, p.submitted_at`,
+      [parsed.trx_id, parsed.amount_paisa.toString(), when, SMS_MATCH_WINDOW_DAYS, last4],
     );
     for (const r of res.rows as Array<Record<string, unknown>>) {
       const sameAmount = toBigInt(r['amount_paisa']) === parsed.amount_paisa;
       const byTrx = r['trx_match'] === true;
+      const byPhone = r['phone_match'] === true;
       matches.push({
         payment_id: r['id'],
         match_type: byTrx ? 'trx_id' : 'amount_phone',
         member_id: r['member_id'],
         member_code: r['member_code'],
         amount_paisa: paisaOut(r['amount_paisa']),
-        exact: byTrx && sameAmount,
+        exact: (byTrx || byPhone) && sameAmount,
       });
     }
   }

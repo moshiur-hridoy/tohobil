@@ -15,7 +15,7 @@ import { daysBetween, fmtDate, fmtInstant, fmtPeriod, todayDhaka } from '../../l
 import { formatCount } from '../../lib/format';
 import { useCashByMethod } from '../../lib/useCashByMethod';
 import { arrearsOf, negClass, taka } from '../../lib/money';
-import { charityBalance, interimNetAssets, memberAdvance } from '../../lib/nav';
+import { charityBalance, fundSplit } from '../../lib/nav';
 import { RoleBadges } from '../../components/RoleBadge';
 import type { AccountBalance, ApprovalRow, MatrixCell, MatrixResponse, MemberRow, NavResponse, ObjectionRow, Page, PaymentRow, ProposalSummary, SettlementView } from '../../lib/types';
 
@@ -151,21 +151,31 @@ function NetAssetsHero({ accounts, members, matrix }: { accounts?: AccountBalanc
   const owed = accounts ? balanceOf(accounts, NAV_DEDUCTION_ACCOUNTS) : null;
   // What can be spent or invested now: the cash less what is held for others (charity, escrow, settlements...).
   const usable = cash === null || owed === null ? null : cash - owed;
-  // Members' money paid ahead: owed to them in the net assets (docs/ASSUMPTIONS.md 120), yet usable cash,
-  // since it pays their coming dues; the usable balance names it.
+  // The same total as the member app's home card (docs/ASSUMPTIONS.md 125): the fund's own cash plus
+  // investments at their latest value, the members' advance kept in. The cashier also sees what was paid
+  // for the investments and the gain on it, and how much of the usable balance is advance.
   const nav = useQuery({ queryKey: ['nav'], queryFn: () => api<NavResponse>('/nav') });
-  const advance = nav.data ? memberAdvance(nav.data) : null;
-  const net = accounts && advance !== null ? interimNetAssets(accounts) - advance : null;
+  const split = nav.data ? fundSplit(nav.data) : null;
+  const net = split ? split.total : null;
+  const advance = split ? split.advance : null;
+  const cost = accounts ? balanceOf(accounts, ['INVESTMENTS_AT_COST']) : null;
+  const gain = split && cost !== null ? split.invested - cost : null;
   // Where the cash sits: one line per account, so a payment through bKash is seen leaving bKash.
   const perAccount = accounts && perMethod ? NAV_CASH_ACCOUNTS.map((code) => [code, balanceOf(accounts, [code])] as const) : [];
-  const breakdown: Array<[string, string | null, string]> = [
-    [t('adminDash.cashAndBank'), cash === null ? null : taka(cash), negClass(cash)],
-    [t('adminDash.assetsAtCost'), accounts ? taka(balanceOf(accounts, ['INVESTMENTS_AT_COST'])) : null, ''],
-    [t('adminDash.owedToOthers'), owed === null ? null : taka(owed), ''],
+  const breakdown: Array<[string, string | null, string, string | null]> = [
+    [t('adminDash.cashAndBank'), cash === null ? null : taka(cash), negClass(cash), null],
+    [
+      t('adminDash.assetsAtValue'),
+      split ? taka(split.invested) : null,
+      '',
+      cost !== null && gain !== null ? t('adminDash.assetsCostGain', { cost: taka(cost), gain: `${gain > 0n ? '+' : ''}${taka(gain)}` }) : null,
+    ],
+    [t('adminDash.owedToOthers'), owed === null ? null : taka(owed), '', null],
     [
       t('adminDash.membersShares'),
       active ? t('adminDash.membersSharesValue', { members: formatCount(active.length), shares: formatCount(active.reduce((s, m) => s + m.shares, 0)) }) : null,
       '',
+      null,
     ],
   ];
 
@@ -184,10 +194,11 @@ function NetAssetsHero({ accounts, members, matrix }: { accounts?: AccountBalanc
           <p className="mt-2 text-sm text-muted">{t('adminDash.netAssetsHint')}</p>
           <div className="my-5 h-px bg-border" />
           <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
-            {breakdown.map(([label, value, tone]) => (
+            {breakdown.map(([label, value, tone, note]) => (
               <div key={label} className="min-w-0">
                 <dt className="text-[0.8125rem] text-muted">{label}</dt>
                 {value === null ? <Skeleton className="mt-1 h-6 w-24" /> : <dd className={`mt-0.5 truncate text-lg font-bold tabular-nums ${tone}`}>{value}</dd>}
+                {note && <dd className="mt-0.5 text-xs text-muted">{note}</dd>}
               </div>
             ))}
           </dl>

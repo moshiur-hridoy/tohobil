@@ -149,7 +149,6 @@ function SendMoneyForm({
   const currentPeriod = today.slice(0, 7);
   const [purpose, setPurpose] = useState<Purpose>('dues');
   const [chosenMethod, setMethod] = useState<PaymentMethod | null>(null);
-  const [trx, setTrx] = useState('');
   const [digits, setDigits] = useState('');
   // Cash only: how it was handed over, in the member's own words, for the cashier.
   const [cashNote, setCashNote] = useState('');
@@ -251,8 +250,8 @@ function SendMoneyForm({
     setDone(false);
     if (!paisa) return setInvalid(t('pay.pickSomething'));
     if (date > todayDhaka()) return setInvalid(t('pay.invalidDate'));
-    if (trxNeeded && !trx.trim() && !senderDigits) return setInvalid(t('errors.payment.trx_required'));
     if (digits.trim() && !senderDigits) return setInvalid(t('pay.senderDigitsInvalid'));
+    if (trxNeeded && !senderDigits) return setInvalid(t('errors.payment.trx_required'));
     setInvalid(null);
     attemptKey.current = uuid();
     setSheet(true);
@@ -272,7 +271,6 @@ function SendMoneyForm({
       body: {
         amount_paisa: paisa,
         method,
-        ...(trx.trim() ? { trx_id: trx.trim() } : {}),
         ...(senderDigits ? { note: t(method === 'bank' ? 'pay.senderNoteBank' : 'pay.senderNotePhone', { digits: senderDigits }) } : {}),
         ...(noteText ? { note: noteText } : {}),
         paid_at: dayToIso(date),
@@ -283,7 +281,6 @@ function SendMoneyForm({
     });
     setPicked(new Set());
     setAhead(SHOWN_AHEAD);
-    setTrx('');
     setDigits('');
     setCashNote('');
     setPurpose('dues');
@@ -398,16 +395,10 @@ function SendMoneyForm({
       <Step n={3} title={t('pay.step3')} hint={t('pay.step3Hint')}>
         <div className="space-y-3.5">
           {trxNeeded && (
-            <>
-              <label className="block">
-                <span className={label}>{t(method === 'bank' ? 'pay.senderDigitsBank' : 'pay.senderDigitsPhone')}</span>
-                <input className={field} inputMode="numeric" maxLength={8} value={digits} onChange={(e) => setDigits(e.target.value)} placeholder={t('pay.digitsExample')} autoComplete="off" />
-              </label>
-              <label className="block">
-                <span className={label}>{t('payment.trxId')}<Optional /></span>
-                <input className={field} value={trx} onChange={(e) => setTrx(e.target.value)} placeholder={t('pay.trxExample')} autoCapitalize="characters" autoComplete="off" />
-              </label>
-            </>
+            <label className="block">
+              <span className={label}>{t(method === 'bank' ? 'pay.senderDigitsBank' : 'pay.senderDigitsPhone')}</span>
+              <input className={field} inputMode="numeric" maxLength={8} value={digits} onChange={(e) => setDigits(e.target.value)} placeholder={t('pay.digitsExample')} autoComplete="off" />
+            </label>
           )}
 
           {method === 'cash' && (
@@ -454,7 +445,6 @@ function SendMoneyForm({
       <ConfirmSheet open={sheet} onClose={() => setSheet(false)} title={t('pay.reviewTitle')} confirmLabel={t('pay.send')} onConfirm={send}>
         <SheetRow label={t('payment.amount')} value={paisa ? taka(paisa) : ''} strong />
         <SheetRow label={t('payment.method')} value={PAYMENT_METHOD_LABELS[method].bn} />
-        {trx.trim() && <SheetRow label={t('payment.trxId')} value={<span className="select-all">{trx.trim()}</span>} />}
         {senderDigits && <SheetRow label={t(method === 'bank' ? 'pay.senderDigitsBank' : 'pay.senderDigitsPhone')} value={senderDigits} />}
         {noteText && <SheetRow label={t('pay.cashNote')} value={<span className="whitespace-pre-line">{noteText}</span>} />}
         <SheetRow label={t('payment.date')} value={fmtDate(date)} />

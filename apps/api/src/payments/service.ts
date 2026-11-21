@@ -2,12 +2,14 @@ import type pg from 'pg';
 import type { Logger } from 'pino';
 import {
   formatBDT,
+  methodAccount,
   toDhakaDate,
   type CashierEntry,
   type Clock,
   type EntryPreviewQuery,
   type ParseSms,
   type PaymentConfirm,
+  type PaymentMethod,
   type PaymentPurpose,
   type PaymentReject,
   type PaymentSubmit,
@@ -21,6 +23,7 @@ import { LEDGER_REF, postEntries, reverseReference } from '../ledger/service';
 import { paymentPostings } from '../ledger/postings';
 import { audit } from '../lib/audit';
 import { applyApprovedValuation, notifyValuationRejected } from '../assets/valuation-requests';
+import { mandateFor, recordPurchase, undoPurchase } from '../assets/mandates';
 import { decodeCursor, encodeCursor, tsKey } from '../lib/cursor';
 import { AppError, badRequest, conflict, forbidden, notFound } from '../lib/errors';
 import { paisaOut, toBigInt } from '../lib/money';
@@ -98,13 +101,15 @@ interface NewPayment {
   submittedBy: string;
   /** From the clock, not the database: whether a payment was recorded in time decides late fines. */
   submittedAt: Date;
+  /** The shop the member sent the money to under its standing approval (ASSUMPTIONS 131). */
+  partnerId: string | null;
 }
 
 async function insertPayment(tx: pg.PoolClient, p: NewPayment): Promise<string> {
   const res = await tx.query(
     `INSERT INTO payments (member_id, amount_paisa, method, purpose, trx_id, paid_at, source,
-                           for_periods, proof_file_id, raw_sms, note, submitted_by, submitted_at)
-     VALUES ($1, $2::bigint, $3, $4, $5, $6, $7, $8::text[], $9, $10, $11, $12, $13)
+                           for_periods, proof_file_id, raw_sms, note, submitted_by, submitted_at, partner_id)
+     VALUES ($1, $2::bigint, $3, $4, $5, $6, $7, $8::text[], $9, $10, $11, $12, $13, $14)
      RETURNING id`,
     [
       p.memberId,
@@ -120,9 +125,25 @@ async function insertPayment(tx: pg.PoolClient, p: NewPayment): Promise<string> 
       p.note,
       p.submittedBy,
       p.submittedAt,
+      p.partnerId,
     ],
   );
   return (res.rows[0] as { id: string }).id;
+}
+
+/**
+ * Dues sent straight to a shop are only accepted while a standing approval covers that shop and day
+ * (ASSUMPTIONS 131). Checked again, against the limit, when the cashier confirms.
+ */
+async function checkShopPayment(tx: Db, partnerId: string | undefined, purpose: PaymentPurpose, paidAt: Date): Promise<string | null> {
+  if (!partnerId) return null;
+  if (purpose !== 'dues') {
+    throw badRequest('payment.shop_dues_only', 'Only monthly dues can be sent straight to a shop');
+  }
+  if (!(await mandateFor(tx, partnerId, toDhakaDate(paidAt)))) {
+    throw badRequest('mandate.not_in_force', 'No standing approval covers this shop on that day');
+  }
+  return partnerId;
 }
 
 /** 409 with a pointer to the payment that already holds this TrxID. */
@@ -172,6 +193,7 @@ export async function submitPayment(
         // Somebody else's upload is the same as a missing one: a proof must be your own file.
         if (!row || row.created_by !== user.id) throw notFound('file.not_found', 'File not found');
       }
+      const partnerId = await checkShopPayment(tx, input.partner_id, input.purpose, paidAt);
       const id = await insertPayment(tx, {
         memberId: user.member_id,
         amount: input.amount_paisa,
@@ -186,6 +208,7 @@ export async function submitPayment(
         note: input.note ?? null,
         submittedBy: user.id,
         submittedAt: deps.clock.now(),
+        partnerId,
       });
       await audit(tx, {
         actor: user.id,
@@ -199,6 +222,7 @@ export async function submitPayment(
           trx_id: trxId,
           paid_at: paidAt.toISOString(),
           has_proof: !!input.proof_file_id,
+          ...(partnerId ? { partner_id: partnerId } : {}),
         },
         ip: ctx.ip,
         deviceId: user.device_id,
@@ -327,7 +351,7 @@ async function confirmInTx(
   action: 'payment.confirm' | 'payment.cashier_entry',
 ): Promise<ConfirmedPayment> {
   const res = await tx.query(
-    `SELECT id, member_id, amount_paisa, method, purpose, status, paid_at, submitted_at, source, note
+    `SELECT id, member_id, amount_paisa, method, purpose, status, paid_at, submitted_at, source, note, partner_id
      FROM payments WHERE id = $1 FOR UPDATE`,
     [paymentId],
   );
@@ -343,6 +367,7 @@ async function confirmInTx(
         submitted_at: Date;
         source: string;
         note: string | null;
+        partner_id: string | null;
       }
     | undefined;
   if (!p) throw notFound('payment.not_found', 'Payment not found');
@@ -381,9 +406,14 @@ async function confirmInTx(
     );
   }
   const dropped = new Set(cancelled.map((f) => f.fine_id));
+  // Money sent to a shop becomes gold, and fines are charity money that must never be invested
+  // (18.2), so it pays dues only; any rest is the member's credit.
+  if (p.partner_id && manual?.some((l) => l.fine_id)) {
+    throw badRequest('payment.shop_no_fines', 'Money sent to a shop cannot pay a fine');
+  }
   const plan = planFor(amount, withoutFines(manual, dropped), {
     dues: items.dues,
-    fines: items.fines.filter((f) => !dropped.has(f.id)),
+    fines: p.partner_id ? [] : items.fines.filter((f) => !dropped.has(f.id)),
   });
   const now = deps.clock.now();
 
@@ -434,6 +464,22 @@ async function confirmInTx(
     { userId: actor.id, ip: ctx.ip, deviceId: actor.device_id },
   );
 
+  // Sent straight to the shop: the same money is that month's purchase under the standing approval,
+  // so it leaves the account it was booked into on the same day (ASSUMPTIONS 131).
+  let shopPurchase: { asset_id: string; ledger_seq: string } | null = null;
+  if (p.partner_id) {
+    const mandate = await mandateFor(tx, p.partner_id, entryDate);
+    if (!mandate) throw badRequest('mandate.not_in_force', 'No standing approval covers this shop on that day');
+    shopPurchase = await recordPurchase(tx, { userId: actor.id, ip: ctx.ip, deviceId: actor.device_id }, {
+      mandate,
+      entryDate,
+      amountPaisa: amount,
+      account: methodAccount(p.method as PaymentMethod),
+      memberId: p.member_id,
+      paymentId: p.id,
+    });
+  }
+
   // Spec 5.9: when the entry due is fully paid, activate the prospective member.
   if (p.purpose === 'entry') {
     const entryDueId = plan.lines.find((l) => l.due_id !== undefined)?.due_id;
@@ -462,6 +508,7 @@ async function confirmInTx(
       entry_date: entryDate,
       allocation: planOut(plan),
       ...(cancelled.length > 0 ? { cancelled_fine_ids: cancelled.map((f) => f.fine_id) } : {}),
+      ...(shopPurchase ? { shop_purchase: shopPurchase } : {}),
       // A cashier confirming their own payment is allowed (nobody else can) but visible to the auditor.
       self_confirmed: p.member_id === actor.member_id,
     },
@@ -539,6 +586,7 @@ export async function cashierEntry(
     return await inTransaction(deps.pool, async (tx) => {
       const member = await tx.query(`SELECT 1 FROM members WHERE id = $1`, [input.member_id]);
       if ((member.rowCount ?? 0) === 0) throw notFound('member.not_found', 'Member not found');
+      const partnerId = await checkShopPayment(tx, input.partner_id, input.purpose, paidAt);
       const id = await insertPayment(tx, {
         memberId: input.member_id,
         amount: input.amount_paisa,
@@ -553,6 +601,7 @@ export async function cashierEntry(
         note: input.note ?? null,
         submittedBy: actor.id,
         submittedAt: deps.clock.now(),
+        partnerId,
       });
       return confirmInTx(tx, deps, actor, id, input.allocations, ctx, 'payment.cashier_entry');
     });
@@ -673,7 +722,7 @@ async function lockApproval(tx: pg.PoolClient, id: string, actor: AuthUser): Pro
   if (a.requested_by === actor.id) {
     throw forbidden('approval.self_decision', 'You cannot decide your own request');
   }
-  if (a.kind !== 'payment_reversal' && a.kind !== 'valuation_update') {
+  if (a.kind !== 'payment_reversal' && a.kind !== 'valuation_update' && a.kind !== 'mandate_purchase_reversal') {
     throw badRequest('approval.kind_unsupported', `Approvals of kind ${a.kind} are not available yet`);
   }
   return a;
@@ -694,6 +743,27 @@ export async function approveApproval(
       const out = await applyApprovedValuation(tx, deps.clock, actor, a, note, ctx);
       return { id: approvalId, status: 'approved' as const, ...out };
     }
+    const ledger = { userId: actor.id, ip: ctx.ip, deviceId: actor.device_id };
+    // A shop purchase the cashier recorded by mistake (ASSUMPTIONS 131).
+    if (a.kind === 'mandate_purchase_reversal') {
+      const seqs = await undoPurchase(tx, deps.clock, ledger, a.ref_id, a.reason ?? 'Purchase reversed', approvalId);
+      await tx.query(`UPDATE approvals SET status = 'approved', decided_by = $2, decided_at = $3, decision_note = $4 WHERE id = $1`, [
+        approvalId,
+        actor.id,
+        deps.clock.now(),
+        note ?? null,
+      ]);
+      await audit(tx, {
+        actor: actor.id,
+        action: 'mandate.reverse',
+        entityType: 'asset',
+        entityId: a.ref_id,
+        after: { approval_id: approvalId, reason: a.reason, note: note ?? null, reversal_seqs: seqs },
+        ip: ctx.ip,
+        deviceId: actor.device_id,
+      });
+      return { id: approvalId, status: 'approved' as const, reversal_seqs: seqs };
+    }
     const paymentId = a.ref_id;
 
     const res = await tx.query(`SELECT status, member_id FROM payments WHERE id = $1 FOR UPDATE`, [paymentId]);
@@ -705,9 +775,15 @@ export async function approveApproval(
 
     const reversals = await reverseReference(tx, LEDGER_REF.payment, paymentId, {
       reason: a.reason ?? 'Payment reversed',
-      actor: { userId: actor.id, ip: ctx.ip, deviceId: actor.device_id },
+      actor: ledger,
       clock: deps.clock,
     });
+    const reversalSeqs = reversals.map((r) => r.seq.toString());
+    // Money the member had sent to a shop: its purchase goes with the payment.
+    const shop = await tx.query(`SELECT id FROM assets WHERE payment_id = $1`, [paymentId]);
+    for (const row of shop.rows as Array<{ id: string }>) {
+      reversalSeqs.push(...(await undoPurchase(tx, deps.clock, ledger, row.id, a.reason ?? 'Payment reversed', approvalId)));
+    }
 
     // Negative allocation rows reopen the dues and fines this payment had paid (including credit it
     // had since been spent on). The payment's unspent credit goes with it.
@@ -743,7 +819,7 @@ export async function approveApproval(
         approval_id: approvalId,
         reason: a.reason,
         note: note ?? null,
-        reversal_seqs: reversals.map((r) => r.seq.toString()),
+        reversal_seqs: reversalSeqs,
       },
       ip: ctx.ip,
       deviceId: actor.device_id,
@@ -752,7 +828,7 @@ export async function approveApproval(
       id: approvalId,
       status: 'approved' as const,
       payment_id: paymentId,
-      reversal_seqs: reversals.map((r) => r.seq.toString()),
+      reversal_seqs: reversalSeqs,
     };
   });
 }
@@ -797,7 +873,11 @@ export async function listApprovals(
   const cursor = decodeCursor(q.cursor, 2); // [created_at, id]
   const res = await deps.pool.query(
     `SELECT a.id, a.kind, a.ref_id, a.reason, a.status, a.created_at, a.decided_at, a.decision_note,
-            vr.partner_id, vp.name AS partner_name, vr.base_value_paisa, vr.new_value_paisa,
+            COALESCE(vr.partner_id, ma.partner_id) AS partner_id, COALESCE(vp.name, mp.name) AS partner_name,
+            vr.base_value_paisa, vr.new_value_paisa,
+            ma.acquired_on::text AS purchase_date,
+            (SELECT le.amount_paisa::text FROM ledger_entries le WHERE le.ref_type = 'mandate_purchase'
+               AND le.ref_id::text = a.ref_id AND le.reverses_seq IS NULL LIMIT 1) AS purchase_amount_paisa,
             vr.as_of::text AS valuation_as_of, vr.proof_file_id AS valuation_proof_file_id,
             ${tsKey('a.created_at')} AS created_key,
             rm.code AS requested_by_code, dm.code AS decided_by_code,
@@ -811,6 +891,8 @@ export async function listApprovals(
      LEFT JOIN members pm ON pm.id = p.member_id
      LEFT JOIN valuation_requests vr ON a.kind = 'valuation_update' AND vr.id::text = a.ref_id
      LEFT JOIN investment_partners vp ON vp.id = vr.partner_id
+     LEFT JOIN assets ma ON a.kind = 'mandate_purchase_reversal' AND ma.id::text = a.ref_id
+     LEFT JOIN investment_partners mp ON mp.id = ma.partner_id
      WHERE ($1::text IS NULL OR a.status = $1) AND ($2::text IS NULL OR a.kind = $2)
        AND ($3::timestamptz IS NULL OR (a.created_at, a.id) < ($3::timestamptz, $4::uuid))
      ORDER BY a.created_at DESC, a.id DESC
@@ -838,9 +920,11 @@ const PAYMENT_SELECT = `
   p.purpose, p.trx_id, p.paid_at, p.status, p.source, p.for_periods, p.proof_file_id,
   (p.raw_sms IS NOT NULL) AS has_raw_sms, p.note, p.reject_reason, p.unallocated_paisa,
   p.submitted_at, p.confirmed_at, cm.code AS confirmed_by_code,
+  p.partner_id, pp.name AS partner_name,
   ${tsKey('p.paid_at')} AS sort_key
   FROM payments p
   JOIN members m ON m.id = p.member_id
+  LEFT JOIN investment_partners pp ON pp.id = p.partner_id
   LEFT JOIN users cu ON cu.id = p.confirmed_by
   LEFT JOIN members cm ON cm.id = cu.member_id`;
 

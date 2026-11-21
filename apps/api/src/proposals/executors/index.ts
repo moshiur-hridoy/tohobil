@@ -19,6 +19,7 @@ import {
   distributionExecutor,
   expenseExecutor,
   fineWaiverExecutor,
+  investmentMandateExecutor,
   investmentPurchaseExecutor,
 } from './financial';
 import {
@@ -52,6 +53,7 @@ export const EXECUTORS: Record<ProposalType, ExecutorSignature> = {
   expense: expenseExecutor,
   charity_donation: charityDonationExecutor,
   investment_purchase: investmentPurchaseExecutor,
+  investment_mandate: investmentMandateExecutor,
   asset_sale: assetSaleExecutor,
   distribution: distributionExecutor,
 

@@ -9,7 +9,7 @@ import { errorMessage } from '../../../lib/errors';
 import { dayToIso, fmtDate, fmtPeriod, todayDhaka } from '../../../lib/dates';
 import { paisaToDecimal, parseAmountInput, taka } from '../../../lib/money';
 import { formatCount } from '../../../lib/format';
-import type { MemberRow, ParsedSms, PaymentInstructions } from '../../../lib/types';
+import type { MandateRow, MemberRow, ParsedSms, PaymentInstructions } from '../../../lib/types';
 import { DateInput, Optional } from '../../../components/ui';
 import { StatusPill } from '../../../components/StatusPill';
 import { MAX_AHEAD, allocationsFor, entryRows, pickedTotal, togglePick, type EntryPreview, type EntryRow } from './entryRows';
@@ -63,6 +63,15 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
   const [note, setNote] = useState('');
   const [date, setDate] = useState(todayDhaka());
   const [purpose, setPurpose] = useState<Purpose>('dues');
+  // Dues the member sent straight to a shop under its standing approval (ASSUMPTIONS 131).
+  const [shopId, setShopId] = useState('');
+  const mandates = useQuery({
+    queryKey: ['mandates'],
+    queryFn: () => api<{ items: MandateRow[] }>('/mandates'),
+    select: (r) => r.items.filter((m) => m.status === 'active'),
+    enabled: open,
+  });
+  const shop = purpose === 'dues' ? (mandates.data?.find((m) => m.partner_id === shopId) ?? null) : null;
   const [requoteError, setRequoteError] = useState<unknown>(null);
   const [requoting, setRequoting] = useState(false);
   // Rows the cashier ticked one by one; null while the typed amount simply fills the rows top down.
@@ -177,8 +186,10 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
         paid_at: dayToIso(date),
         ...(purpose !== 'dues' ? { purpose } : {}),
         ...(forPeriods.length > 0 ? { for_periods: forPeriods.slice(0, 24) } : {}),
-        // Exactly what the rows show, so a month's fine is paid with that month (ASSUMPTIONS 61).
-        ...(allocations.length > 0 ? { allocations } : {}),
+        // Exactly what the rows show, so a month's fine is paid with that month (ASSUMPTIONS 61). Money
+        // sent to a shop never pays a fine (fines are charity money), so those lines are left out.
+        ...(shop ? { partner_id: shop.partner_id } : {}),
+        ...(allocations.length > 0 ? { allocations: shop ? allocations.filter((a) => !a.fine_id) : allocations } : {}),
         ...(prefill?.rawSms ? { raw_sms: prefill.rawSms } : {}),
       },
     });
@@ -273,6 +284,16 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
           ))}
         </select>
       </label>
+      {purpose === 'dues' && (mandates.data?.length ?? 0) > 0 && (
+        <label className="field-label">
+          {t('pay.whereTitle')}
+          <select className={field} value={shopId} onChange={(e) => setShopId(e.target.value)}>
+            <option value="">{t('pay.whereFund')}</option>
+            {mandates.data!.map((m) => <option key={m.id} value={m.partner_id}>{t('pay.whereShop', { name: m.partner_name })}</option>)}
+          </select>
+          {shop && <span className="mt-1 block text-xs font-normal text-muted">{t('pay.whereShopFineHint', { name: shop.partner_name })}</span>}
+        </label>
+      )}
       <label className="field-label">
         {t(method === 'bank' ? 'pay.senderDigitsBank' : 'pay.senderDigitsPhone')}
         {!needsTrx && <Optional />}
@@ -299,6 +320,7 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
           <SheetRow label={`${member.code} ${member.full_name}`} value={taka(paisa as string)} strong />
           {purpose !== 'dues' && <SheetRow label={t('pay.purposeLabel')} value={t(PURPOSE_LABEL[purpose])} />}
           <SheetRow label={t('payment.method')} value={PAYMENT_METHOD_LABELS[method].bn} />
+          {shop && <SheetRow label={t('pay.whereTitle')} value={shop.partner_name} />}
           <SheetRow label={t('paymentsPage.paidAt')} value={fmtDate(date)} />
           {trxId && <SheetRow label={t('payment.trxId')} value={trxId} />}
           {sentNote && <p className="mt-1 whitespace-pre-line text-sm text-muted">{sentNote}</p>}

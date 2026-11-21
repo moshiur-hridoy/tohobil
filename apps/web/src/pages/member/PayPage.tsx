@@ -17,7 +17,7 @@ import { dayToIso, fmtDate, fmtInstant, fmtPeriod, todayDhaka } from '../../lib/
 import { formatCount } from '../../lib/format';
 import { taka } from '../../lib/money';
 import { monthsAhead } from '../../lib/advance';
-import type { DueRow, FineRow, Page, PaymentDetail, PaymentInstructions, PaymentRow } from '../../lib/types';
+import type { DueRow, FineRow, MandateRow, Page, PaymentDetail, PaymentInstructions, PaymentRow } from '../../lib/types';
 
 const NEEDS_TRX: PaymentMethod[] = ['bkash', 'nagad', 'bank'];
 /** How many months ahead a member can add on the pay page. */
@@ -149,6 +149,13 @@ function SendMoneyForm({
   const currentPeriod = today.slice(0, 7);
   const [purpose, setPurpose] = useState<Purpose>('dues');
   const [chosenMethod, setMethod] = useState<PaymentMethod | null>(null);
+  // Dues sent straight to a shop under its standing approval (ASSUMPTIONS 131); null = the fund's account.
+  const [shopId, setShopId] = useState<string | null>(null);
+  const mandates = useQuery({
+    queryKey: ['mandates'],
+    queryFn: () => api<{ items: MandateRow[] }>('/mandates'),
+    select: (r) => r.items.filter((m) => m.status === 'active'),
+  });
   const [digits, setDigits] = useState('');
   // Cash only: how it was handed over, in the member's own words, for the cashier.
   const [cashNote, setCashNote] = useState('');
@@ -242,6 +249,7 @@ function SendMoneyForm({
   // Bengali digits are accepted and turned into 0-9; exactly four are kept as the sender's identity.
   const senderDigits = /^\d{4}$/.test(toAscii(digits.trim())) ? toAscii(digits.trim()) : '';
   const paisa = total > 0n ? total.toString() : null;
+  const shop = purpose === 'dues' ? (mandates.data?.find((m) => m.partner_id === shopId) ?? null) : null;
   const trxNeeded = NEEDS_TRX.includes(method);
   const noteText = method === 'cash' ? cashNote.trim() : '';
   const readOnly = !!me?.read_only;
@@ -277,6 +285,7 @@ function SendMoneyForm({
         ...(purpose !== 'dues' ? { purpose } : {}),
         ...(periods.length > 0 ? { for_periods: periods } : {}),
         ...(proof ? { proof_file_id: proof } : {}),
+        ...(shop ? { partner_id: shop.partner_id } : {}),
       },
     });
     setPicked(new Set());
@@ -284,6 +293,7 @@ function SendMoneyForm({
     setDigits('');
     setCashNote('');
     setPurpose('dues');
+    setShopId(null);
     setFile(null);
     setDone(true);
     setSentAmount(taka(paisa as string));
@@ -392,7 +402,27 @@ function SendMoneyForm({
         </div>
       </Step>
 
-      <Step n={3} title={t('pay.step3')} hint={t('pay.step3Hint')}>
+      {purpose === 'dues' && (mandates.data?.length ?? 0) > 0 && (
+        <Step n={3} title={t('pay.whereTitle')}>
+          <div role="radiogroup" aria-label={t('pay.whereTitle')} className="grid gap-2">
+            {[null, ...mandates.data!].map((m) => (
+              <button
+                key={m?.id ?? 'fund'}
+                type="button"
+                role="radio"
+                aria-checked={(shopId ?? null) === (m?.partner_id ?? null)}
+                onClick={() => setShopId(m?.partner_id ?? null)}
+                className={`min-h-12 rounded-[14px] border-[1.5px] px-4 py-2 text-left text-sm ${(shopId ?? null) === (m?.partner_id ?? null) ? 'border-primary bg-primary-soft font-bold text-primary' : 'border-border bg-card text-ink2'}`}
+              >
+                {m ? t('pay.whereShop', { name: m.partner_name }) : t('pay.whereFund')}
+              </button>
+            ))}
+          </div>
+          {shop && <p className="field-hint mt-2">{t(fineTotal > 0n ? 'pay.whereShopFineHint' : 'pay.whereShopHint', { name: shop.partner_name })}</p>}
+        </Step>
+      )}
+
+      <Step n={purpose === 'dues' && (mandates.data?.length ?? 0) > 0 ? 4 : 3} title={t('pay.step3')} hint={t('pay.step3Hint')}>
         <div className="space-y-3.5">
           {trxNeeded && (
             <label className="block">
@@ -445,6 +475,7 @@ function SendMoneyForm({
       <ConfirmSheet open={sheet} onClose={() => setSheet(false)} title={t('pay.reviewTitle')} confirmLabel={t('pay.send')} onConfirm={send}>
         <SheetRow label={t('payment.amount')} value={paisa ? taka(paisa) : ''} strong />
         <SheetRow label={t('payment.method')} value={PAYMENT_METHOD_LABELS[method].bn} />
+        {shop && <SheetRow label={t('pay.whereTitle')} value={shop.partner_name} />}
         {senderDigits && <SheetRow label={t(method === 'bank' ? 'pay.senderDigitsBank' : 'pay.senderDigitsPhone')} value={senderDigits} />}
         {noteText && <SheetRow label={t('pay.cashNote')} value={<span className="whitespace-pre-line">{noteText}</span>} />}
         <SheetRow label={t('payment.date')} value={fmtDate(date)} />

@@ -26,6 +26,8 @@ const EXPECTED: ReadonlyArray<
   ['asset_cost_levy', 'member', 'majority', '6.2', false],
   ['special_contribution', 'member', 'unanimous', '1.4', false],
   ['investment_purchase', 'member', 'majority', '4.2', true],
+  // Standing approval: one vote for many months of purchases from one shop (ASSUMPTIONS 131, migration 013).
+  ['investment_mandate', 'member', 'majority', '12.2', false],
   ['asset_sale', 'member', 'majority', '4.2', false],
   ['distribution', 'member', 'majority', '4.2', false],
   ['valuation_update', 'member', 'majority', '4.2', false],

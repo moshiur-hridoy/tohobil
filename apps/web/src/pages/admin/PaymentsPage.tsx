@@ -313,6 +313,7 @@ function QueueRow({ r, selected, match, isCashier, onPick, onAct }: {
           <span className="block truncate text-xs text-muted">
             {PAYMENT_METHOD_LABELS[r.method].bn} · {fmtInstant(r.paid_at)}
             {r.trx_id && <> · <span className="font-mono">{r.trx_id}</span></>}
+            {r.partner_name && <> · <span className="font-semibold text-primary">{t('pay.toShop', { name: r.partner_name })}</span></>}
           </span>
           <MatchLine match={match} />
         </span>
@@ -380,6 +381,7 @@ function PaymentPanel({ row, match, isCashier, onAct }: { row: PaymentRow | null
 
       <dl className="mt-4">
         <InfoRow label={t('paymentsPage.method')} value={PAYMENT_METHOD_LABELS[row.method].bn} />
+        {row.partner_name && <InfoRow label={t('pay.whereTitle')} value={t('pay.whereShop', { name: row.partner_name })} />}
         <InfoRow label={t('paymentsPage.trxId')} value={row.trx_id ? <span className="select-all font-mono">{row.trx_id}</span> : '—'} />
         <InfoRow label={t('paymentsPage.paidAt')} value={fmtInstant(row.paid_at)} />
         <InfoRow label={t('paymentsPage.source')} value={t(`paymentsPage.${SOURCE_KEY[row.source]}`)} />
@@ -419,10 +421,12 @@ function PaymentPanel({ row, match, isCashier, onAct }: { row: PaymentRow | null
 }
 
 function PaymentSummary({ row }: { row: PaymentRow }) {
+  const { t } = useTranslation();
   return (
     <>
       <SheetRow label={`${row.member_code} ${row.member_name}`} value={taka(row.amount_paisa)} strong />
       <SheetRow label={PAYMENT_METHOD_LABELS[row.method].bn} value={row.trx_id ?? ''} />
+      {row.partner_name && <SheetRow label={t('pay.whereTitle')} value={row.partner_name} />}
     </>
   );
 }

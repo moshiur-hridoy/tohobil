@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { COMPLIANCE_CHECKLIST_FIELDS, type ProposalType } from '@barakah/shared';
 import { api, apiBlob } from '../lib/api';
-import { fmtDate } from '../lib/dates';
+import { fmtDate, fmtPeriod } from '../lib/dates';
 import { formatCount, localDigits } from '../lib/format';
 import { taka } from '../lib/money';
 import { ruleName, ruleValueText } from '../lib/ruleText';
@@ -41,7 +41,7 @@ export function ProposalDetails({ type, payload }: { type: ProposalType; payload
 
 function ComplianceChecklist({ type, payload }: { type: ProposalType; payload: Record<string, unknown> }) {
   const { t } = useTranslation();
-  if (type !== 'investment_purchase') return null;
+  if (type !== 'investment_purchase' && type !== 'investment_mandate') return null;
   const compliance = (payload.compliance ?? {}) as Record<string, boolean>;
   const allTrue = COMPLIANCE_CHECKLIST_FIELDS.every((f) => compliance[f] === true);
   // One declaration on the form ticks every point (ASSUMPTIONS 127), so a complete one reads as one line.
@@ -97,6 +97,7 @@ function DetailRows({ type, payload }: { type: ProposalType; payload: Record<str
     if (MEMBER_KEYS.has(k)) return memberName(String(v));
     if (k === 'partner_id') return partnerName(String(v));
     if (k === 'asset_id') return assetName(String(v));
+    if (k === 'first_period' && typeof v === 'string') return fmtPeriod(v);
     if (k === 'asset_ids_to_sell' && Array.isArray(v)) return <List items={v.map((id) => assetName(String(id)))} />;
     if (k === 'fine_ids' && Array.isArray(v)) return t('proposalFields.fineCount', { n: formatCount(v.length) });
     if ((k === 'payout_plan' || k === 'instalments') && Array.isArray(v)) {

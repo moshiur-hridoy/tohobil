@@ -37,6 +37,8 @@ export function ApprovalsTab() {
   const rows = q.data?.pages.flatMap((p) => p.items) ?? [];
 
   const isValue = (a: ApprovalRow) => a.kind === 'valuation_update';
+  // A shop purchase the cashier recorded by mistake (ASSUMPTIONS 131).
+  const isPurchase = (a: ApprovalRow) => a.kind === 'mandate_purchase_reversal';
   const valueChange = (a: ApprovalRow) => BigInt(a.new_value_paisa ?? '0') - BigInt(a.base_value_paisa ?? '0');
   const openStatement = async (fileId: string) => {
     window.open(URL.createObjectURL(await apiBlob(`/files/${fileId}`)), '_blank', 'noopener');
@@ -67,7 +69,7 @@ export function ApprovalsTab() {
               <li key={a.id} className="border-b border-border py-3 last:border-b-0">
                 {/* Details on top, status and buttons below, so the text keeps its width on a phone. */}
                 <div className="flex items-start gap-3">
-                  <MemberBadge code={isValue(a) ? (a.requested_by_code ?? '?') : (a.payment_member_code ?? '?')} />
+                  <MemberBadge code={isValue(a) || isPurchase(a) ? (a.requested_by_code ?? '?') : (a.payment_member_code ?? '?')} />
                   <div className="min-w-0 flex-1">
                     {isValue(a) ? (
                       <>
@@ -75,6 +77,14 @@ export function ApprovalsTab() {
                         <p className="text-sm tabular-nums">
                           {taka(a.base_value_paisa ?? '0')} → <strong>{taka(a.new_value_paisa ?? '0')}</strong> <Change paisa={valueChange(a)} className="text-xs" />
                           {a.valuation_as_of && <span className="text-muted"> · {fmtDate(a.valuation_as_of)}</span>}
+                        </p>
+                      </>
+                    ) : isPurchase(a) ? (
+                      <>
+                        <p className="font-semibold">{t('mandate.approvalTitle', { name: a.partner_name ?? '' })}</p>
+                        <p className="text-sm tabular-nums">
+                          {a.purchase_amount_paisa ? taka(a.purchase_amount_paisa) : ''}
+                          {a.purchase_date && <span className="text-muted"> · {fmtDate(a.purchase_date)}</span>}
                         </p>
                       </>
                     ) : (
@@ -138,9 +148,13 @@ export function ApprovalsTab() {
           )}
           {target && !isValue(target.row) && (
             <>
-              <SheetRow label={target.row.payment_member_code ?? ''} value={target.row.payment_amount_paisa ? taka(target.row.payment_amount_paisa) : ''} strong />
+              {isPurchase(target.row) ? (
+                <SheetRow label={target.row.partner_name ?? ''} value={target.row.purchase_amount_paisa ? taka(target.row.purchase_amount_paisa) : ''} strong />
+              ) : (
+                <SheetRow label={target.row.payment_member_code ?? ''} value={target.row.payment_amount_paisa ? taka(target.row.payment_amount_paisa) : ''} strong />
+              )}
               {target.row.reason && <SheetRow label={t('common.reason')} value={target.row.reason} />}
-              {target.action === 'approve' && <p className="text-muted">{t('paymentsPage.reversalEffect')}</p>}
+              {target.action === 'approve' && <p className="text-muted">{t(isPurchase(target.row) ? 'mandate.reversalEffect' : 'paymentsPage.reversalEffect')}</p>}
               <textarea aria-label={t('paymentsPage.decisionNote')} placeholder={t('paymentsPage.decisionNote')} className="field min-h-20 w-full" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
             </>
           )}

@@ -1,4 +1,5 @@
 import { divRound, type CashAccountCode, type LevyExpenseCategory } from '@barakah/shared';
+import { mandateLastPeriod } from '../../assets/mandates';
 import { postLevyExpense } from '../../obligations/service';
 import { postEntries } from '../../ledger/service';
 import { badRequest, forbidden, notFound } from '../../lib/errors';
@@ -136,6 +137,32 @@ export const charityDonationExecutor: ExecutorSignature = async (db, proposal, i
     amount_paisa: amount.toString(),
     ledger_seq: seq.toString(),
   });
+};
+
+/**
+ * A standing investment approval (ASSUMPTIONS 131): records the mandate; no money moves now. Each
+ * month's purchase is recorded later against it, up to the monthly limit.
+ */
+export const investmentMandateExecutor: ExecutorSignature = async (db, proposal, _input, _actor, _ctx, deps) => {
+  const payload = proposal.payload as {
+    partner_id: string;
+    monthly_max_paisa: string;
+    first_period: string;
+    months: number;
+    compliance: Record<string, unknown>;
+  };
+  const partner = await db.query(`SELECT 1 FROM investment_partners WHERE id = $1`, [payload.partner_id]);
+  if (partner.rowCount === 0) throw notFound('partner.not_found', 'Investment partner not found');
+  const last = mandateLastPeriod(payload.first_period, payload.months);
+  if (last < deps.clock.todayDhaka().slice(0, 7)) {
+    throw badRequest('mandate.already_over', 'Every month this approval covers has already passed');
+  }
+  const res = await db.query(
+    `INSERT INTO investment_mandates (proposal_id, partner_id, monthly_max_paisa, first_period, last_period, compliance)
+     VALUES ($1, $2, $3::bigint, $4, $5, $6) RETURNING id`,
+    [proposal.id, payload.partner_id, payload.monthly_max_paisa, payload.first_period, last, JSON.stringify(payload.compliance)],
+  );
+  return serialised({ mandate_id: (res.rows[0] as { id: string }).id, first_period: payload.first_period, last_period: last });
 };
 
 export const investmentPurchaseExecutor: ExecutorSignature = async (db, proposal, input, actor, ctx, deps) => {

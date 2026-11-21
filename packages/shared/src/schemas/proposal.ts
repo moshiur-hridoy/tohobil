@@ -5,6 +5,7 @@ import {
   dateSchema,
   paginationSchema,
   paisaStringSchema,
+  periodSchema,
   phoneSchema,
   positivePaisaSchema,
   timestampSchema,
@@ -115,6 +116,19 @@ export const investmentPurchasePayloadSchema = z.object({
   feasibility_file_id: z.string().uuid().optional(),
   /** The shop this purchase is made with: the asset joins that partner's page. */
   partner_id: z.string().uuid().optional(),
+});
+
+/**
+ * A standing approval (ASSUMPTIONS 131): up to `monthly_max_paisa` a month goes to one shop for
+ * `months` months from `first_period`, each purchase recorded by the cashier without a new vote.
+ */
+export const investmentMandatePayloadSchema = z.object({
+  partner_id: z.string().uuid(),
+  monthly_max_paisa: paisaStringSchema.refine((v) => BigInt(v) > 0n, 'The monthly limit must be more than zero'),
+  first_period: periodSchema,
+  months: z.number().int().min(1).max(12),
+  notes: z.string().max(1000).optional(),
+  compliance: complianceChecklistSchema,
 });
 
 /**
@@ -265,6 +279,7 @@ export const PROPOSAL_PAYLOAD_SCHEMAS = {
   fine_waiver: fineWaiverPayloadSchema,
   expense: expensePayloadSchema,
   investment_purchase: investmentPurchasePayloadSchema,
+  investment_mandate: investmentMandatePayloadSchema,
   asset_sale: assetSalePayloadSchema,
   valuation_update: valuationUpdatePayloadSchema,
   new_member: newMemberPayloadSchema,

@@ -4,8 +4,11 @@ import { cashAccountSchema, paisaSchema, periodSchema } from './common';
 export const yearSchema = z.string().regex(/^\d{4}$/, 'Invalid year (expected YYYY)');
 
 /**
- * The cashier's count at the end of a month: one actual balance for each of the four cash accounts.
- * A difference from the books needs a note, and the auditor is told about it.
+ * The cashier's month-end check (ASSUMPTIONS 132). `entries`: what each cash account really held. With
+ * one cash pool (the default, ASSUMPTIONS 96) that is a single `BANK` row compared with cash, bank,
+ * bKash and Nagad together; with `cash_tracking_by_method` on, one row for each of the four. `shops`:
+ * for each shop that had money sent to it that month (or an approval in force), what its own statement
+ * shows it received. The server decides which rows are needed; a difference needs a note.
  */
 export const reconciliationSubmitSchema = z.object({
   period: periodSchema,
@@ -15,10 +18,24 @@ export const reconciliationSubmitSchema = z.object({
         account: cashAccountSchema,
         actual_balance_paisa: paisaSchema,
         note: z.string().trim().max(500).optional(),
+        proof_file_id: z.string().uuid().optional(),
       }),
     )
-    .length(4)
-    .refine((rows) => new Set(rows.map((r) => r.account)).size === 4, 'Each of the four cash accounts exactly once'),
+    .min(1)
+    .max(4)
+    .refine((rows) => new Set(rows.map((r) => r.account)).size === rows.length, 'Each cash account at most once'),
+  shops: z
+    .array(
+      z.object({
+        partner_id: z.string().uuid(),
+        statement_paisa: paisaSchema,
+        note: z.string().trim().max(500).optional(),
+        proof_file_id: z.string().uuid().optional(),
+      }),
+    )
+    .max(50)
+    .refine((rows) => new Set(rows.map((r) => r.partner_id)).size === rows.length, 'Each shop at most once')
+    .default([]),
 });
 export type ReconciliationSubmit = z.infer<typeof reconciliationSubmitSchema>;
 

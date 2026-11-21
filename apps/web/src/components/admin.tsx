@@ -163,15 +163,25 @@ export function SplitLayout({ main, side, sideWidth = '380px', sideFirst = false
   );
 }
 
-/** Pill-shaped segmented control (the matrix range picker): buttons with aria-pressed. */
-export function Segmented<T extends string>({ label, value, options, onChange }: {
+/**
+ * Pill-shaped segmented control (the matrix range picker): buttons with aria-pressed. The chosen one
+ * is filled with the primary colour, so it reads as chosen in light and dark mode alike (a card-on-soft
+ * fill was nearly invisible in dark mode). A count sits in a small badge so it never reads as a step
+ * number. `wide` makes the options share the full width, for page-level tabs.
+ */
+export function Segmented<T extends string>({ label, value, options, onChange, wide = false }: {
   label: string;
   value: T;
   options: Array<{ value: T; label: string; count?: number | string }>;
   onChange: (v: T) => void;
+  wide?: boolean;
 }) {
   return (
-    <div role="group" aria-label={label} className="flex max-w-full gap-0.5 overflow-x-auto rounded-xl bg-soft p-1 text-[0.8125rem]">
+    <div
+      role="group"
+      aria-label={label}
+      className={`${wide ? 'grid auto-cols-fr grid-flow-col text-sm' : 'flex max-w-full overflow-x-auto text-[0.8125rem]'} gap-1 rounded-xl border border-border bg-soft p-1`}
+    >
       {options.map((o) => {
         const active = o.value === value;
         return (
@@ -180,10 +190,14 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
             type="button"
             aria-pressed={active}
             onClick={() => onChange(o.value)}
-            className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring ${active ? 'bg-card font-bold text-foreground shadow-card' : 'text-ink2 hover:text-foreground'}`}
+            className={`flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring ${wide ? 'h-10' : 'py-1.5'} ${active ? 'bg-primary font-bold text-primary-foreground shadow-card' : 'font-medium text-ink2 hover:bg-hover hover:text-foreground'}`}
           >
             {o.label}
-            {o.count !== undefined && <span className="text-xs font-normal text-muted tabular-nums">{o.count}</span>}
+            {o.count !== undefined && (
+              <span className={`min-w-5 rounded-full px-1.5 text-center text-xs font-semibold tabular-nums ${active ? 'bg-card text-primary' : 'bg-card text-muted'}`}>
+                {o.count}
+              </span>
+            )}
           </button>
         );
       })}

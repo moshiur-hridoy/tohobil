@@ -60,7 +60,8 @@ const count = (b: Record<string, bigint>, over: Record<string, bigint> = {}, not
   }));
 
 beforeAll(async () => {
-  db = await createTestDb();
+  // four accounts counted one by one; the one-pool check (the default) is in reconcile-pool.test.ts
+  db = await createTestDb({ cashByMethod: true });
   if (!db) return;
   app = await buildApp({ env, db: db.app, clock });
   fund = await seedFund(db.admin);

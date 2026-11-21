@@ -500,6 +500,7 @@ export function CreateProposalForm({
   initialValues,
   lockType = false,
   defaultTitle,
+  hide,
 }: {
   type: ProposalType;
   onTypeChange: (t: ProposalType) => void;
@@ -514,6 +515,8 @@ export function CreateProposalForm({
   lockType?: boolean;
   /** The title used when none is typed (the type's name otherwise). */
   defaultTitle?: string;
+  /** With `lockType`: which filled-in fields to hide, when some are only suggestions (all of them otherwise). */
+  hide?: readonly string[];
 }) {
   const { t } = useTranslation();
   const [title, setTitle] = useState('');
@@ -586,7 +589,7 @@ export function CreateProposalForm({
         </div>
       )}
       {!lockType && titleField}
-      <ProposalFields type={type} form={form} onChange={setForm} hidden={lockType ? Object.keys(initialValues ?? {}) : []} />
+      <ProposalFields type={type} form={form} onChange={setForm} hidden={lockType ? (hide ?? Object.keys(initialValues ?? {})) : []} />
       {lockType && <ClauseSelect value={clauseRef} onChange={setClauseRef} suggested={policyClause} />}
       {lockType && titleField}
       {error != null && <p role="alert" className="rounded-xl bg-bad-bg px-3 py-2 text-sm text-bad">{proposalErrorText(error, t)}</p>}

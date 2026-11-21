@@ -63,6 +63,9 @@ export interface PaymentRow {
   method: 'bkash' | 'nagad' | 'bank' | 'cash' | 'other';
   purpose: string;
   trx_id: string | null;
+  /** Sent straight to this shop under its standing approval (ASSUMPTIONS 131). */
+  partner_id?: string | null;
+  partner_name?: string | null;
   paid_at: string;
   status: PaymentStatus;
   source: 'member_submitted' | 'cashier_entry' | 'sms_match' | 'import';
@@ -196,6 +199,9 @@ export interface ApprovalRow {
   new_value_paisa?: string | null;
   valuation_as_of?: string | null;
   valuation_proof_file_id?: string | null;
+  /** A shop purchase to reverse (kind `mandate_purchase_reversal`). */
+  purchase_amount_paisa?: string | null;
+  purchase_date?: string | null;
 }
 
 export interface ParsedSms {
@@ -315,8 +321,40 @@ export interface HoldingValuation {
   basis: string | null;
 }
 
+/** A standing investment approval (ASSUMPTIONS 131): one vote for many months of purchases. */
+export interface MandateRow {
+  id: string;
+  proposal_id: string;
+  proposal_title: string;
+  partner_id: string;
+  partner_name: string;
+  monthly_max_paisa: string;
+  first_period: string;
+  last_period: string;
+  ended_on: string | null;
+  end_reason: string | null;
+  used_this_month_paisa: string;
+  total_paisa: string;
+  status: 'active' | 'upcoming' | 'expired' | 'ended';
+}
+
+export interface MandatePurchaseRow {
+  asset_id: string;
+  entry_date: string;
+  amount_paisa: string;
+  original_paisa: string;
+  note: string | null;
+  payment_id: string | null;
+  member_code: string | null;
+  member_name: string | null;
+  reversed: boolean;
+  reversal_pending: boolean;
+  receipt_file_id: string | null;
+}
+
 export interface HoldingResponse {
   partner: PartnerRow;
+  mandates?: MandateRow[];
   valuation_requests?: ValuationRequestRow[];
   assets: AssetRow[];
   entries: HoldingEntry[];

@@ -285,7 +285,8 @@
     "dissolution": "Dissolution",
     "wind_up": "Wind-up",
     "land_selection": "Land selection",
-    "project_closure": "Project closure"
+    "project_closure": "Project closure",
+    "investment_mandate": "Standing investment approval"
   },
   "proposal": {
     "closeEarlyDisabled": "The result is not certain yet, so it cannot be closed early.",
@@ -387,7 +388,9 @@
       "allocation_invalid": "An allocation points at something that is not open for this member.",
       "allocation_exceeds_outstanding": "An allocation is larger than what is still owed.",
       "allocation_exceeds_amount": "The allocations are more than the payment.",
-      "backdate_reason_required": "This entry is dated before today and cancels a late fine. Write the reason in the note."
+      "backdate_reason_required": "This entry is dated before today and cancels a late fine. Write the reason in the note.",
+      "shop_dues_only": "Only monthly dues can be sent straight to a shop.",
+      "shop_no_fines": "Money sent to a shop cannot pay a fine."
     },
     "auth": {
       "invalid_pin": "Incorrect PIN.",
@@ -562,6 +565,33 @@
       "base_changed": "The value changed after this update was sent. Decline it and ask for a new one.",
       "reason_required": "Write why it is declined.",
       "not_found": "Value update not found."
+    },
+    "mandate": {
+      "over_limit": "This would go past the monthly limit the members approved.",
+      "not_in_force": "No standing approval covers this shop on that day.",
+      "receipt_required": "Attach the shop's receipt.",
+      "future_date": "The date cannot be in the future.",
+      "insufficient_funds": "The fund does not hold that much.",
+      "already_ended": "This approval has already ended.",
+      "already_over": "Every month this approval covers has passed.",
+      "already_reversed": "This purchase has already been reversed.",
+      "reverse_the_payment": "This came from a member's payment: reverse that payment instead.",
+      "not_found": "Approval not found."
+    },
+    "reconciliation": {
+      "wrong_accounts": "Give exactly the accounts this month needs. Open the page again.",
+      "wrong_shops": "Give the statement figure of every shop this month needs. Open the page again.",
+      "books_changed": "The books changed after the count. Approve once the cashier submits again.",
+      "note_required": "Write the reason for a difference.",
+      "self_approval": "You cannot approve your own count.",
+      "incomplete": "Everything must be counted before approval.",
+      "already_approved": "This month is already approved."
+    },
+    "period": {
+      "not_ended": "A month can only be checked after it ends.",
+      "not_reconciled": "The month must be approved before it is locked.",
+      "open_objections": "This month has open objections; resolve them first.",
+      "already_locked": "This month is already locked."
     }
   },
   "common": {
@@ -908,7 +938,13 @@
     "noDuesAhead": "Nothing is owed now. You can pay upcoming months ahead.",
     "cashNote": "How you paid",
     "cashNotePlaceholder": "e.g. handed to the cashier at the meeting",
-    "cashNoteHint": "Write whom you gave the money to, where or how. The cashier uses it to match the payment."
+    "cashNoteHint": "Write whom you gave the money to, where or how. The cashier uses it to match the payment.",
+    "whereTitle": "Where did you send it?",
+    "whereFund": "To the fund's account",
+    "whereShop": "Straight to {{name}}",
+    "whereShopHint": "This money counts as your dues and is recorded at once as this month's investment with {{name}}.",
+    "whereShopFineHint": "Money sent to a shop does not pay a fine (fines are charity money and are never invested). Send fines to the fund's account separately.",
+    "toShop": "→ {{name}}"
   },
   "ledgerPage": {
     "title": "Ledger",
@@ -1992,6 +2028,13 @@
       "source_account": "Which account pays",
       "partner_id": "Shop",
       "feasibility_file_id": "Price paper or photo"
+    },
+    "investment_mandate": {
+      "partner_id": "Shop",
+      "monthly_max_paisa": "The most that may go each month",
+      "first_period": "Starting month",
+      "months": "For how many months (up to 12)",
+      "notes": "Anything else to say"
     }
   },
   "proposalFields": {
@@ -2058,7 +2101,10 @@
     "fine_ids": "Fines",
     "document_file_id": "Document",
     "terms": "Terms",
-    "nominees": "Nominees"
+    "nominees": "Nominees",
+    "monthly_max_paisa": "Most per month",
+    "first_period": "From which month",
+    "months": "How many months (1 to 12)"
   },
   "proposalOptions": {
     "receive": "Receive (member lends to the fund)",
@@ -2177,7 +2223,68 @@
       "request": "Request audit",
       "signoff": "Sign the audit",
       "archive": "Create archive"
-    }
+    },
+    "subtitle": "At each month end, check the books against the bank and shop statements",
+    "stage": {
+      "notEnded": "The month has not ended yet. It can be checked after its last day.",
+      "count": "The cashier fills in the boxes below from the bank and shop statements.",
+      "stale": "The books for this month changed after the count. The cashier needs to submit again.",
+      "approve": "Submitted. Waiting for the auditor to approve.",
+      "lock": "Approved. The auditor now locks the month.",
+      "locked": "All checked, the month is locked."
+    },
+    "state": {
+      "todo": "To do",
+      "counted": "Waiting approval",
+      "approved": "Approved",
+      "locked": "Locked",
+      "future": "Not ended yet"
+    },
+    "step1": "What happened this month",
+    "step1Hint": "Where the fund's money came from and went, according to the books.",
+    "opening": "At the start of the month",
+    "closing": "In the books at month end",
+    "noMoves": "No money moved this month.",
+    "line": {
+      "deposits": "Members' deposits",
+      "levy": "Levy (in and out)",
+      "income": "Income (rent and so on)",
+      "charity": "Sadaqah fund (fines, gifts)",
+      "investments": "Investments (sent to shops and back)",
+      "costs": "Costs",
+      "payouts": "Paid out to members",
+      "financing": "Loans and instalments",
+      "other": "Other"
+    },
+    "step2": "What is really there",
+    "step2HintPool": "Enter the bank statement balance on the last day of the month, and for each shop money went to this month, what its statement shows it received. A photo of the statement lets the auditor check it.",
+    "step2HintMethod": "Enter what each account really held at month end, and for each shop money went to this month, what its statement shows it received.",
+    "staleWarn": "A new entry dated in this month was added after the count, so the books changed. Check the new figure and submit again.",
+    "poolTitle": "Bank (all the fund's money)",
+    "booksBalance": "In the books at month end",
+    "statementBalance": "On the bank statement at month end",
+    "sentThisMonth": "Sent this month in the books ({{n}})",
+    "shopStatement": "Received this month on the shop's statement",
+    "noShops": "No money went to a shop this month, so there is no shop to check.",
+    "resubmit": "Submit again",
+    "fillAll": "Fill every box; write the reason for any difference.",
+    "step3": "The auditor approves and locks",
+    "step3Hint": "The auditor checks and approves, then locks the month. No entry can be added to a locked month.",
+    "done": {
+      "counted": "The cashier submitted",
+      "approved": "The auditor approved",
+      "locked": "The month is locked"
+    },
+    "auditorDoes": "The rest is the auditor's.",
+    "submitWarning": "You can submit again until the auditor approves. Any difference is reported to the auditor.",
+    "approveWarning": "After approval the cashier cannot change this month's figures.",
+    "matched": "Matches",
+    "mismatch": "Off by {{amount}}",
+    "booksChanged": "Books changed",
+    "viewStatement": "View statement",
+    "newFigure": "New figure",
+    "whyDifferent": "Why it differs",
+    "statementPhoto": "Photo or PDF of the statement"
   },
   "reportsPage": {
     "title": "Reports and downloads",
@@ -2644,5 +2751,40 @@
     "placeholder": "For example: paid in cash in front of the shop owner, receipt to follow",
     "history": "Remark history",
     "current": "shown now"
+  },
+  "mandate": {
+    "title": "Standing investment approval",
+    "none": "No standing approval for this shop. Instead of a vote for every month's purchase, set a monthly limit with one vote.",
+    "propose": "Ask the members to approve",
+    "proposeHint": "The members vote once: which shop, the most per month, and for how many months. Once it passes, the cashier records each month's purchase here with its receipt, with no new vote.",
+    "perMonth": "Up to {{amount}} a month",
+    "span": "{{from}} to {{to}}",
+    "endedOn": "Ended on {{date}}: {{reason}}",
+    "status": {
+      "active": "In force",
+      "upcoming": "Starts soon",
+      "expired": "Expired",
+      "ended": "Ended"
+    },
+    "thisMonth": "Sent in {{month}}",
+    "left": "{{amount}} more can go this month",
+    "addPurchase": "Record this month's purchase",
+    "buyHint": "Record the money sent from the fund's account to {{name}}. {{left}} more can go this month. The shop's receipt is needed.",
+    "date": "The day the money went to the shop",
+    "receipt": "The shop's receipt (photo or PDF)",
+    "end": "End the approval",
+    "endHint": "From today no purchase can be recorded under this approval. Starting again needs a new vote.",
+    "reason": "Reason",
+    "reverse": "Wrong: ask to reverse",
+    "reverseHint": "A request to reverse the {{amount}} purchase of {{date}} goes to the auditor. Once approved, a reversing entry is posted; the original is never deleted.",
+    "reversed": "Reversed",
+    "reversalPending": "Reversal waiting",
+    "fromFund": "From the fund's account",
+    "fromMember": "Sent straight by {{member}}",
+    "hint": "Everyone sees this approval and every purchase. At month end the auditor checks them during reconciliation. If something looks wrong, object in the ledger.",
+    "past": "Earlier approvals: {{n}}",
+    "approvalTitle": "{{name}}: reverse a purchase",
+    "reversalEffect": "Approving posts a reversing entry: the money returns to the fund's account in the books and leaves the shop's total.",
+    "voteTitle": "Monthly investment with {{name}}"
   }
 }

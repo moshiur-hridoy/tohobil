@@ -60,6 +60,7 @@ export const PROPOSAL_TYPES = [
   'fine_waiver',
   'expense',
   'investment_purchase',
+  'investment_mandate',
   'asset_sale',
   'valuation_update',
   'new_member',
@@ -245,6 +246,7 @@ export const APPROVAL_KINDS = [
   'inactive_declaration',
   'death_surrender',
   'valuation_update',
+  'mandate_purchase_reversal',
 ] as const;
 export type ApprovalKind = (typeof APPROVAL_KINDS)[number];
 

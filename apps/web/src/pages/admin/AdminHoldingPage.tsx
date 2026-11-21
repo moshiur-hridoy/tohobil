@@ -17,6 +17,7 @@ import type { AssetRow, HoldingDocument, HoldingEntry, HoldingResponse, HoldingW
 import { CreateProposalForm } from './ProposalsPage';
 import { ValuationRequestList, ValuationRequestSheet } from '../../components/ValuationUpdate';
 import { RemarkLine } from '../../components/EntryRemarks';
+import { MandateCard } from '../../components/MandateCard';
 
 /** A withdrawal's stage: waiting on someone (amber), voting (blue), money due (amber), done (green). */
 const STAGE_TONE: Record<HoldingWithdrawal['status'], string> = {
@@ -232,6 +233,8 @@ function HoldingView({ id }: { id: string }) {
           {isCashier && <button type="button" onClick={() => { setDocType('contract'); setAction({ kind: 'cpaper' }); }} className={BTN_SM}>{t('holding.addPaper')}</button>}
         </div>
       </Card>
+
+      <MandateCard partner={partner} mandates={q.data.mandates ?? []} onChanged={refresh} />
 
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">

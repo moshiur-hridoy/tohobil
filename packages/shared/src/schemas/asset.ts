@@ -199,3 +199,25 @@ export function splitByCost(total: bigint, assets: ReadonlyArray<{ id: string; c
     return { asset_id: a.id, value_paisa: value };
   });
 }
+
+/**
+ * One month's purchase under a standing approval (ASSUMPTIONS 131): the day the money went to the
+ * shop, the amount, and the shop's receipt. No vote: the members approved the monthly limit once.
+ */
+export const mandatePurchaseSchema = z.object({
+  entry_date: dateSchema,
+  amount_paisa: positivePaisaSchema,
+  account: cashAccountSchema.default('BANK'),
+  receipt_file_id: uuidSchema,
+  quantity: z.number().positive().optional(),
+  unit: z.enum(['vori', 'gram']).optional(),
+  note: z.string().trim().max(500).optional(),
+});
+export type MandatePurchase = z.infer<typeof mandatePurchaseSchema>;
+
+/** Ending a standing approval early only narrows it, so the cashier or auditor may do it with a reason. */
+export const mandateEndSchema = z.object({ reason: z.string().trim().min(3).max(500) });
+export type MandateEnd = z.infer<typeof mandateEndSchema>;
+
+/** The cashier asks the auditor to reverse a purchase recorded by mistake. */
+export const mandatePurchaseReverseSchema = z.object({ reason: z.string().trim().min(3).max(500) });

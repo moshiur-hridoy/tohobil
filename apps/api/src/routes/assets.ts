@@ -8,12 +8,16 @@ import {
   assetPaymentSchema,
   assetUpdateSchema,
   documentAttachSchema,
+  mandateEndSchema,
+  mandatePurchaseReverseSchema,
+  mandatePurchaseSchema,
   partnerCreateSchema,
   partnerUpdateSchema,
   uuidSchema,
   valuationRequestSchema,
 } from '@barakah/shared';
 import { submitValuationRequest } from '../assets/valuation-requests';
+import { addMandatePurchase, endMandate, listMandatePurchases, listMandates, requestPurchaseReversal } from '../assets/mandates';
 import { requireAuth, type Guards } from '../auth/guards';
 import { notFound } from '../lib/errors';
 import type { AuthUser } from '../auth/service';
@@ -121,21 +125,21 @@ export function assetRoutes(deps: AssetDeps, guards: Guards) {
 
     app.post('/partners', { preHandler: cashier, schema: { body: partnerCreateSchema } }, async (req) => {
       const id = await createPartner(deps, actorFrom(requireAuth(req), req), req.body);
-      const found = await getPartner(deps.pool, id, true);
+      const found = await getPartner(deps.pool, id, deps.clock.todayDhaka(), true);
       if (!found) throw notFound('partner.not_found', 'Investment partner not found');
       return found;
     });
 
     app.get('/partners/:id', { preHandler: authenticate, schema: { params: idParams } }, async (req) => {
       const viewer = requireAuth(req);
-      const found = await getPartner(deps.pool, req.params.id, viewer.roles.includes('cashier') || viewer.roles.includes('auditor'));
+      const found = await getPartner(deps.pool, req.params.id, deps.clock.todayDhaka(), viewer.roles.includes('cashier') || viewer.roles.includes('auditor'));
       if (!found) throw notFound('partner.not_found', 'Investment partner not found');
       return found;
     });
 
     app.patch('/partners/:id', { preHandler: cashier, schema: { params: idParams, body: partnerUpdateSchema } }, async (req) => {
       await updatePartner(deps, actorFrom(requireAuth(req), req), req.params.id, req.body);
-      const found = await getPartner(deps.pool, req.params.id, true);
+      const found = await getPartner(deps.pool, req.params.id, deps.clock.todayDhaka(), true);
       if (!found) throw notFound('partner.not_found', 'Investment partner not found');
       return found;
     });
@@ -165,6 +169,42 @@ export function assetRoutes(deps: AssetDeps, guards: Guards) {
 
     app.get('/assets/:id/documents', { preHandler: authenticate, schema: { params: idParams } }, async (req) =>
       listDocuments(deps.pool, req.params.id),
+    );
+
+    // Standing investment approvals (ASSUMPTIONS 131): everyone sees them and what went to the shop.
+    app.get('/mandates', { preHandler: authenticate, schema: { querystring: z.object({ partner_id: uuidSchema.optional() }) } }, async (req) =>
+      listMandates(deps.pool, deps.clock.todayDhaka(), req.query.partner_id),
+    );
+
+    app.get('/mandates/:id/purchases', { preHandler: authenticate, schema: { params: idParams } }, async (req) =>
+      listMandatePurchases(deps.pool, req.params.id),
+    );
+
+    app.post(
+      '/mandates/:id/purchases',
+      { preHandler: cashierStepUp, schema: { params: idParams, body: mandatePurchaseSchema } },
+      async (req, reply) => {
+        const out = await addMandatePurchase(deps, actorFrom(requireAuth(req), req), req.params.id, req.body);
+        return reply.status(201).send(out);
+      },
+    );
+
+    app.post(
+      '/mandates/:id/end',
+      { preHandler: [authenticate, requireRole('cashier', 'auditor'), requireStepUp], schema: { params: idParams, body: mandateEndSchema } },
+      async (req, reply) => {
+        await endMandate(deps, actorFrom(requireAuth(req), req), req.params.id, req.body.reason);
+        return reply.status(204).send();
+      },
+    );
+
+    app.post(
+      '/mandate-purchases/:id/reverse-request',
+      { preHandler: cashier, schema: { params: idParams, body: mandatePurchaseReverseSchema } },
+      async (req, reply) => {
+        const out = await requestPurchaseReversal(deps, actorFrom(requireAuth(req), req), req.params.id, req.body.reason);
+        return reply.status(201).send(out);
+      },
     );
   };
 }

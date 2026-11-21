@@ -30,6 +30,8 @@ export const paymentSubmitSchema = z
     for_periods: z.array(periodSchema).max(24).optional(),
     proof_file_id: z.string().uuid().optional(),
     note: z.string().max(500).optional(),
+    /** Sent straight to this shop under its standing approval, not to the fund's account (ASSUMPTIONS 131). */
+    partner_id: z.string().uuid().optional(),
   })
   .refine(
     (data) =>
@@ -77,6 +79,7 @@ export const cashierEntrySchema = z
     note: z.string().max(500).optional(),
     raw_sms: z.string().max(2000).optional(),
     allocations: z.array(allocationItemSchema).max(100).optional(),
+    partner_id: z.string().uuid().optional(),
   })
   .refine(allocationsWithinAmount, {
     path: ['allocations'],

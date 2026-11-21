@@ -117,7 +117,8 @@ export function AdminAssetsPage() {
   // on the Investments tab for one.
   const items = all.filter((a) => !a.partner_id && a.kind !== 'gold');
   const looseGold = all.filter((a) => !a.partner_id && a.kind === 'gold' && a.status !== 'planned');
-  const tab = chosenTab ?? (items.length === 0 ? 'investments' : 'assets');
+  // Investments (the shops) come first: that is where most of the fund's money is.
+  const tab = chosenTab ?? 'investments';
   const partnerList = partners.data?.items ?? [];
   const STATUS_TONE: Record<AssetRow['status'], string> = {
     planned: 'bg-soft text-ink2',
@@ -250,9 +251,10 @@ export function AdminAssetsPage() {
         label={t('assetsAdmin.title')}
         value={tab}
         onChange={setTab}
+        wide
         options={[
-          { value: 'assets', label: t('assetsAdmin.tabAssets'), count: formatCount(items.length) },
           { value: 'investments', label: t('assetsAdmin.tabInvestments'), count: formatCount(partnerList.length + (looseGold.length > 0 ? 1 : 0)) },
+          { value: 'assets', label: t('assetsAdmin.tabAssets'), count: formatCount(items.length) },
         ]}
       />
 

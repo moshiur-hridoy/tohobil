@@ -12,7 +12,7 @@ import type { AssetRow, MemberRow, PartnerRow } from '../../lib/types';
  * API validates (packages/shared proposal schemas), so a field added there is added here.
  */
 type Kind =
-  | 'text' | 'textarea' | 'money' | 'int' | 'decimal' | 'date' | 'json'
+  | 'text' | 'textarea' | 'money' | 'int' | 'decimal' | 'date' | 'month' | 'json'
   | 'member' | 'asset' | 'partner' | 'file' | { select: readonly string[] };
 
 export interface Field {
@@ -57,6 +57,14 @@ export const PROPOSAL_FORMS: Partial<Record<ProposalType, Field[]>> = {
     { key: 'notes', kind: 'text', optional: true },
     { key: 'partner_id', kind: 'partner', optional: true },
     { key: 'feasibility_file_id', kind: 'file', optional: true },
+  ],
+  // One vote for many months of purchases from one shop (ASSUMPTIONS 131).
+  investment_mandate: [
+    { key: 'partner_id', kind: 'partner' },
+    { key: 'monthly_max_paisa', kind: 'money' },
+    { key: 'first_period', kind: 'month' },
+    { key: 'months', kind: 'int' },
+    { key: 'notes', kind: 'text', optional: true },
   ],
   asset_sale: [
     { key: 'asset_id', kind: 'asset' },
@@ -186,7 +194,7 @@ export async function buildPayload(type: ProposalType, form: FormState): Promise
     else out[f.key] = raw;
   }
 
-  if (type === 'investment_purchase') {
+  if (type === 'investment_purchase' || type === 'investment_mandate') {
     // One declaration stands for every point of the checklist (ASSUMPTIONS 127); the payload keeps them all.
     if (!COMPLIANCE_CHECKLIST_FIELDS.every((c) => form.compliance[c] === true)) throw bad('halal');
     out.compliance = form.compliance;
@@ -264,7 +272,7 @@ export function ProposalFields({ type, form, onChange, hidden = [] }: { type: Pr
           ) : (
             <input
               className={inputClass}
-              type={f.kind === 'date' ? 'date' : 'text'}
+              type={f.kind === 'date' ? 'date' : f.kind === 'month' ? 'month' : 'text'}
               inputMode={f.kind === 'money' || f.kind === 'decimal' || f.kind === 'int' ? 'decimal' : undefined}
               value={form.values[f.key] ?? ''}
               onChange={(e) => set(f.key, e.target.value)}
@@ -273,7 +281,7 @@ export function ProposalFields({ type, form, onChange, hidden = [] }: { type: Pr
         </label>
       ))}
 
-      {type === 'investment_purchase' && (
+      {(type === 'investment_purchase' || type === 'investment_mandate') && (
         <label className="flex items-start gap-3 rounded-xl border border-border p-3 text-sm">
           <input
             type="checkbox"

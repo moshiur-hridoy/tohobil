@@ -229,7 +229,7 @@ export async function createProposal(
  * policy asks for one, a feasibility file. Checked here, not at creation, so a draft can be worked on.
  */
 function assertReadyToOpen(proposal: ProposalRow, requiresFeasibility: boolean): void {
-  if (proposal.type !== 'investment_purchase') return;
+  if (proposal.type !== 'investment_purchase' && proposal.type !== 'investment_mandate') return;
   const payload = proposal.payload as { compliance?: Record<string, unknown>; feasibility_file_id?: string };
   const unticked = Object.entries(payload.compliance ?? {})
     .filter(([, ok]) => ok !== true)

@@ -6,6 +6,7 @@ import { audit } from '../lib/audit';
 import { inTransaction, type Db } from '../lib/tx';
 import { postEntries } from '../ledger/service';
 import { queueMembersAlert } from '../notifications/role-alert';
+import { listMandates } from './mandates';
 
 export interface AssetDeps {
   pool: pg.Pool;
@@ -21,7 +22,7 @@ export interface AssetActor {
 const SELECT_ASSET_COLUMNS = `
   a.id, a.kind, a.name, a.description, a.location, a.acquired_on, a.cost_paisa, a.quantity::text AS quantity,
   a.unit, a.status, a.sold_on, a.sale_price_paisa, a.legal_owner_name, a.ownership_split, a.compliance,
-  a.feasibility_file_id, a.proposal_id, a.partner_id, a.created_at,
+  a.feasibility_file_id, a.proposal_id, a.partner_id, a.mandate_id, a.payment_id, a.created_at,
   (SELECT value_paisa FROM asset_valuations v WHERE v.asset_id = a.id ORDER BY v.as_of DESC, v.created_at DESC LIMIT 1) AS latest_value_paisa,
   (SELECT as_of FROM asset_valuations v WHERE v.asset_id = a.id ORDER BY v.as_of DESC, v.created_at DESC LIMIT 1) AS latest_value_as_of
 `;
@@ -425,7 +426,7 @@ export async function adoptAssets(deps: AssetDeps, actor: AssetActor, partnerId:
  * together. Reversed entries are flagged, never hidden. `privileged` (cashier or auditor) adds each
  * purchase's newest remark (ASSUMPTIONS 128); others get none.
  */
-export async function getPartner(db: Db, id: string, privileged = false): Promise<Record<string, unknown> | null> {
+export async function getPartner(db: Db, id: string, today: string, privileged = false): Promise<Record<string, unknown> | null> {
   const partner = (await listPartners(db)).find((p) => p.id === id);
   if (!partner) return null;
   const assets = await db.query(
@@ -442,7 +443,7 @@ export async function getPartner(db: Db, id: string, privileged = false): Promis
             CASE WHEN $2::boolean THEN (SELECT count(*)::int FROM entry_remarks er WHERE er.ledger_seq = l.seq) ELSE 0 END AS remark_count
      -- imported purchases point at the asset; a purchase executed from a proposal points at that proposal
      FROM ledger_entries l
-     JOIN assets a ON a.id = l.ref_id OR (l.ref_type = 'proposal' AND a.proposal_id = l.ref_id)
+     JOIN assets a ON a.id = l.ref_id OR (l.ref_type = 'proposal' AND a.proposal_id = l.ref_id AND a.mandate_id IS NULL)
      WHERE a.partner_id = $1 AND l.debit_account = 'INVESTMENTS_AT_COST' AND l.reverses_seq IS NULL
      ORDER BY l.entry_date DESC, l.seq DESC`,
     [id, privileged],
@@ -498,8 +499,10 @@ export async function getPartner(db: Db, id: string, privileged = false): Promis
      LIMIT 20`,
     [id],
   );
+  const mandates = await listMandates(db, today, id);
   return {
     partner,
+    mandates: mandates.items,
     valuation_requests: requests.rows,
     assets: assets.rows.map((r) => serializeBigints(r as Record<string, unknown>)),
     entries: entries.rows,

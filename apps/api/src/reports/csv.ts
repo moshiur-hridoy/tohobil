@@ -60,9 +60,9 @@ const SPECS: Record<string, Spec> = {
           ORDER BY v.period, m.code, v.kind`,
   },
   fines: {
-    columns: ['member_code', 'kind', 'amount_paisa', 'reason', 'created_at', 'waived_at', 'outstanding_paisa'],
+    columns: ['member_code', 'kind', 'amount_paisa', 'reason', 'created_at', 'waived_at', 'cancelled', 'outstanding_paisa'],
     sql: `SELECT m.code AS member_code, f.kind, f.amount_paisa::text AS amount_paisa, f.reason, f.created_at, f.waived_at,
-                 s.outstanding_paisa::text AS outstanding_paisa
+                 s.cancelled, s.outstanding_paisa::text AS outstanding_paisa
           FROM fines f JOIN members m ON m.id = f.member_id JOIN v_fine_status s ON s.fine_id = f.id
           WHERE ($1::date IS NULL OR f.created_at::date >= $1::date) AND ($2::date IS NULL OR f.created_at::date <= $2::date)
           ORDER BY f.created_at, f.id`,

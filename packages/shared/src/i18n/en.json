@@ -386,7 +386,8 @@
       "not_confirmed": "Only a confirmed payment can be reversed.",
       "allocation_invalid": "An allocation points at something that is not open for this member.",
       "allocation_exceeds_outstanding": "An allocation is larger than what is still owed.",
-      "allocation_exceeds_amount": "The allocations are more than the payment."
+      "allocation_exceeds_amount": "The allocations are more than the payment.",
+      "backdate_reason_required": "This entry is dated before today and cancels a late fine. Write the reason in the note."
     },
     "auth": {
       "invalid_pin": "Incorrect PIN.",
@@ -615,6 +616,7 @@
   "notif": {
     "due_reminder": "{name}, ৳{outstanding} for {month} is due by {due_date}. Send it via bKash or bank and submit the TrxID in the app.",
     "fine_notice": "{name}, a fine of ৳{fine} was charged for late payment of {month}. Total due ৳{total}. Open the app to request a waiver.",
+    "fine_cancelled": "Your money for {month} had arrived on time, so the ৳{amount} fine was cancelled.",
     "member_onboarded": "{name}, your membership is now active. Shares: {shares}, code: {code}. View payments and votes in the app.",
     "payment_submitted_ack": "We received your ৳{amount}. The cashier is verifying it.",
     "payment_confirmed": "Your payment of ৳{amount} was accepted. If anything is wrong, raise an objection in the app.",
@@ -1268,7 +1270,14 @@
     "selfPayment": "This is your own payment: the auditor will see that you confirmed it.",
     "fromSms": "From SMS",
     "smsMatchedHint": "{{n}} payments match exactly. They are green in the list; approve them together with the button at the top.",
-    "showInQueue": "Show in the list"
+    "showInQueue": "Show in the list",
+    "backdateFine": "If the money arrived on this date, the fine for {{months}} is cancelled (when the month is paid in full). Write the reason in the note, for example: got the SMS later.",
+    "fineCancellations": "Fines cancelled for on-time money",
+    "fineCancellationsHint": "The money arrived by the due date but was recorded later, so the fine was cancelled. Check the cashier's reason on entries with an earlier date.",
+    "noFineCancellations": "No fine has been cancelled.",
+    "fineCancelledLine": "{{month}} fine of {{amount}} cancelled",
+    "fineOwedAgain": "Owed again (payment reversed)",
+    "fineCancelledDates": "Money arrived {{paid}} · due {{due}} · recorded {{recorded}}"
   },
   "adminLedger": {
     "title": "Ledger",
@@ -2099,6 +2108,7 @@
     "purpose": "Purpose",
     "none": "None",
     "waived": "Waived",
+    "cancelled": "Cancelled (paid on time)",
     "open": "Open",
     "settled": "Settled",
     "statementNote": "The ledger is the fund's official record. If something looks wrong, raise an objection on the ledger row in the app.",

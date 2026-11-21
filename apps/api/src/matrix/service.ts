@@ -17,7 +17,7 @@ interface Cell {
   status: CellStatus;
   due: bigint;
   paid: bigint;
-  /** Fines charged on this period's dues (waived ones excluded). */
+  /** Fines charged on this period's dues (waived and cancelled ones excluded). */
   fine: bigint;
   fine_paid: bigint;
   /** The member has a payment waiting for the cashier and this cell still owes something. */
@@ -118,7 +118,7 @@ export async function getMatrix(deps: MatrixDeps, q: MatrixQuery) {
        FROM fines f
        JOIN dues d ON d.id = f.due_id
        JOIN v_fine_status s ON s.fine_id = f.id
-       WHERE f.waived_at IS NULL AND d.period >= $1 AND d.period <= $2`,
+       WHERE f.waived_at IS NULL AND NOT s.cancelled AND d.period >= $1 AND d.period <= $2`,
       [from, to],
     ),
     deps.pool.query(`SELECT member_id, for_periods FROM payments WHERE status = 'pending'`),

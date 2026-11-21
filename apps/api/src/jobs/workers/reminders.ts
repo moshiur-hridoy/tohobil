@@ -62,8 +62,10 @@ export async function notifyFinesJob(deps: JobDeps): Promise<{ queued: number }>
      FROM fines f
      JOIN dues d ON d.id = f.due_id
      JOIN members m ON m.id = f.member_id
+     -- a fine already cancelled (money on time, ASSUMPTIONS 130) or paid by now needs no notice
+     JOIN v_fine_status s ON s.fine_id = f.id
      WHERE date_trunc('day', f.created_at AT TIME ZONE 'Asia/Dhaka') = today_dhaka()
-       AND f.kind = 'late_payment'`,
+       AND f.kind = 'late_payment' AND s.outstanding_paisa > 0`,
   );
   const ndeps = makeNotificationDeps(deps);
   let queued = 0;

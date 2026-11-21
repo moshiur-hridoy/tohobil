@@ -51,7 +51,7 @@ export interface FineRow {
   period: string | null;
   amount_paisa: string;
   outstanding_paisa: string;
-  status: 'unpaid' | 'partial' | 'paid' | 'waived';
+  status: 'unpaid' | 'partial' | 'paid' | 'waived' | 'cancelled';
 }
 
 export interface PaymentRow {

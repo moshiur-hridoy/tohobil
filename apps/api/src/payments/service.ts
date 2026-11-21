@@ -15,6 +15,7 @@ import {
   type ApprovalsQuery,
 } from '@barakah/shared';
 import type { AuthUser } from '../auth/service';
+import { applyFinesForMember, cancelFines, onTimeFineCandidates, type OnTimeFine } from '../fines/service';
 import { activateProspectiveMember, assertEntryQuoteValid } from '../members/entry';
 import { LEDGER_REF, postEntries, reverseReference } from '../ledger/service';
 import { paymentPostings } from '../ledger/postings';
@@ -95,13 +96,15 @@ interface NewPayment {
   rawSms: string | null;
   note: string | null;
   submittedBy: string;
+  /** From the clock, not the database: whether a payment was recorded in time decides late fines. */
+  submittedAt: Date;
 }
 
 async function insertPayment(tx: pg.PoolClient, p: NewPayment): Promise<string> {
   const res = await tx.query(
     `INSERT INTO payments (member_id, amount_paisa, method, purpose, trx_id, paid_at, source,
-                           for_periods, proof_file_id, raw_sms, note, submitted_by)
-     VALUES ($1, $2::bigint, $3, $4, $5, $6, $7, $8::text[], $9, $10, $11, $12)
+                           for_periods, proof_file_id, raw_sms, note, submitted_by, submitted_at)
+     VALUES ($1, $2::bigint, $3, $4, $5, $6, $7, $8::text[], $9, $10, $11, $12, $13)
      RETURNING id`,
     [
       p.memberId,
@@ -116,6 +119,7 @@ async function insertPayment(tx: pg.PoolClient, p: NewPayment): Promise<string> 
       p.rawSms,
       p.note,
       p.submittedBy,
+      p.submittedAt,
     ],
   );
   return (res.rows[0] as { id: string }).id;
@@ -181,6 +185,7 @@ export async function submitPayment(
         rawSms: null,
         note: input.note ?? null,
         submittedBy: user.id,
+        submittedAt: deps.clock.now(),
       });
       await audit(tx, {
         actor: user.id,
@@ -249,6 +254,37 @@ function planFor(
     : planDefaultAllocation(amount, items.dues, items.fines);
 }
 
+/** Manual lines without the given fines (they are cancelled, so no longer open). */
+const withoutFines = (manual: PaymentConfirm['allocations'], fines: ReadonlySet<string>) =>
+  manual?.filter((l) => l.fine_id === undefined || !fines.has(l.fine_id));
+
+/**
+ * Late fines this payment proves wrong (ASSUMPTIONS 130): the money counts as arrived on `onTime`, on
+ * or before the due date, and this payment pays the rest of that due in full. Dues are paid before
+ * fines in either plan, so leaving the cancelled fines out does not change what the dues receive.
+ */
+async function finesPaidOnTime(
+  tx: pg.PoolClient,
+  memberId: string,
+  onTime: string,
+  amount: bigint,
+  manual: PaymentConfirm['allocations'],
+  items: { dues: Outstanding[]; fines: Outstanding[] },
+): Promise<OnTimeFine[]> {
+  const candidates = await onTimeFineCandidates(tx, memberId, onTime);
+  if (candidates.length === 0) return [];
+  const skip = new Set(candidates.map((c) => c.fine_id));
+  const trial = planFor(amount, withoutFines(manual, skip), {
+    dues: items.dues,
+    fines: items.fines.filter((f) => !skip.has(f.id)),
+  });
+  return candidates.filter((c) => {
+    const owed = items.dues.find((d) => d.id === c.due_id)?.outstanding ?? 0n;
+    const paid = trial.lines.reduce((sum, l) => (l.due_id === c.due_id ? sum + l.amount : sum), 0n);
+    return paid > 0n && paid === owed;
+  });
+}
+
 const planOut = (plan: AllocationPlan) => ({
   principal_paisa: plan.principal.toString(),
   fine_paisa: plan.fine.toString(),
@@ -265,6 +301,8 @@ export interface ConfirmedPayment {
   id: string;
   status: 'confirmed';
   allocation: PlanOut;
+  /** Late fines this payment cancelled because it paid on time (ASSUMPTIONS 130). */
+  cancelled_fine_ids?: string[];
 }
 
 async function isPeriodLocked(tx: pg.PoolClient, date: string): Promise<boolean> {
@@ -289,7 +327,7 @@ async function confirmInTx(
   action: 'payment.confirm' | 'payment.cashier_entry',
 ): Promise<ConfirmedPayment> {
   const res = await tx.query(
-    `SELECT id, member_id, amount_paisa, method, purpose, status, paid_at
+    `SELECT id, member_id, amount_paisa, method, purpose, status, paid_at, submitted_at, source, note
      FROM payments WHERE id = $1 FOR UPDATE`,
     [paymentId],
   );
@@ -302,6 +340,9 @@ async function confirmInTx(
         purpose: PaymentPurpose;
         status: string;
         paid_at: Date;
+        submitted_at: Date;
+        source: string;
+        note: string | null;
       }
     | undefined;
   if (!p) throw notFound('payment.not_found', 'Payment not found');
@@ -321,7 +362,29 @@ async function confirmInTx(
   }
 
   const amount = toBigInt(p.amount_paisa);
-  const plan = planFor(amount, manual, await openItems(tx, p.member_id, p.purpose, deps.clock.todayDhaka()));
+  const items = await openItems(tx, p.member_id, p.purpose, deps.clock.todayDhaka());
+
+  // A late fine is cancelled when this money had arrived by the due date (ASSUMPTIONS 130). A member's
+  // own submission counts from the later of the day they say they paid and the day they told the app;
+  // the cashier's entry counts from the date the cashier gives, with a reason when it is earlier than
+  // the day of entry.
+  const paidOn = toDhakaDate(new Date(p.paid_at));
+  const recordedOn = toDhakaDate(new Date(p.submitted_at));
+  const onTime = p.source === 'member_submitted' && recordedOn > paidOn ? recordedOn : paidOn;
+  const cancelled =
+    p.purpose === 'dues' ? await finesPaidOnTime(tx, p.member_id, onTime, amount, manual, items) : [];
+  const backdated = p.source !== 'member_submitted' && paidOn < recordedOn;
+  if (cancelled.length > 0 && backdated && !p.note?.trim()) {
+    throw badRequest(
+      'payment.backdate_reason_required',
+      'This entry is dated earlier than today and cancels a late fine; write the reason in the note',
+    );
+  }
+  const dropped = new Set(cancelled.map((f) => f.fine_id));
+  const plan = planFor(amount, withoutFines(manual, dropped), {
+    dues: items.dues,
+    fines: items.fines.filter((f) => !dropped.has(f.id)),
+  });
   const now = deps.clock.now();
 
   // The database only lets confirmed payments carry allocations, so mark it confirmed first.
@@ -339,6 +402,19 @@ async function confirmInTx(
       [p.id, line.due_id ?? null, line.fine_id ?? null, line.amount.toString()],
     );
   }
+
+  await cancelFines(tx, {
+    fines: cancelled,
+    paymentId: p.id,
+    memberId: p.member_id,
+    paidOn: onTime,
+    reason: backdated ? (p.note?.trim() ?? null) : null,
+    actor,
+    ip: ctx.ip,
+  });
+  // The fine job waited for this payment if it was sent in time; what it leaves unpaid is fined now.
+  const sentOn = recordedOn > paidOn ? recordedOn : paidOn;
+  if (p.purpose === 'dues') await applyFinesForMember(tx, deps.clock, p.member_id, { sentOn });
 
   // The money arrived on paid_at; if that month is already locked it is booked today instead.
   let entryDate = toDhakaDate(new Date(p.paid_at));
@@ -385,6 +461,7 @@ async function confirmInTx(
       member_id: p.member_id,
       entry_date: entryDate,
       allocation: planOut(plan),
+      ...(cancelled.length > 0 ? { cancelled_fine_ids: cancelled.map((f) => f.fine_id) } : {}),
       // A cashier confirming their own payment is allowed (nobody else can) but visible to the auditor.
       self_confirmed: p.member_id === actor.member_id,
     },
@@ -399,7 +476,12 @@ async function confirmInTx(
     objection_link: `/menu/ledger?ref_type=payment&ref_id=${p.id}`,
   }, { amount: formatBDT(amount, { digits: 'bn' }) });
 
-  return { id: p.id, status: 'confirmed', allocation: planOut(plan) };
+  return {
+    id: p.id,
+    status: 'confirmed',
+    allocation: planOut(plan),
+    ...(cancelled.length > 0 ? { cancelled_fine_ids: cancelled.map((f) => f.fine_id) } : {}),
+  };
 }
 
 /**
@@ -470,6 +552,7 @@ export async function cashierEntry(
         rawSms: input.raw_sms ?? null,
         note: input.note ?? null,
         submittedBy: actor.id,
+        submittedAt: deps.clock.now(),
       });
       return confirmInTx(tx, deps, actor, id, input.allocations, ctx, 'payment.cashier_entry');
     });
@@ -487,10 +570,13 @@ export async function rejectPayment(
   ctx: ClientCtx,
 ): Promise<{ id: string; status: 'rejected' }> {
   return inTransaction(deps.pool, async (tx) => {
-    const res = await tx.query(`SELECT member_id, status, amount_paisa::text AS amount_paisa FROM payments WHERE id = $1 FOR UPDATE`, [
-      paymentId,
-    ]);
-    const p = res.rows[0] as { member_id: string; status: string; amount_paisa: string } | undefined;
+    const res = await tx.query(
+      `SELECT member_id, status, purpose, amount_paisa::text AS amount_paisa,
+              (GREATEST(paid_at, submitted_at) AT TIME ZONE 'Asia/Dhaka')::date::text AS sent_on
+       FROM payments WHERE id = $1 FOR UPDATE`,
+      [paymentId],
+    );
+    const p = res.rows[0] as { member_id: string; status: string; purpose: string; amount_paisa: string; sent_on: string } | undefined;
     if (!p) throw notFound('payment.not_found', 'Payment not found');
     if (p.status !== 'pending') {
       throw conflict('payment.not_pending', `This payment is already ${p.status}`);
@@ -499,6 +585,8 @@ export async function rejectPayment(
       paymentId,
       body.reason,
     ]);
+    // The fine job may have waited for this payment (ASSUMPTIONS 130); without it the due is late.
+    if (p.purpose === 'dues') await applyFinesForMember(tx, deps.clock, p.member_id, { sentOn: p.sent_on });
     await audit(tx, {
       actor: actor.id,
       action: 'payment.reject',
@@ -608,8 +696,8 @@ export async function approveApproval(
     }
     const paymentId = a.ref_id;
 
-    const res = await tx.query(`SELECT status FROM payments WHERE id = $1 FOR UPDATE`, [paymentId]);
-    const p = res.rows[0] as { status: string } | undefined;
+    const res = await tx.query(`SELECT status, member_id FROM payments WHERE id = $1 FOR UPDATE`, [paymentId]);
+    const p = res.rows[0] as { status: string; member_id: string } | undefined;
     if (!p) throw notFound('payment.not_found', 'Payment not found');
     if (p.status !== 'confirmed') {
       throw conflict('payment.not_confirmed', 'Only a confirmed payment can be reversed');
@@ -634,6 +722,14 @@ export async function approveApproval(
     await tx.query(`UPDATE payments SET status = 'reversed', unallocated_paisa = 0 WHERE id = $1`, [
       paymentId,
     ]);
+    // A fine this payment had cancelled is owed again by itself (the cancellation needs a confirmed
+    // payment); a due it had paid in time and never fined is fined as the last fine run would have.
+    const paidDues = await tx.query(
+      `SELECT DISTINCT due_id FROM payment_allocations WHERE payment_id = $1 AND due_id IS NOT NULL`,
+      [paymentId],
+    );
+    const dueIds = (paidDues.rows as Array<{ due_id: string }>).map((r) => r.due_id);
+    if (dueIds.length > 0) await applyFinesForMember(tx, deps.clock, p.member_id, { dueIds });
     await tx.query(
       `UPDATE approvals SET status = 'approved', decided_by = $2, decided_at = $3 WHERE id = $1`,
       [approvalId, actor.id, deps.clock.now()],

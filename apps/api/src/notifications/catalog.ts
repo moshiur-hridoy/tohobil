@@ -17,6 +17,7 @@ import { bn } from '@barakah/shared';
 export type NotificationTemplate =
   | 'due_reminder'
   | 'fine_notice'
+  | 'fine_cancelled'
   | 'member_onboarded'
   | 'payment_submitted_ack'
   | 'payment_confirmed'
@@ -66,6 +67,8 @@ export const TEMPLATE_META: Record<NotificationTemplate, TemplateMeta> = {
     ignoreSmsOptOut: true,
     roleRecipients: ['member'],
   },
+  // A late fine cancelled because the money had arrived on time (ASSUMPTIONS 130).
+  fine_cancelled: { channels: ['push'], roleRecipients: ['member'] },
   member_onboarded: { channels: ['push', 'sms'], roleRecipients: ['member'] },
   payment_submitted_ack: { channels: ['push'], roleRecipients: ['member'] },
   payment_confirmed: { channels: ['push', 'sms'], pushFallback: true, roleRecipients: ['member'] },

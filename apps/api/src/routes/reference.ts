@@ -1,10 +1,11 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type pg from 'pg';
-import { DEFAULT_MEMBER_PAYMENT_METHODS, PAYMENT_METHODS, duesQuerySchema, finesQuerySchema, rulesQuerySchema, type Clock } from '@barakah/shared';
+import { DEFAULT_MEMBER_PAYMENT_METHODS, PAYMENT_METHODS, duesQuerySchema, fineCancellationsQuerySchema, finesQuerySchema, rulesQuerySchema, type Clock } from '@barakah/shared';
 import { listAccountBalances } from '../accounts/service';
 import type { Guards } from '../auth/guards';
 import { listDues, listFines } from '../dues/queries';
+import { listFineCancellations } from '../fines/service';
 import { listRuleHistory, listRulesInForce } from '../lib/rules';
 
 export interface ReferenceDeps {
@@ -19,7 +20,7 @@ export interface ReferenceDeps {
 export function referenceRoutes(deps: ReferenceDeps, guards: Guards) {
   return async function register(instance: FastifyInstance): Promise<void> {
     const app = instance.withTypeProvider<ZodTypeProvider>();
-    const { authenticate } = guards;
+    const { authenticate, requireRole } = guards;
 
     app.get(
       '/rules',
@@ -64,6 +65,16 @@ export function referenceRoutes(deps: ReferenceDeps, guards: Guards) {
       '/fines',
       { preHandler: authenticate, schema: { querystring: finesQuerySchema } },
       (req) => listFines(deps.pool, req.query),
+    );
+
+    // Late fines cancelled because the money was on time (ASSUMPTIONS 130), for the auditor to check.
+    app.get(
+      '/fines/cancellations',
+      {
+        preHandler: [authenticate, requireRole('cashier', 'auditor')],
+        schema: { querystring: fineCancellationsQuerySchema },
+      },
+      (req) => listFineCancellations(deps.pool, req.query),
     );
 
     /**

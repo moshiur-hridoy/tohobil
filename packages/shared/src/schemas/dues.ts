@@ -18,3 +18,6 @@ export const finesQuerySchema = paginationSchema.extend({
 });
 
 export type FinesQuery = z.infer<typeof finesQuerySchema>;
+
+/** `GET /fines/cancellations?cursor&limit` (cashier, auditor): fines cancelled by on-time money. */
+export const fineCancellationsQuerySchema = paginationSchema;

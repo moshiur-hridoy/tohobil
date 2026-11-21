@@ -41,7 +41,8 @@ export const DUE_STATUSES = ['unpaid', 'partial', 'overdue', 'paid', 'paid_late'
 export type DueStatus = (typeof DUE_STATUSES)[number];
 
 /** Derived from allocations and the waiver (view `v_fine_status`, spec 5.5). */
-export const FINE_STATUSES = ['unpaid', 'partial', 'paid', 'waived'] as const;
+/** `cancelled`: the money had arrived on time, so the late fine does not stand (ASSUMPTIONS 130). */
+export const FINE_STATUSES = ['unpaid', 'partial', 'paid', 'waived', 'cancelled'] as const;
 export type FineStatus = (typeof FINE_STATUSES)[number];
 
 export const PROPOSAL_STATUSES = [

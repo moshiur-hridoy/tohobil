@@ -10,7 +10,7 @@ import { StatusPill } from '../../../components/StatusPill';
 import { Change } from '../../../components/ValuationUpdate';
 import { api, apiBlob } from '../../../lib/api';
 import { useAuth } from '../../../lib/auth';
-import { fmtDate, fmtInstant } from '../../../lib/dates';
+import { fmtDate, fmtInstant, fmtPeriod } from '../../../lib/dates';
 import { taka } from '../../../lib/money';
 import type { ApprovalRow, Page } from '../../../lib/types';
 
@@ -51,59 +51,161 @@ export function ApprovalsTab() {
   };
 
   return (
+    <div className="grid gap-4">
+      <Card className="px-5 pb-3 pt-5 sm:px-6">
+        <CardHead icon={ICONS.undo} tone="bg-blue-bg text-blue" title={t('paymentsPage.approvals')} />
+        <Notice text={notice} className="mb-3" />
+        {q.error ? (
+          <LoadError error={q.error} onRetry={() => void q.refetch()} />
+        ) : !q.data ? (
+          <ListSkeleton rows={3} />
+        ) : rows.length === 0 ? (
+          <EmptyCard text={t('paymentsPage.noApprovals')} />
+        ) : (
+          <ul>
+            {rows.map((a) => (
+              <li key={a.id} className="border-b border-border py-3 last:border-b-0">
+                {/* Details on top, status and buttons below, so the text keeps its width on a phone. */}
+                <div className="flex items-start gap-3">
+                  <MemberBadge code={isValue(a) ? (a.requested_by_code ?? '?') : (a.payment_member_code ?? '?')} />
+                  <div className="min-w-0 flex-1">
+                    {isValue(a) ? (
+                      <>
+                        <p className="font-semibold">{t('valuation.approvalTitle', { name: a.partner_name ?? '' })}</p>
+                        <p className="text-sm tabular-nums">
+                          {taka(a.base_value_paisa ?? '0')} → <strong>{taka(a.new_value_paisa ?? '0')}</strong> <Change paisa={valueChange(a)} className="text-xs" />
+                          {a.valuation_as_of && <span className="text-muted"> · {fmtDate(a.valuation_as_of)}</span>}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="font-semibold">
+                        {a.payment_amount_paisa ? taka(a.payment_amount_paisa) : ''}
+                        {a.payment_method && <span className="font-normal text-muted"> · {PAYMENT_METHOD_LABELS[a.payment_method as keyof typeof PAYMENT_METHOD_LABELS].bn}</span>}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted">{t('paymentsPage.requestedBy', { code: a.requested_by_code ?? '?' })} · {fmtInstant(a.created_at)}</p>
+                    {a.reason && <p className="mt-1 text-sm">{a.reason}</p>}
+                    {a.status === 'rejected' && a.decision_note && <p className="mt-1 text-sm text-bad">{t('valuation.reason', { reason: a.decision_note })}</p>}
+                    {isValue(a) && a.valuation_proof_file_id && (
+                      <button type="button" className="mt-1 text-xs font-semibold text-primary hover:underline" onClick={() => void openStatement(a.valuation_proof_file_id as string)}>
+                        {t('valuation.viewStatement')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
+                  <StatusPill status={a.status === 'pending' ? 'pending' : a.status === 'approved' ? 'confirmed' : 'rejected'} label={t(a.status === 'pending' ? 'valuation.status.waitAuditor' : a.status === 'approved' ? 'valuation.status.approved' : 'valuation.status.rejected')} />
+                  {a.status === 'pending' && isAuditor && (
+                    <div className="flex gap-2">
+                      <button type="button" className={BTN_SM_PRIMARY} onClick={() => { setNotice(null); setTarget({ row: a, action: 'approve' }); }}>
+                        {t(isValue(a) ? 'valuation.approve' : 'paymentsPage.approveReversal')}
+                      </button>
+                      <button type="button" className={BTN_SM} onClick={() => { setNotice(null); setTarget({ row: a, action: 'reject' }); }}>
+                        {t(isValue(a) ? 'valuation.reject' : 'paymentsPage.rejectReversal')}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        {q.hasNextPage && (
+          <button type="button" onClick={() => void q.fetchNextPage()} className={`${BTN_SECONDARY} mb-2 mt-3 w-full`}>{t('common.loadMore')}</button>
+        )}
+
+        <ConfirmSheet
+          open={!!target}
+          onClose={() => setTarget(null)}
+          title={target && isValue(target.row)
+            ? t('valuation.approvalTitle', { name: target.row.partner_name ?? '' })
+            : target?.action === 'approve' ? t('paymentsPage.reversalTitle') : t('paymentsPage.rejectReversal')}
+          confirmLabel={target && isValue(target.row)
+            ? t(target.action === 'approve' ? 'valuation.approve' : 'valuation.reject')
+            : target?.action === 'approve' ? t('paymentsPage.approveReversal') : t('paymentsPage.rejectReversal')}
+          tone={target?.action === 'approve' && !(target && isValue(target.row)) ? 'danger' : 'primary'}
+          canConfirm={!(target && isValue(target.row) && target.action === 'reject' && note.trim().length < 3)}
+          onConfirm={decide}
+        >
+          {target && isValue(target.row) && (
+            <>
+              <SheetRow label={t('valuation.current', { value: taka(target.row.base_value_paisa ?? '0') })} value={taka(target.row.new_value_paisa ?? '0')} strong />
+              <SheetRow label={t(valueChange(target.row) < 0n ? 'valuation.loss' : 'valuation.gain')} value={<Change paisa={valueChange(target.row)} />} />
+              {target.row.reason && <SheetRow label={t('valuation.note')} value={target.row.reason} />}
+              <p className="text-muted">{t(target.action === 'approve' ? 'valuation.approveEffect' : 'valuation.rejectHint')}</p>
+              <textarea aria-label={t('paymentsPage.decisionNote')} placeholder={t('paymentsPage.decisionNote')} className="field min-h-20 w-full" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
+            </>
+          )}
+          {target && !isValue(target.row) && (
+            <>
+              <SheetRow label={target.row.payment_member_code ?? ''} value={target.row.payment_amount_paisa ? taka(target.row.payment_amount_paisa) : ''} strong />
+              {target.row.reason && <SheetRow label={t('common.reason')} value={target.row.reason} />}
+              {target.action === 'approve' && <p className="text-muted">{t('paymentsPage.reversalEffect')}</p>}
+              <textarea aria-label={t('paymentsPage.decisionNote')} placeholder={t('paymentsPage.decisionNote')} className="field min-h-20 w-full" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
+            </>
+          )}
+        </ConfirmSheet>
+      </Card>
+      <FineCancellations />
+    </div>
+  );
+}
+
+interface FineCancellationRow {
+  id: string;
+  member_code: string;
+  period: string;
+  due_date: string;
+  amount_paisa: string;
+  payment_amount_paisa: string;
+  paid_on: string;
+  recorded_on: string;
+  source: string;
+  reason: string | null;
+  cancelled_by_code: string | null;
+  created_at: string;
+  in_force: boolean;
+}
+
+/**
+ * Late fines cancelled because the money had arrived on time (ASSUMPTIONS 130), newest first. Nothing
+ * to decide: the auditor reads them, above all those the cashier entered with an earlier date and a
+ * reason. A fine no longer in force is owed again (its payment was reversed).
+ */
+function FineCancellations() {
+  const { t } = useTranslation();
+  const q = useInfiniteQuery({
+    queryKey: ['fines', 'cancellations'],
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) => api<Page<FineCancellationRow>>(`/fines/cancellations?limit=30${pageParam ? `&cursor=${pageParam}` : ''}`),
+    getNextPageParam: (last) => last.next_cursor ?? undefined,
+  });
+  const rows = q.data?.pages.flatMap((p) => p.items) ?? [];
+  return (
     <Card className="px-5 pb-3 pt-5 sm:px-6">
-      <CardHead icon={ICONS.undo} tone="bg-blue-bg text-blue" title={t('paymentsPage.approvals')} />
-      <Notice text={notice} className="mb-3" />
+      <CardHead icon={ICONS.clock} tone="bg-warn-bg text-warn" title={t('paymentsPage.fineCancellations')} />
+      <p className="-mt-1 mb-2 text-sm text-muted">{t('paymentsPage.fineCancellationsHint')}</p>
       {q.error ? (
         <LoadError error={q.error} onRetry={() => void q.refetch()} />
       ) : !q.data ? (
-        <ListSkeleton rows={3} />
+        <ListSkeleton rows={2} />
       ) : rows.length === 0 ? (
-        <EmptyCard text={t('paymentsPage.noApprovals')} />
+        <EmptyCard text={t('paymentsPage.noFineCancellations')} />
       ) : (
         <ul>
-          {rows.map((a) => (
-            <li key={a.id} className="border-b border-border py-3 last:border-b-0">
-              {/* Details on top, status and buttons below, so the text keeps its width on a phone. */}
-              <div className="flex items-start gap-3">
-                <MemberBadge code={isValue(a) ? (a.requested_by_code ?? '?') : (a.payment_member_code ?? '?')} />
-                <div className="min-w-0 flex-1">
-                  {isValue(a) ? (
-                    <>
-                      <p className="font-semibold">{t('valuation.approvalTitle', { name: a.partner_name ?? '' })}</p>
-                      <p className="text-sm tabular-nums">
-                        {taka(a.base_value_paisa ?? '0')} → <strong>{taka(a.new_value_paisa ?? '0')}</strong> <Change paisa={valueChange(a)} className="text-xs" />
-                        {a.valuation_as_of && <span className="text-muted"> · {fmtDate(a.valuation_as_of)}</span>}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="font-semibold">
-                      {a.payment_amount_paisa ? taka(a.payment_amount_paisa) : ''}
-                      {a.payment_method && <span className="font-normal text-muted"> · {PAYMENT_METHOD_LABELS[a.payment_method as keyof typeof PAYMENT_METHOD_LABELS].bn}</span>}
-                    </p>
-                  )}
-                  <p className="text-xs text-muted">{t('paymentsPage.requestedBy', { code: a.requested_by_code ?? '?' })} · {fmtInstant(a.created_at)}</p>
-                  {a.reason && <p className="mt-1 text-sm">{a.reason}</p>}
-                  {a.status === 'rejected' && a.decision_note && <p className="mt-1 text-sm text-bad">{t('valuation.reason', { reason: a.decision_note })}</p>}
-                  {isValue(a) && a.valuation_proof_file_id && (
-                    <button type="button" className="mt-1 text-xs font-semibold text-primary hover:underline" onClick={() => void openStatement(a.valuation_proof_file_id as string)}>
-                      {t('valuation.viewStatement')}
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
-                <StatusPill status={a.status === 'pending' ? 'pending' : a.status === 'approved' ? 'confirmed' : 'rejected'} label={t(a.status === 'pending' ? 'valuation.status.waitAuditor' : a.status === 'approved' ? 'valuation.status.approved' : 'valuation.status.rejected')} />
-                {a.status === 'pending' && isAuditor && (
-                  <div className="flex gap-2">
-                    <button type="button" className={BTN_SM_PRIMARY} onClick={() => { setNotice(null); setTarget({ row: a, action: 'approve' }); }}>
-                      {t(isValue(a) ? 'valuation.approve' : 'paymentsPage.approveReversal')}
-                    </button>
-                    <button type="button" className={BTN_SM} onClick={() => { setNotice(null); setTarget({ row: a, action: 'reject' }); }}>
-                      {t(isValue(a) ? 'valuation.reject' : 'paymentsPage.rejectReversal')}
-                    </button>
-                  </div>
-                )}
+          {rows.map((c) => (
+            <li key={c.id} className="flex items-start gap-3 border-b border-border py-3 last:border-b-0">
+              <MemberBadge code={c.member_code} />
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold">
+                  {t('paymentsPage.fineCancelledLine', { month: fmtPeriod(c.period), amount: taka(c.amount_paisa) })}
+                  {!c.in_force && <span className="ml-2 text-xs font-normal text-bad">{t('paymentsPage.fineOwedAgain')}</span>}
+                </p>
+                <p className="text-xs text-muted">
+                  {t('paymentsPage.fineCancelledDates', { paid: fmtDate(c.paid_on), due: fmtDate(c.due_date), recorded: fmtDate(c.recorded_on) })}
+                  {' · '}{taka(c.payment_amount_paisa)}{c.cancelled_by_code ? ` · ${c.cancelled_by_code}` : ''}
+                </p>
+                {c.reason && <p className="mt-1 text-sm">{t('common.reason')}: {c.reason}</p>}
               </div>
             </li>
           ))}
@@ -112,38 +214,6 @@ export function ApprovalsTab() {
       {q.hasNextPage && (
         <button type="button" onClick={() => void q.fetchNextPage()} className={`${BTN_SECONDARY} mb-2 mt-3 w-full`}>{t('common.loadMore')}</button>
       )}
-
-      <ConfirmSheet
-        open={!!target}
-        onClose={() => setTarget(null)}
-        title={target && isValue(target.row)
-          ? t('valuation.approvalTitle', { name: target.row.partner_name ?? '' })
-          : target?.action === 'approve' ? t('paymentsPage.reversalTitle') : t('paymentsPage.rejectReversal')}
-        confirmLabel={target && isValue(target.row)
-          ? t(target.action === 'approve' ? 'valuation.approve' : 'valuation.reject')
-          : target?.action === 'approve' ? t('paymentsPage.approveReversal') : t('paymentsPage.rejectReversal')}
-        tone={target?.action === 'approve' && !(target && isValue(target.row)) ? 'danger' : 'primary'}
-        canConfirm={!(target && isValue(target.row) && target.action === 'reject' && note.trim().length < 3)}
-        onConfirm={decide}
-      >
-        {target && isValue(target.row) && (
-          <>
-            <SheetRow label={t('valuation.current', { value: taka(target.row.base_value_paisa ?? '0') })} value={taka(target.row.new_value_paisa ?? '0')} strong />
-            <SheetRow label={t(valueChange(target.row) < 0n ? 'valuation.loss' : 'valuation.gain')} value={<Change paisa={valueChange(target.row)} />} />
-            {target.row.reason && <SheetRow label={t('valuation.note')} value={target.row.reason} />}
-            <p className="text-muted">{t(target.action === 'approve' ? 'valuation.approveEffect' : 'valuation.rejectHint')}</p>
-            <textarea aria-label={t('paymentsPage.decisionNote')} placeholder={t('paymentsPage.decisionNote')} className="field min-h-20 w-full" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
-          </>
-        )}
-        {target && !isValue(target.row) && (
-          <>
-            <SheetRow label={target.row.payment_member_code ?? ''} value={target.row.payment_amount_paisa ? taka(target.row.payment_amount_paisa) : ''} strong />
-            {target.row.reason && <SheetRow label={t('common.reason')} value={target.row.reason} />}
-            {target.action === 'approve' && <p className="text-muted">{t('paymentsPage.reversalEffect')}</p>}
-            <textarea aria-label={t('paymentsPage.decisionNote')} placeholder={t('paymentsPage.decisionNote')} className="field min-h-20 w-full" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
-          </>
-        )}
-      </ConfirmSheet>
     </Card>
   );
 }

@@ -67,6 +67,7 @@ export async function listFines(db: Db, q: FinesQuery): Promise<Page<Record<stri
               f.kind, f.reason, d.period, f.amount_paisa, s.allocated_paisa, s.outstanding_paisa,
               f.waived_at, f.created_at, ${tsKey('f.created_at')} AS created_key,
               CASE WHEN f.waived_at IS NOT NULL THEN 'waived'
+                   WHEN s.cancelled THEN 'cancelled'
                    WHEN s.outstanding_paisa <= 0 THEN 'paid'
                    WHEN s.allocated_paisa > 0 THEN 'partial'
                    ELSE 'unpaid' END AS status

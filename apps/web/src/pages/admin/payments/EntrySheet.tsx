@@ -150,7 +150,15 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
   const senderDigits = /^\d{4}$/.test(toAscii(digits.trim())) ? toAscii(digits.trim()) : '';
   const digitsBad = digits.trim() !== '' && !senderDigits;
   const trxId = smsTrx.trim();
-  const valid = !!paisa && !!memberId && date <= todayDhaka() && (!needsTrx || !!senderDigits || !!trxId) && !digitsBad && !entryBlocked;
+  // An earlier date that is on or before a fined month's due date cancels that fine when the money pays
+  // the month in full, so the reason is required (late-fine assumption in docs/ASSUMPTIONS.md).
+  const monthlyDueDate = new Map((preview.data?.items ?? []).flatMap((i) => (i.due_id && i.kind === 'monthly' && i.period ? [[i.period, i.due_date ?? '']] : [])));
+  const fineMonths =
+    purpose === 'dues' && date < todayDhaka()
+      ? (preview.data?.items ?? []).flatMap((i) => (i.fine_id && i.period && (monthlyDueDate.get(i.period) ?? '') >= date ? [i.period] : []))
+      : [];
+  const valid =
+    !!paisa && !!memberId && date <= todayDhaka() && (!needsTrx || !!senderDigits || !!trxId) && !digitsBad && !entryBlocked && (fineMonths.length === 0 || note.trim() !== '');
   const sentNote = [senderDigits ? t(method === 'bank' ? 'pay.senderNoteBank' : 'pay.senderNotePhone', { digits: senderDigits }) : '', note.trim()]
     .filter(Boolean)
     .join('\n')
@@ -280,6 +288,11 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
       <label className="field-label">
         {t('paymentsPage.entryPaidAt')}
         <DateInput className={field} max={todayDhaka()} value={date} onChange={(e) => setDate(e.target.value)} />
+        {fineMonths.length > 0 && (
+          <span className="mt-1 block text-xs font-normal text-warn">
+            {t('paymentsPage.backdateFine', { months: fineMonths.map((p) => fmtPeriod(p)).join(', ') })}
+          </span>
+        )}
       </label>
       {valid && member && (
         <div className="rounded-md bg-soft p-3">

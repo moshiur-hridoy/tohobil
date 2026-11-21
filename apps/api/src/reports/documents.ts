@@ -56,7 +56,7 @@ export async function memberStatementPdf(db: Db, clock: Clock, memberId: string,
   );
   const fines = await db.query(
     `SELECT (f.created_at AT TIME ZONE 'Asia/Dhaka')::date::text AS day, f.amount_paisa::text AS amount_paisa,
-            f.waived_at, s.outstanding_paisa::text AS outstanding_paisa
+            f.waived_at, s.cancelled, s.outstanding_paisa::text AS outstanding_paisa
      FROM fines f JOIN v_fine_status s ON s.fine_id = f.id
      WHERE f.member_id = $1 AND (f.created_at AT TIME ZONE 'Asia/Dhaka')::date BETWEEN $2::date AND $3::date
      ORDER BY day, f.id`,
@@ -114,7 +114,7 @@ export async function memberStatementPdf(db: Db, clock: Clock, memberId: string,
     ],
     fineRows.length === 0
       ? [[L.none, '', '']]
-      : fineRows.map((f) => [day(f.day as string), f.waived_at ? L.waived : toBigInt(f.outstanding_paisa as string) > 0n ? L.open : L.settled, money(f.amount_paisa as string)]),
+      : fineRows.map((f) => [day(f.day as string), f.waived_at ? L.waived : f.cancelled ? L.cancelled : toBigInt(f.outstanding_paisa as string) > 0n ? L.open : L.settled, money(f.amount_paisa as string)]),
   );
   pdf.paragraph(L.statementNote, 9);
   return pdf.finish();
@@ -157,7 +157,9 @@ export async function annualSummaryPdf(db: Db, clock: Clock, year: string): Prom
     [`${year}-01-01`, to],
   );
   const fines = await one(
-    `SELECT COALESCE(SUM(amount_paisa), 0)::text AS v FROM fines WHERE created_at::date BETWEEN $1::date AND $2::date`,
+    // a fine cancelled because the money was on time (ASSUMPTIONS 130) was never really charged
+    `SELECT COALESCE(SUM(f.amount_paisa), 0)::text AS v FROM fines f JOIN v_fine_status s ON s.fine_id = f.id
+     WHERE NOT s.cancelled AND f.created_at::date BETWEEN $1::date AND $2::date`,
     [`${year}-01-01`, to],
   );
   const members = await one(`SELECT count(*)::text AS v FROM members WHERE status IN ('active','warning')`, []);

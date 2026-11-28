@@ -75,7 +75,7 @@ export function ObligationsPage() {
               {special.data!.items.map((s) => {
                 const paid = s.members.filter((m) => BigInt(m.outstanding_paisa) <= 0n).length;
                 return (
-                  <div key={s.period} className="rounded-xl border border-border p-3.5">
+                  <div key={s.period} className="rounded-lg border border-border p-3.5">
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                       <p className="font-semibold">{fmtPeriod(s.period)} · <span className="font-normal text-muted">{fmtDate(s.due_date)}</span></p>
                       <p className="tabular-nums">
@@ -118,7 +118,7 @@ export function ObligationsPage() {
               {financing.data.items.map((f) => {
                 const paid = f.instalments.filter((i) => i.paid_at).length;
                 return (
-                  <div key={f.id} className="rounded-xl border border-border p-3.5">
+                  <div key={f.id} className="rounded-lg border border-border p-3.5">
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                       <p className="font-semibold">{f.asset_name}</p>
                       <p className="font-bold tabular-nums">{taka(f.total_paisa)}</p>

@@ -108,7 +108,7 @@ export function AdminDashboard() {
       {failed?.error && <LoadError error={failed.error} onRetry={() => void failed.refetch()} />}
 
       {verify.data?.ok === false && (
-        <Link to="/admin/system" role="alert" className="flex items-center gap-3 rounded-2xl border border-bad bg-bad-bg p-4 text-sm font-medium text-bad">
+        <Link to="/admin/system" role="alert" className="flex items-center gap-3 rounded-lg border border-bad bg-bad-bg p-4 text-sm font-medium text-bad">
           <Icon d={ICONS.flag} />
           <span className="flex-1">{t('adminDash.ledgerAlert')}</span>
           <Icon d={ICONS.chevron} size={18} />
@@ -187,7 +187,7 @@ function NetAssetsHero({ accounts, members, matrix }: { accounts?: AccountBalanc
         <div className="min-w-0">
           <p className="text-sm font-semibold text-ink2">{t('admin.netAssets')}</p>
           {net !== null ? (
-            <p className={`mt-1.5 text-[2.75rem] font-bold leading-tight tracking-tight tabular-nums ${negClass(net)}`}>{taka(net)}</p>
+            <p className={`mt-1.5 text-display font-bold leading-tight tracking-tight tabular-nums ${negClass(net)}`}>{taka(net)}</p>
           ) : (
             <Skeleton className="mt-2 h-12 w-64" />
           )}
@@ -196,13 +196,13 @@ function NetAssetsHero({ accounts, members, matrix }: { accounts?: AccountBalanc
           <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
             {breakdown.map(([label, value, tone, note]) => (
               <div key={label} className="min-w-0">
-                <dt className="text-[0.8125rem] text-muted">{label}</dt>
+                <dt className="text-meta text-muted">{label}</dt>
                 {value === null ? <Skeleton className="mt-1 h-6 w-24" /> : <dd className={`mt-0.5 truncate text-lg font-bold tabular-nums ${tone}`}>{value}</dd>}
                 {note && <dd className="mt-0.5 text-xs text-muted">{note}</dd>}
               </div>
             ))}
           </dl>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl bg-accent-soft px-4 py-3" data-testid="usable-balance">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-md bg-accent-soft px-4 py-3" data-testid="usable-balance">
             <div className="min-w-0">
               <p className="text-sm font-semibold text-foreground">{t('adminDash.usableBalance')}</p>
               <p className="text-xs text-ink2">{t('adminDash.usableBalanceHint')}</p>
@@ -211,7 +211,7 @@ function NetAssetsHero({ accounts, members, matrix }: { accounts?: AccountBalanc
             {usable === null ? <Skeleton className="h-7 w-28" /> : <p className={`text-xl font-bold tabular-nums ${negClass(usable) || 'text-accent'}`}>{taka(usable)}</p>}
           </div>
           {perAccount.length > 0 && (
-            <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-[0.8125rem]" data-testid="cash-by-account">
+            <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-meta" data-testid="cash-by-account">
               {perAccount.map(([code, value]) => (
                 <li key={code} className="flex justify-between gap-2">
                   <span className="text-muted">{t(`cashAccount.${code}`)}</span>
@@ -254,14 +254,14 @@ function CollectionTrend({ matrix }: { matrix?: MatrixResponse }) {
     <div className="flex min-w-0 flex-col">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-[1.0625rem] font-bold">{t('adminDash.trendTitle')}</h2>
+          <h2 className="text-lead font-bold">{t('adminDash.trendTitle')}</h2>
           {months.length > 0 && (
-            <p className="mt-0.5 text-[0.8125rem] text-muted">{t('adminDash.trendSub', { from: fmtPeriod(months[0]!.period), to: fmtPeriod(months[last]!.period) })}</p>
+            <p className="mt-0.5 text-meta text-muted">{t('adminDash.trendSub', { from: fmtPeriod(months[0]!.period), to: fmtPeriod(months[last]!.period) })}</p>
           )}
         </div>
-        <div className="flex gap-4 text-[0.8125rem] text-ink2">
-          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-accent" />{t('adminDash.legendPaid')}</span>
-          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm border border-input bg-soft" />{t('adminDash.legendDue')}</span>
+        <div className="flex gap-4 text-meta text-ink2">
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-xs bg-accent" />{t('adminDash.legendPaid')}</span>
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-xs border border-input bg-soft" />{t('adminDash.legendDue')}</span>
         </div>
       </div>
 
@@ -275,7 +275,7 @@ function CollectionTrend({ matrix }: { matrix?: MatrixResponse }) {
             <span className="text-xl font-bold tabular-nums">{taka(months[shown]!.paid)}</span>
             <span className="text-sm text-muted tabular-nums">/ {taka(months[shown]!.due)}</span>
             {months[shown]!.due > 0n && (
-              <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-bold text-accent tabular-nums">{formatCount(percent(months[shown]!.paid, months[shown]!.due))}%</span>
+              <span className="rounded-sm bg-accent-soft px-2 py-0.5 text-xs font-bold text-accent tabular-nums">{formatCount(percent(months[shown]!.paid, months[shown]!.due))}%</span>
             )}
           </div>
           <div className="mt-3 flex h-44 items-end gap-2 border-b border-border sm:gap-3" onMouseLeave={() => setActive(null)}>
@@ -290,7 +290,7 @@ function CollectionTrend({ matrix }: { matrix?: MatrixResponse }) {
                   onMouseEnter={() => setActive(i)}
                   onFocus={() => setActive(i)}
                   onBlur={() => setActive(null)}
-                  className={`relative h-full flex-1 rounded-t-lg outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring ${shown === i ? 'bg-hover' : ''}`}
+                  className={`relative h-full flex-1 rounded-t-md outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring ${shown === i ? 'bg-hover' : ''}`}
                 >
                   <span className="absolute inset-x-[18%] bottom-0 rounded-t-md border border-b-0 border-input bg-soft" style={{ height: `${dueH}%` }} />
                   <span
@@ -306,7 +306,7 @@ function CollectionTrend({ matrix }: { matrix?: MatrixResponse }) {
               <span key={m.period} className={`flex-1 truncate text-center text-xs ${shown === i ? 'font-semibold text-foreground' : 'text-muted'}`}>{short(m.period)}</span>
             ))}
           </div>
-          <p className="mt-3 text-[0.8125rem] text-muted">{t('adminDash.trendTotal', { paid: taka(totalPaid), due: taka(totalDue) })}</p>
+          <p className="mt-3 text-meta text-muted">{t('adminDash.trendTotal', { paid: taka(totalPaid), due: taka(totalDue) })}</p>
         </>
       )}
     </div>
@@ -326,18 +326,18 @@ function Kpi({ label, value, valueClass = '', tone, icon, to, footer, children }
   children?: ReactNode;
 }) {
   const body = (
-    <div className={`flex h-full flex-col rounded-[18px] border border-border bg-card px-[18px] py-4 shadow-card ${to ? 'transition-all hover:border-input hover:shadow-lift motion-safe:hover:-translate-y-0.5' : ''}`}>
+    <div className={`flex h-full flex-col rounded-lg border border-border bg-card px-[18px] py-4 shadow-card ${to ? 'transition-all hover:border-input hover:shadow-lift motion-safe:hover:-translate-y-0.5' : ''}`}>
       <div className="flex items-center gap-2.5">
         <Chip tone={tone} d={icon} />
         <p className="flex-1 text-sm text-ink2">{label}</p>
         {to && <span className="text-muted"><Icon d={ICONS.chevron} size={16} /></span>}
       </div>
-      {value === null ? <Skeleton className="mt-3 h-8 w-28" /> : <p className={`mt-3 text-[1.625rem] font-bold leading-tight tabular-nums ${valueClass}`}>{value}</p>}
+      {value === null ? <Skeleton className="mt-3 h-8 w-28" /> : <p className={`mt-3 text-figure font-bold leading-tight tabular-nums ${valueClass}`}>{value}</p>}
       {children}
       {footer && <p className="mt-auto pt-2 text-xs text-muted">{footer}</p>}
     </div>
   );
-  return to ? <Link to={to} className="block rounded-[18px] outline-none focus-visible:ring-2 focus-visible:ring-ring">{body}</Link> : body;
+  return to ? <Link to={to} className="block rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring">{body}</Link> : body;
 }
 
 function CollectedTile({ totals, loaded }: { totals?: { due_paisa: string; paid_paisa: string }; loaded: boolean }) {
@@ -456,17 +456,17 @@ function MemberStatus({ matrix, members, period, settlements }: { matrix?: Matri
       <Tabs.Root value={filter} onValueChange={(v) => setFilter(v as Filter)}>
         <div className="card-head mb-4 flex flex-wrap items-center justify-between gap-3 pb-3.5">
           <div>
-            <h2 className="text-[1.0625rem] font-bold">{t('adminDash.membersTitle')}</h2>
-            <p className="text-[0.8125rem] text-muted">
+            <h2 className="text-lead font-bold">{t('adminDash.membersTitle')}</h2>
+            <p className="text-meta text-muted">
               {matrix ? t('adminDash.membersSub', { period: fmtPeriod(period), paid: formatCount(paidCount), total: formatCount(rows.filter((r) => !r.settling).length) }) : fmtPeriod(period)}
             </p>
           </div>
-          <Tabs.List aria-label={t('adminDash.filterLabel')} className="flex gap-0.5 rounded-xl bg-soft p-1 text-[0.8125rem]">
+          <Tabs.List aria-label={t('adminDash.filterLabel')} className="flex gap-0.5 rounded-lg bg-soft p-1 text-meta">
             {FILTERS.map(([value, key]) => (
               <Tabs.Trigger
                 key={value}
                 value={value}
-                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-ink2 outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-[state=active]:bg-card data-[state=active]:font-bold data-[state=active]:text-foreground data-[state=active]:shadow-card"
+                className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-ink2 outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-[state=active]:bg-card data-[state=active]:font-bold data-[state=active]:text-foreground data-[state=active]:shadow-card"
               >
                 {t(key)}
                 {matrix && <span className="text-xs text-muted tabular-nums">{formatCount(counts[value])}</span>}
@@ -517,14 +517,14 @@ function StatusTable({ rows }: { rows: StatusRow[] }) {
               <div role="cell" className="flex min-w-0 flex-1 items-center gap-3">
                 <Avatar fileId={r.photo} fallback={r.name.trim().charAt(0)} className="h-8 w-8 bg-soft text-sm font-bold text-ink2" />
                 <div className="min-w-0">
-                  <p className="flex min-w-0 items-center gap-1.5 text-[0.9375rem] font-semibold"><span className="shrink-0 text-xs text-muted tabular-nums">{r.code}</span><span className="truncate">{r.name}</span><RoleBadges roles={r.roles} /></p>
+                  <p className="flex min-w-0 items-center gap-1.5 text-body font-semibold"><span className="shrink-0 text-xs text-muted tabular-nums">{r.code}</span><span className="truncate">{r.name}</span><RoleBadges roles={r.roles} /></p>
                   {r.cell && <p className="truncate text-xs text-muted tabular-nums sm:hidden">{taka(paid)} / {taka(due)}</p>}
                   {r.owes > 0n && !r.settling && <p className="truncate text-xs text-bad">{t('adminDash.owesTotal', { amount: taka(r.owes) })}</p>}
                 </div>
               </div>
-              <span role="cell" className="hidden text-[0.9375rem] tabular-nums sm:block">{r.cell ? taka(due) : '—'}</span>
+              <span role="cell" className="hidden text-body tabular-nums sm:block">{r.cell ? taka(due) : '—'}</span>
               <div role="cell" className="hidden min-w-0 sm:block">
-                <p className="text-[0.8125rem] text-muted tabular-nums">{r.cell ? taka(paid) : '—'}</p>
+                <p className="text-meta text-muted tabular-nums">{r.cell ? taka(paid) : '—'}</p>
                 {r.cell && due > 0n && (
                   <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-soft">
                     <div className={`h-full rounded-full ${bar}`} style={{ width: `${pct}%` }} />
@@ -533,7 +533,7 @@ function StatusTable({ rows }: { rows: StatusRow[] }) {
               </div>
               <span role="cell" className="shrink-0">
                 {r.settling ? (
-                  <Link to="/admin/settlements" title={t(`settlement.status.${r.settling}`)} className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-blue-bg px-3 text-[0.8125rem] font-semibold text-blue">
+                  <Link to="/admin/settlements" title={t(`settlement.status.${r.settling}`)} className="inline-flex min-h-8 items-center gap-1.5 rounded-md bg-blue-bg px-3 text-meta font-semibold text-blue">
                     <span aria-hidden="true" className="h-2 w-2 rounded-full bg-blue" />
                     {t('member.status.leaving')}
                   </Link>
@@ -545,7 +545,7 @@ function StatusTable({ rows }: { rows: StatusRow[] }) {
           );
         })}
       </div>
-      <Link to="/admin/matrix" className="flex min-h-11 items-center gap-1 text-[0.8125rem] font-semibold text-accent hover:underline">
+      <Link to="/admin/matrix" className="flex min-h-11 items-center gap-1 text-meta font-semibold text-accent hover:underline">
         {hidden > 0 ? t('adminDash.moreMembers', { n: formatCount(hidden) }) : t('adminDash.openMatrix')}
         <Icon d={ICONS.chevron} size={14} sw={2.2} />
       </Link>
@@ -558,7 +558,7 @@ function StatusTable({ rows }: { rows: StatusRow[] }) {
 function TaskRow({ to, tone, icon, title, sub }: { to: string; tone: string; icon: string; title: string; sub: string }) {
   return (
     <li>
-      <Link to={to} className="-mx-2 flex min-h-[3.75rem] items-center gap-3 rounded-xl px-2 outline-none transition-colors hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring">
+      <Link to={to} className="-mx-2 flex min-h-[3.75rem] items-center gap-3 rounded-lg px-2 outline-none transition-colors hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring">
         <Chip tone={tone} d={icon} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">{title}</p>
@@ -615,8 +615,8 @@ function Tasks({ pending, approvals, objections, votes }: {
   return (
     <Card className="px-5 pb-3 pt-5">
       <div className="card-head mb-3 flex items-center justify-between pb-3.5">
-        <h2 className="text-[1.0625rem] font-bold">{t('adminDash.todo')}</h2>
-        {loaded && rows.length > 0 && <span className="rounded-full bg-soft px-2 py-0.5 text-xs font-bold text-ink2 tabular-nums">{formatCount(rows.length)}</span>}
+        <h2 className="text-lead font-bold">{t('adminDash.todo')}</h2>
+        {loaded && rows.length > 0 && <span className="rounded-sm bg-soft px-2 py-0.5 text-xs font-bold text-ink2 tabular-nums">{formatCount(rows.length)}</span>}
       </div>
       {!loaded ? (
         <div className="space-y-2 pb-2">{Array.from({ length: 3 }, (_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
@@ -672,7 +672,7 @@ function Safety({ system, systemFailed, verify, today }: { system?: SystemStatus
     <Card className="px-5 pb-2 pt-5">
       <div className="card-head mb-3 flex items-center gap-2.5 pb-3.5">
         <Chip tone="bg-ok-bg text-ok" d={ICONS.shield} size={32} iconSize={18} />
-        <h2 className="text-[1.0625rem] font-bold">{t('adminDash.safetyTitle')}</h2>
+        <h2 className="text-lead font-bold">{t('adminDash.safetyTitle')}</h2>
       </div>
       {!system && !systemFailed ? (
         <div className="space-y-2 pb-3">{Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-8 w-full" />)}</div>
@@ -689,7 +689,7 @@ function Safety({ system, systemFailed, verify, today }: { system?: SystemStatus
           ))}
         </dl>
       )}
-      <Link to="/admin/system" className="flex min-h-11 items-center gap-1 border-t border-border text-[0.8125rem] font-semibold text-accent hover:underline">
+      <Link to="/admin/system" className="flex min-h-11 items-center gap-1 border-t border-border text-meta font-semibold text-accent hover:underline">
         {t('adminDash.safetyMore')}
         <Icon d={ICONS.chevron} size={14} sw={2.2} />
       </Link>

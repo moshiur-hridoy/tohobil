@@ -25,7 +25,7 @@ export const writtenText = (payload: Record<string, unknown>) => {
 export function AmountLine({ paisa }: { paisa: string }) {
   const { t } = useTranslation();
   return (
-    <p className="flex items-baseline gap-1.5 text-[0.8125rem]"><span className="text-muted">{t('common.amount')}</span><span className="text-lg font-bold tabular-nums">{taka(paisa)}</span></p>
+    <p className="flex items-baseline gap-1.5 text-meta"><span className="text-muted">{t('common.amount')}</span><span className="text-lg font-bold tabular-nums">{taka(paisa)}</span></p>
   );
 }
 
@@ -63,7 +63,7 @@ export function VoteMeter({ tally, status, voted, eligible, showNeed = false }: 
   const { t } = useTranslation();
   const fill = status === 'rejected' ? 'bg-bad' : 'bg-muted';
   return (
-    <div className="space-y-1.5 text-[0.8125rem]">
+    <div className="space-y-1.5 text-meta">
       {tally.yes !== null && (
         <p><span className="text-muted">{t('proposal.yesVotes')}</span> <span className="font-bold tabular-nums">{tally.yes}</span></p>
       )}

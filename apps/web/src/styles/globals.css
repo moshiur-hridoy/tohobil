@@ -17,7 +17,7 @@
     height: 2.75rem;
     padding: 0 0.875rem;
     border: 1px solid var(--edge);
-    border-radius: 0.75rem;
+    border-radius: var(--radius-lg);
     background-color: var(--soft);
     color: var(--foreground);
     font-size: 0.9375rem;
@@ -59,6 +59,31 @@
     opacity: 0.6;
     cursor: pointer;
   }
+  /* A table row that can be pointed at or chosen (`aria-selected`), in a table inset in its card: the
+     fill sits on the cells, so its two ends take the system's corners. */
+  .row-fill > td {
+    transition: background-color 150ms;
+  }
+  .row-fill:hover > td {
+    border-bottom-color: transparent;
+    background-color: var(--hover);
+  }
+  .row-fill[aria-selected='true'] > td {
+    border-bottom-color: transparent;
+    background-color: var(--accent-soft);
+  }
+  .row-fill:is(:hover, [aria-selected='true']) > td:first-child {
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+  }
+  .row-fill:is(:hover, [aria-selected='true']) > td:last-child {
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  }
+  /* on a phone the last column may be hidden: the one before it ends the row */
+  @media (max-width: 639px) {
+    .row-fill:is(:hover, [aria-selected='true']) > td:has(+ td.hidden:last-child) {
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    }
+  }
   /* The line under a card's title row (`CardHead`): drawn wider than any card padding and clipped by
      the card (`overflow: clip`, which unlike `hidden` keeps sticky table columns working). */
   .card-head {
@@ -99,8 +124,66 @@
   }
   .field-lg {
     height: 3.5rem;
-    border-radius: 1rem;
     font-size: 1.0625rem;
+  }
+
+  /* -------------------------------------------------------------------------------------------
+   * Buttons (DESIGN.md "Buttons"): `btn` plus one look (`btn-primary`, `btn-secondary`,
+   * `btn-danger`) and, if needed, one size (`btn-sm`, `btn-lg`). Width and margin stay on the
+   * element; a utility class on it wins over these.
+   * ------------------------------------------------------------------------------------------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.75rem;
+    padding: 0 1.25rem;
+    border-radius: var(--radius-lg);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    transition: opacity 150ms, background-color 150ms, box-shadow 150ms;
+  }
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .btn-sm {
+    height: 2.25rem;
+    gap: 0.375rem;
+    padding: 0 0.875rem;
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+  .btn-lg {
+    height: 3.5rem;
+    font-size: 1.0625rem;
+    font-weight: 700;
+  }
+  .btn-primary {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+  .btn-danger {
+    background-color: var(--bad);
+    color: var(--on-bad);
+  }
+  .btn-primary:hover:not(:disabled),
+  .btn-danger:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+  .btn-secondary {
+    border: 1px solid var(--border);
+    background-color: var(--card);
+    color: var(--ink2);
+    box-shadow:
+      inset 0 -1px 0 rgb(0 0 0 / 0.06),
+      0 1px 2px rgb(0 0 0 / 0.06);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background-color: var(--hover);
   }
 }
 
@@ -126,11 +209,10 @@
 /* ---------------------------------------------------------------------------------------------
  * Solid buttons look raised (owner choice, docs/ASSUMPTIONS.md 137): a darker rim, a light line
  * inside the top edge, a gentle top-down sheen and a soft glow in the button's own colour; pressed,
- * it sinks. Picked up from the fill class, so every solid button gets it and a new one needs nothing
- * extra. The rim and the light are see-through layers, so they work on any fill. Outline and text
+ * it sinks. Picked up from the button or fill class, so a new solid button needs nothing extra. The rim and the light are see-through layers, so they work on any fill. Outline and text
  * buttons stay flat, which keeps the main action the one that stands out.
  * --------------------------------------------------------------------------------------------- */
-:where(button, a):is(.bg-primary, .bg-bad, .bg-hero-action) {
+:where(button, a):is(.btn-primary, .btn-danger, .bg-primary, .bg-bad, .bg-hero-action) {
   background-image: linear-gradient(to bottom, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0) 50%, rgb(0 0 0 / 0.04));
   box-shadow:
     inset 0 0 0 1px rgb(0 0 0 / 0.18),
@@ -138,16 +220,16 @@
     0 1px 2px rgb(0 0 0 / 0.16);
 }
 @supports (color: color-mix(in srgb, red 50%, transparent)) {
-  :where(button, a).bg-primary {
+  :where(button, a):is(.btn-primary, .bg-primary) {
     --glow: var(--primary);
   }
-  :where(button, a).bg-bad {
+  :where(button, a):is(.btn-danger, .bg-bad) {
     --glow: var(--bad);
   }
   :where(button, a).bg-hero-action {
     --glow: var(--hero-action);
   }
-  :where(button, a):is(.bg-primary, .bg-bad, .bg-hero-action) {
+  :where(button, a):is(.btn-primary, .btn-danger, .bg-primary, .bg-bad, .bg-hero-action) {
     box-shadow:
       inset 0 0 0 1px rgb(0 0 0 / 0.18),
       inset 0 2px 0 rgb(255 255 255 / 0.28),
@@ -155,11 +237,11 @@
       0 6px 16px -6px color-mix(in srgb, var(--glow) 55%, transparent);
   }
 }
-:where(button, a):is(.bg-primary, .bg-bad, .bg-hero-action):active:not(:disabled) {
+:where(button, a):is(.btn-primary, .btn-danger, .bg-primary, .bg-bad, .bg-hero-action):active:not(:disabled) {
   box-shadow:
     inset 0 0 0 1px rgb(0 0 0 / 0.22),
     inset 0 2px 4px rgb(0 0 0 / 0.22);
 }
-:where(button, a):is(.bg-primary, .bg-bad, .bg-hero-action):disabled {
+:where(button, a):is(.btn-primary, .btn-danger, .bg-primary, .bg-bad, .bg-hero-action):disabled {
   box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.18);
 }

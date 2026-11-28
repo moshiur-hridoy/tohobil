@@ -60,7 +60,7 @@ function ShopView({ id }: { id: string }) {
           {t('holding.back')}
         </Link>
         <div className="flex items-center gap-3">
-          <span className={`grid h-11 w-11 flex-none place-items-center rounded-[14px] ${meta.bg} ${meta.color}`}>{meta.icon('h-6 w-6')}</span>
+          <span className={`grid h-11 w-11 flex-none place-items-center rounded-lg ${meta.bg} ${meta.color}`}>{meta.icon('h-6 w-6')}</span>
           <div className="min-w-0">
             <h1 className="truncate text-2xl font-bold">{partner.name}</h1>
             <p className="text-sm text-muted">{t(meta.labelKey)} · {t('holding.subtitle', { n: formatCount(shown.length) })}</p>
@@ -69,13 +69,13 @@ function ShopView({ id }: { id: string }) {
       </header>
 
       <main className="flex-1 space-y-3 px-4 py-2 pb-4">
-        <section className="rounded-[20px] border border-border bg-card p-4 shadow-sm">
+        <section className="rounded-lg border border-border bg-card p-4 shadow-card">
           <div className="grid grid-cols-2 gap-2.5">
-            <div className="rounded-[14px] bg-soft p-3">
+            <div className="rounded-md bg-soft p-3">
               <div className="text-xs text-muted">{t('holding.invested')}</div>
               <div className="mt-0.5 text-lg font-bold">{taka(totals.invested)}</div>
             </div>
-            <div className="rounded-[14px] bg-soft p-3">
+            <div className="rounded-md bg-soft p-3">
               <div className="text-xs text-muted">{t('holding.value')}</div>
               <div className="mt-0.5 text-lg font-bold">{taka(totals.value)}</div>
             </div>
@@ -87,21 +87,21 @@ function ShopView({ id }: { id: string }) {
             {totals.lastValued ? t('holding.valuedOn', { date: fmtDate(totals.lastValued) }) : t('holding.neverValued')}
           </p>
           {mine && (
-            <button type="button" onClick={() => { setSent(null); setSendOpen(true); }} className="mt-3 h-12 w-full rounded-2xl bg-primary font-bold text-primary-foreground">
+            <button type="button" onClick={() => { setSent(null); setSendOpen(true); }} className="btn btn-primary mt-3 w-full">
               {t('valuation.send')}
             </button>
           )}
-          {sent && <p role="status" className="mt-2 rounded-xl bg-ok-bg p-2.5 text-sm text-ok">{sent}</p>}
+          {sent && <p role="status" className="mt-2 rounded-md bg-ok-bg p-2.5 text-sm text-ok">{sent}</p>}
         </section>
 
-        <section className="rounded-[20px] border border-border bg-card p-4 shadow-sm">
+        <section className="rounded-lg border border-border bg-card p-4 shadow-card">
           <h2 className="card-head pb-3 text-base font-bold">{t('valuation.requests')}</h2>
           <div className="mt-2">
             <ValuationRequestList requests={q.data.valuation_requests ?? []} voteLink={(pid) => `/votes/${pid}`} />
           </div>
         </section>
 
-        <section className="overflow-clip rounded-[20px] border border-border bg-card p-4 shadow-sm">
+        <section className="overflow-clip rounded-lg border border-border bg-card p-4 shadow-card">
           <h2 className="card-head pb-3 text-base font-bold">{t('holding.contract')}</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between gap-3">
@@ -133,7 +133,7 @@ function ShopView({ id }: { id: string }) {
             <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
               <span className="text-xs font-semibold text-muted">{t('holding.contractPapers')}:</span>
               {contractPapers.map((d) => (
-                <button key={d.id} type="button" onClick={() => void openPaper(d)} className="min-h-9 rounded-full bg-soft px-3 text-xs font-semibold">
+                <button key={d.id} type="button" onClick={() => void openPaper(d)} className="min-h-9 rounded-md bg-soft px-3 text-xs font-semibold">
                   {paperLabel(d)}
                 </button>
               ))}
@@ -141,7 +141,7 @@ function ShopView({ id }: { id: string }) {
           )}
         </section>
 
-        <section className="overflow-hidden rounded-[20px] border border-border bg-card shadow-sm">
+        <section className="overflow-hidden rounded-lg border border-border bg-card shadow-card">
           {shown.length === 0 ? (
             <p className="py-8 text-center text-muted">{t('common.noData')}</p>
           ) : (
@@ -154,14 +154,14 @@ function ShopView({ id }: { id: string }) {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="font-semibold">{fmtDate(e.entry_date)}</div>
-                        <div className="text-[0.8125rem] text-muted">
+                        <div className="text-meta text-muted">
                           {t(`cashAccount.${e.account}`, { defaultValue: e.account })} · {e.ref_type === 'import' ? t('holding.imported') : (e.memo ?? '—')}
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="font-bold tabular-nums">{taka(e.amount_paisa)}</div>
                         {a && (
-                          <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[0.6875rem] font-bold ${a.status === 'held' ? 'bg-ok-bg text-ok' : 'bg-warn-bg text-warn'}`}>
+                          <span className={`mt-1 inline-block rounded-sm px-2 py-0.5 text-2xs font-bold ${a.status === 'held' ? 'bg-ok-bg text-ok' : 'bg-warn-bg text-warn'}`}>
                             {t(`assets.status.${a.status}`)}
                           </span>
                         )}
@@ -170,7 +170,7 @@ function ShopView({ id }: { id: string }) {
                     {papers.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {papers.map((d) => (
-                          <button key={d.id} type="button" onClick={() => void openPaper(d)} className="min-h-9 rounded-full bg-soft px-3 text-xs font-semibold">
+                          <button key={d.id} type="button" onClick={() => void openPaper(d)} className="min-h-9 rounded-md bg-soft px-3 text-xs font-semibold">
                             {paperLabel(d)}
                           </button>
                         ))}

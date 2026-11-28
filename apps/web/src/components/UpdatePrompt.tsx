@@ -25,13 +25,13 @@ export function UpdatePrompt() {
   return (
     <div
       role="status"
-      className="fixed inset-x-4 bottom-24 z-50 mx-auto flex max-w-md items-center justify-between gap-3 rounded-lg border border-border bg-card p-3 shadow-lg"
+      className="fixed inset-x-4 bottom-24 z-50 mx-auto flex max-w-md items-center justify-between gap-3 rounded-md border border-border bg-card p-3 shadow-lift"
     >
       <span>{t('common.updateAvailable')}</span>
       <button
         type="button"
         onClick={() => void updateServiceWorker(true)}
-        className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground"
+        className="btn btn-primary"
       >
         {t('common.reload')}
       </button>

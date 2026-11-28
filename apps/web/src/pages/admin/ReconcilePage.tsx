@@ -206,10 +206,10 @@ export function ReconcilePage() {
                 aria-pressed={p === period}
                 aria-label={`${fmtPeriod(p)}: ${t(`reconcile.state.${st}`)}`}
                 onClick={() => setPeriod(p)}
-                className={`flex flex-col items-center rounded-xl border px-1 py-1.5 text-xs font-semibold ${STATE_TONE[st]} ${p === period ? 'ring-2 ring-accent' : ''}`}
+                className={`flex flex-col items-center rounded-md border px-1 py-1.5 text-xs font-semibold ${STATE_TONE[st]} ${p === period ? 'ring-2 ring-accent' : ''}`}
               >
                 <span>{fmtPeriodShort(p).split(' ')[0]}</span>
-                <span aria-hidden="true" className="mt-0.5 text-[0.6875rem]">{st === 'locked' ? '✓' : st === 'approved' ? '✓' : st === 'counted' ? '…' : st === 'todo' ? '•' : ''}</span>
+                <span aria-hidden="true" className="mt-0.5 text-2xs">{st === 'locked' ? '✓' : st === 'approved' ? '✓' : st === 'counted' ? '…' : st === 'todo' ? '•' : ''}</span>
               </button>
             );
           })}
@@ -222,7 +222,7 @@ export function ReconcilePage() {
       </Card>
 
       {stage.text && (
-        <p role="status" className={`rounded-xl px-4 py-3 text-sm font-semibold ${stage.tone}`}>{fmtPeriod(period)}: {stage.text}</p>
+        <p role="status" className={`rounded-lg px-4 py-3 text-sm font-semibold ${stage.tone}`}>{fmtPeriod(period)}: {stage.text}</p>
       )}
 
       {month.error ? (
@@ -248,7 +248,7 @@ export function ReconcilePage() {
           {/* Step 2: what is really there */}
           <Card className="p-5">
             <CardHead icon={ICONS.wallet} title={<StepTitle n={2} text={t('reconcile.step2')} />} sub={t(m.mode === 'pool' ? 'reconcile.step2HintPool' : 'reconcile.step2HintMethod')} />
-            {m.stale && <p role="alert" className="mb-3 rounded-xl bg-bad-bg px-3 py-2 text-sm text-bad">{t('reconcile.staleWarn')}</p>}
+            {m.stale && <p role="alert" className="mb-3 rounded-md bg-bad-bg px-3 py-2 text-sm text-bad">{t('reconcile.staleWarn')}</p>}
             <ul className="space-y-3">
               {accounts.map((a) => (
                 <CheckRow
@@ -320,10 +320,10 @@ export function ReconcilePage() {
       )}
 
       {/* Year end: folded away until it matters */}
-      <details className="group rounded-[20px] border border-border bg-card shadow-card" open={lockedCount === 12}>
+      <details className="group rounded-lg border border-border bg-card shadow-card" open={lockedCount === 12}>
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-5">
           <span className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-blue-bg text-blue"><Icon d={ICONS.lock} size={18} /></span>
+            <span className="grid h-9 w-9 place-items-center rounded-md bg-blue-bg text-blue"><Icon d={ICONS.lock} size={18} /></span>
             <span>
               <span className="block font-bold">{t('reconcile.yearEnd')} · {localDigits(year)}</span>
               <span className="block text-xs text-muted">{t('reconcile.lockedMonths', { count: lockedCount })} · {t(`reconcile.auditStatus.${auditStatus}`)}</span>
@@ -413,31 +413,31 @@ function CheckRow(p: {
   const { t } = useTranslation();
   const result = (diff: bigint): ReactNode =>
     diff === 0n ? (
-      <span className="rounded-full bg-ok-bg px-2.5 py-0.5 text-xs font-semibold text-ok">✓ {t('reconcile.matched')}</span>
+      <span className="rounded-sm bg-ok-bg px-2.5 py-0.5 text-xs font-semibold text-ok">✓ {t('reconcile.matched')}</span>
     ) : (
-      <span className="rounded-full bg-bad-bg px-2.5 py-0.5 text-xs font-semibold text-bad">{t('reconcile.mismatch', { amount: `${diff > 0n ? '+' : '−'}${taka(diff > 0n ? diff : -diff)}` })}</span>
+      <span className="rounded-sm bg-bad-bg px-2.5 py-0.5 text-xs font-semibold text-bad">{t('reconcile.mismatch', { amount: `${diff > 0n ? '+' : '−'}${taka(diff > 0n ? diff : -diff)}` })}</span>
     );
   const shownDiff = p.submitted ? BigInt(p.submitted.difference_paisa) : null;
   return (
-    <li className="rounded-2xl border border-border p-4">
+    <li className="rounded-lg border border-border p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="font-bold">{p.title}</span>
         {p.submitted && !p.stale && result(shownDiff!)}
-        {p.stale && <span className="rounded-full bg-bad-bg px-2.5 py-0.5 text-xs font-semibold text-bad">{t('reconcile.booksChanged')}</span>}
+        {p.stale && <span className="rounded-sm bg-bad-bg px-2.5 py-0.5 text-xs font-semibold text-bad">{t('reconcile.booksChanged')}</span>}
       </div>
       <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
-        <div className="rounded-xl bg-soft p-2.5">
+        <div className="rounded-md bg-soft p-2.5">
           <dt className="text-xs text-muted">{p.booksLabel}</dt>
           <dd className="font-bold tabular-nums">{taka(p.books)}</dd>
         </div>
-        <div className="rounded-xl bg-soft p-2.5">
+        <div className="rounded-md bg-soft p-2.5">
           <dt className="text-xs text-muted">{p.inputLabel}</dt>
           <dd className="font-bold tabular-nums">{p.submittedValue ? taka(p.submittedValue) : '—'}</dd>
         </div>
       </dl>
       {p.submitted?.note && <p className="mt-2 text-sm text-ink2">{p.submitted.note}</p>}
       {p.submitted?.proof_file_id && (
-        <button type="button" onClick={() => p.onOpen(p.submitted!.proof_file_id!)} className="mt-2 inline-flex items-center gap-1 rounded-full bg-soft px-2.5 py-1 text-xs font-semibold text-ink2 hover:bg-hover">
+        <button type="button" onClick={() => p.onOpen(p.submitted!.proof_file_id!)} className="mt-2 inline-flex items-center gap-1 rounded-md bg-soft px-2.5 py-1 text-xs font-semibold text-ink2 hover:bg-hover">
           <Icon d={ICONS.doc} size={14} />{t('reconcile.viewStatement')}
         </button>
       )}

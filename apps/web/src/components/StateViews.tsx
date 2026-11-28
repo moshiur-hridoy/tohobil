@@ -14,7 +14,7 @@ export function LoadError({ error, onRetry }: { error: unknown; onRetry?: () => 
         </p>
       )}
       {onRetry && (
-        <button type="button" onClick={onRetry} className="mt-3 h-11 rounded-md border border-border px-4">
+        <button type="button" onClick={onRetry} className="btn btn-secondary mt-3">
           {t('common.retry')}
         </button>
       )}

@@ -15,7 +15,7 @@ export function Icon({ d, size = 20, sw = 1.8 }: { d: string; size?: number; sw?
 /** Rounded icon tile; `tone` is a bg + text colour pair such as `bg-warn-bg text-warn`. */
 export function Chip({ tone, d, size = 36, iconSize = 20 }: { tone: string; d: string; size?: number; iconSize?: number }) {
   return (
-    <span className={`grid shrink-0 place-items-center rounded-xl ${tone}`} style={{ width: size, height: size }}>
+    <span className={`grid shrink-0 place-items-center rounded-lg ${tone}`} style={{ width: size, height: size }}>
       <Icon d={d} size={iconSize} />
     </span>
   );
@@ -39,7 +39,7 @@ export function BackButton({ fallback }: { fallback: string }) {
         }
       }}
       aria-label={t('common.back')}
-      className="grid h-11 w-11 shrink-0 place-items-center rounded-[14px] border border-border bg-card text-foreground"
+      className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-border bg-card text-foreground"
     >
       <Icon d="M15 5l-7 7 7 7" size={22} sw={2} />
     </Link>
@@ -104,7 +104,7 @@ export function DateInput({ className = 'field w-full', value, onClick, ...rest 
         }}
       />
       {/* Stops short of the calendar icon on the right, so a narrow box cuts the text instead of covering the icon. */}
-      <span aria-hidden="true" className={`pointer-events-none absolute inset-y-0 left-0 right-10 flex items-center overflow-hidden pl-3.5 ${large ? 'text-[1.0625rem]' : 'text-[0.9375rem]'} ${value ? '' : 'text-muted'}`}>
+      <span aria-hidden="true" className={`pointer-events-none absolute inset-y-0 left-0 right-10 flex items-center overflow-hidden pl-3.5 ${large ? 'text-lead' : 'text-body'} ${value ? '' : 'text-muted'}`}>
         <span className="truncate">{value ? fmtDate(value) : t('common.pickDate')}</span>
       </span>
     </span>
@@ -123,7 +123,7 @@ export function Switch({ checked, onChange, label, disabled = false }: { checked
       onClick={() => onChange(!checked)}
       className={`relative h-7 w-12 shrink-0 rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 ${checked ? 'bg-accent' : 'bg-input'}`}
     >
-      <span aria-hidden="true" className={`absolute top-0.5 h-6 w-6 rounded-full shadow transition-[left] ${checked ? 'left-[1.375rem] bg-card' : 'left-0.5 bg-white'}`} />
+      <span aria-hidden="true" className={`absolute top-0.5 h-6 w-6 rounded-full shadow-card transition-[left] ${checked ? 'left-[1.375rem] bg-card' : 'left-0.5 bg-white'}`} />
     </button>
   );
 }

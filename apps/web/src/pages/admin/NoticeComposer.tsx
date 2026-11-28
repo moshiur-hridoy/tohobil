@@ -59,7 +59,7 @@ export function NoticeComposer({ members, onSent }: { members: MemberRow[]; onSe
           />
         </div>
         {audience === 'selected' && (
-          <ul className="max-h-60 overflow-y-auto rounded-xl border border-border">
+          <ul className="max-h-60 overflow-y-auto rounded-lg border border-border">
             {reachable.map((m) => (
               <li key={m.id} className="border-t border-border first:border-t-0">
                 <label className="flex min-h-11 cursor-pointer items-center gap-3 px-3 text-sm">
@@ -106,7 +106,7 @@ export function NoticeComposer({ members, onSent }: { members: MemberRow[]; onSe
         }}
       >
         <p className="text-muted">{t(sms ? 'noticeCompose.confirmBodySms' : 'noticeCompose.confirmBody', { n: formatCount(count) })}</p>
-        <div className="mt-3 rounded-xl border border-border p-3">
+        <div className="mt-3 rounded-md border border-border p-3">
           <p className="font-semibold">{title.trim()}</p>
           <p className="mt-1 whitespace-pre-line text-sm">{message.trim()}</p>
         </div>

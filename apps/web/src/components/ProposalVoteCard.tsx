@@ -22,9 +22,9 @@ export function ProposalVoteCard({ proposal }: { proposal: ProposalSummary }) {
   const written = proposal.payload ? writtenText(proposal.payload) : undefined;
   const voters = proposal.voters ?? [];
   return (
-    <div data-testid="proposal-card" className="relative rounded-[20px] border border-border bg-card shadow-card transition-colors hover:border-track">
+    <div data-testid="proposal-card" className="relative rounded-lg border border-border bg-card shadow-card transition-colors hover:border-track">
       {/* The link's hit area is stretched over the whole card (its ::after); only the vote buttons sit above it. */}
-      <Link to={`/votes/${proposal.id}`} className="block space-y-3 rounded-[20px] p-4 outline-none after:absolute after:inset-0 after:rounded-[20px] after:content-[''] focus-visible:after:ring-2 focus-visible:after:ring-ring">
+      <Link to={`/votes/${proposal.id}`} className="block space-y-3 rounded-lg p-4 outline-none after:absolute after:inset-0 after:rounded-lg after:content-[''] focus-visible:after:ring-2 focus-visible:after:ring-ring">
         <div className="min-w-0 space-y-1">
           <p className="text-base font-bold leading-snug [overflow-wrap:anywhere]">{proposal.title}</p>
           {written && <p className="line-clamp-2 text-sm text-muted [overflow-wrap:anywhere]">{written}</p>}
@@ -48,7 +48,7 @@ export function ProposalVoteCard({ proposal }: { proposal: ProposalSummary }) {
                   aria-pressed={active}
                   disabled={vote.isPending}
                   onClick={() => vote.mutate(choice)}
-                  className={`h-12 rounded-2xl text-base font-bold disabled:opacity-50 ${choiceTone(choice, active)}`}
+                  className={`btn h-12 px-0 text-base font-bold ${choiceTone(choice, active)}`}
                 >
                   {active ? `${t(`votes.${choice}`)} ✓` : t(`votes.${choice}`)}
                 </button>

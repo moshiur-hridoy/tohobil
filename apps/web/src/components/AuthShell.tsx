@@ -22,7 +22,7 @@ export function AuthShell({ children, footer }: { children: ReactNode; footer?: 
   useHeroStatusBar();
   return (
     <div className="min-h-screen bg-background lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      <aside className="relative overflow-hidden rounded-b-[32px] bg-hero px-6 pb-16 pt-10 text-on-hero lg:flex lg:min-h-screen lg:flex-col lg:rounded-none lg:px-14 lg:py-12">
+      <aside className="relative overflow-hidden rounded-b-xl bg-hero px-6 pb-16 pt-10 text-on-hero lg:flex lg:min-h-screen lg:flex-col lg:rounded-none lg:px-14 lg:py-12">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'radial-gradient(70% 60% at 85% 0%, var(--hero-icon) 0%, transparent 70%)' }} />
         <svg aria-hidden="true" viewBox="10 20 75 56" className="pointer-events-none absolute -bottom-6 -right-6 hidden w-[380px] text-on-hero opacity-[0.07] lg:block">
           <path d={MARK} fill="currentColor" />
@@ -30,14 +30,14 @@ export function AuthShell({ children, footer }: { children: ReactNode; footer?: 
 
         <div className="relative mx-auto flex max-w-md flex-col items-center text-center lg:mx-0 lg:my-auto lg:items-start lg:text-left">
           <Wordmark className="h-auto w-[168px] lg:w-[240px]" />
-          <p className="mt-4 text-[0.9375rem] text-on-hero-muted lg:mt-8 lg:text-xl lg:font-semibold lg:text-on-hero">{t('auth.brandTagline')}</p>
+          <p className="mt-4 text-body text-on-hero-muted lg:mt-8 lg:text-xl lg:font-semibold lg:text-on-hero">{t('auth.brandTagline')}</p>
           <ul className="mt-10 hidden space-y-5 lg:block">
             {TRUST.map(([key, d]) => (
               <li key={key} className="flex items-center gap-4">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-hero-chip text-on-hero">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-hero-chip text-on-hero">
                   <Icon d={d} />
                 </span>
-                <span className="text-[0.9375rem] text-on-hero-muted">{t(key)}</span>
+                <span className="text-body text-on-hero-muted">{t(key)}</span>
               </li>
             ))}
           </ul>
@@ -47,9 +47,9 @@ export function AuthShell({ children, footer }: { children: ReactNode; footer?: 
 
       <main className="relative -mt-8 flex flex-col px-5 pb-10 lg:mt-0 lg:justify-center lg:px-12 lg:py-12">
         <div className="mx-auto flex w-full max-w-[26rem] flex-col gap-5">
-          <section className="flex flex-col gap-5 rounded-[28px] border border-border bg-card p-6 shadow-lift sm:p-7">{children}</section>
+          <section className="flex flex-col gap-5 rounded-xl border border-border bg-card p-6 shadow-lift sm:p-7">{children}</section>
           {footer && (
-            <div className="flex gap-3 rounded-[20px] border border-border bg-card px-4 py-3.5 text-[0.8125rem] leading-[1.7] text-muted">
+            <div className="flex gap-3 rounded-lg border border-border bg-card px-4 py-3.5 text-meta leading-[1.7] text-muted">
               <span className="mt-0.5 shrink-0 text-ink2"><Icon d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v5M12 8v.01" size={18} /></span>
               <div>{footer}</div>
             </div>
@@ -64,7 +64,7 @@ export function FieldError({ message, requestId }: { message: string | null; req
   const { t } = useTranslation();
   if (!message) return null;
   return (
-    <p role="alert" className="flex gap-2 rounded-xl bg-bad-bg px-3 py-2.5 text-sm text-bad">
+    <p role="alert" className="flex gap-2 rounded-md bg-bad-bg px-3 py-2.5 text-sm text-bad">
       <span aria-hidden="true" className="font-bold">!</span>
       <span>
         {message}

@@ -67,13 +67,14 @@ export function MemberLayout() {
           <Avatar fileId={myPhoto} fallback={initial} className="h-11 w-11 bg-accent-soft text-lg font-bold text-accent" />
         </Link>
         <div className="min-w-0 flex-1">
-          <div className="text-[0.8125rem] text-muted">{t('app.greeting')}</div>
-          <div className="truncate text-[1.1875rem] font-bold leading-tight">{me?.full_name ?? t('app.name')}</div>
+          <div className="text-meta text-muted">{t('app.greeting')}</div>
+          <div className="truncate text-title font-bold leading-tight">{me?.full_name ?? t('app.name')}</div>
         </div>
         <Link
           to="/menu/notices"
-          aria-label={t('notices.title')}
-          className="relative grid h-11 w-11 place-items-center rounded-[14px] border border-border bg-card text-foreground"
+          // the number on the badge is part of the name, as a voice user would say what they see
+          aria-label={unread > 0 ? `${t('notices.title')} ${unread > 9 ? '9+' : unread}` : t('notices.title')}
+          className="relative grid h-11 w-11 place-items-center rounded-lg border border-border bg-card text-foreground"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7 M10 20a2 2 0 0 0 4 0" />
@@ -82,7 +83,7 @@ export function MemberLayout() {
             <span
               role="status"
               aria-label={t('notices.unreadCount', { count: unread })}
-              className="absolute -right-1.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-bad px-1 text-[0.6875rem] font-bold leading-none text-on-bad"
+              className="absolute -right-1.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-bad px-1 text-2xs font-bold leading-none text-on-bad"
             >
               {unread > 9 ? '9+' : unread}
             </span>
@@ -129,7 +130,7 @@ function PayButton({ label }: { label: string }) {
         <>
           <span className="relative h-[30px] w-[52px]">
             <span
-              className={`absolute bottom-0 left-1/2 grid h-14 w-14 -translate-x-1/2 place-items-center rounded-full border border-input bg-fab text-on-fab shadow-lg ring-4 transition-transform group-active:scale-95 motion-reduce:transition-none motion-reduce:group-active:scale-100 ${
+              className={`absolute bottom-0 left-1/2 grid h-14 w-14 -translate-x-1/2 place-items-center rounded-full border border-input bg-fab text-on-fab shadow-lift ring-4 transition-transform group-active:scale-95 motion-reduce:transition-none motion-reduce:group-active:scale-100 ${
                 isActive ? 'ring-accent-soft' : 'ring-card'
               }`}
             >
@@ -159,7 +160,7 @@ function TabItem({ to, label, icon, badge = 0 }: { to: string; label: string; ic
       {({ isActive }) => (
         <>
           <span
-            className={`relative grid h-[30px] w-[52px] place-items-center rounded-[15px] ${
+            className={`relative grid h-[30px] w-[52px] place-items-center rounded-md ${
               isActive ? 'bg-accent-soft text-accent' : 'text-muted'
             }`}
           >
@@ -180,7 +181,7 @@ function TabItem({ to, label, icon, badge = 0 }: { to: string; label: string; ic
               <span
                 role="status"
                 aria-label={t('votes.openCount', { count: badge })}
-                className="absolute -right-0.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-bad px-1 text-[0.6875rem] font-bold leading-none text-on-bad"
+                className="absolute -right-0.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-bad px-1 text-2xs font-bold leading-none text-on-bad"
               >
                 {badge}
               </span>

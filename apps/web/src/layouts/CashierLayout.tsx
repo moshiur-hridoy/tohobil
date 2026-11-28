@@ -89,7 +89,7 @@ function ExtraLink({ to, label, icon, compact = false }: { to: string; label: st
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors ${compact ? 'whitespace-nowrap' : ''} ${
+        `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${compact ? 'whitespace-nowrap' : ''} ${
           isActive ? 'bg-accent-soft font-bold text-accent' : 'text-foreground hover:bg-hover'
         }`
       }
@@ -253,7 +253,7 @@ function LogoutButton({ compact = false }: { compact?: boolean }) {
     <button
       type="button"
       onClick={() => void logout().then(() => navigate('/login', { replace: true }))}
-      className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-bad transition-colors hover:bg-bad-bg ${compact ? 'whitespace-nowrap' : 'min-w-0 flex-1'}`}
+      className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm text-bad transition-colors hover:bg-bad-bg ${compact ? 'whitespace-nowrap' : 'min-w-0 flex-1'}`}
     >
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d={LOGOUT_ICON} />
@@ -284,7 +284,7 @@ function ProfileCard() {
       : t('roles.member');
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-border bg-background p-2.5">
+    <div className="flex items-center gap-3 rounded-lg border border-border bg-background p-2.5">
       <div className="grid h-9 w-9 place-items-center rounded-full bg-accent-soft text-sm font-bold text-accent">
         {initials}
       </div>
@@ -318,7 +318,7 @@ function SidebarLink({
       to={to}
       end={to === '/admin'}
       className={({ isActive }) =>
-        `flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors ${
+        `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
           compact ? 'whitespace-nowrap' : ''
         } ${
           isActive
@@ -345,7 +345,7 @@ function SidebarLink({
         <span
           role="status"
           aria-label={t('votes.openCount', { count: badge })}
-          className="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-bad px-1 text-[0.6875rem] font-bold leading-none text-on-bad"
+          className="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-bad px-1 text-2xs font-bold leading-none text-on-bad"
         >
           {badge}
         </span>

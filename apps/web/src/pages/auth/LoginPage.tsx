@@ -64,7 +64,7 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={!valid}
-            className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-primary text-[1.0625rem] font-bold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="btn btn-primary btn-lg w-full disabled:opacity-40"
           >
             {t('auth.continue')}
             <Icon d="M5 12h14M13 6l6 6-6 6" sw={2.2} />
@@ -108,8 +108,8 @@ export function LoginPage() {
         <p className="mt-1 text-sm text-muted">{t('auth.pinHint')}</p>
       </div>
       {/* who is signing in, with the way out right next to it */}
-      <div className="flex items-center gap-3 rounded-2xl bg-soft p-2.5 pr-3">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-accent-soft text-sm font-bold text-accent">{activeRef}</span>
+      <div className="flex items-center gap-3 rounded-md bg-soft p-2.5 pr-3">
+        <span className="grid h-10 w-10 place-items-center rounded-lg bg-accent-soft text-sm font-bold text-accent">{activeRef}</span>
         <span className="flex-1 text-sm font-semibold">{t('auth.signingInAs', { ref: activeRef })}</span>
         <button type="button" className="min-h-11 text-sm font-semibold text-accent hover:underline" onClick={notYou} aria-label={t('auth.notYou')}>
           {t('auth.change')}
@@ -119,7 +119,7 @@ export function LoginPage() {
       <FieldError message={error?.message ?? null} requestId={error?.requestId} />
       {forgot ? (
         <div className="flex flex-col gap-1">
-          <p className="rounded-xl bg-soft px-3 py-2.5 text-[0.8125rem] leading-normal text-ink2">{t('auth.forgotPinBody')}</p>
+          <p className="rounded-md bg-soft px-3 py-2.5 text-meta leading-normal text-ink2">{t('auth.forgotPinBody')}</p>
           {/* A cashier-issued activation code is the other way back in (ASSUMPTIONS 80). */}
           <button
             type="button"

@@ -61,7 +61,7 @@ export function PinPad({ value, onChange, onComplete, disabled, invalid }: PinPa
               disabled={disabled}
               onClick={() => (k === 'back' ? back() : press(k))}
               aria-label={k === 'back' ? t('auth.pinDelete') : k}
-              className={`h-[3.75rem] rounded-2xl text-2xl font-semibold outline-none transition-[background-color,transform] duration-100 focus-visible:ring-2 focus-visible:ring-ring active:scale-95 disabled:opacity-50 ${
+              className={`h-[3.75rem] rounded-lg text-2xl font-semibold outline-none transition-[background-color,transform] duration-100 focus-visible:ring-2 focus-visible:ring-ring active:scale-95 disabled:opacity-50 ${
                 k === 'back' ? 'text-muted hover:bg-soft' : 'bg-soft hover:bg-hover active:bg-accent-soft'
               }`}
             >

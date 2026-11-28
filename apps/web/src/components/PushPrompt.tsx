@@ -47,9 +47,9 @@ export function PushPrompt() {
   };
 
   return (
-    <section role="region" aria-label={t('pushPrompt.title')} className="mx-4 mt-3 rounded-[18px] border border-accent bg-accent-soft p-4 lg:mx-6 lg:mt-4">
+    <section role="region" aria-label={t('pushPrompt.title')} className="mx-4 mt-3 rounded-lg border border-accent bg-accent-soft p-4 lg:mx-6 lg:mt-4">
       <div className="flex items-start gap-3">
-        <span className="grid h-10 w-10 flex-none place-items-center rounded-xl bg-accent-fill text-on-accent">
+        <span className="grid h-10 w-10 flex-none place-items-center rounded-lg bg-accent-fill text-on-accent">
           <Icon d={BELL} size={20} />
         </span>
         <div className="min-w-0 flex-1">
@@ -60,11 +60,11 @@ export function PushPrompt() {
       {failed && <p className="mt-2 text-sm text-bad">{t('push.failed')}</p>}
       <div className="mt-3 flex flex-wrap gap-2">
         {state === 'off' && (
-          <button type="button" disabled={busy} onClick={() => void turnOn()} className="h-11 flex-1 rounded-xl bg-primary px-4 font-semibold text-primary-foreground disabled:opacity-60">
+          <button type="button" disabled={busy} onClick={() => void turnOn()} className="btn btn-primary flex-1">
             {t('pushPrompt.turnOn')}
           </button>
         )}
-        <button type="button" onClick={remindLater} className="h-11 flex-1 rounded-xl border border-border bg-card px-4 font-semibold text-foreground">
+        <button type="button" onClick={remindLater} className="btn btn-secondary flex-1 text-foreground">
           {t('pushPrompt.later')}
         </button>
       </div>

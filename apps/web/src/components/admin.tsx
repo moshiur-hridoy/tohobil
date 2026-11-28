@@ -43,16 +43,11 @@ export const ICONS = {
   wallet: 'M3 7h18v12H3zM3 11h18M16 15h2',
 } as const;
 
-/** Button looks. Height 44px (h-11) everywhere a finger may tap; `BTN_SM` is for dense table rows.
- * The sides are generous because the buttons are pills (owner). */
-export const BTN_PRIMARY =
-  'inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50';
-export const BTN_SECONDARY =
-  'inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-card px-6 text-sm font-medium text-ink2 transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50';
-export const BTN_SM =
-  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-5 text-xs font-semibold text-ink2 transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50';
-export const BTN_SM_PRIMARY =
-  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50';
+/** The design system's buttons (docs: DESIGN.md "Buttons"); `.btn` classes live in globals.css. */
+export const BTN_PRIMARY = 'btn btn-primary';
+export const BTN_SECONDARY = 'btn btn-secondary';
+export const BTN_SM = 'btn btn-secondary btn-sm';
+export const BTN_SM_PRIMARY = 'btn btn-primary btn-sm';
 
 export function AdminPage({ children }: { children: ReactNode }) {
   return <div className="mx-auto max-w-[1400px] space-y-5">{children}</div>;
@@ -72,7 +67,7 @@ export function AdminHeader({ title, subtitle, actions }: { title: string; subti
 
 export function Card({ children, className = '', ...rest }: { children: ReactNode; className?: string } & HTMLAttributes<HTMLElement>) {
   return (
-    <section {...rest} className={`min-w-0 overflow-clip rounded-[20px] border border-border bg-card shadow-card ${className}`}>
+    <section {...rest} className={`min-w-0 overflow-clip rounded-lg border border-border bg-card shadow-card ${className}`}>
       {children}
     </section>
   );
@@ -95,8 +90,8 @@ export function CardHead({ title, sub, icon, tone = 'bg-accent-soft text-accent'
       <div className="flex min-w-0 items-center gap-2.5">
         {icon && <Chip tone={tone} d={icon} size={32} iconSize={18} />}
         <div className="min-w-0">
-          <h2 id={id} className="text-[1.0625rem] font-bold">{title}</h2>
-          {sub && <p className="text-[0.8125rem] text-muted">{sub}</p>}
+          <h2 id={id} className="text-lead font-bold">{title}</h2>
+          {sub && <p className="text-meta text-muted">{sub}</p>}
         </div>
       </div>
       {action && <div className="flex flex-wrap items-center gap-2">{action}</div>}
@@ -126,11 +121,11 @@ export function StatTile({ tone, icon, label, value, valueClass = '', sub, to, o
 }) {
   const interactive = !!(to || onClick);
   const body = (
-    <div className={`flex h-full items-center gap-3.5 rounded-[18px] border bg-card px-3.5 py-3.5 text-left shadow-card sm:px-[18px] sm:py-4 ${pressed ? 'border-accent ring-1 ring-accent' : 'border-border'} ${interactive ? 'transition-all hover:border-input hover:shadow-lift' : ''}`}>
+    <div className={`flex h-full items-center gap-3.5 rounded-lg border bg-card px-3.5 py-3.5 text-left shadow-card sm:px-[18px] sm:py-4 ${pressed ? 'border-accent ring-1 ring-accent' : 'border-border'} ${interactive ? 'transition-all hover:border-input hover:shadow-lift' : ''}`}>
       {/* the chip is decoration: on a phone the two-up tiles need the width for the figure */}
       <span className="hidden sm:block"><Chip tone={tone} d={icon} size={44} /></span>
       <div className="min-w-0 flex-1">
-        <p className="text-[0.8125rem] leading-snug text-muted">{label}</p>
+        <p className="text-meta leading-snug text-muted">{label}</p>
         {value === null ? (
           <Skeleton className="mt-1 h-7 w-20" />
         ) : (
@@ -141,10 +136,10 @@ export function StatTile({ tone, icon, label, value, valueClass = '', sub, to, o
       {to && <span className="text-muted"><Icon d={ICONS.chevron} size={16} /></span>}
     </div>
   );
-  if (to) return <Link to={to} className="block rounded-[18px] outline-none focus-visible:ring-2 focus-visible:ring-ring">{body}</Link>;
+  if (to) return <Link to={to} className="block rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring">{body}</Link>;
   if (onClick) {
     return (
-      <button type="button" aria-pressed={pressed} onClick={onClick} className="block w-full rounded-[18px] outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <button type="button" aria-pressed={pressed} onClick={onClick} className="block w-full rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring">
         {body}
       </button>
     );
@@ -181,7 +176,7 @@ export function Segmented<T extends string>({ label, value, options, onChange, w
     <div
       role="group"
       aria-label={label}
-      className={`${wide ? 'grid auto-cols-fr grid-flow-col text-sm' : 'flex max-w-full overflow-x-auto text-[0.8125rem]'} gap-1 rounded-xl border border-border bg-soft p-1`}
+      className={`${wide ? 'grid auto-cols-fr grid-flow-col text-sm' : 'flex max-w-full overflow-x-auto text-meta'} gap-1 rounded-lg border border-border bg-soft p-1`}
     >
       {options.map((o) => {
         const active = o.value === value;
@@ -191,7 +186,7 @@ export function Segmented<T extends string>({ label, value, options, onChange, w
             type="button"
             aria-pressed={active}
             onClick={() => onChange(o.value)}
-            className={`flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring ${wide ? 'h-10' : 'py-1.5'} ${active ? 'bg-accent-fill font-bold text-on-accent shadow-card' : 'font-medium text-ink2 hover:bg-hover hover:text-foreground'}`}
+            className={`flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring ${wide ? 'h-10' : 'py-1.5'} ${active ? 'bg-accent-fill font-bold text-on-accent shadow-card' : 'font-medium text-ink2 hover:bg-hover hover:text-foreground'}`}
           >
             {o.label}
             {o.count !== undefined && (
@@ -209,7 +204,7 @@ export function Segmented<T extends string>({ label, value, options, onChange, w
 /** The round member-code badge used in every member list. */
 export function MemberBadge({ code, size = 'md' }: { code: string; size?: 'md' | 'lg' }) {
   return (
-    <span className={`grid shrink-0 place-items-center rounded-full bg-soft font-bold text-ink2 ${size === 'lg' ? 'h-11 w-11 text-sm' : 'h-8 w-8 text-[0.6875rem]'}`}>
+    <span className={`grid shrink-0 place-items-center rounded-full bg-soft font-bold text-ink2 ${size === 'lg' ? 'h-11 w-11 text-sm' : 'h-8 w-8 text-2xs'}`}>
       {code}
     </span>
   );
@@ -239,7 +234,7 @@ export function FieldLabel({ label, children, className = '' }: { label: ReactNo
 export function Notice({ text, className = '' }: { text: string | null; className?: string }) {
   if (!text) return null;
   return (
-    <p role="status" className={`flex items-center gap-2 rounded-xl bg-ok-bg px-4 py-2.5 text-sm font-medium text-ok ${className}`}>
+    <p role="status" className={`flex items-center gap-2 rounded-md bg-ok-bg px-4 py-2.5 text-sm font-medium text-ok ${className}`}>
       <Icon d={ICONS.check} size={16} sw={2.2} />
       {text}
     </p>
@@ -261,10 +256,10 @@ export function AdminDialog({ open, onClose, title, children, wide = false }: {
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
         <Dialog.Content
           aria-describedby={undefined}
-          className={`fixed left-1/2 top-1/2 z-50 max-h-[90vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-[24px] border border-border bg-card p-6 shadow-lift ${wide ? 'w-[min(40rem,94vw)]' : 'w-[min(30rem,92vw)]'}`}
+          className={`fixed left-1/2 top-1/2 z-50 max-h-[90vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-lift ${wide ? 'w-[min(40rem,94vw)]' : 'w-[min(30rem,92vw)]'}`}
         >
           <Dialog.Title className="mb-4 pr-8 text-lg font-bold">{title}</Dialog.Title>
-          <Dialog.Close aria-label={t('common.close')} className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full text-muted transition-colors hover:bg-hover">
+          <Dialog.Close aria-label={t('common.close')} className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-md text-muted transition-colors hover:bg-hover">
             <Icon d="M6 6l12 12M18 6L6 18" size={18} />
           </Dialog.Close>
           {children}

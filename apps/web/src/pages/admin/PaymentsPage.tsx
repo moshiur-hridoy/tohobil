@@ -263,7 +263,7 @@ export function PaymentsPage() {
           }}
         />
         {exact.size > 0 && (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-ok-bg p-3 text-sm text-ok">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-md bg-ok-bg p-3 text-sm text-ok">
             <span className="font-medium">{t('paymentsPage.smsMatchedHint', { n: formatCount(exact.size) })}</span>
             <button type="button" className={BTN_SECONDARY} onClick={() => setSmsOpen(false)}>
               {t('paymentsPage.showInQueue')}
@@ -303,13 +303,13 @@ function QueueRow({ r, selected, match, isCashier, onPick, onAct }: {
     <li
       aria-current={selected}
       onClick={onPick}
-      className={`-mx-2 flex cursor-pointer flex-wrap items-center gap-3 rounded-xl border-b border-border px-2 py-3 transition-colors last:border-b-0 ${selected ? 'bg-accent-soft' : 'hover:bg-hover'}`}
+      className={`-mx-2 flex cursor-pointer flex-wrap items-center gap-3 rounded-md border-b border-border px-2 py-3 transition-colors last:border-b-0 ${selected ? 'border-transparent bg-accent-soft' : 'hover:border-transparent hover:bg-hover'}`}
     >
       {/* the click bubbles to the row; the button makes the row reachable by keyboard */}
-      <button type="button" className="flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <button type="button" className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <MemberBadge code={r.member_code} />
         <span className="min-w-0">
-          <span className="block truncate text-[0.9375rem] font-semibold">{r.member_name}</span>
+          <span className="block truncate text-body font-semibold">{r.member_name}</span>
           <span className="block truncate text-xs text-muted">
             {PAYMENT_METHOD_LABELS[r.method].bn} · {fmtInstant(r.paid_at)}
             {r.trx_id && <> · <span className="font-mono">{r.trx_id}</span></>}
@@ -319,7 +319,7 @@ function QueueRow({ r, selected, match, isCashier, onPick, onAct }: {
         </span>
       </button>
       <span className="text-right">
-        <span className="block text-[0.9375rem] font-bold tabular-nums">{taka(r.amount_paisa)}</span>
+        <span className="block text-body font-bold tabular-nums">{taka(r.amount_paisa)}</span>
         <span className="block text-xs text-muted">{t(`paymentsPage.${SOURCE_KEY[r.source]}`)}</span>
       </span>
       <span className="w-[6.5rem] text-right"><StatusPill status={r.status} /></span>
@@ -363,19 +363,19 @@ function PaymentPanel({ row, match, isCashier, onAct }: { row: PaymentRow | null
         <MemberBadge code={row.member_code} size="lg" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-lg font-bold">{row.member_name}</p>
-          <p className="text-[0.8125rem] text-muted">{row.status === 'pending' ? t('adminUi.payments.check') : t(`payment.status.${row.status}`)}</p>
+          <p className="text-meta text-muted">{row.status === 'pending' ? t('adminUi.payments.check') : t(`payment.status.${row.status}`)}</p>
         </div>
         <StatusPill status={row.status} />
       </div>
 
-      <p className="mt-4 text-[2rem] font-bold leading-tight tabular-nums">{taka(row.amount_paisa)}</p>
+      <p className="mt-4 text-figure font-bold leading-tight tabular-nums">{taka(row.amount_paisa)}</p>
       <div className="mt-1"><MatchLine match={match} /></div>
 
       <div className="mt-4">
         {row.proof_file_id ? (
-          <AuthedImage fileId={row.proof_file_id} alt={t('paymentsPage.proof')} className="h-48 w-full rounded-xl bg-soft object-contain" />
+          <AuthedImage fileId={row.proof_file_id} alt={t('paymentsPage.proof')} className="h-48 w-full rounded-lg bg-soft object-contain" />
         ) : (
-          <div className="grid h-20 place-items-center rounded-xl border border-dashed border-border text-sm text-muted">{t('paymentsPage.noProof')}</div>
+          <div className="grid h-20 place-items-center rounded-lg border border-dashed border-border text-sm text-muted">{t('paymentsPage.noProof')}</div>
         )}
       </div>
 
@@ -387,11 +387,11 @@ function PaymentPanel({ row, match, isCashier, onAct }: { row: PaymentRow | null
         <InfoRow label={t('paymentsPage.source')} value={t(`paymentsPage.${SOURCE_KEY[row.source]}`)} />
         {row.for_periods && row.for_periods.length > 0 && <InfoRow label={t('adminUi.payments.for')} value={row.for_periods.map(fmtPeriod).join(', ')} />}
       </dl>
-      {row.note && <p className="mt-2 rounded-xl bg-soft px-3 py-2 text-sm">{row.note}</p>}
-      {row.reject_reason && <p className="mt-2 rounded-xl bg-bad-bg px-3 py-2 text-sm text-bad">{row.reject_reason}</p>}
+      {row.note && <p className="mt-2 rounded-md bg-soft px-3 py-2 text-sm">{row.note}</p>}
+      {row.reject_reason && <p className="mt-2 rounded-md bg-bad-bg px-3 py-2 text-sm text-bad">{row.reject_reason}</p>}
 
       {row.status === 'pending' && isCashier && (
-        <div className="mt-4 rounded-xl bg-soft p-3">
+        <div className="mt-4 rounded-md bg-soft p-3">
           <p className="mb-1 text-xs font-semibold text-muted">{t('paymentsPage.approveEffect')}</p>
           {detail.error ? (
             <LoadError error={detail.error} />
@@ -457,7 +457,7 @@ function ApproveSheet({ action, onClose, onDone }: { action: Action; onClose: ()
       {detail.error && <LoadError error={detail.error} />}
       {!preview && !detail.error && <ListSkeleton rows={1} />}
       {preview && (
-        <div className="rounded-xl bg-soft p-3">
+        <div className="rounded-md bg-soft p-3">
           <p className="mb-1 text-sm text-muted">{t('paymentsPage.approveEffect')}</p>
           <SheetRow label={t('paymentsPage.toPrincipal')} value={taka(preview.principal_paisa)} />
           <SheetRow label={t('paymentsPage.toFines')} value={taka(preview.fine_paisa)} />

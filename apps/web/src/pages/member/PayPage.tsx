@@ -71,7 +71,7 @@ export function PayPage() {
         title={t('payment.title')}
         subtitle={t('pay.subtitle')}
         action={
-          <button type="button" onClick={() => setHowTo(true)} className="-mx-2 flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-sm font-semibold text-accent hover:bg-hover">
+          <button type="button" onClick={() => setHowTo(true)} className="-mx-2 flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-accent hover:bg-hover">
             <Icon d={INFO_ICON} size={18} />
             {t('pay.howTo')}
           </button>
@@ -84,7 +84,7 @@ export function PayPage() {
         ) : fines.error ? (
           <LoadError error={fines.error} onRetry={() => void fines.refetch()} />
         ) : !dues.data || !fines.data || !detail.data || !pending.data ? (
-          <div className="rounded-[20px] border border-border bg-card p-4"><ListSkeleton rows={3} /></div>
+          <div className="rounded-lg border border-border bg-card p-4"><ListSkeleton rows={3} /></div>
         ) : (
           // Mounted once the dues are in, so the default ticks see them. Not re-keyed on refresh: coming
           // back from the bKash app refetches, and that must not wipe what the member has typed.
@@ -110,10 +110,10 @@ export function PayPage() {
 function Step({ title, hint, flush, children }: { title: string; hint?: string; flush?: boolean; children: ReactNode }) {
   const id = useId();
   return (
-    <section className="overflow-hidden rounded-[20px] border border-border bg-card" aria-labelledby={id}>
+    <section className="overflow-hidden rounded-lg border border-border bg-card" aria-labelledby={id}>
       <div className="border-b border-border px-4 py-3.5">
         <h2 id={id} className="text-lg font-bold leading-7">{title}</h2>
-        {hint && <p className="text-[0.8125rem] leading-snug text-muted">{hint}</p>}
+        {hint && <p className="text-meta leading-snug text-muted">{hint}</p>}
       </div>
       <div className={flush ? undefined : 'p-4'}>{children}</div>
     </section>
@@ -121,8 +121,8 @@ function Step({ title, hint, flush, children }: { title: string; hint?: string; 
 }
 
 /** A row of choices as one bar, the chosen one filled. Wraps when a cashier enables many methods. */
-const segmentBar = 'grid grid-cols-[repeat(auto-fit,minmax(4.5rem,1fr))] gap-1 rounded-[1.75rem] border border-edge bg-soft p-1';
-const segment = (chosen: boolean) => `rounded-full text-sm ${chosen ? 'bg-accent-fill font-bold text-on-accent' : 'text-ink2 hover:bg-hover'}`;
+const segmentBar = 'grid grid-cols-[repeat(auto-fit,minmax(4.5rem,1fr))] gap-1 rounded-lg border border-edge bg-soft p-1';
+const segment = (chosen: boolean) => `rounded-md text-sm ${chosen ? 'bg-accent-fill font-bold text-on-accent' : 'text-ink2 hover:bg-hover'}`;
 
 type Purpose = 'dues' | 'levy' | 'special';
 const PURPOSES: readonly Purpose[] = ['dues', 'special', 'levy'];
@@ -460,15 +460,15 @@ function SendMoneyForm({
             </ul>
           </fieldset>
         )}
-        <div className="flex flex-wrap items-center gap-x-2 border-t border-border px-2 py-2.5 empty:hidden">
+        <div className="flex flex-wrap items-center border-t border-border px-1.5 py-2.5 empty:hidden">
           {nextAhead && !fill && (
-            <button type="button" onClick={addAhead} className="flex min-h-12 items-center gap-1 rounded-xl px-2 text-[0.8125rem] font-semibold text-accent hover:bg-hover">
+            <button type="button" onClick={addAhead} className="flex min-h-12 items-center gap-1 rounded-lg px-2 text-meta font-semibold text-accent hover:bg-hover">
               <Icon d="M12 5v14M5 12h14" size={16} sw={2} />
               {t('pay.addAhead')}
             </button>
           )}
           {canTypeAmount && (
-            <button type="button" aria-expanded={otherOpen} onClick={() => (otherOpen ? closeOther() : setOtherOpen(true))} className="ml-auto flex min-h-12 items-center rounded-xl px-2 text-[0.8125rem] font-semibold text-accent underline underline-offset-4 hover:bg-hover">
+            <button type="button" aria-expanded={otherOpen} onClick={() => (otherOpen ? closeOther() : setOtherOpen(true))} className="ml-auto flex min-h-12 items-center rounded-lg px-2 text-meta font-semibold text-accent underline underline-offset-4 hover:bg-hover">
               {t('pay.otherAmount')}
             </button>
           )}
@@ -494,10 +494,10 @@ function SendMoneyForm({
 
         <div className="flex items-center justify-between gap-3 border-t border-border bg-accent-soft px-4 py-3" aria-live="polite">
           <div>
-            <p className="text-[0.9375rem] font-semibold text-ink2">{t(sentPaisa ? 'pay.totalCredit' : 'pay.payableTotal')}</p>
+            <p className="text-body font-semibold text-ink2">{t(sentPaisa ? 'pay.totalCredit' : 'pay.payableTotal')}</p>
             {fineTotal > 0n && <p className="text-xs font-semibold text-bad">{t('pay.includesFine', { fine: taka(fineTotal) })}</p>}
           </div>
-          <p data-testid="pay-total" className="text-[1.75rem] font-bold leading-tight text-accent">{takaExact(total)}</p>
+          <p data-testid="pay-total" className="text-figure font-bold leading-tight text-accent">{takaExact(total)}</p>
         </div>
       </Step>
 
@@ -552,9 +552,9 @@ function SendMoneyForm({
       </Step>
 
       {invalid && <p role="alert" className="px-1 text-bad">{invalid}</p>}
-      {done && <p role="status" className="rounded-2xl bg-ok-bg p-3 text-ok">{t('pay.sent')}</p>}
+      {done && <p role="status" className="rounded-lg bg-ok-bg p-3 text-ok">{t('pay.sent')}</p>}
 
-      <button type="submit" disabled={readOnly} className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-[1.0625rem] font-bold text-primary-foreground disabled:opacity-50">
+      <button type="submit" disabled={readOnly} className="btn btn-primary btn-lg w-full">
         {t('pay.send')}
         {total > 0n && <span>· {takaExact(total)}</span>}
       </button>
@@ -563,11 +563,11 @@ function SendMoneyForm({
       <Dialog.Root open={sentAmount !== null} onOpenChange={(o) => !o && setSentAmount(null)}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
-          <Dialog.Content aria-describedby="pay-sent-body" className="fixed left-1/2 top-1/2 z-50 w-[min(24rem,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-[24px] border border-border bg-card p-6 text-center shadow-lift">
+          <Dialog.Content aria-describedby="pay-sent-body" className="fixed left-1/2 top-1/2 z-50 w-[min(24rem,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-6 text-center shadow-lift">
             <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-ok-bg text-ok"><Icon d="M5 12l5 5 9-10" size={28} sw={2.4} /></span>
             <Dialog.Title className="mt-4 text-lg font-bold">{t('pay.sentTitle')}</Dialog.Title>
             <p id="pay-sent-body" className="mt-2 text-ink2">{t('pay.sentBody', { amount: sentAmount ?? '' })}</p>
-            <Dialog.Close className="mt-5 h-12 w-full rounded-2xl bg-primary font-bold text-primary-foreground">{t('pay.sentOk')}</Dialog.Close>
+            <Dialog.Close className="btn btn-primary mt-5 w-full">{t('pay.sentOk')}</Dialog.Close>
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
@@ -626,11 +626,11 @@ function HowToPaySheet({ open, onClose }: { open: boolean; onClose: () => void }
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
         <Dialog.Content
           aria-describedby="how-to-pay-after"
-          className="fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-[24px] border border-border bg-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-lg sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-[24px]"
+          className="fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-xl border border-border bg-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-lift sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-xl"
         >
           <div className="mb-3 flex items-center justify-between gap-3">
             <Dialog.Title className="text-lg font-bold">{t('pay.howToTitle')}</Dialog.Title>
-            <Dialog.Close aria-label={t('common.close')} className="grid h-10 w-10 place-items-center rounded-full text-muted hover:bg-hover">
+            <Dialog.Close aria-label={t('common.close')} className="grid h-10 w-10 place-items-center rounded-md text-muted hover:bg-hover">
               <Icon d="M6 6l12 12M18 6L6 18" size={20} />
             </Dialog.Close>
           </div>
@@ -641,7 +641,7 @@ function HowToPaySheet({ open, onClose }: { open: boolean; onClose: () => void }
           ) : (
             <div className="space-y-3">
               {methods.map((m) => (
-                <section key={m} className="space-y-2 rounded-2xl border border-border p-3">
+                <section key={m} className="space-y-2 rounded-md border border-border p-3">
                   <h3 className="font-bold">{PAYMENT_METHOD_LABELS[m].bn}</h3>
                   {section(m)}
                 </section>
@@ -657,10 +657,10 @@ function HowToPaySheet({ open, onClose }: { open: boolean; onClose: () => void }
 
 function CopyRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-[14px] bg-soft px-3 py-2.5">
+    <div className="flex items-center gap-3 rounded-md bg-soft px-3 py-2.5">
       <span className="min-w-0 flex-1">
         <span className="block text-xs text-muted">{label}</span>
-        <span className="select-all break-all text-[1.0625rem] font-bold tracking-wide">{value}</span>
+        <span className="select-all break-all text-lead font-bold tracking-wide">{value}</span>
       </span>
       <CopyButton text={value} />
     </div>
@@ -686,7 +686,7 @@ function PickRow({ checked, partial, disabled, onToggle, title, sub, subBad, amo
       <label className={`flex min-h-16 items-center gap-3 px-4 py-2.5 ${disabled ? 'cursor-not-allowed opacity-60' : checked ? 'cursor-pointer bg-accent-soft' : partial ? 'cursor-pointer bg-warn-bg' : 'cursor-pointer hover:bg-hover'}`}>
         <input type="checkbox" checked={checked} disabled={disabled} onChange={onToggle} className="h-5 w-5 shrink-0 accent-[var(--accent-fill)]" />
         <span className="min-w-0 flex-1">
-          <span className="block text-[0.9375rem] font-semibold">{title}</span>
+          <span className="block text-body font-semibold">{title}</span>
           {sub && <span className={`block text-xs ${partial ? 'font-semibold text-warn' : subBad ? 'font-semibold text-bad' : 'text-muted'}`}>{sub}</span>}
         </span>
         <span className="flex flex-col items-end gap-1">
@@ -717,9 +717,9 @@ function History({ memberId }: { memberId: string | undefined }) {
   const items = q.data?.pages.flatMap((p) => p.items) ?? [];
 
   return (
-    <section className="rounded-[20px] border border-border bg-card">
+    <section className="rounded-lg border border-border bg-card">
       <h3 className="text-lg font-bold leading-7">
-        <button type="button" aria-expanded={open} aria-controls={bodyId} onClick={() => setOpen((o) => !o)} className={`flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-hover ${open ? 'rounded-t-[20px] border-b border-border' : 'rounded-[20px]'}`}>
+        <button type="button" aria-expanded={open} aria-controls={bodyId} onClick={() => setOpen((o) => !o)} className={`flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-hover ${open ? 'rounded-t-lg border-b border-border' : 'rounded-lg'}`}>
           <span className="min-w-0 flex-1">{t('pay.history')}</span>
           <Icon d={open ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'} size={22} sw={2} />
         </button>
@@ -739,7 +739,7 @@ function History({ memberId }: { memberId: string | undefined }) {
           </ul>
         )}
         {q.hasNextPage && (
-          <button type="button" disabled={q.isFetchingNextPage} onClick={() => void q.fetchNextPage()} className="mt-3 h-11 w-full rounded-[14px] border border-border">
+          <button type="button" disabled={q.isFetchingNextPage} onClick={() => void q.fetchNextPage()} className="btn btn-secondary mt-3 w-full text-foreground">
             {t('common.loadMore')}
           </button>
         )}
@@ -757,7 +757,7 @@ function PaymentItem({ p }: { p: PaymentRow }) {
     <li className="py-2">
       <button type="button" className="flex w-full items-center justify-between gap-3 text-left" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
         <span>
-          <span className="block text-[0.9375rem] font-semibold">{taka(p.amount_paisa)}</span>
+          <span className="block text-body font-semibold">{taka(p.amount_paisa)}</span>
           <span className="block text-sm text-muted">
             {PAYMENT_METHOD_LABELS[p.method].bn} · {fmtInstant(p.paid_at)}
           </span>
@@ -765,7 +765,7 @@ function PaymentItem({ p }: { p: PaymentRow }) {
         <StatusPill status={p.status} />
       </button>
       {open && (
-        <div className="mt-2 space-y-1 rounded-xl bg-soft p-3 text-sm">
+        <div className="mt-2 space-y-1 rounded-md bg-soft p-3 text-sm">
           {p.trx_id && <p>{t('payment.trxId')}: <span className="select-all">{p.trx_id}</span></p>}
           {p.status === 'rejected' && p.reject_reason && <p className="text-bad">{t('pay.rejectedReason', { reason: p.reject_reason })}</p>}
           {p.status === 'confirmed' && (

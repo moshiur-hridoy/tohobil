@@ -39,16 +39,16 @@ export function DemoLogin() {
               setBusy(null);
             }
           }}
-          className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 text-left transition-colors hover:bg-soft disabled:opacity-60"
+          className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:bg-soft disabled:opacity-60"
         >
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent-soft text-sm font-bold text-accent">{ref}</span>
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-accent-soft text-sm font-bold text-accent">{ref}</span>
           <span className="flex flex-col">
             <span className="font-semibold">{t(`demo.${key}`)}</span>
-            <span className="text-[0.8125rem] text-muted">{t(`demo.${key}Hint`)}</span>
+            <span className="text-meta text-muted">{t(`demo.${key}Hint`)}</span>
           </span>
         </button>
       ))}
-      <p className="pt-2 text-center text-[0.8125rem] text-muted">{t('demo.or')}</p>
+      <p className="pt-2 text-center text-meta text-muted">{t('demo.or')}</p>
     </div>
   );
 }
@@ -62,11 +62,11 @@ export function DemoBanner() {
 
   return (
     // Phones get only the button, so the badge hides as little of the screen as possible.
-    <div className="fixed bottom-24 right-3 z-[60] flex items-center gap-2 rounded-full text-[0.75rem] shadow-lg lg:bottom-4 lg:border lg:border-border lg:bg-card lg:py-1 lg:pl-3 lg:pr-1 lg:text-[0.8125rem]">
+    <div className="fixed bottom-24 right-3 z-[60] flex items-center gap-2 rounded-md text-xs shadow-lift lg:bottom-4 lg:border lg:border-border lg:bg-card lg:py-1 lg:pl-3 lg:pr-1 lg:text-meta">
       <span className="hidden font-semibold lg:inline">{t('demo.badge')}</span>
       <button
         type="button"
-        className="min-h-8 rounded-full bg-primary px-3 font-semibold text-primary-foreground opacity-90 hover:opacity-100 lg:min-h-9"
+        className="btn btn-primary btn-sm px-3"
         onClick={async () => {
           await auth.logout();
           auth.forgetDevice();

@@ -232,11 +232,11 @@ function HoldingView({ id }: { id: string }) {
         <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
           <span className="text-xs font-semibold text-muted">{t('holding.contractPapers')}:</span>
           {contractPapers.map((d) => (
-            <button key={d.id} type="button" onClick={() => void openPaper(d)} className="inline-flex items-center gap-1 rounded-full bg-soft px-2.5 py-1 text-xs font-semibold text-ink2 hover:bg-hover">
+            <button key={d.id} type="button" onClick={() => void openPaper(d)} className="inline-flex items-center gap-1 rounded-md bg-soft px-2.5 py-1 text-xs font-semibold text-ink2 hover:bg-hover">
               <Icon d={ICONS.doc} size={14} />{d.title ?? t(`holding.doc.${d.doc_type ?? 'other'}`, { defaultValue: t('holding.doc.other') })}
             </button>
           ))}
-          {contractPapers.length === 0 && <span className="rounded-full bg-warn-bg px-2.5 py-1 text-xs font-semibold text-warn">{t('holding.noPapers')}</span>}
+          {contractPapers.length === 0 && <span className="rounded-sm bg-warn-bg px-2.5 py-1 text-xs font-semibold text-warn">{t('holding.noPapers')}</span>}
           {isCashier && <button type="button" onClick={() => { setDocType('contract'); setAction({ kind: 'cpaper' }); }} className={BTN_SM}>{t('holding.addPaper')}</button>}
         </div>
       </Card>
@@ -274,11 +274,11 @@ function HoldingView({ id }: { id: string }) {
                     <td className="border-b border-border px-4 py-3">
                       <div className="flex flex-wrap items-center gap-1.5">
                         {papers.map((d) => (
-                          <button key={d.id} type="button" onClick={() => void openPaper(d)} className="inline-flex items-center gap-1 rounded-full bg-soft px-2.5 py-1 text-xs font-semibold text-ink2 hover:bg-hover">
+                          <button key={d.id} type="button" onClick={() => void openPaper(d)} className="inline-flex items-center gap-1 rounded-md bg-soft px-2.5 py-1 text-xs font-semibold text-ink2 hover:bg-hover">
                             <Icon d={ICONS.doc} size={14} />{d.title ?? t(`holding.doc.${d.doc_type ?? 'other'}`, { defaultValue: t('holding.doc.other') })}
                           </button>
                         ))}
-                        {papers.length === 0 && <span className="rounded-full bg-warn-bg px-2.5 py-1 text-xs font-semibold text-warn">{t('holding.noPapers')}</span>}
+                        {papers.length === 0 && <span className="rounded-sm bg-warn-bg px-2.5 py-1 text-xs font-semibold text-warn">{t('holding.noPapers')}</span>}
                         {isCashier && <button type="button" onClick={() => setAction({ kind: 'paper', entry: e })} className={BTN_SM}>{t('holding.addPaper')}</button>}
                         {isCashier && a?.status === 'acquiring' && papers.length > 0 && (
                           <button type="button" onClick={() => setAction({ kind: 'complete', entry: e })} className={BTN_SM_PRIMARY}>{t('holding.complete')}</button>
@@ -304,7 +304,7 @@ function HoldingView({ id }: { id: string }) {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-semibold">{w.everything ? t('holding.withdrawalAll') : taka(w.amount_paisa)}</span>
                     {/* Say where the withdrawal stands in plain words, not the bare proposal status ("খসড়া"). */}
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STAGE_TONE[w.status]}`}>{t(`holding.withdrawalStage.${w.status}`)}</span>
+                    <span className={`rounded-sm px-2.5 py-0.5 text-xs font-semibold ${STAGE_TONE[w.status]}`}>{t(`holding.withdrawalStage.${w.status}`)}</span>
                   </div>
                   {w.status === 'executed' && w.withdrawn_paisa ? (
                     <p className="mt-1 text-muted">{t('holding.withdrawalDone', { amount: taka(w.withdrawn_paisa), date: w.executed_on ? fmtDate(w.executed_on) : '—' })}</p>
@@ -312,7 +312,7 @@ function HoldingView({ id }: { id: string }) {
                     <p className="mt-1 text-muted">{t(`holding.withdrawalNext.${w.status}`)}</p>
                   )}
                   <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
-                    <Link to={`/admin/proposals?id=${w.proposal_id}`} className="text-[0.8125rem] font-semibold text-accent hover:underline">
+                    <Link to={`/admin/proposals?id=${w.proposal_id}`} className="text-meta font-semibold text-accent hover:underline">
                       {t('holding.withdrawalOpenProposal')} →
                     </Link>
                     {gain !== null && gain !== 0n && (

@@ -158,7 +158,7 @@ export function AdminAssetsPage() {
     <ul className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-3">
       {looseGold.length > 0 && (
         // Gold bought before shops were recorded: one investment card that only needs the shop's name.
-        <li className="flex flex-col rounded-[18px] border border-warn bg-card p-[18px] shadow-card" data-testid="partner-row">
+        <li className="flex flex-col rounded-lg border border-warn bg-card p-[18px] shadow-card" data-testid="partner-row">
           <div className="flex items-start gap-3">
             <Chip tone={KIND_TONE.gold} d={ICONS.layers} />
             <div className="min-w-0 flex-1">
@@ -167,11 +167,11 @@ export function AdminAssetsPage() {
             </div>
           </div>
           <dl className="mt-3 grid grid-cols-2 gap-2.5">
-            <div className="rounded-xl bg-soft px-3 py-2">
+            <div className="rounded-md bg-soft px-3 py-2">
               <dt className="text-xs text-muted">{t('holding.invested')}</dt>
               <dd className="font-bold tabular-nums">{taka(looseTotals.invested)}</dd>
             </div>
-            <div className="rounded-xl bg-soft px-3 py-2">
+            <div className="rounded-md bg-soft px-3 py-2">
               <dt className="text-xs text-muted">{t('holding.value')}</dt>
               <dd className="font-bold tabular-nums">{taka(looseTotals.value)}</dd>
             </div>
@@ -191,7 +191,7 @@ export function AdminAssetsPage() {
         const mine = holdingTotals(all.filter((a) => a.partner_id === p.id));
         return (
           <li key={p.id}>
-            <Link to={`/admin/assets/investment/${p.id}`} className="flex h-full flex-col rounded-[18px] border border-border bg-card p-[18px] shadow-card outline-none transition hover:border-input hover:shadow-lift focus-visible:ring-2 focus-visible:ring-ring" data-testid="partner-row">
+            <Link to={`/admin/assets/investment/${p.id}`} className="flex h-full flex-col rounded-lg border border-border bg-card p-[18px] shadow-card outline-none transition hover:border-input hover:shadow-lift focus-visible:ring-2 focus-visible:ring-ring" data-testid="partner-row">
               <div className="flex items-start gap-3">
                 <Chip tone={KIND_TONE[p.kind]} d={p.kind === 'gold' ? ICONS.layers : p.kind === 'other' ? ICONS.doc : ICONS.home} />
                 <div className="min-w-0 flex-1">
@@ -201,11 +201,11 @@ export function AdminAssetsPage() {
                 <span className="shrink-0 text-muted"><Icon d={ICONS.chevron} size={18} /></span>
               </div>
               <dl className="mt-3 grid grid-cols-2 gap-2.5">
-                <div className="rounded-xl bg-soft px-3 py-2">
+                <div className="rounded-md bg-soft px-3 py-2">
                   <dt className="text-xs text-muted">{t('holding.invested')}</dt>
                   <dd className="font-bold tabular-nums">{taka(mine.invested)}</dd>
                 </div>
-                <div className="rounded-xl bg-soft px-3 py-2">
+                <div className="rounded-md bg-soft px-3 py-2">
                   <dt className="text-xs text-muted">{t('holding.value')}</dt>
                   <dd className="font-bold tabular-nums">{taka(mine.value)}</dd>
                 </div>
@@ -221,8 +221,8 @@ export function AdminAssetsPage() {
         // A card the size of a shop's card: the form opens in a dialog.
         <li>
           <button type="button" onClick={() => { setPartnerError(null); setPartnerOpen(true); }} data-testid="add-partner"
-            className="flex h-full min-h-[11.5rem] w-full flex-col items-center justify-center gap-2.5 rounded-[18px] border-2 border-dashed border-border bg-card p-[18px] text-muted outline-none transition hover:border-input hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
-            <span className="grid h-12 w-12 place-items-center rounded-full bg-accent-soft text-accent"><Icon d={ICONS.plus} size={26} /></span>
+            className="flex h-full min-h-[11.5rem] w-full flex-col items-center justify-center gap-2.5 rounded-lg border-2 border-dashed border-border bg-card p-[18px] text-muted outline-none transition hover:border-input hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
+            <span className="grid h-12 w-12 place-items-center rounded-lg bg-accent-soft text-accent"><Icon d={ICONS.plus} size={26} /></span>
             <span className="font-semibold">{t('assetsAdmin.addSector')}</span>
           </button>
         </li>
@@ -278,21 +278,21 @@ export function AdminAssetsPage() {
           ) : (
             <ul className="grid gap-3.5 md:grid-cols-2">
               {items.map((a) => (
-                <li key={a.id} className="flex flex-col rounded-[18px] border border-border bg-card p-[18px] shadow-card" data-testid="asset-row">
+                <li key={a.id} className="flex flex-col rounded-lg border border-border bg-card p-[18px] shadow-card" data-testid="asset-row">
                   <div className="flex items-start gap-3">
                     <Chip tone={KIND_TONE[a.kind]} d={a.kind === 'gold' ? ICONS.layers : a.kind === 'other' ? ICONS.doc : ICONS.home} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold">{a.name}</p>
                       <p className="text-xs text-muted">{t(`assets.${a.kind}`)}{a.location ? ` · ${a.location}` : ''}</p>
                     </div>
-                    <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[a.status]}`}>{t(`assetsAdmin.status.${a.status}`)}</span>
+                    <span className={`shrink-0 rounded-sm px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[a.status]}`}>{t(`assetsAdmin.status.${a.status}`)}</span>
                   </div>
                   <dl className="mt-3 grid grid-cols-2 gap-2.5">
-                    <div className="rounded-xl bg-soft px-3 py-2">
+                    <div className="rounded-md bg-soft px-3 py-2">
                       <dt className="text-xs text-muted">{t('assetsAdmin.paid')}</dt>
                       <dd className="font-bold tabular-nums">{taka(a.cost_paisa)}</dd>
                     </div>
-                    <div className="rounded-xl bg-soft px-3 py-2">
+                    <div className="rounded-md bg-soft px-3 py-2">
                       <dt className="text-xs text-muted">{t('assetsAdmin.valued')}</dt>
                       <dd className="font-bold tabular-nums">{a.latest_value_paisa ? taka(a.latest_value_paisa) : '—'}</dd>
                     </div>

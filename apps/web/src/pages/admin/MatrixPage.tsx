@@ -69,7 +69,7 @@ function owedOf(c: MatrixCell) {
 function StatusChip({ status }: { status: Look }) {
   const { t } = useTranslation();
   return (
-    <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${CELL[status].chip}`}>
+    <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-sm px-2.5 py-1 text-xs font-semibold ${CELL[status].chip}`}>
       <span aria-hidden="true">{CELL[status].glyph}</span>
       {t(CELL[status].legend)}
     </span>
@@ -218,7 +218,7 @@ export function MatrixPage() {
       {q.error ? (
         <LoadError error={q.error} onRetry={() => void q.refetch()} />
       ) : !q.data ? (
-        <Skeleton className="h-96 w-full rounded-[20px]" />
+        <Skeleton className="h-96 w-full rounded-lg" />
       ) : empty ? (
         <Empty text={t('matrixPage.empty')} />
       ) : (
@@ -247,7 +247,7 @@ export function MatrixPage() {
                   <tr key={m.member_id} className="group">
                     <th scope="row" className="sticky left-0 z-10 whitespace-nowrap border-b border-r border-border bg-card px-4 py-2 text-left font-normal transition-colors group-hover:bg-hover">
                       <span className="flex items-center gap-2.5">
-                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-soft text-[0.6875rem] font-bold text-ink2">{m.member_code}</span>
+                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-soft text-2xs font-bold text-ink2">{m.member_code}</span>
                         <span className="font-semibold">{m.member_name}</span>
                         <AheadBadge months={ahead} />
                       </span>
@@ -267,7 +267,7 @@ export function MatrixPage() {
                               onMouseEnter={(e) => showHover(e.currentTarget, label, p, c)}
                               onFocus={(e) => showHover(e.currentTarget, label, p, c)}
                               onBlur={() => setHover(null)}
-                              className={`mx-auto grid h-9 w-full min-w-[3rem] max-w-[5.5rem] place-items-center rounded-lg font-bold outline-none transition focus-visible:ring-2 focus-visible:ring-ring ${showAmount ? 'px-1.5 text-xs tabular-nums' : 'text-base'} ${CELL[look(c)].tone} ${c.pending ? 'ring-2 ring-inset ring-warn' : ''} hover:brightness-125`}
+                              className={`mx-auto grid h-9 w-full min-w-[3rem] max-w-[5.5rem] place-items-center rounded-md font-bold outline-none transition focus-visible:ring-2 focus-visible:ring-ring ${showAmount ? 'px-1.5 text-xs tabular-nums' : 'text-base'} ${CELL[look(c)].tone} ${c.pending ? 'ring-2 ring-inset ring-warn' : ''} hover:brightness-125`}
                             >
                               {showAmount ? <span className="whitespace-nowrap">{c.status === 'partial' ? '½ ' : ''}{taka(owed.total)}</span> : CELL[look(c)].glyph}
                             </button>
@@ -280,8 +280,8 @@ export function MatrixPage() {
                     <td className={`${PAID_COL} z-10 whitespace-nowrap border-b bg-card py-2 tabular-nums transition-colors group-hover:bg-hover`}>{taka(m.totals.paid_paisa)}</td>
                     <td className={`${OWED_COL} z-10 whitespace-nowrap border-b bg-card py-2 tabular-nums transition-colors group-hover:bg-hover`}>
                       {(owes > 0n || advancePaid === 0n) && <div className={`font-semibold ${owes > 0n ? 'text-bad' : 'text-muted'}`}>{taka(owes)}</div>}
-                      {advancePaid > 0n && <div className={owes > 0n ? 'text-[0.6875rem] font-semibold text-ok' : 'font-semibold text-ok'}>+{taka(advancePaid)}</div>}
-                      {fineOwed > 0n && <div className="text-[0.6875rem] text-bad">{t('matrixPage.plusFine', { amount: taka(fineOwed) })}</div>}
+                      {advancePaid > 0n && <div className={owes > 0n ? 'text-2xs font-semibold text-ok' : 'font-semibold text-ok'}>+{taka(advancePaid)}</div>}
+                      {fineOwed > 0n && <div className="text-2xs text-bad">{t('matrixPage.plusFine', { amount: taka(fineOwed) })}</div>}
                     </td>
                   </tr>
                 );
@@ -297,7 +297,7 @@ export function MatrixPage() {
                   return (
                     <td key={p} className="px-1 py-2 text-center">
                       <div className="text-xs font-semibold tabular-nums">{taka(paid)}</div>
-                      {due > 0n && <div className={`text-[0.6875rem] tabular-nums ${percent(paid, due) >= 100 ? 'text-ok' : 'text-bad'}`}>{formatCount(percent(paid, due))}%</div>}
+                      {due > 0n && <div className={`text-2xs tabular-nums ${percent(paid, due) >= 100 ? 'text-ok' : 'text-bad'}`}>{formatCount(percent(paid, due))}%</div>}
                     </td>
                   );
                 })}
@@ -314,7 +314,7 @@ export function MatrixPage() {
       {hover && (
         <div
           role="tooltip"
-          className="pointer-events-none fixed z-40 w-64 -translate-x-1/2 rounded-2xl border border-border bg-card px-4 py-3 text-sm shadow-lift [&_dl>div]:min-h-0 [&_dl>div]:py-1.5"
+          className="pointer-events-none fixed z-40 w-64 -translate-x-1/2 rounded-lg border border-border bg-card px-4 py-3 text-sm shadow-lift [&_dl>div]:min-h-0 [&_dl>div]:py-1.5"
           style={hover.top > 300 ? { left: hover.x, top: hover.top - 8, transform: 'translate(-50%, -100%)' } : { left: hover.x, top: hover.bottom + 8 }}
         >
           <div className="mb-1 font-semibold">{t('matrixPage.cellTitle', { member: hover.member, period: fmtPeriod(hover.period) })}</div>
@@ -324,7 +324,7 @@ export function MatrixPage() {
       )}
 
       {/* Legend: the same chips as the grid, in plain words */}
-      <ul aria-label={t('matrixPage.legend')} className="flex flex-wrap gap-x-5 gap-y-2.5 text-[0.8125rem] text-ink2">
+      <ul aria-label={t('matrixPage.legend')} className="flex flex-wrap gap-x-5 gap-y-2.5 text-meta text-ink2">
         {(Object.keys(CELL) as Look[]).map((s) => (
           <li key={s} className="flex items-center gap-2">
             <span aria-hidden="true" className={`grid h-6 w-7 place-items-center rounded-md text-sm font-bold ${CELL[s].chip}`}>{CELL[s].glyph}</span>
@@ -336,7 +336,7 @@ export function MatrixPage() {
           {t('matrixPage.legendPending')}
         </li>
         <li className="flex items-center gap-2">
-          <span aria-hidden="true" className="grid h-6 place-items-center rounded-md bg-bad-bg px-1.5 text-[0.6875rem] font-bold text-bad">৳</span>
+          <span aria-hidden="true" className="grid h-6 place-items-center rounded-md bg-bad-bg px-1.5 text-2xs font-bold text-bad">৳</span>
           {t('matrixPage.legendAmount')}
         </li>
       </ul>
@@ -344,13 +344,13 @@ export function MatrixPage() {
       <Dialog.Root open={!!cell} onOpenChange={(o) => !o && setCell(null)}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
-          <Dialog.Content aria-describedby={undefined} className="fixed left-1/2 top-1/2 z-50 w-[min(26rem,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-[24px] border border-border bg-card p-6 shadow-lift">
+          <Dialog.Content aria-describedby={undefined} className="fixed left-1/2 top-1/2 z-50 w-[min(26rem,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-6 shadow-lift">
             {cell && (
               <>
                 <Dialog.Title className="mb-4 text-lg font-bold">{t('matrixPage.cellTitle', { member: cell.member, period: fmtPeriod(cell.period) })}</Dialog.Title>
                 <CellDetails data={cell.data} />
-                {cell.data.pending && <p className="mt-3 rounded-xl bg-warn-bg px-3 py-2 text-sm text-warn">{t('matrixPage.pendingFlag')}</p>}
-                <Dialog.Close className="mt-5 h-11 w-full rounded-xl border border-border font-medium transition-colors hover:bg-hover">{t('common.close')}</Dialog.Close>
+                {cell.data.pending && <p className="mt-3 rounded-md bg-warn-bg px-3 py-2 text-sm text-warn">{t('matrixPage.pendingFlag')}</p>}
+                <Dialog.Close className="btn btn-secondary mt-5 w-full">{t('common.close')}</Dialog.Close>
               </>
             )}
           </Dialog.Content>

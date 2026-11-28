@@ -52,7 +52,7 @@ export function SecurityFeedPage() {
         {groups.map((g) => (
           <section key={g.day}>
             <h2 className="px-1 pb-2 text-sm font-semibold text-muted">{dayTitle(g.day)}</h2>
-            <ul className="divide-y divide-border overflow-clip rounded-[20px] border border-border bg-card">
+            <ul className="divide-y divide-border overflow-clip rounded-lg border border-border bg-card">
               {g.items.map((e) => {
                 const mine = e.member_code === me?.member_code;
                 return (
@@ -61,7 +61,7 @@ export function SecurityFeedPage() {
                     <div className="min-w-0 flex-1">
                       <p className="break-words font-medium">
                         {e.full_name} <span className="font-normal text-muted">· {e.member_code}</span>
-                        {mine && <span className="ml-2 inline-block rounded-full bg-accent-fill px-2 py-0.5 align-middle text-xs font-semibold text-on-accent">{t('securityFeed.you')}</span>}
+                        {mine && <span className="ml-2 inline-block rounded-sm bg-accent-fill px-2 py-0.5 align-middle text-xs font-semibold text-on-accent">{t('securityFeed.you')}</span>}
                       </p>
                       <p className="text-sm text-muted">
                         {t(`menu.deviceEvent.${e.kind}`)} · <time dateTime={e.at}>{fmtClock(t, dhakaTime(e.at))}</time>

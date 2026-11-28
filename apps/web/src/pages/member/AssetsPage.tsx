@@ -125,7 +125,7 @@ export function AssetsPage() {
             <p className="py-8 text-center text-muted">{t('common.noData')}</p>
           ) : (
             <>
-              <h2 className="flex items-baseline gap-1.5 px-1 pt-2 text-[0.9375rem] font-bold">
+              <h2 className="flex items-baseline gap-1.5 px-1 pt-2 text-body font-bold">
                 {t('assets.investments')}
                 <span className="text-sm font-normal text-muted">· {formatCount(shops.length + own.length)}</span>
               </h2>
@@ -154,7 +154,7 @@ function SummaryCard({ nav, assets }: { nav: NavResponse | undefined; assets: As
 
   if (!nav || !assets) {
     return (
-      <section className="rounded-[22px] border border-border bg-card p-5">
+      <section className="rounded-lg border border-border bg-card p-5">
         <Skeleton className="h-4 w-20" />
         <Skeleton className="mt-2.5 h-9 w-44" />
         <Skeleton className="mt-2 h-4 w-52" />
@@ -183,9 +183,9 @@ function SummaryCard({ nav, assets }: { nav: NavResponse | undefined; assets: As
   const barTotal = parts.reduce((sum, p) => sum + (p.paisa > 0n ? p.paisa : 0n), 0n);
 
   return (
-    <section className="rounded-[22px] border border-border bg-card p-5" aria-label={t('assetsAdmin.netAssets')}>
+    <section className="rounded-lg border border-border bg-card p-5" aria-label={t('assetsAdmin.netAssets')}>
       <div className="text-sm text-muted">{t('assetsAdmin.netAssets')}</div>
-      <div className={`mt-1 text-[2.25rem] font-bold leading-[1.15] ${negClass(nav.net_assets_paisa)}`}>{taka(nav.net_assets_paisa)}</div>
+      <div className={`mt-1 text-figure-lg font-bold leading-[1.15] ${negClass(nav.net_assets_paisa)}`}>{taka(nav.net_assets_paisa)}</div>
       <div className="mt-1.5 text-sm text-muted">
         {t('assets.perShareLine', {
           value: taka(nav.nav_per_share_paisa),
@@ -200,7 +200,7 @@ function SummaryCard({ nav, assets }: { nav: NavResponse | undefined; assets: As
               <span key={p.key} className={`h-full first:rounded-l-full last:rounded-r-full ${p.bar}`} style={{ width: pct(p.paisa, barTotal) }} />
             ))}
           </div>
-          <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[0.8125rem]">
+          <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-meta">
             {parts.map((p) => (
               <li key={p.key} className="flex items-center gap-1.5">
                 <span className={`h-2.5 w-2.5 rounded-full ${p.bar}`} aria-hidden="true" />
@@ -224,16 +224,16 @@ function ShopCard({ partner, items }: { partner: PartnerRow; items: AssetRow[] }
   return (
     <Link
       to={`/assets/shop/${partner.id}`}
-      className="block rounded-[20px] border border-border bg-card p-4 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="block rounded-lg border border-border bg-card p-4 shadow-card outline-none focus-visible:ring-2 focus-visible:ring-ring"
       data-testid="shop-card"
     >
       <div className="flex items-center gap-3">
-        <span className={`grid h-11 w-11 flex-none place-items-center rounded-[14px] ${meta.bg} ${meta.color}`}>
+        <span className={`grid h-11 w-11 flex-none place-items-center rounded-lg ${meta.bg} ${meta.color}`}>
           {meta.icon('h-6 w-6')}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[1.0625rem] font-bold">{partner.name}</div>
-          <div className="text-[0.8125rem] text-muted">
+          <div className="truncate text-lead font-bold">{partner.name}</div>
+          <div className="text-meta text-muted">
             {t(meta.labelKey)} · {t('holding.subtitle', { n: formatCount(totals.count) })}
           </div>
         </div>
@@ -241,20 +241,20 @@ function ShopCard({ partner, items }: { partner: PartnerRow; items: AssetRow[] }
       </div>
 
       <div className="mt-3.5 grid grid-cols-2 gap-2.5">
-        <div className="rounded-[14px] bg-soft p-3">
+        <div className="rounded-md bg-soft p-3">
           <div className="text-xs text-muted">{t('holding.invested')}</div>
           <div className="mt-0.5 text-lg font-bold">{taka(totals.invested)}</div>
         </div>
-        <div className="rounded-[14px] bg-soft p-3">
+        <div className="rounded-md bg-soft p-3">
           <div className="text-xs text-muted">{t('holding.value')}</div>
           <div className="mt-0.5 text-lg font-bold">{taka(totals.value)}</div>
         </div>
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-2">
-        <span className="text-[0.8125rem] text-muted">{t('holding.profit')}</span>
+        <span className="text-meta text-muted">{t('holding.profit')}</span>
         <span
-          className={`rounded-full px-2.5 py-1 text-[0.8125rem] font-bold ${
+          className={`rounded-sm px-2.5 py-1 text-meta font-bold ${
             totals.profit > 0n ? 'bg-ok-bg text-ok' : totals.profit < 0n ? 'bg-bad-bg text-bad' : 'bg-soft text-muted'
           }`}
         >
@@ -271,7 +271,7 @@ function ShopCard({ partner, items }: { partner: PartnerRow; items: AssetRow[] }
 function StaleValuations({ items }: { items: NavResponse['stale_valuations'] }) {
   const { t } = useTranslation();
   return (
-    <section className="rounded-xl bg-warn-bg p-3 text-warn" aria-labelledby="stale-title">
+    <section className="rounded-md bg-warn-bg p-3 text-warn" aria-labelledby="stale-title">
       <h2 id="stale-title" className="flex items-center gap-2 text-sm font-semibold">
         <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z" /><path d="M12 10v5" /><path d="M12 18h.01" /></svg>
         {t('assets.staleCount', { count: items.length })}
@@ -297,9 +297,9 @@ function StaleValuations({ items }: { items: NavResponse['stale_valuations'] }) 
           return (
             <li key={a.id}>
               {a.partner_id ? (
-                <Link to={`/assets/shop/${a.partner_id}`} className="flex items-center gap-2 rounded-lg bg-card px-2.5 py-2">{body}</Link>
+                <Link to={`/assets/shop/${a.partner_id}`} className="flex items-center gap-2 rounded-md bg-card px-2.5 py-2">{body}</Link>
               ) : (
-                <div className="flex items-center gap-2 rounded-lg bg-card px-2.5 py-2">{body}</div>
+                <div className="flex items-center gap-2 rounded-md bg-card px-2.5 py-2">{body}</div>
               )}
             </li>
           );
@@ -317,13 +317,13 @@ export function AssetCard({ asset }: { asset: AssetRow }) {
   const acquiring = asset.status === 'acquiring';
 
   return (
-    <article className="rounded-[20px] border border-border bg-card p-4 shadow-sm">
+    <article className="rounded-lg border border-border bg-card p-4 shadow-card">
       <div className="flex items-center gap-3">
-        <span className={`grid h-11 w-11 flex-none place-items-center rounded-[14px] ${meta.bg} ${meta.color}`}>
+        <span className={`grid h-11 w-11 flex-none place-items-center rounded-lg ${meta.bg} ${meta.color}`}>
           {meta.icon('h-6 w-6')}
         </span>
         <div className="flex-1">
-          <div className="text-[1.0625rem] font-bold">
+          <div className="text-lead font-bold">
             {asset.name}
             {asset.quantity && asset.unit && (
               <span className="ml-1.5 text-sm font-normal text-muted">
@@ -331,12 +331,12 @@ export function AssetCard({ asset }: { asset: AssetRow }) {
               </span>
             )}
           </div>
-          <div className="text-[0.8125rem] text-muted">
+          <div className="text-meta text-muted">
             {asset.location ?? t(meta.labelKey)} · {asset.acquired_on ? asset.acquired_on : t('assets.noAcquireDate')}
           </div>
         </div>
         <span
-          className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+          className={`rounded-sm px-2.5 py-1 text-xs font-bold ${
             asset.status === 'held' ? 'bg-ok-bg text-ok' : 'bg-warn-bg text-warn'
           }`}
         >
@@ -345,27 +345,27 @@ export function AssetCard({ asset }: { asset: AssetRow }) {
       </div>
 
       <div className="mt-3.5 grid grid-cols-2 gap-2.5">
-        <div className="rounded-[14px] bg-soft p-3">
+        <div className="rounded-md bg-soft p-3">
           <div className="text-xs text-muted">{t('assets.cost')}</div>
           <div className="mt-0.5 text-lg font-bold">{taka(cost)}</div>
         </div>
-        <div className="rounded-[14px] bg-soft p-3">
+        <div className="rounded-md bg-soft p-3">
           <div className="text-xs text-muted">{t('assets.latestValuation')}</div>
           <div className="mt-0.5 text-lg font-bold">{taka(asset.latest_value_paisa ?? asset.cost_paisa)}</div>
           {asset.latest_value_as_of && (
-            <div className="text-[0.6875rem] text-muted">{asset.latest_value_as_of}</div>
+            <div className="text-2xs text-muted">{asset.latest_value_as_of}</div>
           )}
         </div>
       </div>
 
       {acquiring && (
-        <div className="mt-3 rounded-xl bg-soft p-3 text-[0.8125rem] text-muted">
+        <div className="mt-3 rounded-md bg-soft p-3 text-meta text-muted">
           {t('assets.acquiringNote')}
         </div>
       )}
 
       {asset.status === 'held' && isStale(asset.latest_value_as_of) && (
-        <div className="mt-3 flex items-center gap-2 rounded-xl bg-warn-bg p-3 text-[0.8125rem] font-semibold text-warn">
+        <div className="mt-3 flex items-center gap-2 rounded-md bg-warn-bg p-3 text-meta font-semibold text-warn">
           <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l10 18H2z" /><path d="M12 10v5" /><path d="M12 18h.01" /></svg>
           {t('assets.valuationStale')}
         </div>

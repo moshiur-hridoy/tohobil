@@ -71,7 +71,7 @@ export function PinStepUpPrompt() {
         <Dialog.Overlay className="fixed inset-0 z-[60] bg-black/50" />
         <Dialog.Content
           aria-describedby={undefined}
-          className="fixed left-1/2 top-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-4 shadow-lg"
+          className="fixed left-1/2 top-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-4 shadow-lift"
         >
           <Dialog.Title className="text-lg font-semibold">{t('pinStepUp.title')}</Dialog.Title>
           <p className="mt-1 text-sm text-muted">{t('pinStepUp.hint')}</p>
@@ -99,10 +99,10 @@ export function PinStepUpPrompt() {
               </p>
             )}
             <div className="flex gap-3">
-              <button type="button" disabled={busy} onClick={() => finish(null)} className="h-12 flex-1 rounded-md border border-border">
+              <button type="button" disabled={busy} onClick={() => finish(null)} className="btn btn-secondary flex-1">
                 {t('common.cancel')}
               </button>
-              <button type="submit" disabled={busy || pin.length !== 6} className="h-12 flex-1 rounded-md bg-primary font-medium text-primary-foreground disabled:opacity-50">
+              <button type="submit" disabled={busy || pin.length !== 6} className="btn btn-primary flex-1">
                 {busy ? t('common.working') : t('pinStepUp.confirm')}
               </button>
             </div>

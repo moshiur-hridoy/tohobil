@@ -68,7 +68,7 @@ function Preview({ file }: { file: File }) {
     setUrl(next);
     return () => URL.revokeObjectURL(next);
   }, [file]);
-  return url ? <img src={url} alt="" className="max-h-40 w-full rounded-xl bg-card object-contain" /> : null;
+  return url ? <img src={url} alt="" className="max-h-40 w-full rounded-lg bg-card object-contain" /> : null;
 }
 
 /**
@@ -139,9 +139,9 @@ export function FilePicker({ file, onChange, accept = 'image/*,application/pdf',
         }}
       />
       {!file ? (
-        <div className={`rounded-[14px] border-[1.5px] focus-within:border-accent hover:border-accent ${dragging ? 'border-dashed border-accent bg-accent-soft' : 'border-edge bg-soft'}`}>
-          <button type="button" onClick={pick} className="flex w-full items-center gap-3 rounded-[14px] p-3 text-left">
-            <span aria-hidden="true" className="grid h-10 w-10 flex-none place-items-center rounded-xl bg-accent-soft text-accent">
+        <div className={`rounded-lg border-[1.5px] focus-within:border-accent hover:border-accent ${dragging ? 'border-dashed border-accent bg-accent-soft' : 'border-edge bg-soft'}`}>
+          <button type="button" onClick={pick} className="flex w-full items-center gap-3 rounded-lg p-3 text-left">
+            <span aria-hidden="true" className="grid h-10 w-10 flex-none place-items-center rounded-lg bg-accent-soft text-accent">
               <Icon d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" size={20} />
             </span>
             <span className="min-w-0">
@@ -154,24 +154,24 @@ export function FilePicker({ file, onChange, accept = 'image/*,application/pdf',
             </span>
           </button>
           {canReadClipboard() && (
-            <button type="button" onClick={() => void paste()} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-b-[14px] border-t border-edge text-sm font-semibold text-accent hover:bg-hover">
+            <button type="button" onClick={() => void paste()} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-b-lg border-t border-edge text-sm font-semibold text-accent hover:bg-hover">
               <Icon d="M9 4h6v3H9zM9 5H6v16h12V5h-3" size={18} />
               {t('file.paste')}
             </button>
           )}
         </div>
       ) : (
-        <div className={`space-y-2 rounded-[14px] border-[1.5px] border-accent bg-accent-soft p-3 ${dragging ? 'border-dashed' : ''}`}>
+        <div className={`space-y-2 rounded-lg border-[1.5px] border-accent bg-accent-soft p-3 ${dragging ? 'border-dashed' : ''}`}>
           <div className="flex items-center gap-3">
-            <span aria-hidden="true" className="grid h-10 w-10 flex-none place-items-center rounded-xl bg-card text-accent">
+            <span aria-hidden="true" className="grid h-10 w-10 flex-none place-items-center rounded-lg bg-card text-accent">
               <Icon d="M20 6L9 17l-5-5" size={20} sw={2} />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-xs text-muted">{t('file.attached')}</span>
               <span className="block truncate text-sm font-semibold">{file.name}</span>
             </span>
-            <button type="button" onClick={pick} className="min-h-11 rounded-xl px-2 text-sm font-semibold text-accent hover:bg-hover">{t('file.change')}</button>
-            <button type="button" onClick={() => attach(null)} className="min-h-11 rounded-xl px-2 text-sm font-semibold text-bad hover:bg-hover">{t('file.remove')}</button>
+            <button type="button" onClick={pick} className="min-h-11 rounded-md px-2 text-sm font-semibold text-accent hover:bg-hover">{t('file.change')}</button>
+            <button type="button" onClick={() => attach(null)} className="min-h-11 rounded-md px-2 text-sm font-semibold text-bad hover:bg-hover">{t('file.remove')}</button>
           </div>
           {file.type.startsWith('image/') && <Preview file={file} />}
         </div>

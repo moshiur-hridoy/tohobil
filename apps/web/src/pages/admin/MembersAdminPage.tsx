@@ -148,9 +148,9 @@ export function MembersAdminPage() {
                       const gone = isGone(m);
                       const status = shownStatus(m);
                       return (
-                        <tr key={m.id} aria-selected={isSel} onClick={() => choose(m)} className={`cursor-pointer transition-colors ${isSel ? 'bg-accent-soft' : 'hover:bg-hover'} ${(gone || isLeaving(m)) && !isSel ? 'opacity-55' : ''}`}>
+                        <tr key={m.id} aria-selected={isSel} onClick={() => choose(m)} className={`row-fill cursor-pointer ${(gone || isLeaving(m)) && !isSel ? 'opacity-55' : ''}`}>
                           <td className="border-b border-border px-2 py-2.5">
-                            <button type="button" onClick={(e) => { e.stopPropagation(); choose(m); }} className="flex min-w-0 items-center gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                            <button type="button" onClick={(e) => { e.stopPropagation(); choose(m); }} className="flex min-w-0 items-center gap-3 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
                               <Avatar fileId={m.photo_file_id} fallback={m.full_name.trim().charAt(0)} className="h-8 w-8 bg-soft text-sm font-bold text-ink2" />
                               <span className="min-w-0">
                                 <span className="flex items-center gap-1.5">
@@ -160,7 +160,7 @@ export function MembersAdminPage() {
                                   {DOT_TONE[status] && <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${DOT_TONE[status]}`} />}
                                 </span>
                                 {status !== 'active' ? (
-                                  <span className={`mt-0.5 inline-block rounded-full px-2 py-px text-[0.6875rem] font-semibold ${STATUS_TONE[status] ?? 'bg-soft text-muted'}`}>{t(`status.member.${status}`, { defaultValue: status })}</span>
+                                  <span className={`mt-0.5 inline-block rounded-sm px-2 py-px text-2xs font-semibold ${STATUS_TONE[status] ?? 'bg-soft text-muted'}`}>{t(`status.member.${status}`, { defaultValue: status })}</span>
                                 ) : null}
                               </span>
                             </button>
@@ -255,19 +255,19 @@ function MemberPanel({ member: m, totalShares, loading, isCashier, onAction }: {
         )}
         <div className="min-w-0 flex-1">
           <p className="flex min-w-0 items-center gap-1.5 text-lg font-bold"><span className="shrink-0 text-sm font-semibold text-muted tabular-nums">{m.code}</span><span className="truncate">{m.full_name}</span><RoleBadges roles={m.roles} /></p>
-          <span className={`mt-0.5 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[status] ?? 'bg-soft text-muted'}`}>
+          <span className={`mt-0.5 inline-block rounded-sm px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[status] ?? 'bg-soft text-muted'}`}>
             {t(`status.member.${status}`, { defaultValue: status })}
           </span>
         </div>
         {menuItems.length > 0 && (
           <Menu.Root>
-            <Menu.Trigger aria-label={t('membersAdmin.more')} className="grid h-10 w-10 shrink-0 place-items-center self-start rounded-full text-muted outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring">
+            <Menu.Trigger aria-label={t('membersAdmin.more')} className="grid h-10 w-10 shrink-0 place-items-center self-start rounded-md text-muted outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring">
               <Icon d="M12 5.5h.01M12 12h.01M12 18.5h.01" sw={3} />
             </Menu.Trigger>
             <Menu.Portal>
-              <Menu.Content align="end" sideOffset={6} className="z-50 min-w-48 rounded-xl border border-border bg-card p-1.5 shadow-card">
+              <Menu.Content align="end" sideOffset={6} className="z-50 min-w-48 rounded-lg border border-border bg-card p-1.5 shadow-card">
                 {menuItems.map(([kind, label, , icon]) => (
-                  <Menu.Item key={kind} onSelect={() => onAction(kind, m)} className={`flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold outline-none ${kind === 'status' ? 'text-ink2 data-[highlighted]:bg-hover' : 'text-bad data-[highlighted]:bg-bad-bg'}`}>
+                  <Menu.Item key={kind} onSelect={() => onAction(kind, m)} className={`flex cursor-pointer items-center gap-2.5 rounded-md px-3 py-2.5 text-sm font-semibold outline-none ${kind === 'status' ? 'text-ink2 data-[highlighted]:bg-hover' : 'text-bad data-[highlighted]:bg-bad-bg'}`}>
                     <Icon d={icon} size={18} />
                     {label}
                   </Menu.Item>
@@ -279,7 +279,7 @@ function MemberPanel({ member: m, totalShares, loading, isCashier, onAction }: {
       </div>
 
       {notice && (
-        <div role="note" className={`mt-4 flex gap-2.5 rounded-xl p-3 text-sm ${STATUS_TONE[status]}`}>
+        <div role="note" className={`mt-4 flex gap-2.5 rounded-md p-3 text-sm ${STATUS_TONE[status]}`}>
           <span className="mt-0.5 shrink-0"><Icon d={ICONS.alert} size={18} /></span>
           <div className="min-w-0">
             <p>{t(`adminUi.members.${notice}`)}</p>
@@ -291,11 +291,11 @@ function MemberPanel({ member: m, totalShares, loading, isCashier, onAction }: {
       )}
 
       <div className="mt-4 grid grid-cols-2 gap-2.5">
-        <div className="rounded-xl bg-soft px-3 py-2.5">
+        <div className="rounded-md bg-soft px-3 py-2.5">
           <p className="text-xs text-muted">{t('membersPage.capital')}</p>
           <p className="font-bold tabular-nums">{taka(m.capital_paisa)}</p>
         </div>
-        <div className={`rounded-xl px-3 py-2.5 ${owes > 0n ? 'bg-bad-bg' : 'bg-soft'}`}>
+        <div className={`rounded-md px-3 py-2.5 ${owes > 0n ? 'bg-bad-bg' : 'bg-soft'}`}>
           <p className="text-xs text-muted">{t('admin.members.due')}</p>
           <p className={`font-bold tabular-nums ${owes > 0n ? 'text-bad' : ''}`}>{taka(owes)}</p>
         </div>
@@ -314,7 +314,7 @@ function MemberPanel({ member: m, totalShares, loading, isCashier, onAction }: {
       {register.error ? <LoadError error={register.error} onRetry={() => void register.refetch()} /> : !register.data ? <Skeleton className="h-16 w-full" /> : mine.length === 0 ? (
         <p className="text-sm text-muted">{t('common.noData')}</p>
       ) : (
-        <ul className="divide-y divide-border rounded-xl bg-soft px-3 text-sm">
+        <ul className="divide-y divide-border rounded-md bg-soft px-3 text-sm">
           {mine.map((r) => (
             <li key={r.share_no} className="py-2">
               <p className="font-medium"><span className="text-muted">#{formatCount(r.share_no)}</span> {r.registered_name}</p>
@@ -329,7 +329,7 @@ function MemberPanel({ member: m, totalShares, loading, isCashier, onAction }: {
       <p className="mb-2 mt-4 text-xs font-semibold text-muted">{t('adminUi.members.actions')}</p>
       <div className="grid grid-cols-2 gap-2">
         {actions.filter(([, , show]) => show).map(([kind, label]) => (
-          <button key={kind} type="button" onClick={() => onAction(kind, m)} className={`${BTN_SECONDARY} h-auto min-h-11 !px-3 py-2 text-[0.8125rem] leading-snug `}>
+          <button key={kind} type="button" onClick={() => onAction(kind, m)} className={`${BTN_SECONDARY} h-auto min-h-11 !px-3 py-2 text-meta leading-snug `}>
             {label}
           </button>
         ))}
@@ -527,7 +527,7 @@ function EditContactDialog({ member, open, onClose }: { member: MemberRow; open:
       </label>
       {phoneTouched && phone.trim() !== '' && nextPhone === null && <p className="mt-1 text-sm text-bad">{t('membersAdmin.phoneInvalid')}</p>}
       {valid && (
-        <div className="mt-3 space-y-1 rounded-xl bg-soft p-3 text-sm">
+        <div className="mt-3 space-y-1 rounded-md bg-soft p-3 text-sm">
           {nameChanged && <p>{member.full_name} → <strong>{nextName}</strong></p>}
           {phoneChanged && <p className="tabular-nums">{member.phone ? localDigits(phoneForInput(member.phone)) : '—'} → <strong>{localDigits(phoneForInput(nextPhone))}</strong></p>}
         </div>
@@ -693,7 +693,7 @@ function SettlementBreakdown({ e }: { e: SettlementEstimate }) {
     );
   const net = BigInt(e.net_paisa);
   return (
-    <div className="mt-2 space-y-1 rounded-xl bg-soft p-3 text-sm">
+    <div className="mt-2 space-y-1 rounded-md bg-soft p-3 text-sm">
       <div className="flex justify-between gap-3">
         <span className="text-muted">{t('membersAdmin.estPaidIn')}</span>
         <span className="tabular-nums">{taka(e.gross_paisa)}</span>
@@ -759,7 +759,7 @@ function ContactLogDialog({ member, open, onClose, isCashier }: { member: Member
     <AdminDialog open={open} onClose={onClose} title={<>{t('membersAdmin.contactLogTitle')} — {member.code} {member.full_name}</>}>
 
       {isCashier && member.status === 'suspended' && (
-        <div className="mb-3 rounded-xl bg-accent-soft p-2">
+        <div className="mb-3 rounded-md bg-accent-soft p-2">
           <button type="button" disabled={busy} onClick={() => void reinstate()} className={`${BTN_PRIMARY} w-full`}>
             {busy ? t('common.working') : t('membersAdmin.reinstate')}
           </button>
@@ -768,7 +768,7 @@ function ContactLogDialog({ member, open, onClose, isCashier }: { member: Member
       )}
 
       {isCashier && (
-        <div className="mb-3 space-y-2 rounded-xl border border-border p-2">
+        <div className="mb-3 space-y-2 rounded-md border border-border p-2">
           <label className="field-label">
             {t('membersAdmin.contactKind')}
             <select className="field mt-1 w-full" value={kind} onChange={(e) => setKind(e.target.value)}>

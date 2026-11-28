@@ -26,15 +26,15 @@ export function SettlementPage() {
         <Link
           to="/menu"
           aria-label={t('common.back')}
-          className="grid h-11 w-11 place-items-center rounded-[14px] border border-border bg-card text-foreground"
+          className="grid h-11 w-11 place-items-center rounded-lg border border-border bg-card text-foreground"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M15 5l-7 7 7 7" />
           </svg>
         </Link>
         <div className="flex-1 pl-1">
-          <div className="text-[1.1875rem] font-bold leading-tight">{t('settlement.title')}</div>
-          <div className="text-[0.8125rem] text-muted">{t('settlement.subtitle')}</div>
+          <div className="text-title font-bold leading-tight">{t('settlement.title')}</div>
+          <div className="text-meta text-muted">{t('settlement.subtitle')}</div>
         </div>
       </header>
 
@@ -68,30 +68,30 @@ export function SettlementCard({ s }: { s: SettlementView }) {
   ];
 
   return (
-    <section className="rounded-[20px] border border-border bg-card p-4 shadow-sm" data-testid="settlement-card">
+    <section className="rounded-lg border border-border bg-card p-4 shadow-card" data-testid="settlement-card">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <div className="text-[1.0625rem] font-bold">{s.member_code} · {s.member_name}</div>
-          <div className="text-[0.8125rem] text-muted">{t(`settlementKind.${s.kind}`)} · {fmtDate(s.taken_on)}</div>
+          <div className="text-lead font-bold">{s.member_code} · {s.member_name}</div>
+          <div className="text-meta text-muted">{t(`settlementKind.${s.kind}`)} · {fmtDate(s.taken_on)}</div>
         </div>
-        <span className="rounded-full bg-soft px-2.5 py-1 text-xs font-semibold">{t(`settlement.status.${s.status}`)}</span>
+        <span className="rounded-sm bg-soft px-2.5 py-1 text-xs font-semibold">{t(`settlement.status.${s.status}`)}</span>
       </div>
 
       <ul>
         {lines.map((l) => (
-          <li key={l.label} className={`flex justify-between gap-3 border-t border-border py-2.5 text-[0.9375rem] first:border-t-0 ${l.className}`}>
+          <li key={l.label} className={`flex justify-between gap-3 border-t border-border py-2.5 text-body first:border-t-0 ${l.className}`}>
             <span>{l.label}</span>
             <span>{l.value}</span>
           </li>
         ))}
-        <li className="flex justify-between gap-3 border-t border-border py-2.5 text-[0.9375rem] font-bold text-ok">
+        <li className="flex justify-between gap-3 border-t border-border py-2.5 text-body font-bold text-ok">
           <span>{t('settlement.netRefund')}</span>
           <span>{taka(BigInt(s.net_paisa))}</span>
         </li>
       </ul>
 
       <h2 className="mb-1 mt-3 text-sm font-bold">{t('settlement.payoutPlan')}</h2>
-      <ul className="text-[0.9375rem]">
+      <ul className="text-body">
         {s.payouts.map((p) => (
           <li key={p.due_on} className="flex items-center justify-between gap-3 border-t border-border py-2 first:border-t-0">
             <span>{fmtDate(p.due_on)}{p.paid_at ? ` · ${t('settlement.paid')}` : ''}</span>

@@ -232,7 +232,7 @@ export function EntrySheet({ open, onClose, prefill, onDone }: { open: boolean; 
               {q.expired ? (
                 <div className="mt-2 space-y-2">
                   <p className="text-warn">{t('paymentsPage.quoteExpired')}</p>
-                  <button type="button" disabled={requoting} onClick={() => void requote()} className="h-11 w-full rounded-md border border-border font-semibold text-accent">
+                  <button type="button" disabled={requoting} onClick={() => void requote()} className="btn btn-secondary w-full text-accent">
                     {t('paymentsPage.requote')}
                   </button>
                   {requoteError != null && <p role="alert" className="text-bad">{errorMessage(t, requoteError).message}</p>}
@@ -357,7 +357,7 @@ function EntryRowCard({ row, onTap }: { row: EntryRow; onTap: () => void }) {
       : `${row.period ? fmtPeriod(row.period) : ''}${row.kind !== 'monthly' ? ` · ${t(`pay.dueKind.${row.kind}`)}` : ''}`;
   return (
     <li>
-      <label className={`flex min-h-12 cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-1.5 ${full ? 'border-accent bg-accent-soft' : part ? 'border-warn bg-warn-bg' : 'border-border bg-card'}`}>
+      <label className={`flex min-h-12 cursor-pointer items-center gap-2.5 rounded-md border px-3 py-1.5 ${full ? 'border-accent bg-accent-soft' : part ? 'border-warn bg-warn-bg' : 'border-border bg-card'}`}>
         <input type="checkbox" checked={full} onChange={onTap} className="h-[18px] w-[18px] shrink-0 accent-[var(--accent-fill)]" />
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-semibold">{title}</span>

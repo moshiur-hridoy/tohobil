@@ -159,15 +159,15 @@ export function NoticesPage() {
             }
           }}
           aria-label={t('common.back', { defaultValue: 'ফিরে যান' })}
-          className="grid h-11 w-11 place-items-center rounded-[14px] border border-border bg-card text-foreground"
+          className="grid h-11 w-11 place-items-center rounded-lg border border-border bg-card text-foreground"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M15 5l-7 7 7 7" />
           </svg>
         </Link>
         <div className="flex-1 pl-1">
-          <div className="text-[1.1875rem] font-bold leading-tight">{t('notices.title', { defaultValue: 'নোটিস' })}</div>
-          <div className="text-[0.8125rem] text-muted">{t('notices.subtitle', { defaultValue: 'সব বার্তা এখানে থাকে' })}</div>
+          <div className="text-title font-bold leading-tight">{t('notices.title', { defaultValue: 'নোটিস' })}</div>
+          <div className="text-meta text-muted">{t('notices.subtitle', { defaultValue: 'সব বার্তা এখানে থাকে' })}</div>
         </div>
       </header>
 
@@ -179,7 +179,7 @@ export function NoticesPage() {
               type="button"
               disabled={openAll.isPending}
               onClick={() => openAll.mutate()}
-              className="h-9 rounded-xl border border-border bg-card px-3 text-sm font-semibold"
+              className="btn btn-secondary btn-sm text-foreground"
             >
               {t('notices.markAllRead')}
             </button>
@@ -222,16 +222,16 @@ function NoticeCard({ item, onOpen }: { item: InboxItem; onOpen: () => void }) {
   return (
     <article
       onClick={onOpen}
-      className={`rounded-[18px] border bg-card p-4 shadow-sm transition-opacity ${meta.borderClass} ${unread ? 'ring-1 ring-accent' : 'opacity-75'}`}
+      className={`rounded-lg border bg-card p-4 shadow-card transition-opacity ${meta.borderClass} ${unread ? 'ring-1 ring-accent' : 'opacity-75'}`}
     >
       <div className="flex items-center gap-2.5">
-        <span className={`grid h-9 w-9 flex-none place-items-center rounded-[11px] ${meta.chipClass}`}>{meta.icon}</span>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${meta.chipClass}`}>
+        <span className={`grid h-9 w-9 flex-none place-items-center rounded-md ${meta.chipClass}`}>{meta.icon}</span>
+        <span className={`rounded-sm px-2.5 py-1 text-xs font-bold ${meta.chipClass}`}>
           {known ? t(TAG_KEY[kind]) : t('notices.tags.general')}
         </span>
         <span className="ml-auto flex items-center gap-2 text-xs text-muted">
           {whenText(t, item.sent_at ?? item.scheduled_for)}
-          {unread && <span aria-label={t('notices.new')} className="h-2.5 w-2.5 rounded-full bg-accent" />}
+          {unread && <span role="img" aria-label={t('notices.new')} className="h-2.5 w-2.5 rounded-full bg-accent" />}
         </span>
       </div>
       {item.template === 'custom_notice' && item.payload._title && <p className="mt-2.5 font-bold text-foreground">{item.payload._title}</p>}

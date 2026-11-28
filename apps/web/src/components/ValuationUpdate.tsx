@@ -89,7 +89,7 @@ export function ValuationRequestSheet({ open, onClose, partner, currentValue, on
         <FilePicker file={file} onChange={setFile} className="mt-1" />
       </div>
       {next !== null && (
-        <div className={`rounded-xl p-3 text-sm ${reason === null ? 'bg-ok-bg text-ok' : 'bg-warn-bg text-warn'}`}>
+        <div className={`rounded-md p-3 text-sm ${reason === null ? 'bg-ok-bg text-ok' : 'bg-warn-bg text-warn'}`}>
           <p className="font-semibold">{t(change < 0n ? 'valuation.loss' : 'valuation.gain')}: <Change paisa={change} /></p>
           <p className="mt-1">{t(reason === null ? 'valuation.toAuditor' : `valuation.toVote.${reason}`)}</p>
         </div>
@@ -130,7 +130,7 @@ export function ValuationRequestList({ requests, voteLink }: { requests: Valuati
                 {taka(r.base_value_paisa)} → <strong>{taka(r.new_value_paisa)}</strong>{' '}
                 <Change paisa={BigInt(r.new_value_paisa) - BigInt(r.base_value_paisa)} className="text-xs" />
               </span>
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${s.tone}`}>{t(s.key)}</span>
+              <span className={`rounded-sm px-2.5 py-0.5 text-xs font-semibold ${s.tone}`}>{t(s.key)}</span>
             </div>
             <p className="mt-0.5 text-xs text-muted">
               {fmtDate(r.as_of)} · {t('valuation.sentBy', { code: r.requested_by_code ?? '?' })}

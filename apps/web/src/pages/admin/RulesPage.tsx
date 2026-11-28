@@ -75,7 +75,7 @@ export function RulesPage() {
               <a
                 key={g.id}
                 href={`#rules-${g.id}`}
-                className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-[0.8125rem] font-medium text-ink2 transition-colors hover:bg-hover"
+                className="flex shrink-0 items-center gap-1.5 rounded-md border border-border bg-card px-3.5 py-2 text-meta font-medium text-ink2 transition-colors hover:bg-hover"
               >
                 <Icon d={g.icon} size={15} />
                 {t(`rulesPage.groups.${g.id}.title`)}
@@ -134,8 +134,8 @@ function RuleItem({ ruleKey: key, versions, today, canPropose, onPropose, onHist
     <li className="flex items-start gap-3 border-t border-border py-3.5 first:border-t-0 first:pt-1 last:pb-0">
       <div className="min-w-0 flex-1 sm:flex sm:items-start sm:gap-4">
         <div className="min-w-0 flex-1">
-          <h3 className="text-[0.9375rem] font-semibold">{ruleName(t, key)}</h3>
-          {hint && <p className="mt-0.5 text-[0.8125rem] text-muted">{hint}</p>}
+          <h3 className="text-body font-semibold">{ruleName(t, key)}</h3>
+          {hint && <p className="mt-0.5 text-meta text-muted">{hint}</p>}
           <p className="mt-1 text-xs text-muted">
             {t('adminUi.rules.since', { date: fmtDate(current.valid_from) })}
             {current.clause_ref && (
@@ -148,7 +148,7 @@ function RuleItem({ ruleKey: key, versions, today, canPropose, onPropose, onHist
             )}
           </p>
           {upcoming.map((r) => (
-            <p key={r.valid_from} className="mt-2 inline-block rounded-lg bg-warn-bg px-2.5 py-1 text-xs text-warn">
+            <p key={r.valid_from} className="mt-2 inline-block rounded-md bg-warn-bg px-2.5 py-1 text-xs text-warn">
               {t('rulesPage.upcoming', { value: ruleValueText(t, key, r.value), date: fmtDate(r.valid_from) })}
             </p>
           ))}
@@ -158,12 +158,12 @@ function RuleItem({ ruleKey: key, versions, today, canPropose, onPropose, onHist
       <DropdownMenu.Root>
         <DropdownMenu.Trigger
           aria-label={t('rulesPage.menu', { name: ruleName(t, key) })}
-          className="-mr-1.5 grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted outline-none transition-colors hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring"
+          className="-mr-1.5 grid h-9 w-9 shrink-0 place-items-center rounded-md text-muted outline-none transition-colors hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Icon d={DOTS} size={18} sw={2.4} />
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content align="end" sideOffset={4} className="z-50 min-w-[13rem] rounded-xl border border-border bg-card p-1 shadow-lift">
+          <DropdownMenu.Content align="end" sideOffset={4} className="z-50 min-w-[13rem] rounded-lg border border-border bg-card p-1 shadow-lift">
             {canPropose && (
               <DropdownMenu.Item onSelect={onPropose} className={MENU_ITEM}>
                 <Icon d={ICONS.sliders} size={16} />
@@ -192,7 +192,7 @@ function RuleItem({ ruleKey: key, versions, today, canPropose, onPropose, onHist
 // three vertical dots
 const DOTS = 'M12 5h.01M12 12h.01M12 19h.01';
 const MENU_ITEM =
-  'flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground outline-none data-[highlighted]:bg-hover';
+  'flex cursor-pointer items-center gap-2.5 rounded-md px-3 py-2.5 text-sm text-foreground outline-none data-[highlighted]:bg-hover';
 
 /** The version in force today: the newest that has started; a later one is a scheduled change. */
 function currentOf(versions: RuleRow[], today: string): RuleRow {
@@ -286,7 +286,7 @@ function CreateRuleChange({ open, presetKey, onClose, current, clauses }: {
       canConfirm={key.length > 0 && parsed !== undefined}
       onConfirm={submit}
     >
-      <p className="mb-3 rounded-xl bg-soft px-3 py-2.5 text-[0.8125rem] text-ink2">{t('rulesPage.howItWorks')}</p>
+      <p className="mb-3 rounded-md bg-soft px-3 py-2.5 text-meta text-ink2">{t('rulesPage.howItWorks')}</p>
       <label className="field-label">
         {t('rulesPage.pickRule')}
         <select className="field mt-1 w-full" value={key} onChange={(e) => pickKey(e.target.value)}>

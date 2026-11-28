@@ -59,7 +59,7 @@ export function AdminSystemStatusPage() {
         title={t('systemStatus.title')}
         subtitle={t('adminUi.sub.system')}
         actions={overall && (
-          <span className={`inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${overall === 'ok' ? 'bg-ok-bg text-ok' : overall === 'bad' ? 'bg-bad-bg text-bad' : 'bg-warn-bg text-warn'}`}>
+          <span className={`inline-flex h-11 items-center gap-2 rounded-lg px-4 text-sm font-semibold ${overall === 'ok' ? 'bg-ok-bg text-ok' : overall === 'bad' ? 'bg-bad-bg text-bad' : 'bg-warn-bg text-warn'}`}>
             <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-full ${overall === 'ok' ? 'bg-ok' : overall === 'bad' ? 'bg-bad' : 'bg-warn'}`} />
             {overall === 'ok' ? t('adminUi.system.allOk') : t('adminUi.system.attention')}
           </span>
@@ -69,7 +69,7 @@ export function AdminSystemStatusPage() {
       {status.error ? (
         <LoadError error={status.error} onRetry={() => void status.refetch()} />
       ) : !s ? (
-        <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">{Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-36 w-full rounded-[18px]" />)}</div>
+        <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">{Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-36 w-full rounded-lg" />)}</div>
       ) : (
         <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
           <Health
@@ -127,7 +127,7 @@ export function AdminSystemStatusPage() {
           </button>
           {verify.error && <div className="mt-3"><LoadError error={verify.error} /></div>}
           {verify.data && (
-            <p className={`mt-3 rounded-xl px-4 py-2.5 text-sm font-medium ${verify.data.ok ? 'bg-ok-bg text-ok' : 'bg-bad-bg text-bad'}`} data-testid="verify-result">
+            <p className={`mt-3 rounded-md px-4 py-2.5 text-sm font-medium ${verify.data.ok ? 'bg-ok-bg text-ok' : 'bg-bad-bg text-bad'}`} data-testid="verify-result">
               {verify.data.ok ? t('systemStatus.verifyOk', { count: verify.data.count }) : t('systemStatus.verifyBroken', { count: verify.data.issues_total })}
             </p>
           )}

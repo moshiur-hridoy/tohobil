@@ -16,7 +16,7 @@ export function ActionError({ error }: { error: unknown }) {
   if (!error) return null;
   const needsStepUp = error instanceof ApiError && STEP_UP_CODES.has(error.code);
   return (
-    <div role="alert" className="mt-3 rounded-xl border border-border p-3 text-sm">
+    <div role="alert" className="mt-3 rounded-md border border-border p-3 text-sm">
       <p className="text-bad">{errorMessage(t, error).message}</p>
       {needsStepUp && (
         <Link to="/totp" className="mt-1 inline-block font-medium text-accent underline">

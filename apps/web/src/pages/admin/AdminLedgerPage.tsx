@@ -49,7 +49,7 @@ function ObjectionsPanel() {
         icon={ICONS.flag}
         tone="bg-bad-bg text-bad"
         title={t('adminLedger.objections')}
-        action={q.data && rows.length > 0 ? <span className="rounded-full bg-bad-bg px-2.5 py-0.5 text-xs font-bold text-bad tabular-nums">{formatCount(rows.length)}{q.hasNextPage ? '+' : ''}</span> : undefined}
+        action={q.data && rows.length > 0 ? <span className="rounded-sm bg-bad-bg px-2.5 py-0.5 text-xs font-bold text-bad tabular-nums">{formatCount(rows.length)}{q.hasNextPage ? '+' : ''}</span> : undefined}
       />
       <Notice text={notice} className="mb-3" />
       {q.error ? (

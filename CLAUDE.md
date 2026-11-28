@@ -3,6 +3,7 @@
 ## Quick Reference
 
 - **Spec**: [`Doc.md`](./Doc.md) is the authoritative build specification. Sections 18 (constitution) and 19 (design-review amendments) override earlier sections.
+- **Design**: [`DESIGN.md`](./DESIGN.md) is the design system for every visible change (colours, corners, buttons, fields, type). Use its tokens and classes; `design.test.ts` enforces them. Change the system and the file together.
 - **Rule**: NEVER mutate or delete financial records. Corrections are reversal entries only. Database triggers enforce this; do not work around them.
 - **Money**: All amounts are bigint paisa. No floats. Ever. On the wire (JSON) and inside jsonb payloads, paisa is a decimal **string**; the zod schemas in `packages/shared` convert to/from bigint.
 - **Dates**: business dates are `YYYY-MM-DD` strings in Asia/Dhaka, never JS `Date` objects. Anything that depends on "now" takes an injectable `Clock`.

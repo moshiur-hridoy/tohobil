@@ -148,7 +148,7 @@ export function AdminRentPage() {
                         </p>
                       </div>
                       <div className="w-40 min-w-0">
-                        <p className="text-right text-[0.8125rem] tabular-nums"><b>{taka(e.received_paisa)}</b> <span className="text-muted">/ {taka(e.amount_paisa)}</span></p>
+                        <p className="text-right text-meta tabular-nums"><b>{taka(e.received_paisa)}</b> <span className="text-muted">/ {taka(e.amount_paisa)}</span></p>
                         <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-soft">
                           <div className={`h-full rounded-full ${left > 0n ? 'bg-warn' : 'bg-accent'}`} style={{ width: `${p}%` }} />
                         </div>

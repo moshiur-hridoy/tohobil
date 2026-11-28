@@ -45,7 +45,7 @@ export function MembersPage() {
           {members.data.items.map((m) => {
             const mine = register.data?.items.filter((r) => r.member_id === m.id) ?? [];
             return (
-              <li key={m.id} className="flex gap-3 rounded-[18px] border border-border bg-card p-3 shadow-card">
+              <li key={m.id} className="flex gap-3 rounded-lg border border-border bg-card p-3 shadow-card">
                 <Avatar fileId={m.photo_file_id} fallback={m.full_name.trim().charAt(0)} className="h-11 w-11 bg-accent-soft font-bold text-accent" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-3">

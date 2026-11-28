@@ -82,7 +82,8 @@ test('(2) member submits, cashier pastes the SMS and approves, member sees it co
   await shot(cashier.page, 'cashier-payments');
 
   // Approve through the confirmation sheet, which shows the effect before anything is posted.
-  await cashier.page.getByRole('button', { name: tr('paymentsPage.approve'), exact: true }).first().click();
+  // The "অনুমোদন" tab at the top has the same name as the approve button; a tab is a pressed/unpressed button.
+  await cashier.page.getByRole('button', { name: tr('paymentsPage.approve'), exact: true }).and(cashier.page.locator(':not([aria-pressed])')).first().click();
   const confirm = cashier.page.getByRole('dialog');
   await expect(confirm.getByRole('heading', { name: tr('paymentsPage.approveTitle') })).toBeVisible();
   await expect(confirm).toContainText(tr('paymentsPage.toPrincipal'));
@@ -104,7 +105,11 @@ test('(2) member submits, cashier pastes the SMS and approves, member sees it co
 
   // The ledger shows the entry to everyone and its chain verifies. bKash money lands in BANK: one cash pool (ASSUMPTIONS 96).
   await member.page.goto('/menu/ledger');
-  await expect(member.page.getByText('BANK → MEMBER_CAPITAL')).toBeVisible();
+  // The row reads in Bengali account names; the codes are kept in its title.
+  await expect(member.page.getByTitle('BANK → MEMBER_CAPITAL').filter({ visible: true }).first()).toBeVisible();
+  // A first visit shows the "app updated" card over the top of the page; close it as a person would.
+  const updated = member.page.getByRole('status').getByRole('button', { name: tr('common.close') });
+  if (await updated.isVisible()) await updated.click();
   await member.page.getByRole('button', { name: tr('ledgerPage.verify') }).click();
   await expect(member.page.getByText(tr('ledgerPage.verifyOk', { n: '১', seq: '১' }))).toBeVisible();
 

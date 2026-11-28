@@ -41,11 +41,11 @@ export function TotpPage() {
     <AuthShell>
       <div className="flex items-center gap-3">
         <BackButton fallback="/menu" />
-        <h1 className="text-[1.375rem] font-semibold leading-snug">{t('totp.title')}</h1>
+        <h1 className="text-heading font-semibold leading-snug">{t('totp.title')}</h1>
       </div>
       {enrolling && !secret && (
         <>
-          <p className="text-[0.8125rem] leading-normal text-muted">{t('totp.enrolHint')}</p>
+          <p className="text-meta leading-normal text-muted">{t('totp.enrolHint')}</p>
           <button
             type="button"
             disabled={busy}
@@ -54,21 +54,21 @@ export function TotpPage() {
               setQr(await QRCode.toDataURL(r.otpauth_url, { margin: 2, width: 240 }));
               setSecret(r.secret);
             })}
-            className="h-14 rounded-2xl bg-primary text-[1.0625rem] font-bold text-primary-foreground disabled:opacity-50"
+            className="btn btn-primary btn-lg w-full"
           >
             {t('totp.startEnrol')}
           </button>
         </>
       )}
       {secret && (
-        <div className="rounded-2xl border border-border bg-background p-4">
+        <div className="rounded-lg border border-border bg-background p-4">
           {qr && (
             <>
-              <p className="text-[0.8125rem] text-muted">{t('totp.qrHint')}</p>
-              <img src={qr} alt={t('totp.qrAlt')} width={240} height={240} className="mx-auto my-3 rounded-xl bg-white" />
+              <p className="text-meta text-muted">{t('totp.qrHint')}</p>
+              <img src={qr} alt={t('totp.qrAlt')} width={240} height={240} className="mx-auto my-3 rounded-lg bg-white" />
             </>
           )}
-          <p className="text-[0.8125rem] text-muted">{t('totp.secretHint')}</p>
+          <p className="text-meta text-muted">{t('totp.secretHint')}</p>
           <p className="mt-2 select-all break-all text-center font-mono text-lg tracking-wider">{secret}</p>
         </div>
       )}
@@ -97,7 +97,7 @@ export function TotpPage() {
           <button
             type="submit"
             disabled={busy || code.length !== 6}
-            className="h-14 rounded-2xl bg-primary text-[1.0625rem] font-bold text-primary-foreground disabled:opacity-50"
+            className="btn btn-primary btn-lg w-full"
           >
             {t('totp.verify')}
           </button>

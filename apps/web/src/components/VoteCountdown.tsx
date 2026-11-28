@@ -51,11 +51,11 @@ export function VoteCountdown({ closesAt }: { closesAt: string }) {
 export function CountdownChip({ closesAt }: { closesAt: string }) {
   const { t } = useTranslation();
   const left = splitTimeLeft(useTimeLeft(closesAt) ?? 0);
-  if (!left) return <span className="rounded-full bg-soft px-2.5 py-1 text-xs font-semibold text-muted">{t('votes.countdown.over')}</span>;
+  if (!left) return <span className="rounded-sm bg-soft px-2.5 py-1 text-xs font-semibold text-muted">{t('votes.countdown.over')}</span>;
   const clock = `${twoDigits(left.hours)}:${twoDigits(left.minutes)}:${twoDigits(left.seconds)}`;
   const urgent = left.days === 0 && left.hours === 0;
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums ${urgent ? 'bg-bad-bg text-bad' : 'bg-warn-bg text-warn'}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-xs font-semibold tabular-nums ${urgent ? 'bg-bad-bg text-bad' : 'bg-warn-bg text-warn'}`}>
       <Icon d={CLOCK} size={14} sw={2} />
       {left.days > 0 ? t('votes.countdown.chipDays', { days: formatCount(left.days), clock }) : t('votes.countdown.chip', { clock })}
     </span>

@@ -164,11 +164,12 @@
   --hero-gold-action-2: #d9a521;
   --on-hero-gold-action: #2a1e04;
 
-  /* Radii */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 1.125rem;
-  --radius-xl: 1.5rem;
+  /* Radii (DESIGN.md): nothing is rounder than 16px except true circles */
+  --radius-xs: 0.25rem; /* swatches, tiny marks */
+  --radius-sm: 0.375rem; /* chips, status pills, badges */
+  --radius-md: 0.5rem; /* small buttons, menu items, boxes inside a card */
+  --radius-lg: 0.75rem; /* buttons, fields, cards, tiles, popovers */
+  --radius-xl: 1rem; /* dialogs, bottom sheets, the big balance card */
 
   /* Spacing scale */
   --space-1: 0.25rem;

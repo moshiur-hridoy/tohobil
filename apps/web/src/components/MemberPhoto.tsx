@@ -92,11 +92,11 @@ export function PhotoSheet({ open, onClose, memberId, name, fileId, asCashier = 
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
         <Dialog.Content
           aria-describedby="photo-sheet-hint"
-          className="fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-[24px] border border-border bg-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-lg sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-[24px]"
+          className="fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-xl border border-border bg-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-lift sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-xl"
         >
           <div className="mb-3 flex items-center justify-between gap-3">
             <Dialog.Title className="text-lg font-bold">{asCashier ? t('photo.titleFor', { name }) : t('photo.title')}</Dialog.Title>
-            <Dialog.Close aria-label={t('common.close')} disabled={!!busy} className="grid h-10 w-10 place-items-center rounded-full text-muted hover:bg-hover">
+            <Dialog.Close aria-label={t('common.close')} disabled={!!busy} className="grid h-10 w-10 place-items-center rounded-md text-muted hover:bg-hover">
               <Icon d="M6 6l12 12M18 6L6 18" size={20} />
             </Dialog.Close>
           </div>

@@ -141,7 +141,7 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
         </StatGrid>
 
         {verify.data && (
-          <p role="status" className={`rounded-xl px-4 py-2.5 text-sm font-medium ${verify.data.ok ? 'bg-ok-bg text-ok' : 'bg-bad-bg text-bad'}`}>
+          <p role="status" className={`rounded-lg px-4 py-2.5 text-sm font-medium ${verify.data.ok ? 'bg-ok-bg text-ok' : 'bg-bad-bg text-bad'}`}>
             {verify.data.ok ? t('ledgerPage.verifyOk', { n: formatCount(verify.data.count), seq: localDigits(verify.data.last_seq ?? '-') }) : t('ledgerPage.verifyBad', { n: formatCount(verify.data.issues_total) })}
           </p>
         )}
@@ -263,7 +263,7 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
           </div>
           <button
             type="button"
-            className="flex h-10 shrink-0 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm font-semibold"
+            className="btn btn-secondary h-10 shrink-0 gap-1.5 px-3 text-foreground"
             onClick={() => void verify.refetch()}
             disabled={verify.isFetching}
           >
@@ -303,7 +303,7 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
           {account || memberId || from || to ? (
             <button
               type="button"
-              className="h-9 rounded-xl px-2 text-sm font-semibold text-accent"
+              className="h-9 rounded-md px-2 text-sm font-semibold text-accent"
               onClick={() => { setAccount(''); setMemberId(''); setFrom(''); setTo(''); }}
             >
               {t('ledgerEntry.clearFilters')}
@@ -311,7 +311,7 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
           ) : <span />}
           <button
             type="button"
-            className="flex h-9 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm"
+            className="btn btn-secondary btn-sm text-foreground"
             onClick={() => setOrder(order === 'desc' ? 'asc' : 'desc')}
           >
             {order === 'desc' ? t('ledgerPage.newestFirst') : t('ledgerPage.oldestFirst')}
@@ -336,13 +336,13 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
         ) : (
           <ul className="space-y-2">
             {rows.map((r) => (
-              <li key={r.seq} className={`rounded-[18px] border border-border p-3.5 ${r.open_objections > 0 ? 'bg-bad-bg' : 'bg-card'}`}>
+              <li key={r.seq} className={`rounded-lg border border-border p-3.5 ${r.open_objections > 0 ? 'bg-bad-bg' : 'bg-card'}`}>
                 <EntryBody
                   r={r}
                   details
                   action={
                     canObject && (
-                      <button type="button" onClick={() => { attempt.current = uuid(); setNotice(null); setObjectTo(r); }} className="h-9 shrink-0 rounded-xl border border-border px-3 text-sm">
+                      <button type="button" onClick={() => { attempt.current = uuid(); setNotice(null); setObjectTo(r); }} className="btn btn-secondary btn-sm shrink-0 text-foreground">
                         {t('ledgerPage.objectButton')}
                       </button>
                     )
@@ -354,7 +354,7 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
         )}
 
         {q.hasNextPage && (
-          <button type="button" disabled={q.isFetchingNextPage} onClick={() => void q.fetchNextPage()} className="h-11 w-full rounded-md border border-border">
+          <button type="button" disabled={q.isFetchingNextPage} onClick={() => void q.fetchNextPage()} className="btn btn-secondary w-full text-foreground">
             {t('common.loadMore')}
           </button>
         )}

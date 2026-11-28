@@ -61,7 +61,7 @@ export function SmsPanel({ onResults, onCreate }: { onResults: (r: SmsResult[]) 
           {error == null && results.length > 0 && (
             <ul className="space-y-3">
               {results.map((r, i) => (
-                <li key={i} className={`rounded-xl border p-3 text-sm ${!r.result.parsed ? 'border-warn bg-warn-bg' : r.result.matches.some((m) => m.exact) ? 'border-ok bg-ok-bg' : 'border-border'}`}>
+                <li key={i} className={`rounded-md border p-3 text-sm ${!r.result.parsed ? 'border-warn bg-warn-bg' : r.result.matches.some((m) => m.exact) ? 'border-ok bg-ok-bg' : 'border-border'}`}>
                   {!r.result.parsed ? (
                     <p className="font-medium text-warn">{t('paymentsPage.notParsed')}</p>
                   ) : (

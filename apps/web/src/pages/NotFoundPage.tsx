@@ -9,7 +9,7 @@ export function NotFoundPage() {
       <p className="text-lg">{t('errors.pageNotFound')}</p>
       <Link
         to="/home"
-        className="rounded-md bg-primary px-4 py-3 font-medium text-primary-foreground"
+        className="btn btn-primary"
       >
         {t('nav.home')}
       </Link>

@@ -82,7 +82,7 @@ export function MandateCard({ partner, mandates, onChanged }: { partner: Partner
         <>
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-lg font-bold tabular-nums">{t('mandate.perMonth', { amount: taka(shown.monthly_max_paisa) })}</span>
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[shown.status]}`}>{t(`mandate.status.${shown.status}`)}</span>
+            <span className={`rounded-sm px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[shown.status]}`}>{t(`mandate.status.${shown.status}`)}</span>
           </div>
           <p className="mt-1 text-sm text-muted">
             {t('mandate.span', { from: fmtPeriod(shown.first_period), to: fmtPeriod(shown.last_period) })}
@@ -90,7 +90,7 @@ export function MandateCard({ partner, mandates, onChanged }: { partner: Partner
           </p>
 
           {shown.status === 'active' && (
-            <div className="mt-3 rounded-xl bg-soft p-3 text-sm">
+            <div className="mt-3 rounded-md bg-soft p-3 text-sm">
               <div className="flex justify-between gap-2">
                 <span>{t('mandate.thisMonth', { month: fmtPeriod(todayDhaka().slice(0, 7)) })}</span>
                 <span className="font-semibold tabular-nums">{taka(shown.used_this_month_paisa)} / {taka(shown.monthly_max_paisa)}</span>
@@ -129,10 +129,10 @@ export function MandateCard({ partner, mandates, onChanged }: { partner: Partner
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    {p.reversed && <span className="rounded-full bg-soft px-2.5 py-0.5 text-xs font-semibold text-muted">{t('mandate.reversed')}</span>}
-                    {p.reversal_pending && <span className="rounded-full bg-warn-bg px-2.5 py-0.5 text-xs font-semibold text-warn">{t('mandate.reversalPending')}</span>}
+                    {p.reversed && <span className="rounded-sm bg-soft px-2.5 py-0.5 text-xs font-semibold text-muted">{t('mandate.reversed')}</span>}
+                    {p.reversal_pending && <span className="rounded-sm bg-warn-bg px-2.5 py-0.5 text-xs font-semibold text-warn">{t('mandate.reversalPending')}</span>}
                     {p.receipt_file_id && (
-                      <button type="button" onClick={() => void openReceipt(p.receipt_file_id!)} className="inline-flex items-center gap-1 rounded-full bg-soft px-2.5 py-1 text-xs font-semibold text-ink2 hover:bg-hover">
+                      <button type="button" onClick={() => void openReceipt(p.receipt_file_id!)} className="inline-flex items-center gap-1 rounded-md bg-soft px-2.5 py-1 text-xs font-semibold text-ink2 hover:bg-hover">
                         <Icon d={ICONS.doc} size={14} />{t('holding.doc.receipt')}
                       </button>
                     )}

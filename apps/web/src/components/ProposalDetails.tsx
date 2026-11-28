@@ -47,7 +47,7 @@ export function ProposalDetails({ type, payload, plain = false, table }: {
   if (TEXT_TYPES.includes(type)) {
     const text = payload.text as string | undefined;
     // `plain`: running text under a title, without the tinted box.
-    return text ? <p className={`whitespace-pre-line [overflow-wrap:anywhere] ${plain ? 'text-ink2' : 'rounded-xl bg-soft p-3 text-sm'}`}>{text}</p> : null;
+    return text ? <p className={`whitespace-pre-line [overflow-wrap:anywhere] ${plain ? 'text-ink2' : 'rounded-md bg-soft p-3 text-sm'}`}>{text}</p> : null;
   }
   return (
     <div className="space-y-3 text-sm">
@@ -66,14 +66,14 @@ function ComplianceChecklist({ type, payload, bare = false }: { type: ProposalTy
   // One declaration on the form ticks every point (ASSUMPTIONS 127), so a complete one reads as one line.
   if (allTrue) {
     return (
-      <div className={bare ? '' : 'rounded-xl bg-soft p-3'}>
+      <div className={bare ? '' : 'rounded-md bg-soft p-3'}>
         <p className="flex items-start gap-2 font-medium"><span className="text-ok">✓</span>{t('proposalsPage.halalPledge')}</p>
         <p className="mt-0.5 pl-5 text-xs text-muted">{t('proposalsPage.halalPledgeHint')}</p>
       </div>
     );
   }
   return (
-    <div className="rounded-xl bg-warn-bg p-3">
+    <div className="rounded-md bg-warn-bg p-3">
       <p className="mb-1 font-medium">{t('proposalsPage.compliance')}</p>
       <ul className="space-y-1">
         {COMPLIANCE_CHECKLIST_FIELDS.map((f) => (
@@ -168,7 +168,7 @@ function DetailRows({ type, payload, table }: { type: ProposalType; payload: Rec
   );
   if (table) return list;
   return (
-    <div className="rounded-xl bg-soft p-3">
+    <div className="rounded-md bg-soft p-3">
       <p className="mb-1 font-medium">{t('proposal.payload')}</p>
       {list}
     </div>
@@ -191,7 +191,7 @@ function FileButton({ fileId }: { fileId: string }) {
     window.open(URL.createObjectURL(await apiBlob(`/files/${fileId}`)), '_blank', 'noopener');
   };
   return (
-    <button type="button" onClick={() => void open()} className="h-9 rounded-xl border border-border bg-card px-3 text-sm font-semibold text-accent">
+    <button type="button" onClick={() => void open()} className="btn btn-secondary btn-sm text-accent">
       {t('proposalFields.viewFile')}
     </button>
   );

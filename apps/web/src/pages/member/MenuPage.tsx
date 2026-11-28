@@ -19,9 +19,9 @@ import type { DeviceRow } from './DevicesPage';
 
 /** The fund's first year; the chips run from here to next year. */
 const FIRST_YEAR = 2026;
-const CARD = 'overflow-clip rounded-[20px] border border-border bg-card p-4';
+const CARD = 'overflow-clip rounded-lg border border-border bg-card p-4';
 /** A card holding several rows separated by thin lines. */
-const GROUP = 'divide-y divide-border overflow-clip rounded-[20px] border border-border bg-card';
+const GROUP = 'divide-y divide-border overflow-clip rounded-lg border border-border bg-card';
 const ROW = 'flex min-h-14 items-center gap-3 px-4 py-3';
 const CHEVRON = 'M9 6l6 6-6 6';
 /** Neutral tile for the icon at the start of a settings row. */
@@ -74,19 +74,19 @@ export function MenuPage() {
             </span>
           </button>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[1.0625rem] font-bold">{me.full_name}</p>
-            <p className="text-[0.8125rem] text-muted">
+            <p className="truncate text-lead font-bold">{me.full_name}</p>
+            <p className="text-meta text-muted">
               {me.member_code} · {me.roles.map((r) => t(`roles.${r}`)).join(', ')}
             </p>
           </div>
         </section>
       )}
       {me && <PhotoSheet open={photoOpen} onClose={() => setPhotoOpen(false)} memberId={me.member_id} name={me.full_name} fileId={myPhoto} />}
-      {me?.read_only && <p className="rounded-xl bg-warn-bg p-3 text-sm text-warn">{t('errors.auth.read_only')}</p>}
+      {me?.read_only && <p className="rounded-md bg-warn-bg p-3 text-sm text-warn">{t('errors.auth.read_only')}</p>}
 
       {/* Cashier and auditor reach the admin pages from a phone too (the auditor may have no computer). */}
       {privileged && (
-        <Link to="/admin" className="flex items-center gap-3 rounded-[18px] border border-border bg-card p-3.5 text-foreground">
+        <Link to="/admin" className="flex items-center gap-3 rounded-lg border border-border bg-card p-3.5 text-foreground">
           <Chip tone="bg-accent-soft text-accent" size={40} iconSize={22} d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />
           <span className="min-w-0 flex-1">
             <span className="block font-semibold">{t('menu.adminPanel')}</span>
@@ -103,7 +103,7 @@ export function MenuPage() {
           <Link
             key={x.to}
             to={x.to}
-            className={`flex min-w-0 items-center gap-3 rounded-[18px] border border-border bg-card p-3.5 text-foreground ${i === tiles.length - 1 && tiles.length % 2 === 1 ? 'col-span-2' : ''}`}
+            className={`flex min-w-0 items-center gap-3 rounded-lg border border-border bg-card p-3.5 text-foreground ${i === tiles.length - 1 && tiles.length % 2 === 1 ? 'col-span-2' : ''}`}
           >
             <Chip tone={x.tone} d={x.d} size={40} iconSize={22} />
             <span className="min-w-0 break-words text-sm font-semibold leading-snug">{x.label}</span>
@@ -170,7 +170,7 @@ export function MenuPage() {
       <button
         type="button"
         onClick={() => setLogoutOpen(true)}
-        className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-border bg-card font-semibold text-bad"
+        className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-lg border border-border bg-card font-semibold text-bad"
       >
         <Icon d="M9 4H5v16h4 M16 8l4 4-4 4 M20 12H9" size={18} />
         {t('menu.logout')}
@@ -224,7 +224,7 @@ function LinkRow({ to, icon, label, hint, hintClass = 'text-muted', value }: { t
 function PdfRow({ label, hint, disabled, onClick }: { label: string; hint: string; disabled?: boolean; onClick: () => void }) {
   return (
     <button type="button" disabled={disabled} onClick={onClick} className={ROW + ' w-full text-left text-foreground hover:bg-hover disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent'}>
-      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent">
+      <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent">
         <Icon d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5zm0 0v5h5M9 13h6M9 17h4" size={20} />
       </span>
       <span className="min-w-0 flex-1">
@@ -263,7 +263,7 @@ function MyStatements() {
       </div>
       <div className="mb-3 flex items-center justify-between gap-3">
         <span className="text-sm text-muted">{t('menuReports.year')}</span>
-        <div role="radiogroup" aria-label={t('menuReports.year')} className="inline-flex rounded-full border border-border bg-soft p-0.5">
+        <div role="radiogroup" aria-label={t('menuReports.year')} className="inline-flex rounded-lg border border-border bg-soft p-0.5">
           {years.map((y) => (
             <button
               key={y}
@@ -271,7 +271,7 @@ function MyStatements() {
               role="radio"
               aria-checked={y === year}
               onClick={() => setYear(y)}
-              className={`h-8 rounded-full px-3.5 text-sm font-semibold transition-colors ${y === year ? 'bg-card text-foreground shadow-sm' : 'text-muted hover:text-foreground'}`}
+              className={`h-8 rounded-md px-3.5 text-sm font-semibold transition-colors ${y === year ? 'bg-card text-foreground shadow-card' : 'text-muted hover:text-foreground'}`}
             >
               {localDigits(y)}
             </button>
@@ -279,7 +279,7 @@ function MyStatements() {
         </div>
       </div>
       {noData && <p className="mb-3 text-sm text-muted">{t('menuReports.noData', { year: localDigits(year) })}</p>}
-      <div className="divide-y divide-border overflow-clip rounded-2xl border border-border">
+      <div className="divide-y divide-border overflow-clip rounded-lg border border-border">
         <PdfRow
           label={t('menuReports.statement')}
           hint={t('menuReports.statementFor', { year: localDigits(year) })}

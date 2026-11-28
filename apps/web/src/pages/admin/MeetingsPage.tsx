@@ -86,7 +86,7 @@ export function MeetingsPage() {
                     {open.map((m) => {
                       const started = m.scheduled_for !== null && new Date(m.scheduled_for).getTime() <= now;
                       return (
-                        <li key={m.id} className={`rounded-2xl border p-4 ${m.status === 'draft' ? 'border-warn bg-warn-bg' : 'border-border'}`}>
+                        <li key={m.id} className={`rounded-lg border p-4 ${m.status === 'draft' ? 'border-warn bg-warn-bg' : 'border-border'}`}>
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div className="min-w-0">
                               {m.date && m.time ? (
@@ -210,7 +210,7 @@ export function MeetingsPage() {
 
 function MeetingStatus({ status }: { status: MeetingRow['status'] }) {
   const { t } = useTranslation();
-  return <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_TONE[status]}`}>{t(`meetings.status.${status}`)}</span>;
+  return <span className={`shrink-0 rounded-sm px-2.5 py-1 text-xs font-semibold ${STATUS_TONE[status]}`}>{t(`meetings.status.${status}`)}</span>;
 }
 
 /** The day of the month the meeting window starts, in this or next month, as the form's first guess. */
@@ -360,7 +360,7 @@ function AttendanceDialog({ meetingId, onClose }: { meetingId: string; onClose: 
                           type="button"
                           aria-pressed={active}
                           onClick={() => setMarks((m) => ({ ...m, [p.member_id]: s }))}
-                          className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors ${active ? ATTENDANCE_TONE[s] : 'bg-soft text-muted hover:text-foreground'}`}
+                          className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors ${active ? ATTENDANCE_TONE[s] : 'bg-soft text-muted hover:text-foreground'}`}
                         >
                           {t(`meetings.attendance.${s}`)}
                         </button>
@@ -388,7 +388,7 @@ function AttendanceDialog({ meetingId, onClose }: { meetingId: string; onClose: 
           </p>
           {error != null && <p className="mt-2 text-sm text-bad">{errorMessage(t, error).message}</p>}
           {confirming ? (
-            <div className="mt-3 rounded-xl bg-warn-bg p-3 text-sm text-warn">
+            <div className="mt-3 rounded-md bg-warn-bg p-3 text-sm text-warn">
               <p>{t('meetings.finalWarning')}</p>
               <div className="mt-3 flex justify-end gap-2">
                 <button type="button" className={BTN_SECONDARY} onClick={() => setConfirming(false)}>{t('common.back')}</button>
@@ -429,8 +429,8 @@ function MeetingDetailDialog({ meetingId, onClose }: { meetingId: string; onClos
                       <p className="truncate font-semibold">{p.member_name}</p>
                       {p.reason && <p className="text-xs text-muted">{p.reason}</p>}
                     </div>
-                    {fine && <span className="rounded-full bg-bad-bg px-2.5 py-1 text-xs font-semibold text-bad">{t('meetings.fined', { amount: taka(fine.amount_paisa) })}</span>}
-                    {p.status && <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${ATTENDANCE_TONE[p.status]}`}>{t(`meetings.attendance.${p.status}`)}</span>}
+                    {fine && <span className="rounded-sm bg-bad-bg px-2.5 py-1 text-xs font-semibold text-bad">{t('meetings.fined', { amount: taka(fine.amount_paisa) })}</span>}
+                    {p.status && <span className={`rounded-sm px-2.5 py-1 text-xs font-semibold ${ATTENDANCE_TONE[p.status]}`}>{t(`meetings.attendance.${p.status}`)}</span>}
                   </li>
                 );
               })}

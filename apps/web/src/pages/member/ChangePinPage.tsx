@@ -54,7 +54,7 @@ export function ChangePinPage() {
         type="button"
         disabled={!ready}
         onClick={() => change.mutate()}
-        className="h-12 w-full rounded-md bg-primary font-medium text-primary-foreground disabled:opacity-50"
+        className="btn btn-primary btn-lg w-full"
       >
         {t('pinChange.submit')}
       </button>

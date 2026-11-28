@@ -6,6 +6,16 @@ import type { Config } from 'tailwindcss';
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
+    borderRadius: {
+      none: '0',
+      xs: 'var(--radius-xs)',
+      sm: 'var(--radius-sm)',
+      DEFAULT: 'var(--radius-xs)',
+      md: 'var(--radius-md)',
+      lg: 'var(--radius-lg)',
+      xl: 'var(--radius-xl)',
+      full: '9999px',
+    },
     extend: {
       colors: {
         ok: 'var(--ok)',
@@ -53,11 +63,17 @@ export default {
         // hover lift for clickable cards; dark enough to read on the dark surfaces too
         lift: '0 12px 28px -14px rgba(0,0,0,0.45)',
       },
-      borderRadius: {
-        sm: 'var(--radius-sm)',
-        md: 'var(--radius-md)',
-        lg: 'var(--radius-lg)',
-        xl: 'var(--radius-xl)',
+      // the type scale beyond Tailwind's own xs/sm/base/lg/xl (DESIGN.md); size only, no line height
+      fontSize: {
+        '2xs': '0.6875rem',
+        meta: '0.8125rem',
+        body: '0.9375rem',
+        lead: '1.0625rem',
+        title: '1.1875rem',
+        heading: '1.375rem',
+        figure: '1.75rem',
+        'figure-lg': '2.25rem',
+        display: '2.625rem',
       },
       // wrong-PIN feedback on the PIN dots (motion-safe only)
       keyframes: {

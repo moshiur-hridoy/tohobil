@@ -106,13 +106,13 @@ function FundCard({ icon, tone, title, rule, held, inTotal, outTotal, extraStat,
   return (
     <Card className="px-5 pb-3 pt-5 sm:px-6">
       <CardHead icon={icon} tone={tone} title={title} sub={rule} />
-      <div className="mb-4 rounded-2xl bg-soft p-4">
-        <p className="text-[0.8125rem] text-muted">{negative ? t('fundsPage.deficit') : t('fundsPage.inHand')}</p>
-        <p className={`text-[1.75rem] font-bold leading-tight tabular-nums ${negative ? 'text-bad' : ''}`}>
+      <div className="mb-4 rounded-lg bg-soft p-4">
+        <p className="text-meta text-muted">{negative ? t('fundsPage.deficit') : t('fundsPage.inHand')}</p>
+        <p className={`text-figure font-bold leading-tight tabular-nums ${negative ? 'text-bad' : ''}`}>
           {held === null ? '…' : taka(negative ? (-BigInt(held)).toString() : held)}
         </p>
         {negative && deficitHint && <p className="mt-0.5 text-xs text-bad">{deficitHint}</p>}
-        <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-[0.8125rem]">
+        <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-meta">
           <div className="flex gap-1.5"><dt className="text-muted">{t('fundsPage.cameIn')}</dt><dd className="font-semibold tabular-nums text-ok">{inTotal === null ? '…' : taka(inTotal)}</dd></div>
           <div className="flex gap-1.5"><dt className="text-muted">{t('fundsPage.wentOut')}</dt><dd className="font-semibold tabular-nums text-bad">{outTotal === null ? '…' : taka(outTotal)}</dd></div>
           {extraStat}
@@ -206,7 +206,7 @@ function FundExpensesCard({ query, isCashier }: { query: UseQueryResult<FundExpe
     <Card className="px-5 pb-3 pt-5 sm:px-6">
       <CardHead icon={ICONS.layers} tone="bg-soft text-ink2" title={t('fundsPage.capitalCosts')} sub={t('fundsPage.capitalCostsSub')} action={<span className="font-bold tabular-nums">{taka(ex.total_paisa)}</span>} />
       {canMove && (
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-blue-bg p-3.5 text-sm">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-blue-bg p-3.5 text-sm">
           <p className="min-w-0 flex-1 text-blue">{t('fundsPage.moveHint', { n: formatCount(movable.data!.items.length), total: taka(movable.data!.total_paisa) })}</p>
           <button type="button" className={BTN_SM_PRIMARY} onClick={() => setMoving(true)}>{t('fundsPage.moveButton')}</button>
         </div>
@@ -233,7 +233,7 @@ function FundExpensesCard({ query, isCashier }: { query: UseQueryResult<FundExpe
         }}
       >
         <p className="text-sm">{t('fundsPage.moveExplain')}</p>
-        <ul className="rounded-xl bg-soft px-3 text-sm">
+        <ul className="rounded-md bg-soft px-3 text-sm">
           {movable.data?.items.map((c) => (
             <li key={c.seq} className="flex justify-between gap-3 border-b border-border py-2 last:border-b-0">
               <span className="min-w-0 truncate">{t(`charityPage.account.${c.account}`)} · {fmtDate(c.entry_date)} · #{localDigits(c.seq)}</span>
@@ -301,12 +301,12 @@ function SpendSheet({ open, onClose, levy }: { open: boolean; onClose: () => voi
         {limit !== null && t('fundsPage.limitHint', { limit: taka(limit.toString()) })}
       </p>
       {overLimit && (
-        <div className="rounded-xl bg-warn-bg p-3 text-sm text-warn">
+        <div className="rounded-md bg-warn-bg p-3 text-sm text-warn">
           {t('fundsPage.needsVote')}{' '}
           <button type="button" className="font-semibold underline" onClick={() => { onClose(); void navigate('/admin/proposals?new=expense'); }}>{t('fundsPage.makeProposal')}</button>
         </div>
       )}
-      {overHeld && !overLimit && <p className="rounded-xl bg-bad-bg p-3 text-sm text-bad">{t('fundsPage.notEnough', { held: taka((held < 0n ? 0n : held).toString()) })}</p>}
+      {overHeld && !overLimit && <p className="rounded-md bg-bad-bg p-3 text-sm text-bad">{t('fundsPage.notEnough', { held: taka((held < 0n ? 0n : held).toString()) })}</p>}
       <AccountSelect value={account} onChange={setAccount} />
       <label className="field-label">{t('fundsPage.payee')}
         <input className="field mt-1 w-full" value={payee} onChange={(e) => setPayee(e.target.value)} placeholder={t('fundsPage.payeeExample')} />

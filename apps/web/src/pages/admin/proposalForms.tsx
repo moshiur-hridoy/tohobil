@@ -283,7 +283,7 @@ export function ProposalFields({ type, form, onChange, hidden = [] }: { type: Pr
       ))}
 
       {(type === 'investment_purchase' || type === 'investment_mandate') && (
-        <label className="flex items-start gap-3 rounded-xl border border-border p-3 text-sm">
+        <label className="flex items-start gap-3 rounded-md border border-border p-3 text-sm">
           <input
             type="checkbox"
             className="mt-0.5 size-5 shrink-0"
@@ -298,7 +298,7 @@ export function ProposalFields({ type, form, onChange, hidden = [] }: { type: Pr
       )}
 
       {type === 'financing_arrangement' && (
-        <fieldset className="rounded-xl border border-border p-3">
+        <fieldset className="rounded-md border border-border p-3">
           <legend className="px-1 text-sm font-medium">{t('proposalFields.instalments')}</legend>
           {form.instalments.map((row, i) => (
             <div key={i} className="mb-2 flex gap-2">
@@ -306,14 +306,14 @@ export function ProposalFields({ type, form, onChange, hidden = [] }: { type: Pr
               <input aria-label={t('common.amount')} placeholder={t('common.amount')} inputMode="decimal" className="field flex-1" value={row.amount} onChange={(e) => onChange({ ...form, instalments: form.instalments.map((r, j) => (j === i ? { ...r, amount: e.target.value } : r)) })} />
             </div>
           ))}
-          <button type="button" className="h-9 rounded-xl border border-border px-3 text-sm" onClick={() => onChange({ ...form, instalments: [...form.instalments, { due_on: '', amount: '' }] })}>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => onChange({ ...form, instalments: [...form.instalments, { due_on: '', amount: '' }] })}>
             {t('proposalFields.addInstalment')}
           </button>
         </fieldset>
       )}
 
       {type === 'wind_up' && (
-        <fieldset className="rounded-xl border border-border p-3">
+        <fieldset className="rounded-md border border-border p-3">
           <legend className="px-1 text-sm font-medium">{t('proposalFields.asset_ids_to_sell')}</legend>
           {activeAssets.map((a) => (
             <label key={a.id} className="flex items-center gap-2 py-1 text-sm">

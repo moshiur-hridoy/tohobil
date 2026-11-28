@@ -60,7 +60,7 @@ export function ConfirmSheet({ open, onClose, title, children, confirmLabel, onC
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
         <Dialog.Content
           aria-describedby={undefined}
-          className="fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-xl border border-border bg-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-lg sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-xl"
+          className="fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-xl border border-border bg-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-lift sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-xl"
         >
           <Dialog.Title className="mb-3 text-lg font-semibold">{title}</Dialog.Title>
           <div className="space-y-2">{children}</div>
@@ -82,14 +82,14 @@ export function ConfirmSheet({ open, onClose, title, children, confirmLabel, onC
           )}
 
           <div className="mt-4 flex gap-3">
-            <button type="button" disabled={busy} onClick={onClose} className="h-12 flex-1 rounded-md border border-border">
+            <button type="button" disabled={busy} onClick={onClose} className="btn btn-secondary flex-1">
               {t('common.cancel')}
             </button>
             <button
               type="button"
               disabled={busy || !canConfirm}
               onClick={() => void run()}
-              className={`h-12 flex-1 rounded-md font-medium disabled:opacity-50 ${tone === 'danger' ? 'bg-bad text-primary-foreground' : 'bg-primary text-primary-foreground'}`}
+              className={`btn flex-1 ${tone === 'danger' ? 'btn-danger' : 'btn-primary'}`}
             >
               {busy ? t('common.working') : confirmLabel}
             </button>

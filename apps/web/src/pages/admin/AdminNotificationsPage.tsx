@@ -121,13 +121,13 @@ export function AdminNotificationsPage() {
                     </thead>
                     <tbody>
                       {rows.map((n) => (
-                        <tr key={n.id} className="transition-colors hover:bg-hover">
+                        <tr key={n.id} className="row-fill">
                           <td className="whitespace-nowrap border-b border-border px-2 py-2.5 text-ink2">{fmtInstant(n.scheduled_for)}</td>
                           <td className="border-b border-border px-2 py-2.5 font-semibold">{code(n.member_id)}</td>
                           <td className="border-b border-border px-2 py-2.5 font-mono text-xs">{n.template}</td>
                           <td className="border-b border-border px-2 py-2.5 uppercase text-ink2">{n.channel}</td>
                           <td className="border-b border-border px-2 py-2.5" title={n.error ?? undefined}>
-                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[n.status]}`}>{t(`adminNotifications.status.${n.status}`)}</span>
+                            <span className={`rounded-sm px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[n.status]}`}>{t(`adminNotifications.status.${n.status}`)}</span>
                           </td>
                           <td className="whitespace-nowrap border-b border-border px-2 py-2.5 text-ink2">{n.opened_at ? fmtInstant(n.opened_at) : '—'}</td>
                         </tr>
@@ -157,7 +157,7 @@ export function AdminNotificationsPage() {
                 <span className="flex items-center gap-2">
                   {t('adminNotifications.unreachable')}
                   {unreachable.data && unreachable.data.length > 0 && (
-                    <span className="rounded-full bg-warn-bg px-2.5 py-0.5 text-xs font-bold text-warn tabular-nums">{formatCount(unreachable.data.length)}</span>
+                    <span className="rounded-sm bg-warn-bg px-2.5 py-0.5 text-xs font-bold text-warn tabular-nums">{formatCount(unreachable.data.length)}</span>
                   )}
                 </span>
               }

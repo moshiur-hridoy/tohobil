@@ -91,10 +91,10 @@ export function VoteDetailPage() {
   return (
     <div className="space-y-3 p-4">
       <header className="flex items-center gap-2">
-        <Link to="/votes" aria-label={t('common.back')} className="grid h-11 w-11 shrink-0 place-items-center rounded-[14px] border border-border bg-card text-foreground">
+        <Link to="/votes" aria-label={t('common.back')} className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-border bg-card text-foreground">
           <Icon d="M15 5l-7 7 7 7" size={22} sw={2} />
         </Link>
-        <h1 className="flex-1 pl-1 text-[1.1875rem] font-bold">{t('votes.title')}</h1>
+        <h1 className="flex-1 pl-1 text-title font-bold">{t('votes.title')}</h1>
         {d && <StatusPill status={d.status === 'open' ? 'pending' : d.status} label={t(`status.proposal.${d.status}`)} />}
       </header>
 
@@ -103,10 +103,10 @@ export function VoteDetailPage() {
       ) : (
         <>
           {/* The proposal, under the time left while the vote runs */}
-          <section className="overflow-hidden rounded-[20px] border border-border bg-card shadow-card">
+          <section className="overflow-hidden rounded-lg border border-border bg-card shadow-card">
             {isOpen && d.closes_at && <VoteCountdown closesAt={d.closes_at} />}
             <div className="space-y-2 p-4">
-              <h2 className="text-[1.375rem] font-bold leading-snug [overflow-wrap:anywhere]">{d.title}</h2>
+              <h2 className="text-heading font-bold leading-snug [overflow-wrap:anywhere]">{d.title}</h2>
               {d.description && <p className="whitespace-pre-line text-ink2 [overflow-wrap:anywhere]">{d.description}</p>}
               {d.subject && (
                 <p className="text-sm text-muted">
@@ -124,11 +124,11 @@ export function VoteDetailPage() {
             <section
               ref={setSheet}
               data-testid="vote-sheet"
-              className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] mx-auto max-h-[60dvh] max-w-lg overflow-y-auto rounded-t-[24px] border border-b-0 border-track bg-card px-4 pb-8 pt-3 shadow-[0_-12px_28px_-14px_rgba(0,0,0,0.45)]"
+              className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] mx-auto max-h-[60dvh] max-w-lg overflow-y-auto rounded-t-xl border border-b-0 border-track bg-card px-4 pb-8 pt-3 shadow-[0_-12px_28px_-14px_rgba(0,0,0,0.45)]"
             >
               <h3 className="text-base font-bold">{t('votes.yourVote')}</h3>
               {isSubject ? (
-                <p className="mt-2 rounded-xl bg-warn-bg p-2.5 text-sm text-warn">{t('votes.cannotVoteSubject')}</p>
+                <p className="mt-2 rounded-md bg-warn-bg p-2.5 text-sm text-warn">{t('votes.cannotVoteSubject')}</p>
               ) : (
                 <>
                   <div className="mt-3 grid grid-cols-3 gap-2">
@@ -170,7 +170,7 @@ function ChoiceButton({ choice, active, disabled, onPick }: { choice: Choice; ac
       aria-pressed={active}
       disabled={disabled}
       onClick={onPick}
-      className={`flex h-[54px] items-center justify-center gap-1.5 rounded-2xl text-base font-bold transition-transform active:scale-95 disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100 ${tone}`}
+      className={`btn btn-lg gap-1.5 px-0 text-base transition-transform active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100 ${tone}`}
     >
       <Icon d={CHOICE_ICON[choice]} size={20} sw={2.2} />
       {t(`votes.${choice}`)}
@@ -202,7 +202,7 @@ function ResultCard({ d }: { d: ProposalDetail }) {
     ['border border-border bg-soft', t('votes.notVotedShort'), notVoted],
   ] as const;
   return (
-    <section className="rounded-[20px] border border-border bg-card p-4 shadow-card">
+    <section className="rounded-lg border border-border bg-card p-4 shadow-card">
       <div className="flex items-center gap-3">
         <Chip tone="bg-accent-soft text-accent" d={ICON_RESULT} />
         <h3 className="flex-1 text-base font-bold">{t('votes.result')}</h3>
@@ -236,7 +236,7 @@ function VoterList({ d, myId }: { d: ProposalDetail; myId: string | undefined })
   const { t } = useTranslation();
   const voted = d.voters.filter((v) => v.voted).length;
   return (
-    <section className="rounded-[20px] border border-border bg-card px-4 pb-2 pt-4 shadow-card">
+    <section className="rounded-lg border border-border bg-card px-4 pb-2 pt-4 shadow-card">
       <div className="flex items-baseline justify-between gap-3 pb-2">
         <h3 className="text-base font-bold">{d.ballots_hidden ? t('proposal.voterList') : t('votes.whoVoted')}</h3>
         <span className="text-sm text-muted">{localDigits(`${voted}/${d.voters.length}`)}</span>
@@ -255,7 +255,7 @@ function VoterList({ d, myId }: { d: ProposalDetail; myId: string | undefined })
             <li key={v.member_id} className="flex min-h-[52px] items-center gap-3 border-t border-border py-2">
               <Avatar fileId={v.photo_file_id} fallback={Array.from(v.full_name.trim())[0] ?? '?'} className={`h-9 w-9 text-sm font-bold ${me ? 'bg-accent-fill text-on-accent' : 'bg-accent-soft text-accent'}`} />
               <span className="min-w-0 flex-1">
-                <span className={`block truncate text-[0.9375rem] ${me ? 'font-bold' : 'font-medium'}`}>
+                <span className={`block truncate text-body ${me ? 'font-bold' : 'font-medium'}`}>
                   {v.full_name}
                   {me && <span className="font-normal text-muted"> ({t('votes.you')})</span>}
                 </span>
@@ -264,7 +264,7 @@ function VoterList({ d, myId }: { d: ProposalDetail; myId: string | undefined })
                   {d.basis === 'share' && <> · {t('proposal.countShares', { n: formatCount(v.weight) })}</>}
                 </span>
               </span>
-              <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${pill}`}>
+              <span className={`inline-flex shrink-0 items-center gap-1 rounded-sm px-2.5 py-1 text-xs font-bold ${pill}`}>
                 {v.voted && !cast && <span aria-hidden="true">✓</span>}
                 {label}
               </span>

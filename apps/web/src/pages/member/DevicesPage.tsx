@@ -60,7 +60,7 @@ export function DevicesPage() {
       <div className="flex flex-col gap-3 px-4 pb-6 pt-1">
         {devices.error && <LoadError error={devices.error} onRetry={() => void devices.refetch()} />}
 
-        <ul className="divide-y divide-border overflow-clip rounded-[20px] border border-border bg-card">
+        <ul className="divide-y divide-border overflow-clip rounded-lg border border-border bg-card">
           {sorted.map((d) => {
             const lastUsed = d.last_seen_at ?? d.created_at;
             const idle = daysBetween(toDhakaDate(new Date(lastUsed)), today);
@@ -74,13 +74,13 @@ export function DevicesPage() {
                     {t('devices.lastUsed', { when: when(lastUsed) })} · {t('devices.added', { date: fmtDate(toDhakaDate(new Date(d.created_at))) })}
                   </p>
                   {d.current ? (
-                    <span className="mt-1 inline-block rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent">{t('menu.thisDevice')}</span>
+                    <span className="mt-1 inline-block rounded-sm bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent">{t('menu.thisDevice')}</span>
                   ) : (
-                    idle >= IDLE_DAYS && <span className="mt-1 inline-block rounded-full bg-warn-bg px-2.5 py-0.5 text-xs font-semibold text-warn">{t('devices.idle', { days: idle })}</span>
+                    idle >= IDLE_DAYS && <span className="mt-1 inline-block rounded-sm bg-warn-bg px-2.5 py-0.5 text-xs font-semibold text-warn">{t('devices.idle', { days: idle })}</span>
                   )}
                 </div>
                 {!d.current && (
-                  <button type="button" onClick={() => setRemoving(d)} className="min-h-11 shrink-0 rounded-xl border border-border px-3 text-sm font-semibold text-bad">
+                  <button type="button" onClick={() => setRemoving(d)} className="btn btn-secondary min-h-11 shrink-0 text-bad">
                     {t('devices.remove')}
                   </button>
                 )}
@@ -91,7 +91,7 @@ export function DevicesPage() {
         </ul>
 
         {others.length > 0 && (
-          <button type="button" onClick={() => setRemoveOthers(true)} className="min-h-12 rounded-2xl border border-border bg-card font-semibold text-bad">
+          <button type="button" onClick={() => setRemoveOthers(true)} className="btn btn-secondary min-h-12 w-full text-bad">
             {t('devices.removeOthers')}
           </button>
         )}

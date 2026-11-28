@@ -17,7 +17,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
       onClick={() => { setTheme(next); setCurrent(next); }}
       aria-label={t(next === 'dark' ? 'theme.toDark' : 'theme.toLight')}
       title={t(next === 'dark' ? 'theme.toDark' : 'theme.toLight')}
-      className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl text-muted outline-none transition-colors hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring ${className}`}
+      className={`grid h-10 w-10 shrink-0 place-items-center rounded-md text-muted outline-none transition-colors hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring ${className}`}
     >
       <Icon d={next === 'dark' ? MOON : SUN} />
     </button>

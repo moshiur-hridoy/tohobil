@@ -198,15 +198,15 @@ function ProposalItem({
     <li
       data-testid="proposal-row"
       aria-current={selected}
-      className={`relative flex min-w-0 flex-col gap-3 rounded-[18px] border p-4 shadow-card transition-all sm:p-5 ${selected ? 'border-track bg-soft shadow-lift' : 'border-border bg-card hover:border-track hover:shadow-lift'}`}
+      className={`relative flex min-w-0 flex-col gap-3 rounded-lg border p-4 shadow-card transition-all sm:p-5 ${selected ? 'border-track bg-soft shadow-lift' : 'border-border bg-card hover:border-track hover:shadow-lift'}`}
     >
       {/* The title is the first thing on the card (owner); the pill drops under it when there is no room. */}
       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
         <div className="min-w-0 flex-1 basis-48 space-y-1">
-          <button type="button" className="block rounded-lg text-left text-base font-bold leading-snug outline-none [overflow-wrap:anywhere] after:absolute after:inset-0 after:rounded-[18px] after:content-[''] focus-visible:after:ring-2 focus-visible:after:ring-ring" onClick={onSelect}>
+          <button type="button" className="block rounded-md text-left text-base font-bold leading-snug outline-none [overflow-wrap:anywhere] after:absolute after:inset-0 after:rounded-lg after:content-[''] focus-visible:after:ring-2 focus-visible:after:ring-ring" onClick={onSelect}>
             {p.title}
           </button>
-          {written && <p className="line-clamp-2 text-[0.8125rem] text-muted [overflow-wrap:anywhere]">{written}</p>}
+          {written && <p className="line-clamp-2 text-meta text-muted [overflow-wrap:anywhere]">{written}</p>}
         </div>
         <PillWithTimeLeft status={p.status} closesAt={p.closes_at} />
       </div>
@@ -258,7 +258,7 @@ function ProposalDrawer({ id, onClose, privileged, onRefresh }: { id: string | n
         >
           <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2.5">
             <Dialog.Title className="text-sm font-bold">{t('proposalsPage.selected')}</Dialog.Title>
-            <Dialog.Close aria-label={t('common.close')} className="grid h-11 w-11 place-items-center rounded-full text-muted transition-colors hover:bg-hover">
+            <Dialog.Close aria-label={t('common.close')} className="grid h-11 w-11 place-items-center rounded-md text-muted transition-colors hover:bg-hover">
               <Icon d="M6 6l12 12M18 6L6 18" size={18} />
             </Dialog.Close>
           </div>
@@ -355,7 +355,7 @@ function CloseEarlyButton({ id, onDone, canClose }: { id: string; onDone: () => 
   return (
     <>
       {/* A disabled button takes no hover or tap, so the wrapper does: it shows why (tap or Tab on a phone or keyboard). */}
-      <span className="group relative inline-flex rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring" tabIndex={canClose ? undefined : 0}>
+      <span className="group relative inline-flex rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring" tabIndex={canClose ? undefined : 0}>
         <button
           type="button"
           disabled={!canClose}
@@ -369,7 +369,7 @@ function CloseEarlyButton({ id, onDone, canClose }: { id: string; onDone: () => 
           <span
             id={reasonId}
             role="tooltip"
-            className="invisible absolute bottom-full left-0 z-20 mb-2 w-max max-w-[16rem] rounded-lg border border-track bg-card px-3 py-2 text-xs text-ink2 opacity-0 shadow-lift transition-opacity group-hover:visible group-hover:opacity-100 group-focus:visible group-focus:opacity-100"
+            className="invisible absolute bottom-full left-0 z-20 mb-2 w-max max-w-[16rem] rounded-md border border-track bg-card px-3 py-2 text-xs text-ink2 opacity-0 shadow-lift transition-opacity group-hover:visible group-hover:opacity-100 group-focus:visible group-focus:opacity-100"
           >
             {t('proposal.closeEarlyDisabled')}
           </span>
@@ -618,7 +618,7 @@ export function CreateProposalForm({
       <ProposalFields type={type} form={form} onChange={setForm} hidden={lockType ? (hide ?? Object.keys(initialValues ?? {})) : []} />
       {lockType && <ClauseSelect value={clauseRef} onChange={setClauseRef} suggested={policyClause} />}
       {lockType && titleField}
-      {error != null && <p role="alert" className="rounded-xl bg-bad-bg px-3 py-2 text-sm text-bad">{proposalErrorText(error, t)}</p>}
+      {error != null && <p role="alert" className="rounded-md bg-bad-bg px-3 py-2 text-sm text-bad">{proposalErrorText(error, t)}</p>}
       <div className="flex gap-2.5 pt-1">
         <button type="submit" disabled={busy} className={`${BTN_PRIMARY} flex-1`}>{busy ? t('common.working') : t('common.submit')}</button>
         <button type="button" className={`${BTN_SECONDARY} flex-1`} onClick={onCancel}>{t('common.cancel')}</button>
@@ -656,7 +656,7 @@ function ProposalPanel({ id, loading, actions = false, onRefresh }: { id: string
         <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
           <div className="min-w-0 flex-1 basis-48 space-y-1">
             <h2 className="text-base font-bold leading-snug [overflow-wrap:anywhere]">{d.title}</h2>
-            {written && <p className="whitespace-pre-line text-[0.8125rem] text-muted [overflow-wrap:anywhere]">{written}</p>}
+            {written && <p className="whitespace-pre-line text-meta text-muted [overflow-wrap:anywhere]">{written}</p>}
           </div>
           <PillWithTimeLeft status={d.status} closesAt={d.closes_at} />
         </div>

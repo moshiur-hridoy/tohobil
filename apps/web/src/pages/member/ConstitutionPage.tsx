@@ -97,13 +97,13 @@ export function ConstitutionPage() {
         <Link
           to="/menu"
           aria-label={t('common.back')}
-          className="grid h-11 w-11 place-items-center rounded-[14px] border border-border bg-card text-foreground"
+          className="grid h-11 w-11 place-items-center rounded-lg border border-border bg-card text-foreground"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M15 5l-7 7 7 7" />
           </svg>
         </Link>
-        <div className="flex-1 pl-1 text-[1.1875rem] font-bold">{t('constitutionPage.title')}</div>
+        <div className="flex-1 pl-1 text-title font-bold">{t('constitutionPage.title')}</div>
       </header>
 
       <main className="flex-1 space-y-3 overflow-y-auto px-4 py-1 pb-4">
@@ -120,16 +120,16 @@ export function ConstitutionPage() {
         ) : (
           <>
             {!current.acked_at && (
-              <section className="flex items-center gap-3 rounded-[18px] border border-border bg-warn-bg p-3">
+              <section className="flex items-center gap-3 rounded-lg border border-border bg-warn-bg p-3">
                 <div className="flex-1">
-                  <div className="text-[0.9375rem] font-bold text-warn">{t('constitutionPage.newVersion')}</div>
-                  <div className="text-[0.8125rem] text-foreground">{t('constitutionPage.newVersionHint')}</div>
+                  <div className="text-body font-bold text-warn">{t('constitutionPage.newVersion')}</div>
+                  <div className="text-meta text-foreground">{t('constitutionPage.newVersionHint')}</div>
                 </div>
                 <button
                   type="button"
                   disabled={ack.isPending}
                   onClick={() => ack.mutate()}
-                  className="h-11 rounded-xl bg-primary px-4 text-[0.9375rem] font-bold text-primary-foreground disabled:opacity-60"
+                  className="btn btn-primary"
                 >
                   {t('constitutionPage.ack')}
                 </button>
@@ -137,9 +137,9 @@ export function ConstitutionPage() {
             )}
             {ack.error && <LoadError error={ack.error} />}
 
-            <section className="flex items-center gap-3.5 rounded-[20px] border border-border bg-card p-4 shadow-sm">
+            <section className="flex items-center gap-3.5 rounded-lg border border-border bg-card p-4 shadow-card">
               <div className="flex-1">
-                <div className="text-[1.0625rem] font-bold">
+                <div className="text-lead font-bold">
                   {t('constitutionPage.version')} {current.version}
                   {isLatest && <span className="ml-2 text-xs font-semibold text-accent">{t('constitutionPage.current')}</span>}
                 </div>
@@ -147,14 +147,14 @@ export function ConstitutionPage() {
                   {t('constitutionPage.effectiveFrom')} {fmtDate(current.effective_from)}
                   {current.acked_at && ` · ${t('constitutionPage.acked')}`}
                 </div>
-                {current.summary && <div className="mt-1 text-[0.8125rem]">{current.summary}</div>}
+                {current.summary && <div className="mt-1 text-meta">{current.summary}</div>}
               </div>
               {current.file_id && (
                 <button
                   type="button"
                   disabled={pdf.isPending}
                   onClick={() => pdf.mutate(current.file_id as string)}
-                  className="h-11 text-[0.8125rem] font-bold text-accent"
+                  className="h-11 text-meta font-bold text-accent"
                 >
                   {t('constitutionPage.pdf')}
                 </button>
@@ -162,18 +162,18 @@ export function ConstitutionPage() {
             </section>
             {pdf.error && <LoadError error={pdf.error} />}
 
-            <label className="flex h-[52px] items-center gap-2.5 rounded-2xl border border-edge bg-soft px-3.5 text-muted focus-within:border-accent">
+            <label className="flex h-[52px] items-center gap-2.5 rounded-lg border border-edge bg-soft px-3.5 text-muted focus-within:border-accent">
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('constitutionPage.search')}
                 aria-label={t('constitutionPage.search')}
-                className="flex-1 bg-transparent text-[0.9375rem] text-foreground outline-none placeholder:text-muted"
+                className="flex-1 bg-transparent text-body text-foreground outline-none placeholder:text-muted"
               />
             </label>
 
-            <section className="rounded-[20px] border border-border bg-card px-4 py-1 shadow-sm">
+            <section className="rounded-lg border border-border bg-card px-4 py-1 shadow-card">
               {search.error && debounced ? (
                 <LoadError error={search.error} onRetry={() => void search.refetch()} />
               ) : !clauses ? (
@@ -190,15 +190,15 @@ export function ConstitutionPage() {
                         onClick={() => setOpen(open === c.id ? null : c.id)}
                         className="flex min-h-[54px] w-full items-center gap-3 text-left"
                       >
-                        <span className="grid h-11 min-w-11 flex-none place-items-center rounded-[13px] bg-accent-soft px-2 text-sm font-bold text-accent">
+                        <span className="grid h-11 min-w-11 flex-none place-items-center rounded-lg bg-accent-soft px-2 text-sm font-bold text-accent">
                           {localDigits(c.clause_no)}
                         </span>
                         <span className="flex-1">
                           <span className="block text-base font-semibold">{c.title ?? c.clause_no}</span>
-                          {c.summary && <span className="block text-[0.8125rem] text-muted">{c.summary}</span>}
+                          {c.summary && <span className="block text-meta text-muted">{c.summary}</span>}
                         </span>
                       </button>
-                      {open === c.id && c.body && <p className="whitespace-pre-line pb-2 pl-14 text-[0.875rem]">{c.body}</p>}
+                      {open === c.id && c.body && <p className="whitespace-pre-line pb-2 pl-14 text-sm">{c.body}</p>}
                     </li>
                   ))}
                 </ul>
@@ -215,7 +215,7 @@ export function ConstitutionPage() {
                   {showOlder ? t('constitutionPage.hideOlder') : t('constitutionPage.olderVersions')}
                 </button>
                 {showOlder && (
-                  <ul className="rounded-[20px] border border-border bg-card px-4 shadow-sm">
+                  <ul className="rounded-lg border border-border bg-card px-4 shadow-card">
                     {items.map((v) => (
                       <li key={v.id} className="border-b border-border last:border-b-0">
                         <button

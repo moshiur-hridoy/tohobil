@@ -115,7 +115,7 @@ export function HomePage() {
     <PullToRefresh onRefresh={refresh}>
       <div className="flex flex-col gap-3 px-4 pb-4 pt-1">
         {/* Outstanding hero card */}
-        <section className={`relative overflow-hidden rounded-3xl bg-hero p-5 text-on-hero ${owed > 0n ? 'hero-alert' : gold ? 'hero-gold' : ''}`} aria-labelledby="home-outstanding">
+        <section className={`relative overflow-hidden rounded-xl bg-hero p-5 text-on-hero ${owed > 0n ? 'hero-alert' : gold ? 'hero-gold' : ''}`} aria-labelledby="home-outstanding">
           <svg aria-hidden="true" width="200" height="200" viewBox="0 0 200 200" className={`absolute -right-[50px] -top-[60px] ${gold ? 'text-hero-action opacity-[0.28]' : 'opacity-[0.14]'}`}>
             <circle cx="100" cy="100" r="96" fill="none" stroke="currentColor" strokeWidth="2" />
             <circle cx="100" cy="100" r="66" fill="none" stroke="currentColor" strokeWidth="2" />
@@ -123,12 +123,12 @@ export function HomePage() {
           </svg>
           <div className="relative">
             <h2 id="home-outstanding" className="flex items-center gap-2.5 text-sm font-normal">
-              <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-hero-icon">
+              <span className="grid h-8 w-8 place-items-center rounded-md bg-hero-icon">
                 <Icon d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M3 10h18 M16 14.5h2" size={18} />
               </span>
               {t(owed > 0n ? (now.amount > 0n ? 'home.toPayTotal' : 'home.myOutstanding') : now.amount > 0n ? 'home.toPayThisMonth' : 'home.myOutstanding')}
               {gold && (
-                <span className="ml-auto rounded-full border border-hero-action px-2.5 py-0.5 text-xs font-semibold text-hero-action">
+                <span className="ml-auto rounded-sm border border-hero-action px-2.5 py-0.5 text-xs font-semibold text-hero-action">
                   ★ {t('home.advanceBadge')}
                 </span>
               )}
@@ -137,48 +137,48 @@ export function HomePage() {
               <Skeleton className="mt-3 h-10 w-40" />
             ) : (
               <>
-                <p className="mt-2.5 text-[2.625rem] font-bold leading-[1.15]"><AnimatedTaka paisa={toPay} intro={intro} /></p>
+                <p className="mt-2.5 text-display font-bold leading-[1.15]"><AnimatedTaka paisa={toPay} intro={intro} /></p>
                 {owed === 0n && now.amount > 0n ? (
-                  <div className="mt-2.5 flex flex-wrap gap-2 text-[0.8125rem]">
-                    <span className={`rounded-full px-2.5 py-1 ${now.daysLeft !== null && now.daysLeft <= 3 ? 'bg-on-hero font-semibold text-hero' : 'bg-hero-chip'}`}>{dueChip}</span>
+                  <div className="mt-2.5 flex flex-wrap gap-2 text-meta">
+                    <span className={`rounded-sm px-2.5 py-1 ${now.daysLeft !== null && now.daysLeft <= 3 ? 'bg-on-hero font-semibold text-hero' : 'bg-hero-chip'}`}>{dueChip}</span>
                   </div>
                 ) : owed === 0n ? (
                   <>
                     <p className="mt-2.5 text-sm">{t('home.outstandingNone')}</p>
                     {advance && advance.months > 0 && advance.through && (
-                      <p className="mt-1.5 text-[0.9375rem] font-semibold text-hero-action">
+                      <p className="mt-1.5 text-body font-semibold text-hero-action">
                         {t('home.advanceMonths', { months: formatCount(advance.months), month: fmtPeriod(advance.through) })}
                       </p>
                     )}
                     {advance && advance.extra > 0n && (
-                      <p className="mt-1 text-[0.8125rem]">
+                      <p className="mt-1 text-meta">
                         {t(advance.months > 0 ? 'home.advanceExtra' : 'home.advanceCredit', { amount: taka(advance.extra) })}
                       </p>
                     )}
                     {nextDue && (
-                      <div className="mt-2.5 flex flex-wrap gap-2 text-[0.8125rem]">
-                        <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.nextDueOn', { date: fmtDate(nextDue) })}</span>
+                      <div className="mt-2.5 flex flex-wrap gap-2 text-meta">
+                        <span className="rounded-sm bg-hero-chip px-2.5 py-1">{t('home.nextDueOn', { date: fmtDate(nextDue) })}</span>
                       </div>
                     )}
                   </>
                 ) : (
-                  <div className="mt-2.5 flex flex-wrap gap-2 text-[0.8125rem]">
+                  <div className="mt-2.5 flex flex-wrap gap-2 text-meta">
                     {/* Only as a part of a bigger total: alone it would repeat the title and the figure above (owner). */}
-                    {principal > 0n && principal !== toPay && <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.overdue')} {taka(principal)}</span>}
-                    {fines > 0n && <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.fines')} {taka(fines)}</span>}
+                    {principal > 0n && principal !== toPay && <span className="rounded-sm bg-hero-chip px-2.5 py-1">{t('home.overdue')} {taka(principal)}</span>}
+                    {fines > 0n && <span className="rounded-sm bg-hero-chip px-2.5 py-1">{t('home.fines')} {taka(fines)}</span>}
                     {now.amount > 0n ? (
-                      <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.thisMonthPart', { amount: taka(now.amount) })} · {daysChip}</span>
+                      <span className="rounded-sm bg-hero-chip px-2.5 py-1">{t('home.thisMonthPart', { amount: taka(now.amount) })} · {daysChip}</span>
                     ) : (
-                      nextDue && <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.nextDueOn', { date: fmtDate(nextDue) })}</span>
+                      nextDue && <span className="rounded-sm bg-hero-chip px-2.5 py-1">{t('home.nextDueOn', { date: fmtDate(nextDue) })}</span>
                     )}
                   </div>
                 )}
                 {mine.under_verification && (
-                  <p role="status" className="mt-3 rounded-xl bg-warn-bg p-2.5 text-sm text-warn">
+                  <p role="status" className="mt-3 rounded-md bg-warn-bg p-2.5 text-sm text-warn">
                     <strong>{t('home.underVerification')}.</strong> {t('home.underVerificationHint')}
                   </p>
                 )}
-                <Link to="/pay" className="mt-[18px] flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-hero-action text-[1.0625rem] font-bold text-on-hero-action">
+                <Link to="/pay" className="btn btn-lg mt-[18px] w-full bg-hero-action text-on-hero-action">
                   {toPay === 0n ? t('home.payAdvance') : t('home.payNow')}
                   <Icon d="M5 12h14 M13 6l6 6-6 6" size={20} sw={2} />
                 </Link>
@@ -196,19 +196,19 @@ export function HomePage() {
 
         <section className="grid grid-cols-2 gap-3">
           {mine?.status !== 'inactive' && <MyShareTile nav={nav.data} mine={mine} credit={myCredit} toPay={toPay} intro={intro} />}
-          <div className={`min-w-0 rounded-[18px] border border-border bg-card p-3.5 ${mine?.status === 'inactive' ? 'col-span-2' : ''}`}>
+          <div className={`min-w-0 rounded-lg border border-border bg-card p-3.5 ${mine?.status === 'inactive' ? 'col-span-2' : ''}`}>
             <Chip tone="bg-blue-bg text-blue" d="M12 3l9 5-9 5-9-5z M3 13l9 5 9-5" />
-            <h2 className="mt-2.5 text-[0.8125rem] font-normal text-muted">{t('home.myCapital')}</h2>
-            <p className="mt-0.5 text-[1.3125rem] font-bold [overflow-wrap:anywhere]">{mine && myCredit !== null ? <AnimatedTaka paisa={BigInt(mine.capital_paisa) - myCredit} intro={intro} /> : '…'}</p>
+            <h2 className="mt-2.5 text-meta font-normal text-muted">{t('home.myCapital')}</h2>
+            <p className="mt-0.5 text-heading font-bold [overflow-wrap:anywhere]">{mine && myCredit !== null ? <AnimatedTaka paisa={BigInt(mine.capital_paisa) - myCredit} intro={intro} /> : '…'}</p>
             {mine && <p className="mt-0.5 text-xs text-muted">{t('home.sharesCount', { count: mine.shares })}</p>}
             {myCredit !== null && myCredit > 0n && <p className="text-xs font-semibold text-accent">{t('home.capitalAdvance', { amount: taka(myCredit) })}</p>}
           </div>
           {/* Charity balance (18.2): fines and riba are donated at year end, never fund income */}
-          <div className="col-span-2 rounded-[18px] border border-border bg-card px-3.5 py-3">
+          <div className="col-span-2 rounded-lg border border-border bg-card px-3.5 py-3">
             <div className="flex items-center gap-3">
               <Chip tone="bg-vio-bg text-vio" d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />
-              <h2 className="flex-1 text-[0.8125rem] font-normal text-muted">{t('home.charityToDonate')}</h2>
-              <p className="text-[1.1875rem] font-bold">{accounts.data ? <AnimatedTaka paisa={charityBalance(accounts.data.items)} intro={intro} /> : '…'}</p>
+              <h2 className="flex-1 text-meta font-normal text-muted">{t('home.charityToDonate')}</h2>
+              <p className="text-title font-bold">{accounts.data ? <AnimatedTaka paisa={charityBalance(accounts.data.items)} intro={intro} /> : '…'}</p>
             </div>
             {/* For the cashier, who counts the money: cash without the sadaqah, plus the sadaqah, is all the cash held. */}
             {isCashier && cashSplit && (
@@ -220,26 +220,26 @@ export function HomePage() {
         </section>
 
         {isAuditor && waitingApprovals > 0 && (
-          <Link to="/approvals" className="flex items-center gap-3 rounded-[18px] border border-border bg-card p-3.5 text-foreground">
+          <Link to="/approvals" className="flex items-center gap-3 rounded-lg border border-border bg-card p-3.5 text-foreground">
             <Chip tone="bg-blue-bg text-blue" size={40} iconSize={22} d="M5 12l4 4 10-10" />
             <div className="min-w-0 flex-1">
               <div className="text-base font-bold">{t('home.approvalsWaiting', { count: waitingApprovals })}</div>
-              <div className="truncate text-[0.8125rem] text-ink2">{t('home.approvalsWaitingSub')}</div>
+              <div className="truncate text-meta text-ink2">{t('home.approvalsWaitingSub')}</div>
             </div>
             <span className="text-muted"><Icon d="M9 5l7 7-7 7" sw={2} /></span>
           </Link>
         )}
 
         {nextMeeting?.date && nextMeeting.time && (
-          <section className="flex items-center gap-3 rounded-[18px] border border-border bg-card p-3.5" aria-labelledby="home-meeting">
+          <section className="flex items-center gap-3 rounded-lg border border-border bg-card p-3.5" aria-labelledby="home-meeting">
             <Chip tone="bg-blue-bg text-blue" size={40} iconSize={22} d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M8 14h3" />
             <div className="min-w-0 flex-1">
-              <h2 id="home-meeting" className="text-[0.8125rem] font-normal text-muted">{t('meetings.nextMeeting')}</h2>
+              <h2 id="home-meeting" className="text-meta font-normal text-muted">{t('meetings.nextMeeting')}</h2>
               <p className="text-base font-bold">{fmtDate(nextMeeting.date)} · {fmtClock(t, nextMeeting.time)}</p>
-              {nextMeeting.notes && <p className="truncate text-[0.8125rem] text-ink2">{nextMeeting.notes}</p>}
+              {nextMeeting.notes && <p className="truncate text-meta text-ink2">{nextMeeting.notes}</p>}
             </div>
             {nextMeeting.link && (
-              <a href={nextMeeting.link} target="_blank" rel="noreferrer" className="shrink-0 rounded-xl bg-primary px-3.5 py-2.5 text-sm font-semibold text-primary-foreground">
+              <a href={nextMeeting.link} target="_blank" rel="noreferrer" className="btn btn-primary btn-sm shrink-0">
                 {t('meetings.join')}
               </a>
             )}
@@ -281,30 +281,29 @@ function FundCard({ nav, intro }: { nav: NavResponse | undefined; intro: boolean
       ] as const).filter(([, paisa]) => paisa !== 0n)
     : [];
   return (
-    <Link to="/assets" className="block rounded-[18px] border border-border bg-card p-3.5 text-foreground">
+    <Link to="/assets" className="block rounded-lg border border-border bg-card p-3.5 text-foreground">
       <div className="flex items-center gap-2.5">
         <Chip tone="bg-accent-soft text-accent" d="M3 17l6-6 4 4 8-8 M15 7h6v6" />
-        <h2 className="flex-1 text-[0.8125rem] font-normal text-muted">{t('home.fundNetAssets')}</h2>
+        <h2 className="flex-1 text-meta font-normal text-muted">{t('home.fundNetAssets')}</h2>
         <span className="text-muted"><Icon d="M9 5l7 7-7 7" sw={2} /></span>
       </div>
       {split ? (
         <>
-          <p className={`mt-2 text-[1.75rem] font-bold leading-tight [overflow-wrap:anywhere] ${negClass(split.total)}`}><AnimatedTaka paisa={split.total} intro={intro} /></p>
+          <p className={`mt-2 text-figure font-bold leading-tight [overflow-wrap:anywhere] ${negClass(split.total)}`}><AnimatedTaka paisa={split.total} intro={intro} /></p>
           {cashBar + investedBar > 0n && (
             <div className="mt-3 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-background" aria-hidden="true">
               {cashBar > 0n && <span className="h-full bg-muted" style={{ width: pct(cashBar, cashBar + investedBar) }} />}
               {investedBar > 0n && <span className="h-full bg-accent" style={{ width: pct(investedBar, cashBar + investedBar) }} />}
             </div>
           )}
-          <dl className="mt-3 grid gap-1.5 text-[0.875rem]">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-muted" aria-hidden="true" />
-                <dt className="flex-1 text-muted">{t('home.split.cash')}</dt>
-                <dd className={`font-semibold ${negClass(split.ownCash)}`}>{taka(split.ownCash)}</dd>
-              </div>
+          <dl className="mt-3 grid gap-1.5 text-sm">
+            {/* one wrapper only: a screen reader loses a dt or dd that sits two boxes deep in a dl */}
+            <div className="flex flex-wrap items-center gap-x-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-muted" aria-hidden="true" />
+              <dt className="flex-1 text-muted">{t('home.split.cash')}</dt>
+              <dd className={`font-semibold ${negClass(split.ownCash)}`}>{taka(split.ownCash)}</dd>
               {less.length > 0 && (
-                <dd className="mt-0.5 text-right text-xs text-muted">
+                <dd className="mt-0.5 w-full text-right text-xs text-muted">
                   {less.map(([key, paisa]) => t(key, { amount: taka(paisa < 0n ? -paisa : paisa), sign: paisa < 0n ? '+' : '−' })).join(' · ')}
                 </dd>
               )}
@@ -339,14 +338,14 @@ function MyShareTile({ nav, mine, credit, toPay, intro }: { nav: NavResponse | u
   const gain = value === null ? 0n : value - capital;
   const percent = profitPercent(gain, capital);
   return (
-    <div className="min-w-0 rounded-[18px] border border-border bg-card p-3.5">
+    <div className="min-w-0 rounded-lg border border-border bg-card p-3.5">
       <Chip tone="bg-ok-bg text-ok" d="M12 2v20 M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-      <h2 className="mt-2.5 text-[0.8125rem] font-normal text-muted">{t('home.myShareValue')}</h2>
+      <h2 className="mt-2.5 text-meta font-normal text-muted">{t('home.myShareValue')}</h2>
       {value === null ? (
         <Skeleton className="mt-1 h-7 w-28" />
       ) : (
         <>
-          <p className={`mt-0.5 text-[1.3125rem] font-bold [overflow-wrap:anywhere] ${negClass(value)}`}><AnimatedTaka paisa={value} intro={intro} /></p>
+          <p className={`mt-0.5 text-heading font-bold [overflow-wrap:anywhere] ${negClass(value)}`}><AnimatedTaka paisa={value} intro={intro} /></p>
           {toPay > 0n ? (
             // What is left to pay, not the value net of it: that figure is below the headline and read as if
             // paying took money away (owner feedback).
@@ -427,14 +426,14 @@ function EveryoneStanding({ members, intro }: { members?: MemberRow[]; intro: bo
       aria-label={label}
       disabled={disabled}
       onClick={() => setPeriod(to)}
-      className="grid h-9 w-9 place-items-center rounded-xl border border-border text-foreground disabled:opacity-30"
+      className="grid h-9 w-9 place-items-center rounded-md border border-border text-foreground disabled:opacity-30"
     >
       <Icon d={d} size={18} sw={2} />
     </button>
   );
 
   return (
-    <section className="overflow-hidden rounded-[18px] border border-border bg-card" aria-labelledby="home-everyone">
+    <section className="overflow-hidden rounded-lg border border-border bg-card" aria-labelledby="home-everyone">
       <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
         <Chip tone="bg-accent-soft text-accent" d="M16 20v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1 M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7 M20 20v-1a4 4 0 0 0-3-3.8 M16 4.2a3.5 3.5 0 0 1 0 6.6" />
         <h2 id="home-everyone" className="min-w-0 flex-1 text-base font-bold">{t('home.everyoneInMonth')}</h2>
@@ -451,7 +450,7 @@ function EveryoneStanding({ members, intro }: { members?: MemberRow[]; intro: bo
       {/* Month switcher: from the fund's first month up to December two years ahead */}
       <div className="flex items-center gap-2 border-b border-border px-4 py-3">
         {arrow('M15 5l-7 7 7 7', t('home.prevMonth'), addMonths(period, -1), !matrix.data || period <= first)}
-        <p className="flex-1 text-center text-[0.9375rem] font-bold" aria-live="polite">{fmtPeriod(period)}</p>
+        <p className="flex-1 text-center text-body font-bold" aria-live="polite">{fmtPeriod(period)}</p>
         {arrow('M9 5l7 7-7 7', t('home.nextMonth'), addMonths(period, 1), period >= last)}
       </div>
 
@@ -473,7 +472,7 @@ function EveryoneStanding({ members, intro }: { members?: MemberRow[]; intro: bo
                 <li key={m.member_id} className={`flex min-h-[58px] items-center gap-3 border-border px-4 py-2 ${i ? 'border-t' : ''} ${isMe ? 'bg-accent-soft' : ''}`}>
                   <Avatar fileId={m.member_photo_file_id} fallback={m.member_name.trim().charAt(0)} className={`h-[34px] w-[34px] text-sm font-bold ${isMe ? 'bg-accent-fill text-on-accent' : AVATAR[i % AVATAR.length]}`} />
                   <div className="min-w-0 flex-1">
-                    <div className={`flex min-w-0 items-center gap-1.5 text-[0.9375rem] ${isMe ? 'font-bold' : 'font-medium'}`}><span className="shrink-0 text-xs font-normal text-muted tabular-nums">{m.member_code}</span><span className="truncate">{m.member_name}</span><RoleBadges roles={rolesById.get(m.member_id)} /><AheadBadge months={m.ahead_months} /></div>
+                    <div className={`flex min-w-0 items-center gap-1.5 text-body ${isMe ? 'font-bold' : 'font-medium'}`}><span className="shrink-0 text-xs font-normal text-muted tabular-nums">{m.member_code}</span><span className="truncate">{m.member_name}</span><RoleBadges roles={rolesById.get(m.member_id)} /><AheadBadge months={m.ahead_months} /></div>
                     {owed !== undefined && (
                       <div className={`text-xs ${owed > 0n ? 'font-semibold text-bad' : 'text-muted'}`}>
                         {owed > 0n ? t('home.totalOwed', { amount: taka(owed) }) : t('home.noArrears')}

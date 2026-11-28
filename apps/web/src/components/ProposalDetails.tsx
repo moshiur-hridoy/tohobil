@@ -47,7 +47,7 @@ function ComplianceChecklist({ type, payload }: { type: ProposalType; payload: R
   // One declaration on the form ticks every point (ASSUMPTIONS 127), so a complete one reads as one line.
   if (allTrue) {
     return (
-      <div className="rounded-xl bg-ok-bg p-3">
+      <div className="rounded-xl bg-soft p-3">
         <p className="flex items-start gap-2 font-medium"><span className="text-ok">✓</span>{t('proposalsPage.halalPledge')}</p>
         <p className="mt-0.5 pl-5 text-xs text-muted">{t('proposalsPage.halalPledgeHint')}</p>
       </div>

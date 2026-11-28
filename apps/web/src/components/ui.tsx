@@ -1,4 +1,4 @@
-import { useRef, type InputHTMLAttributes, type ReactNode } from 'react';
+import type { InputHTMLAttributes, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { fmtDate } from '../lib/dates';
@@ -108,62 +108,6 @@ export function DateInput({ className = 'field w-full', value, onClick, ...rest 
         <span className="truncate">{value ? fmtDate(value) : t('common.pickDate')}</span>
       </span>
     </span>
-  );
-}
-
-/**
- * Pick a photo or a PDF, in Bengali throughout: the browser's own file input would say "Choose File /
- * No file chosen" in the phone's language. The real input stays hidden; once a file is picked its
- * name is shown with "বদলান" (change) and "সরান" (remove).
- */
-export function FilePicker({ file, onChange, accept = 'image/*,application/pdf', label, className = '' }: { file: File | null; onChange: (file: File | null) => void; accept?: string; label?: string; className?: string }) {
-  const { t } = useTranslation();
-  const input = useRef<HTMLInputElement>(null);
-  const pick = () => input.current?.click();
-  const hidden = (
-    <input
-      ref={input}
-      type="file"
-      accept={accept}
-      aria-label={label ?? t('file.add')}
-      className="sr-only"
-      tabIndex={-1}
-      onChange={(e) => {
-        onChange(e.target.files?.[0] ?? null);
-        // Cleared so picking the same file again after "সরান" still fires a change.
-        e.target.value = '';
-      }}
-    />
-  );
-  if (!file) {
-    return (
-      <div className={className}>
-        {hidden}
-        <button type="button" onClick={pick} className="flex w-full items-center gap-3 rounded-[14px] border-[1.5px] border-dashed border-input p-3 text-left hover:border-primary">
-          <span aria-hidden="true" className="grid h-10 w-10 flex-none place-items-center rounded-xl bg-primary-soft text-primary">
-            <Icon d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" size={20} />
-          </span>
-          <span className="min-w-0">
-            <span className="block text-sm font-semibold text-primary">{t('file.add')}</span>
-            <span className="block text-xs text-muted">{t('file.hint')}</span>
-          </span>
-        </button>
-      </div>
-    );
-  }
-  return (
-    <div className={`flex items-center gap-3 rounded-[14px] border-[1.5px] border-primary bg-primary-soft p-3 ${className}`}>
-      {hidden}
-      <span aria-hidden="true" className="grid h-10 w-10 flex-none place-items-center rounded-xl bg-card text-primary">
-        <Icon d="M20 6L9 17l-5-5" size={20} sw={2} />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-xs text-muted">{t('file.attached')}</span>
-        <span className="block truncate text-sm font-semibold">{file.name}</span>
-      </span>
-      <button type="button" onClick={pick} className="min-h-11 rounded-xl px-2 text-sm font-semibold text-primary hover:bg-hover">{t('file.change')}</button>
-      <button type="button" onClick={() => onChange(null)} className="min-h-11 rounded-xl px-2 text-sm font-semibold text-bad hover:bg-hover">{t('file.remove')}</button>
-    </div>
   );
 }
 

@@ -67,7 +67,7 @@ export function VoteCountdown({ closesAt }: { closesAt: string }) {
   );
 }
 
-/** "২ দিন ০৫:১২:০৯ বাকি" ticking every second, for a vote's card in the list. */
+/** "২ দিন ০৫:১২:০৯ বাকি" ticking every second, for a vote's card in a list (members and cashier). */
 export function CountdownChip({ closesAt }: { closesAt: string }) {
   const { t } = useTranslation();
   const left = splitTimeLeft(useTimeLeft(closesAt) ?? 0);

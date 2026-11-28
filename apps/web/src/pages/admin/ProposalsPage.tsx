@@ -1,11 +1,12 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { useState } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { PROPOSAL_STATUSES, PROPOSAL_TYPES, type ProposalType } from '@barakah/shared';
+import { PROPOSAL_TYPES, type ProposalType } from '@barakah/shared';
 import {
-  AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, BTN_SM, BTN_SM_PRIMARY, Card, CardHead, EmptyCard, ICONS, InfoRow, MemberBadge, SplitLayout, StatGrid, StatTile,
+  AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, BTN_SM, BTN_SM_PRIMARY, Card, EmptyCard, ICONS, InfoRow, MemberBadge, Segmented, SplitLayout,
 } from '../../components/admin';
 import { ConfirmSheet } from '../../components/ConfirmSheet';
 import { ListSkeleton, Skeleton } from '../../components/Skeleton';
@@ -13,13 +14,14 @@ import { LoadError } from '../../components/StateViews';
 import { Icon, Optional } from '../../components/ui';
 import { StatusPill } from '../../components/StatusPill';
 import { ProposalDetails } from '../../components/ProposalDetails';
+import { CountdownChip } from '../../components/VoteCountdown';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
-import { useCountdown } from '../../lib/countdown';
 import { fmtInstant } from '../../lib/dates';
 import { formatCount, localDigits } from '../../lib/format';
 import { ClauseLink, ClauseSelect, usePolicyClause } from '../../components/ClauseSelect';
 import { parseAmountInput, taka } from '../../lib/money';
+import { useMediaQuery } from '../../lib/useMediaQuery';
 import type { ProposalDetail } from '../../lib/types';
 import { FORM_TYPES, ProposalFields, buildPayload, emptyForm, type FormState } from './proposalForms';
 
@@ -46,16 +48,31 @@ interface ProposalListRow {
   amount_paisa: string | null;
 }
 
+/**
+ * The status tabs above the list. The page opens on `active` (running votes and drafts, owner);
+ * `closed` gathers every vote that ended without being carried out.
+ */
+const TABS = ['active', 'approved', 'draft', 'executed', 'closed', 'all'] as const;
+type Tab = (typeof TABS)[number];
+const inTab = (status: string, tab: Tab) => {
+  if (tab === 'all') return true;
+  if (tab === 'active') return status === 'open' || status === 'draft';
+  if (tab === 'closed') return status === 'rejected' || status === 'lapsed' || status === 'cancelled';
+  return status === tab;
+};
+
 export function ProposalsPage() {
   const { t } = useTranslation();
   const { me } = useAuth();
   const qc = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [search, setSearch] = useState('');
   // `?new=<type>` (from the charity & levy page) opens the new-proposal form on that type;
   // `?id=<proposal>` (from a shop withdrawal) opens that proposal.
   const [params, setParams] = useSearchParams();
   const [selectedId, setSelectedId] = useState<string | null>(params.get('id'));
+  // A linked proposal may have ended already, so such a link starts on the tab that has everything.
+  const [tab, setTab] = useState<Tab>(() => (params.get('id') ? 'all' : 'active'));
   const asked = params.get('new');
   const preset = asked && (CREATE_TYPES as readonly string[]).includes(asked) ? (asked as ProposalType) : null;
   const [createOpen, setCreateOpen] = useState(preset !== null);
@@ -64,31 +81,27 @@ export function ProposalsPage() {
     setCreateOpen(false);
     if (asked) setParams({}, { replace: true });
   };
-  const panel = useRef<HTMLDivElement>(null);
+  // From `xl` the details sit beside the list; below that they slide in over it, only when asked for.
+  const wide = useMediaQuery('(min-width: 1280px)');
 
   const privileged = me?.roles.some((r) => r === 'cashier' || r === 'auditor') ?? false;
 
-  const list = (status: string, type: string) => ({
-    queryKey: ['proposals', 'admin', status, type],
-    queryFn: () =>
-      api<{ items: ProposalListRow[]; next_cursor: string | null }>(`/proposals?limit=200${status ? `&status=${status}` : ''}${type ? `&type=${type}` : ''}`),
+  const proposals = useQuery({
+    queryKey: ['proposals', 'admin', typeFilter],
+    queryFn: () => api<{ items: ProposalListRow[]; next_cursor: string | null }>(`/proposals?limit=200${typeFilter ? `&type=${typeFilter}` : ''}`),
   });
-  const proposals = useQuery(list(statusFilter, typeFilter));
-  // the tiles count everything, whatever the list below is filtered to (same cache entry when unfiltered)
-  const everything = useQuery(list('', ''));
-  const all = everything.data?.items ?? [];
-  const count = (status: string) => (everything.data ? formatCount(all.filter((p) => p.status === status).length) : null);
 
-  const rows = proposals.data?.items ?? [];
+  const all = proposals.data?.items ?? [];
+  const needle = search.trim().toLowerCase();
+  const rows = all
+    .filter((p) => inTab(p.status, tab) && (!needle || p.title.toLowerCase().includes(needle)))
+    // Running votes come before drafts; otherwise the server's order stays.
+    .sort((a, b) => (tab === 'active' ? Number(b.status === 'open') - Number(a.status === 'open') : 0));
   const selected = rows.find((p) => p.id === selectedId) ?? rows[0] ?? null;
 
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ['proposals'] });
     void qc.invalidateQueries({ queryKey: ['proposal'] });
-  };
-  const choose = (id: string) => {
-    setSelectedId(id);
-    if (!window.matchMedia('(min-width: 1280px)').matches) panel.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
@@ -104,58 +117,54 @@ export function ProposalsPage() {
         }
       />
 
-      <StatGrid>
-        <StatTile tone="bg-warn-bg text-warn" icon={ICONS.vote} label={t('adminUi.proposals.statOpen')} value={count('open')} />
-        <StatTile tone="bg-primary-soft text-primary" icon={ICONS.check} label={t('adminUi.proposals.statToExecute')} value={count('approved')} />
-        <StatTile tone="bg-soft text-ink2" icon={ICONS.doc} label={t('adminUi.proposals.statDraft')} value={count('draft')} />
-        <StatTile tone="bg-blue-bg text-blue" icon={ICONS.layers} label={t('adminUi.proposals.statTotal')} value={everything.data ? formatCount(all.length) : null} />
-      </StatGrid>
+      <div className="space-y-3">
+        <Segmented
+          label={t('common.status')}
+          value={tab}
+          onChange={setTab}
+          options={TABS.map((value) => ({
+            value,
+            label: t(`proposalsPage.tabs.${value}`),
+            count: proposals.data ? formatCount(all.filter((p) => inTab(p.status, value)).length) : undefined,
+          }))}
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="relative min-w-0 flex-1 basis-56 sm:max-w-sm">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"><Icon d={ICONS.search} size={18} /></span>
+            <input type="search" aria-label={t('proposalsPage.search')} placeholder={t('proposalsPage.search')} className="field w-full pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </label>
+          <select aria-label={t('proposalsPage.type')} className="field max-w-full basis-full sm:basis-auto" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+            <option value="">{t('proposalsPage.type')}: {t('common.all')}</option>
+            {PROPOSAL_TYPES.map((ty) => (
+              <option key={ty} value={ty}>{t(`proposalType.${ty}`)}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <SplitLayout
         sideWidth="400px"
         main={
-          <Card className="px-5 pb-0 pt-5 sm:px-6">
-            <CardHead
-              title={t('proposalsPage.title')}
-              sub={proposals.data ? t('proposalsPage.count', { count: rows.length }) : undefined}
-              action={
-                <>
-                  <select aria-label={t('common.status')} className="field" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                    <option value="">{t('common.status')}: {t('common.all')}</option>
-                    {PROPOSAL_STATUSES.map((st) => (
-                      <option key={st} value={st}>{t(`status.proposal.${st}`)}</option>
-                    ))}
-                  </select>
-                  <select aria-label={t('proposalsPage.type')} className="field" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-                    <option value="">{t('proposalsPage.type')}: {t('common.all')}</option>
-                    {PROPOSAL_TYPES.map((ty) => (
-                      <option key={ty} value={ty}>{t(`proposalType.${ty}`)}</option>
-                    ))}
-                  </select>
-                </>
-              }
-            />
-            {proposals.error ? (
-              <LoadError error={proposals.error} onRetry={() => void proposals.refetch()} />
-            ) : !proposals.data ? (
-              <ListSkeleton rows={4} />
-            ) : rows.length === 0 ? (
-              <EmptyCard text={t('proposalsPage.empty')} icon={ICONS.vote} />
-            ) : (
-              <ul>
-                {rows.map((p) => (
-                  <ProposalItem key={p.id} p={p} privileged={privileged} selected={selected?.id === p.id} onSelect={() => choose(p.id)} onRefresh={refresh} />
-                ))}
-              </ul>
-            )}
-          </Card>
+          proposals.error ? (
+            <Card className="p-5"><LoadError error={proposals.error} onRetry={() => void proposals.refetch()} /></Card>
+          ) : !proposals.data ? (
+            <Card className="p-5"><ListSkeleton rows={4} /></Card>
+          ) : rows.length === 0 ? (
+            <Card className="p-5"><EmptyCard text={t(all.length === 0 && !typeFilter ? 'proposalsPage.empty' : tab === 'active' && !needle ? 'proposalsPage.noActive' : 'proposalsPage.noMatch')} icon={ICONS.vote} /></Card>
+          ) : (
+            <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-1">
+              {rows.map((p) => (
+                <ProposalItem key={p.id} p={p} privileged={privileged} selected={wide && selected?.id === p.id} onSelect={() => setSelectedId(p.id)} onRefresh={refresh} />
+              ))}
+            </ul>
+          )
         }
-        side={
-          <div ref={panel} className="scroll-mt-4">
-            <ProposalPanel id={selected?.id ?? null} loading={!proposals.data} />
-          </div>
-        }
+        side={wide ? <ProposalPanel id={selected?.id ?? null} loading={!proposals.data} /> : undefined}
       />
+
+      {!wide && (
+        <ProposalDrawer id={selectedId} onClose={() => setSelectedId(null)} privileged={privileged} onRefresh={refresh} />
+      )}
 
       <AdminDialog open={createOpen} onClose={closeCreate} title={t('proposalsPage.newProposal')} wide>
         <CreateProposalForm type={createType} onTypeChange={setCreateType} onCreated={() => { closeCreate(); refresh(); }} onCancel={closeCreate} />
@@ -165,30 +174,64 @@ export function ProposalsPage() {
 }
 
 /**
- * "হ্যাঁ ভোট: ৫ · পাস করতে লাগবে ৪" instead of "5/4": the yes count so far (null while ballots are
- * hidden), what the proposal needs, and whether it has reached it. Share-weighted votes count shares.
- */
-/**
  * Yes votes and the pass mark, always with their unit: a share-weighted vote needs e.g. "9 shares (of 16)",
- * which read as a bare "9" looks like more people than the fund has.
+ * which read as a bare "9" looks like more people than the fund has. `yes` is null while ballots are hidden;
+ * the two percentages (of everyone eligible) draw the vote bar.
  */
 function voteTally(
   p: Pick<ProposalListRow, 'status' | 'ballots_hidden' | 'basis' | 'counts' | 'threshold' | 'threshold_weight' | 'eligible_count' | 'eligible_weight'>,
   t: TFunction,
-): { counted: boolean; yes: string | null; need: string; passed: boolean } {
+): { counted: boolean; yes: string | null; need: string; yesPercent: number; needPercent: number } {
   const byShare = p.basis === 'share';
   const yes = byShare ? String(p.counts.yes_weight) : String(p.counts.yes);
   const need = byShare ? String(p.threshold_weight) : String(p.threshold);
   const total = byShare ? String(p.eligible_weight) : String(p.eligible_count);
   // A draft (or one cancelled before opening) has no voters and a pass mark of 0, so 0 >= 0 must not read as passed.
   const counted = p.status !== 'draft' && BigInt(need) > 0n;
+  const percent = (n: string) => (Number(total) > 0 ? Math.min(100, (Number(n) * 100) / Number(total)) : 0);
   return {
     counted,
     yes: p.ballots_hidden ? null : t(byShare ? 'proposal.countShares' : 'proposal.countMembers', { n: localDigits(yes) }),
     need: t(byShare ? 'proposal.needShares' : 'proposal.needMembers', { n: localDigits(need), total: localDigits(total) }),
-    passed: counted && !p.ballots_hidden && BigInt(yes) >= BigInt(need),
+    yesPercent: percent(yes),
+    needPercent: percent(need),
   };
 }
+
+/**
+ * The vote at a glance: yes votes as a bar, a tick where it passes, and the numbers in words. The bar
+ * stays grey (red when rejected): the status pill already says how it ended, and a page of green bars
+ * tired the eyes (owner).
+ */
+function VoteMeter({ tally, status, voted, eligible }: { tally: ReturnType<typeof voteTally>; status: string; voted?: number; eligible: number }) {
+  const { t } = useTranslation();
+  const fill = status === 'rejected' ? 'bg-bad' : 'bg-muted';
+  return (
+    <div className="space-y-1.5 text-[0.8125rem]">
+      <p>
+        {tally.yes === null ? (
+          <span className="text-muted">{t('votes.hiddenUntilClose')}</span>
+        ) : (
+          <><span className="text-muted">{t('proposal.yesVotes')}</span> <span className="font-bold tabular-nums">{tally.yes}</span></>
+        )}
+      </p>
+      {tally.yes !== null && (
+        <div aria-hidden="true" className="relative h-2 rounded-full bg-track">
+          <div className={`h-full rounded-full ${fill}`} style={{ width: `${tally.yesPercent}%` }} />
+          <span className="absolute -inset-y-1 w-0.5 -translate-x-1/2 rounded-full bg-ink2" style={{ left: `${tally.needPercent}%` }} />
+        </div>
+      )}
+      <div className="flex flex-wrap justify-between gap-x-3 gap-y-0.5 text-xs text-muted">
+        <span>{t('proposal.needToPass')} <span className="tabular-nums">{tally.need}</span></span>
+        {voted !== undefined && (
+          <span data-testid="turnout">{t('proposalsPage.voted')} <span className="font-semibold tabular-nums">{formatCount(voted)}/{formatCount(eligible)}</span></span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const pillStatus = (status: string) => (status === 'open' ? 'pending' : status);
 
 function ProposalItem({
   p,
@@ -204,56 +247,84 @@ function ProposalItem({
   onRefresh: () => void;
 }) {
   const { t } = useTranslation();
-  const remaining = useCountdown(p.closes_at);
   const tally = voteTally(p, t);
 
-  // Rows run edge to edge of the card; the chosen one carries the same green mark as the detail
-  // panel beside it, so the two read as one. The title button's hit area is stretched over the whole
-  // row (its ::after), so a tap anywhere opens it; the action buttons sit above that layer.
+  // The title button's hit area is stretched over the whole card (its ::after), so a tap anywhere
+  // opens it; the action buttons sit above that layer.
   return (
     <li
       data-testid="proposal-row"
       aria-current={selected}
-      className={`relative -mx-5 cursor-pointer border-b border-border px-5 py-4 transition-colors last:border-b-0 sm:-mx-6 sm:px-6 ${selected ? 'bg-primary-soft' : 'hover:bg-hover'}`}
+      className={`relative flex min-w-0 flex-col gap-3 rounded-[18px] border p-4 shadow-card transition-all sm:p-5 ${selected ? 'border-track bg-soft shadow-lift' : 'border-border bg-card hover:border-track hover:shadow-lift'}`}
     >
-      {selected && <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-primary" />}
-      <div className="flex items-start gap-3">
-        <button type="button" className="min-w-0 flex-1 rounded-lg text-left outline-none after:absolute after:inset-0 after:content-[''] focus-visible:ring-2 focus-visible:ring-ring" onClick={onSelect}>
-          <span className="block font-semibold leading-snug">{p.title}</span>
-          <span className="mt-0.5 block text-xs text-muted">
-            {t(`proposalType.${p.type}`)} · {t('proposalsPage.created', { date: fmtInstant(p.created_at) })}
-          </span>
-        </button>
-        <StatusPill status={p.status === 'open' ? 'pending' : p.status} label={t(`status.proposal.${p.status}`)} />
-        {/* points at the detail panel, which sits beside the list on wide screens */}
-        <span aria-hidden="true" className={`mt-1 hidden shrink-0 xl:block ${selected ? 'text-primary' : 'text-muted'}`}><Icon d="M9 6l6 6-6 6" size={18} sw={2} /></span>
+      <div className="flex items-center justify-between gap-3">
+        <p className="min-w-0 truncate text-xs text-muted">
+          <span className="font-semibold text-ink2">{t(`proposalType.${p.type}`)}</span> · {fmtInstant(p.created_at)}
+        </p>
+        <StatusPill status={pillStatus(p.status)} label={t(`status.proposal.${p.status}`)} />
       </div>
 
-      <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-[0.8125rem]">
-        {tally.counted && tally.yes !== null && <div className="flex gap-1.5"><dt className="text-muted">{t('proposal.yesVotes')}</dt><dd className="font-semibold tabular-nums">{tally.yes}</dd></div>}
-        {tally.counted && <div className="flex gap-1.5"><dt className="text-muted">{t('proposal.needToPass')}</dt><dd className="font-semibold tabular-nums">{tally.need}</dd></div>}
-        {tally.passed && <div className="font-semibold text-ok">✓ {t('proposal.passed')}</div>}
-        {tally.counted && p.voted_count !== undefined && (
-          <div data-testid="turnout" className="flex gap-1.5">
-            <dt className="text-muted">{t('proposalsPage.voted')}</dt>
-            <dd className="font-semibold tabular-nums">{formatCount(p.voted_count)}/{formatCount(p.eligible_count)}</dd>
-          </div>
-        )}
-        {p.closes_at && p.status === 'open' && <div className="flex gap-1.5"><dt className="text-muted">{t('votes.deadline')}</dt><dd className="font-semibold">{remaining ?? fmtInstant(p.closes_at)}</dd></div>}
-        {p.amount_paisa && <div className="flex gap-1.5"><dt className="text-muted">{t('common.amount')}</dt><dd className="font-semibold tabular-nums">{taka(p.amount_paisa)}</dd></div>}
-      </dl>
+      <button type="button" className="rounded-lg text-left text-base font-bold leading-snug outline-none [overflow-wrap:anywhere] after:absolute after:inset-0 after:rounded-[18px] after:content-[''] focus-visible:after:ring-2 focus-visible:after:ring-ring" onClick={onSelect}>
+        {p.title}
+      </button>
 
-      {privileged && (p.status === 'draft' || p.status === 'open' || p.status === 'approved' || p.status === 'rejected') && (
-        <div className="relative z-10 mt-3 flex flex-wrap items-center gap-2">
-          {p.status === 'draft' && <OpenButton id={p.id} onDone={onRefresh} />}
-          {p.status === 'draft' && <CancelButton id={p.id} onDone={onRefresh} />}
-          {p.status === 'open' && <CloseEarlyButton id={p.id} onDone={onRefresh} canClose={p.can_close_early === true} />}
-          {p.status === 'open' && <CancelButton id={p.id} running onDone={onRefresh} />}
-          {p.status === 'approved' && <ExecuteButton id={p.id} type={p.type} onDone={onRefresh} />}
-          {(p.status === 'approved' || p.status === 'rejected') && <ReopenButton id={p.id} onDone={onRefresh} />}
+      {(p.amount_paisa || (p.closes_at && p.status === 'open')) && (
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-[0.8125rem]">
+          {p.amount_paisa && <p className="flex items-baseline gap-1.5"><span className="text-muted">{t('common.amount')}</span><span className="text-lg font-bold tabular-nums">{taka(p.amount_paisa)}</span></p>}
+          {p.closes_at && p.status === 'open' && <CountdownChip closesAt={p.closes_at} />}
+        </div>
+      )}
+
+      {tally.counted && <VoteMeter tally={tally} status={p.status} voted={p.voted_count} eligible={p.eligible_count} />}
+
+      {privileged && hasActions(p.status) && (
+        <div className="relative z-10 mt-auto flex flex-wrap items-center gap-2 border-t border-border pt-3">
+          <ProposalActions p={p} onDone={onRefresh} />
         </div>
       )}
     </li>
+  );
+}
+
+const hasActions = (status: string) => status === 'draft' || status === 'open' || status === 'approved' || status === 'rejected';
+
+/** What the cashier and the auditor can do next, by status: the same buttons on a card and in the drawer. */
+function ProposalActions({ p, onDone }: { p: Pick<ProposalListRow, 'id' | 'type' | 'status' | 'can_close_early'>; onDone: () => void }) {
+  return (
+    <>
+      {p.status === 'draft' && <OpenButton id={p.id} onDone={onDone} />}
+      {p.status === 'draft' && <CancelButton id={p.id} onDone={onDone} />}
+      {p.status === 'open' && <CloseEarlyButton id={p.id} onDone={onDone} canClose={p.can_close_early === true} />}
+      {p.status === 'open' && <CancelButton id={p.id} running onDone={onDone} />}
+      {p.status === 'approved' && <ExecuteButton id={p.id} type={p.type} onDone={onDone} />}
+      {(p.status === 'approved' || p.status === 'rejected') && <ReopenButton id={p.id} onDone={onDone} />}
+    </>
+  );
+}
+
+/** Phone and tablet: the chosen proposal slides in from the right, over the list. */
+function ProposalDrawer({ id, onClose, privileged, onRefresh }: { id: string | null; onClose: () => void; privileged: boolean; onRefresh: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <Dialog.Root open={id !== null} onOpenChange={(o) => !o && onClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
+        <Dialog.Content
+          aria-describedby={undefined}
+          className="fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-border bg-background pt-[env(safe-area-inset-top)] shadow-lift sm:w-[28rem]"
+        >
+          <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2.5">
+            <Dialog.Title className="text-sm font-bold">{t('proposalsPage.selected')}</Dialog.Title>
+            <Dialog.Close aria-label={t('common.close')} className="grid h-11 w-11 place-items-center rounded-full text-muted transition-colors hover:bg-hover">
+              <Icon d="M6 6l12 12M18 6L6 18" size={18} />
+            </Dialog.Close>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+            <ProposalPanel id={id} loading={false} actions={privileged} onRefresh={onRefresh} />
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
 
@@ -602,7 +673,7 @@ export function CreateProposalForm({
 }
 
 /** The chosen proposal in full: what it does, the checklist, and who has voted. */
-function ProposalPanel({ id, loading }: { id: string | null; loading: boolean }) {
+function ProposalPanel({ id, loading, actions = false, onRefresh }: { id: string | null; loading: boolean; actions?: boolean; onRefresh?: () => void }) {
   const { t } = useTranslation();
   const proposal = useQuery({ queryKey: ['proposal', id], enabled: !!id, queryFn: () => api<ProposalDetail>(`/proposals/${id}`) });
   const d = proposal.data;
@@ -617,35 +688,36 @@ function ProposalPanel({ id, loading }: { id: string | null; loading: boolean })
   const tally = voteTally(d, t);
   return (
     <Card>
-      {/* The green bar and "selected proposal" tie this panel to the marked row in the list. */}
-      <div aria-hidden="true" className="h-1 bg-primary" />
-      <header className="border-b border-border px-5 pb-4 pt-4">
-        <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-primary">
-          <Icon d="M15 6l-6 6 6 6" size={14} sw={2.2} />
-          {t('proposalsPage.selected')}
-        </p>
-        <div className="flex items-start justify-between gap-3">
-          <h2 className="min-w-0 text-lg font-bold leading-snug [overflow-wrap:anywhere]">{d.title}</h2>
-          <StatusPill status={d.status === 'open' ? 'pending' : d.status} label={t(`status.proposal.${d.status}`)} />
+      <header className="border-b border-border px-5 py-4">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <p className="min-w-0 text-xs font-semibold text-ink2">{t(`proposalType.${d.type}`)}</p>
+          <StatusPill status={pillStatus(d.status)} label={t(`status.proposal.${d.status}`)} />
         </div>
-        <p className="mt-0.5 text-[0.8125rem] text-muted">{t(`proposalType.${d.type}`)}</p>
+        <h2 className="text-lg font-bold leading-snug [overflow-wrap:anywhere]">{d.title}</h2>
+        {d.closes_at && d.status === 'open' && <div className="mt-2"><CountdownChip closesAt={d.closes_at} /></div>}
       </header>
 
       <div className="p-5">
       {d.description && <p className="mb-3 text-sm [overflow-wrap:anywhere]">{d.description}</p>}
 
-      <dl>
-        {d.subject && <InfoRow label={t('proposal.subject')} value={`${d.subject.code} ${d.subject.full_name}`} />}
-        {d.clause_ref && <InfoRow label={t('proposal.clauseRef')} value={<ClauseLink clause={d.clause_ref} />} />}
-        {tally.counted && <InfoRow label={t('proposal.yesVotes')} value={tally.yes ?? t('votes.hiddenUntilClose')} />}
-        {tally.counted && (
-          <InfoRow
-            label={t('proposal.needToPass')}
-            value={tally.passed ? <>{tally.need} <span className="ml-1 text-ok">✓ {t('proposal.passed')}</span></> : tally.need}
-          />
-        )}
-        {tally.counted && d.voted_count !== undefined && <InfoRow label={t('proposalsPage.voted')} value={`${formatCount(d.voted_count)}/${formatCount(d.eligible_count)}`} />}
-      </dl>
+      {actions && onRefresh && hasActions(d.status) && (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <ProposalActions p={d} onDone={onRefresh} />
+        </div>
+      )}
+
+      {tally.counted && (
+        <div className="mb-3 rounded-xl border border-border p-3">
+          <VoteMeter tally={tally} status={d.status} voted={d.voted_count} eligible={d.eligible_count} />
+        </div>
+      )}
+
+      {(d.subject || d.clause_ref) && (
+        <dl>
+          {d.subject && <InfoRow label={t('proposal.subject')} value={`${d.subject.code} ${d.subject.full_name}`} />}
+          {d.clause_ref && <InfoRow label={t('proposal.clauseRef')} value={<ClauseLink clause={d.clause_ref} />} />}
+        </dl>
+      )}
 
       <div className="mt-3 space-y-3 text-sm">
         <ProposalDetails type={d.type} payload={d.payload} />
@@ -668,7 +740,7 @@ function ProposalPanel({ id, loading }: { id: string | null; loading: boolean })
                 <span className="truncate">{v.full_name}{d.basis === 'share' && <span className="text-muted"> · {v.weight}</span>}</span>
               </span>
               {/* While the vote is open only whether they voted is shown (green/red dot), never their choice. */}
-              <span className={`flex shrink-0 items-center gap-1.5 text-xs font-semibold ${v.voted ? 'text-ok' : 'text-bad'}`}>
+              <span className={`flex shrink-0 items-center gap-1.5 text-xs font-semibold ${v.voted ? 'text-ink2' : 'text-bad'}`}>
                 <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-full ${v.voted ? 'bg-ok' : 'bg-bad'}`} />
                 {!d.ballots_hidden && cast ? t(`votes.${cast.choice}`) : v.voted ? t('proposal.votedYes') : t('proposal.votedNo')}
               </span>

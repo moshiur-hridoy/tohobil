@@ -94,6 +94,8 @@ test('(5) cashier executes a distribution proposal', async ({ browser, request }
   await stepUp(page);
 
   await page.goto('/admin/proposals');
+  // The page opens on running votes and drafts; an approved proposal waits on its own tab.
+  await page.getByRole('button', { name: new RegExp(`^${tr('proposalsPage.tabs.approved')}`) }).click();
   const row = page.getByTestId('proposal-row').filter({ hasText: title });
   await expect(row).toContainText(tr('status.proposal.approved'));
 

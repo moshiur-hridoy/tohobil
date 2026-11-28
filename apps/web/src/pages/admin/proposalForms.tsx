@@ -4,7 +4,8 @@ import { COMPLIANCE_CHECKLIST_FIELDS, LEVY_EXPENSE_CATEGORIES, type ProposalType
 import { api, ApiError } from '../../lib/api';
 import { fmtDate } from '../../lib/dates';
 import { parseAmountInput, taka } from '../../lib/money';
-import { Optional, DateInput, FilePicker } from '../../components/ui';
+import { Optional, DateInput } from '../../components/ui';
+import { FilePicker } from '../../components/FilePicker';
 import type { AssetRow, MemberRow, PartnerRow } from '../../lib/types';
 
 /**

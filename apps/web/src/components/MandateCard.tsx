@@ -1,16 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ApiError, api, apiBlob } from '../lib/api';
+import { api, apiBlob } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { fmtDate, fmtPeriod, todayDhaka } from '../lib/dates';
 import { formatCount } from '../lib/format';
-import { parseAmountInput, taka } from '../lib/money';
+import { taka } from '../lib/money';
 import type { MandatePurchaseRow, MandateRow, PartnerRow } from '../lib/types';
 import { CreateProposalForm } from '../pages/admin/ProposalsPage';
 import { ConfirmSheet } from './ConfirmSheet';
 import { AdminDialog, BTN_SM, BTN_SM_PRIMARY, Card, ICONS } from './admin';
-import { DateInput, FilePicker, Icon, Optional } from './ui';
+import { MandatePurchaseSheet, mandateLeft } from './MandatePurchaseSheet';
+import { Icon } from './ui';
 
 const STATUS_TONE: Record<MandateRow['status'], string> = {
   active: 'bg-ok-bg text-ok',
@@ -33,12 +34,6 @@ export function MandateCard({ partner, mandates, onChanged }: { partner: Partner
   const isStaff = isCashier || (me?.roles.includes('auditor') ?? false);
   const [sheet, setSheet] = useState<Sheet>(null);
   const [voteOpen, setVoteOpen] = useState(false);
-  const [date, setDate] = useState(todayDhaka());
-  const [amount, setAmount] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [unit, setUnit] = useState<'' | 'vori' | 'gram'>('');
-  const [note, setNote] = useState('');
-  const [file, setFile] = useState<File | null>(null);
   const [reason, setReason] = useState('');
 
   const current = mandates.find((m) => m.status === 'active' || m.status === 'upcoming');
@@ -51,12 +46,6 @@ export function MandateCard({ partner, mandates, onChanged }: { partner: Partner
 
   const reset = () => {
     setSheet(null);
-    setDate(todayDhaka());
-    setAmount('');
-    setQuantity('');
-    setUnit('');
-    setNote('');
-    setFile(null);
     setReason('');
   };
   const done = () => {
@@ -65,25 +54,8 @@ export function MandateCard({ partner, mandates, onChanged }: { partner: Partner
   };
 
   const run = async () => {
-    if (!sheet) return;
-    if (sheet.kind === 'buy') {
-      const paisa = parseAmountInput(amount);
-      if (!paisa || !file) throw new ApiError(400, 'request.invalid', 'amount and receipt');
-      const form = new FormData();
-      form.append('file', file);
-      const up = await api<{ id: string }>('/files', { method: 'POST', body: form });
-      await api(`/mandates/${sheet.mandate.id}/purchases`, {
-        method: 'POST',
-        body: {
-          entry_date: date,
-          amount_paisa: paisa,
-          receipt_file_id: up.id,
-          ...(quantity.trim() ? { quantity: Number(quantity) } : {}),
-          ...(unit ? { unit } : {}),
-          ...(note.trim() ? { note: note.trim() } : {}),
-        },
-      });
-    } else if (sheet.kind === 'end') {
+    if (!sheet || sheet.kind === 'buy') return;
+    if (sheet.kind === 'end') {
       await api(`/mandates/${sheet.mandate.id}/end`, { method: 'POST', body: { reason: reason.trim() } });
     } else {
       await api(`/mandate-purchases/${sheet.purchase.asset_id}/reverse-request`, { method: 'POST', body: { reason: reason.trim() } });
@@ -94,13 +66,6 @@ export function MandateCard({ partner, mandates, onChanged }: { partner: Partner
   const openReceipt = async (fileId: string) => {
     window.open(URL.createObjectURL(await apiBlob(`/files/${fileId}`)), '_blank', 'noopener');
   };
-
-  const left = (m: MandateRow) => {
-    const rest = BigInt(m.monthly_max_paisa) - BigInt(m.used_this_month_paisa);
-    return rest > 0n ? rest : 0n;
-  };
-  const amountPaisa = parseAmountInput(amount);
-  const tooMuch = sheet?.kind === 'buy' && amountPaisa !== null && date.slice(0, 7) === todayDhaka().slice(0, 7) && BigInt(amountPaisa) > left(sheet.mandate);
 
   return (
     <Card className="p-5">
@@ -136,7 +101,7 @@ export function MandateCard({ partner, mandates, onChanged }: { partner: Partner
                   style={{ width: `${Math.min(100, Number((BigInt(shown.used_this_month_paisa) * 100n) / BigInt(shown.monthly_max_paisa)))}%` }}
                 />
               </div>
-              <p className="mt-2 text-xs text-muted">{t('mandate.left', { amount: taka(left(shown)) })}</p>
+              <p className="mt-2 text-xs text-muted">{t('mandate.left', { amount: taka(mandateLeft(shown)) })}</p>
             </div>
           )}
 
@@ -197,51 +162,17 @@ export function MandateCard({ partner, mandates, onChanged }: { partner: Partner
         />
       </AdminDialog>
 
+      <MandatePurchaseSheet partnerName={partner.name} mandate={sheet?.kind === 'buy' ? sheet.mandate : null} onClose={reset} onSaved={done} />
+
       <ConfirmSheet
-        open={sheet !== null}
+        open={sheet !== null && sheet.kind !== 'buy'}
         onClose={reset}
-        title={sheet?.kind === 'buy' ? t('mandate.addPurchase') : sheet?.kind === 'end' ? t('mandate.end') : t('mandate.reverse')}
-        confirmLabel={sheet?.kind === 'buy' ? t('common.save') : t('common.confirm')}
-        tone={sheet?.kind === 'buy' ? 'primary' : 'danger'}
-        canConfirm={sheet?.kind === 'buy' ? amountPaisa !== null && !!file && !!date && !tooMuch : reason.trim().length >= 3}
+        title={sheet?.kind === 'end' ? t('mandate.end') : t('mandate.reverse')}
+        confirmLabel={t('common.confirm')}
+        tone="danger"
+        canConfirm={reason.trim().length >= 3}
         onConfirm={run}
       >
-        {sheet?.kind === 'buy' && (
-          <div className="space-y-3">
-            <p className="text-sm text-muted">{t('mandate.buyHint', { name: partner.name, left: taka(left(sheet.mandate)) })}</p>
-            <label className="field-label">
-              {t('mandate.date')}
-              <DateInput className="field mt-1 w-full" value={date} max={todayDhaka()} onChange={(e) => setDate(e.target.value)} />
-            </label>
-            <label className="field-label">
-              {t('common.amount')}
-              <input className="field mt-1 w-full" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
-              {tooMuch && <span className="field-hint text-bad">{t('errors.mandate.over_limit')}</span>}
-            </label>
-            <div className="field-label">
-              {t('mandate.receipt')}
-              <FilePicker className="mt-1 font-normal" file={file} onChange={setFile} />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <label className="field-label">
-                {t('proposalFields.quantity')}<Optional />
-                <input className="field mt-1 w-full" inputMode="decimal" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
-              </label>
-              <label className="field-label">
-                {t('proposalFields.unit')}<Optional />
-                <select className="field mt-1 w-full" value={unit} onChange={(e) => setUnit(e.target.value as '' | 'vori' | 'gram')}>
-                  <option value="">—</option>
-                  <option value="vori">{t('proposalOptions.vori')}</option>
-                  <option value="gram">{t('proposalOptions.gram')}</option>
-                </select>
-              </label>
-            </div>
-            <label className="field-label">
-              {t('holding.remark')}<Optional />
-              <input className="field mt-1 w-full" value={note} onChange={(e) => setNote(e.target.value)} />
-            </label>
-          </div>
-        )}
         {sheet && sheet.kind !== 'buy' && (
           <div className="space-y-3">
             <p className="text-sm text-muted">

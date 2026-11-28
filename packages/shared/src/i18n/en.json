@@ -1587,7 +1587,10 @@
     "halalPledge": "I confirm this money is being invested in a fully halal way.",
     "halalPledgeHint": "That is: no interest, no gambling or speculation, and no fixed profit promised.",
     "complianceIncomplete": "All checklist items must be true before this proposal can be opened.",
-    "created": "Created: {{date}}",
+    "search": "Search by proposal name",
+    "noMatch": "No proposal matches here.",
+    "noActive": "No vote is running and there are no drafts.",
+    "tabs": {"all": "All", "active": "Active", "approved": "To execute", "draft": "Draft", "executed": "Executed", "closed": "Closed"},
     "selected": "Selected proposal",
     "voted": "Voted"
   },
@@ -2357,10 +2360,6 @@
       "statusLabel": "Show payments"
     },
     "proposals": {
-      "statOpen": "Voting now",
-      "statDraft": "Drafts",
-      "statToExecute": "Passed, not yet carried out",
-      "statTotal": "All proposals",
       "needsAction": "Needs you",
       "nothingWaiting": "Nothing is waiting for you."
     },
@@ -2474,6 +2473,12 @@
     "hint": "Photo or PDF",
     "attached": "Attached",
     "change": "Change",
+    "paste": "Paste a screenshot",
+    "pasteEmpty": "There is no picture on the clipboard. Copy a screenshot first.",
+    "pasteBlocked": "Could not paste. Press Ctrl+V (⌘V on a Mac), or add the picture from a file.",
+    "desktopHint": "drag it here, or copy a screenshot and press Ctrl+V (⌘V on a Mac)",
+    "dropHere": "Drop it here",
+    "wrongType": "This kind of file cannot be added. Use a picture (JPEG, PNG, WebP) or a PDF.",
     "remove": "Remove"
   },
   "photo": {
@@ -2785,6 +2790,7 @@
     "past": "Earlier approvals: {{n}}",
     "approvalTitle": "{{name}}: reverse a purchase",
     "reversalEffect": "Approving posts a reversing entry: the money returns to the fund's account in the books and leaves the shop's total.",
+    "voteInstead": "Buying outside the approval? Put it to a separate vote",
     "voteTitle": "Monthly investment with {{name}}"
   }
 }

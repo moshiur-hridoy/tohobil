@@ -8,7 +8,8 @@ import { LoadError } from '../../components/StateViews';
 import {
   AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, BTN_SM, BTN_SM_PRIMARY, Card, CardHead, EmptyCard, FieldLabel, ICONS, Segmented, SplitLayout, StatGrid, StatTile,
 } from '../../components/admin';
-import { Chip, FilePicker, Icon } from '../../components/ui';
+import { Chip, Icon } from '../../components/ui';
+import { FilePicker } from '../../components/FilePicker';
 import { formatCount } from '../../lib/format';
 import { holdingTotals } from '../../lib/holding';
 import { Link, useNavigate } from 'react-router-dom';

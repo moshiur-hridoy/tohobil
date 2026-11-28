@@ -6,7 +6,8 @@ import { ConfirmSheet } from '../../components/ConfirmSheet';
 import { ListSkeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
 import { AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, BTN_SM, BTN_SM_PRIMARY, Card, ICONS, InfoRow, Notice, StatGrid, StatTile } from '../../components/admin';
-import { Icon, DateInput, FilePicker } from '../../components/ui';
+import { Icon, DateInput } from '../../components/ui';
+import { FilePicker } from '../../components/FilePicker';
 import { api, apiBlob } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtDate } from '../../lib/dates';
@@ -18,6 +19,7 @@ import { CreateProposalForm } from './ProposalsPage';
 import { ValuationRequestList, ValuationRequestSheet } from '../../components/ValuationUpdate';
 import { RemarkLine } from '../../components/EntryRemarks';
 import { MandateCard } from '../../components/MandateCard';
+import { MandatePurchaseSheet } from '../../components/MandatePurchaseSheet';
 
 /** A withdrawal's stage: waiting on someone (amber), voting (blue), money due (amber), done (green). */
 const STAGE_TONE: Record<HoldingWithdrawal['status'], string> = {
@@ -61,6 +63,7 @@ function HoldingView({ id }: { id: string }) {
   const [docType, setDocType] = useState('receipt');
   const [file, setFile] = useState<File | null>(null);
   const [buyOpen, setBuyOpen] = useState(false);
+  const [recordOpen, setRecordOpen] = useState(false);
   const [valueOpen, setValueOpen] = useState(false);
   const [sent, setSent] = useState<string | null>(null);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
@@ -132,6 +135,8 @@ function HoldingView({ id }: { id: string }) {
   const assetOf = new Map(assets.map((a) => [a.id, a]));
   const papersOf = (assetId: string) => documents.filter((d) => d.entity_type === 'asset' && d.entity_id === assetId);
   const shown = entries.filter((e) => !e.reversed);
+  // While the members' standing approval runs, a purchase is recorded under it, not voted on again.
+  const activeMandate = q.data.mandates?.find((m) => m.status === 'active') ?? null;
 
   // One line per valuation date: the sum of what each purchase was valued at that day.
   const history = [...valuations.reduce((m, v) => m.set(v.as_of, { total: (m.get(v.as_of)?.total ?? 0n) + BigInt(v.value_paisa), basis: m.get(v.as_of)?.basis ?? v.basis }), new Map<string, { total: bigint; basis: string | null }>())]
@@ -166,7 +171,9 @@ function HoldingView({ id }: { id: string }) {
         subtitle={`${t(`assets.${kind}`)} · ${t('holding.subtitle', { n: formatCount(shown.length) })}`}
         actions={isCashier && (
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => setBuyOpen(true)} className={BTN_PRIMARY}>{t('holding.addEntry')}</button>
+            <button type="button" onClick={() => (activeMandate ? setRecordOpen(true) : setBuyOpen(true))} className={BTN_PRIMARY}>
+              {t(activeMandate ? 'mandate.addPurchase' : 'holding.addEntry')}
+            </button>
             <button type="button" onClick={() => setValueOpen(true)} className={BTN_SM_PRIMARY.replace('h-9', 'h-11')}>{t('holding.updateValue')}</button>
             {totals.count > 0 && (
               <button type="button" onClick={() => setWithdrawOpen(true)} className={BTN_SM_PRIMARY.replace('h-9', 'h-11')}>{t('holding.withdraw')}</button>
@@ -346,6 +353,14 @@ function HoldingView({ id }: { id: string }) {
           </ul>
         )}
       </Card>
+
+      <MandatePurchaseSheet
+        partnerName={partner.name}
+        mandate={recordOpen ? activeMandate : null}
+        onClose={() => setRecordOpen(false)}
+        onSaved={refresh}
+        onVoteInstead={() => setBuyOpen(true)}
+      />
 
       <AdminDialog open={buyOpen} onClose={() => setBuyOpen(false)} title={t('holding.addEntry')} wide>
         <p className="mb-3 text-sm text-muted">{t('holding.addEntryHint')}</p>

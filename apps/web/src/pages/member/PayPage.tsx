@@ -3,7 +3,8 @@ import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-quer
 import { useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PAYMENT_METHOD_LABELS, type PaymentMethod } from '@barakah/shared';
-import { Icon, Optional, PageHeader, DateInput, FilePicker } from '../../components/ui';
+import { Icon, Optional, PageHeader, DateInput } from '../../components/ui';
+import { FilePicker } from '../../components/FilePicker';
 import { ConfirmSheet, SheetRow } from '../../components/ConfirmSheet';
 import { CopyButton } from '../../components/CopyButton';
 import { ListSkeleton } from '../../components/Skeleton';

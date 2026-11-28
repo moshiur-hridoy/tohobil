@@ -129,6 +129,10 @@ Read the dry-run report first (counts, warnings, opening-balance adjustments). T
 
 ## 8. Updating later
 
+> **Automatic jobs are off until you switch them on** (`AUTO_JOBS=on`). Follow "Automatic jobs" in
+> `docs/RUNBOOK.md` once, after deploying the version that introduced the switch. That one update also
+> needs the new `infra/docker-compose.portainer.yml` pasted into the stack editor.
+
 1. Release with `pnpm release minor` (or `patch`, see `docs/RELEASES.md`), wait for the green `build-images` run, note the new `Deploy tag`.
 2. Portainer, the stack, **Editor**, change `TAG` in the environment variables to the new version (for example `v1.8.0`), **Update the stack**. Tick **Re-pull image**.
 3. The `migrate` step runs first, so database changes apply automatically.

@@ -20,6 +20,29 @@ First start on an empty volume runs `infra/initdb/10-roles.sh`, which creates `b
 
 Production environment values must not be placeholders; the API refuses to start otherwise (`apps/api/src/lib/env.ts`).
 
+## Automatic jobs (switching them on)
+
+The scheduled jobs (monthly dues, late fines, reminders, push/SMS sending, vote closing, member warning and
+suspension, nightly checks) run only when `AUTO_JOBS` is `on`. In production it is **off** until you switch
+it on (ASSUMPTIONS 136).
+
+1. Deploy the new version (`TAG=vX.Y.Z`). The stack was pasted into Portainer's web editor, so this once
+   also replace its text with the new `infra/docker-compose.portainer.yml`: without the two new lines
+   (`AUTO_JOBS`, `AUTO_FINES_FROM`) the settings below never reach the app. Leave `AUTO_JOBS` empty.
+   Nothing automatic happens yet.
+2. In Portainer open the `api` container → **Console** → **Connect**, and run:
+   `node dist/cli/jobs-preview.js`
+   It changes nothing. It lists the notifications that would be sent, missing monthly dues, the late fines
+   the first run would add, members who would be warned, and votes that would be closed.
+3. If older months must **not** be fined, add the environment variable `AUTO_FINES_FROM` with the first due
+   date to fine, for example `AUTO_FINES_FROM=2026-12-01`, redeploy and run the preview again.
+4. When the list is right, add `AUTO_JOBS=on` and redeploy. The jobs run at their next scheduled time (the
+   daily ones just after midnight).
+5. If this month's dues are missing and its due date has not passed, the next nightly run creates them. For
+   any other month run `node dist/cli/generate-dues.js YYYY-MM` in the same console.
+
+To stop all automatic jobs again, set `AUTO_JOBS=off` and redeploy.
+
 ## Monitoring
 
 - Point an external uptime monitor (UptimeRobot, Healthchecks.io, ...) at `GET https://<domain>/api/v1/health`. It returns **503** when the database is unreachable, so a plain HTTP check is enough. It is exempt from rate limiting.

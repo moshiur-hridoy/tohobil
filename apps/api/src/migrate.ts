@@ -8,7 +8,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runner } from 'node-pg-migrate';
 import PgBoss from 'pg-boss';
-import { JOB_QUEUES } from './jobs/queues';
+import { createJobQueues } from './jobs/queues';
 import { createLogger } from './lib/logger';
 
 try {
@@ -58,7 +58,7 @@ async function main(): Promise<void> {
   const boss = new PgBoss({ connectionString: databaseUrl, max: 1, supervise: false, schedule: false });
   boss.on('error', (err) => logger.error({ err }, 'pg-boss install error'));
   await boss.start();
-  for (const name of JOB_QUEUES) await boss.createQueue(name, { name, policy: 'singleton' });
+  await createJobQueues(boss);
   await boss.stop({ graceful: false });
   logger.info('pg-boss schema and queues ready');
 }

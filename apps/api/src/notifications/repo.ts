@@ -86,6 +86,16 @@ export async function fetchDueNotifications(
   return res.rows as NotificationRow[];
 }
 
+/** Give up on notifications still unsent long after their time; they stay readable in the app. */
+export async function skipStaleNotifications(db: Db, before: Date): Promise<number> {
+  const res = await db.query(
+    `UPDATE notifications SET status = 'skipped', error = 'stale'
+     WHERE status = 'queued' AND scheduled_for < $1`,
+    [before],
+  );
+  return res.rowCount ?? 0;
+}
+
 export async function markNotificationStatus(
   db: Db,
   id: string,

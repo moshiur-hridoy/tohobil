@@ -67,6 +67,15 @@ const envSchema = z
     /** Per-IP limit on `POST /files` (each upload is re-encoded, which costs CPU and memory). */
     UPLOAD_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(30),
 
+    /**
+     * The scheduled jobs (dues, fines, reminders, vote closing, member status ...). Empty means on in
+     * development and off in production, where the owner switches them on after `jobs-preview`
+     * (docs/RUNBOOK.md).
+     */
+    AUTO_JOBS: z.enum(['on', 'off', '']).default(''),
+    /** The job never fines a due dated before this day (YYYY-MM-DD); empty fines every late due. */
+    AUTO_FINES_FROM: z.union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'must be YYYY-MM-DD'), z.literal('')]).default(''),
+
     SMS_PROVIDER: z.enum(['console', 'http']).default('console'),
     SMS_HTTP_URL: z.union([z.string().url(), z.literal('')]).optional(),
     SMS_HTTP_API_KEY: z.string().optional(),
@@ -130,6 +139,9 @@ export function loadEnv(): Env {
   }
   return parseEnv(process.env);
 }
+
+export const autoJobsOn = (env: Pick<Env, 'AUTO_JOBS' | 'NODE_ENV'>): boolean =>
+  env.AUTO_JOBS === 'on' || (env.AUTO_JOBS === '' && env.NODE_ENV !== 'production');
 
 /** Maps TRUST_PROXY to Fastify's trustProxy option. */
 export function parseTrustProxy(value: string): boolean | string[] {

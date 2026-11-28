@@ -30,12 +30,12 @@ export interface AppliedFine {
  * within that month by the due date (ASSUMPTIONS 130): the money may have arrived on time, so the
  * cashier's decision settles it. Confirming or rejecting that payment runs `applyFinesForMember`.
  */
-async function insertLateFines(
+export async function lateFineCandidates(
   tx: Db,
   cutoff: string,
   only: { memberId: string; scope: CatchUpScope } | null,
-): Promise<AppliedFine[]> {
-  const fineAmount = await rulePaisa(tx, 'fine_per_share_paisa', cutoff);
+  dueFrom: string | null = null,
+): Promise<Omit<AppliedFine, 'fine_id'>[]> {
   const res = await tx.query(
     `SELECT d.id AS due_id, d.member_id, d.period, m.code, shares_on(d.member_id, d.due_date) AS shares
      FROM dues d
@@ -45,6 +45,7 @@ async function insertLateFines(
        AND ($2::uuid IS NULL OR d.member_id = $2)
        AND ($3::date IS NULL OR $3::date BETWEEN (d.period || '-01')::date AND d.due_date)
        AND ($4::uuid[] IS NULL OR d.id = ANY($4::uuid[]))
+       AND ($5::date IS NULL OR d.due_date >= $5::date)
        AND m.status IN ('active','warning')
        AND NOT EXISTS (
          SELECT 1 FROM fines f
@@ -59,12 +60,14 @@ async function insertLateFines(
          WHERE p.member_id = d.member_id AND p.status = 'pending' AND p.purpose = 'dues'
            AND (GREATEST(p.paid_at, p.submitted_at) AT TIME ZONE 'Asia/Dhaka')::date
                BETWEEN (d.period || '-01')::date AND d.due_date
-       )`,
+       )
+     ORDER BY m.code, d.due_date`,
     [
       cutoff,
       only?.memberId ?? null,
       only && 'sentOn' in only.scope ? only.scope.sentOn : null,
       only && 'dueIds' in only.scope ? only.scope.dueIds : null,
+      dueFrom,
     ],
   );
   const rows = res.rows as Array<{
@@ -74,28 +77,31 @@ async function insertLateFines(
     code: string;
     shares: number;
   }>;
+  // Read only when there is something to fine: before the fund's first rules there is no amount.
+  if (rows.length === 0) return [];
+  const fineAmount = await rulePaisa(tx, 'fine_per_share_paisa', cutoff);
+  return rows
+    .map((row) => ({ member_id: row.member_id, member_code: row.code, due_id: row.due_id, period: row.period, amount_paisa: BigInt(row.shares) * fineAmount }))
+    .filter((c) => c.amount_paisa > 0n);
+}
+
+async function insertLateFines(
+  tx: Db,
+  cutoff: string,
+  only: { memberId: string; scope: CatchUpScope } | null,
+  dueFrom: string | null = null,
+): Promise<AppliedFine[]> {
   const created: AppliedFine[] = [];
-  for (const row of rows) {
-    const amount = BigInt(row.shares) * fineAmount;
-    if (amount <= 0n) continue;
+  for (const c of await lateFineCandidates(tx, cutoff, only, dueFrom)) {
     const insert = await tx.query(
       `INSERT INTO fines (due_id, member_id, amount_paisa, reason)
        VALUES ($1, $2, $3::bigint, 'late_payment')
        ON CONFLICT (due_id) WHERE due_id IS NOT NULL DO NOTHING
        RETURNING id`,
-      [row.due_id, row.member_id, amount.toString()],
+      [c.due_id, c.member_id, c.amount_paisa.toString()],
     );
     const fineId = (insert.rows[0] as { id: string } | undefined)?.id;
-    if (fineId) {
-      created.push({
-        fine_id: fineId,
-        member_id: row.member_id,
-        member_code: row.code,
-        due_id: row.due_id,
-        period: row.period,
-        amount_paisa: amount,
-      });
-    }
+    if (fineId) created.push({ fine_id: fineId, ...c });
   }
   return created;
 }
@@ -107,13 +113,13 @@ const summary = (created: AppliedFine[]) => ({
 
 /**
  * Apply fines for a specific business date (spec 5.5). Idempotent: only one fine per due.
- * The job calls this on `fine_day` of every month. Fines never compound and only late-payment
- * dues produce fines; absence fines come from meetings (Phase 3).
+ * The job calls this daily with the last `fine_day`. Fines never compound and only late-payment
+ * dues produce fines; absence fines come from meetings (Phase 3). `dueFrom` leaves older dues alone.
  */
-export async function applyFines(deps: FineDeps, asOf?: string): Promise<AppliedFine[]> {
+export async function applyFines(deps: FineDeps, asOf?: string, dueFrom?: string): Promise<AppliedFine[]> {
   const today = asOf ?? deps.clock.todayDhaka();
   return inTransaction(deps.pool, async (tx) => {
-    const created = await insertLateFines(tx, today, null);
+    const created = await insertLateFines(tx, today, null, dueFrom ?? null);
     if (created.length > 0) {
       await audit(tx, {
         actor: null,

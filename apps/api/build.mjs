@@ -21,6 +21,7 @@ await build({
     'cli/import-sheet': 'src/cli/import-sheet.ts',
     'cli/set-role': 'src/cli/set-role.ts',
     'cli/load-constitution': 'src/cli/load-constitution.ts',
+    'cli/jobs-preview': 'src/cli/jobs-preview.ts',
   },
   outdir: 'dist',
   bundle: true,

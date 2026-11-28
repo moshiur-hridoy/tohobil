@@ -1,5 +1,5 @@
 import PgBoss from 'pg-boss';
-import { JOB_QUEUES } from './queues';
+import { CRON_QUEUE, JOB_QUEUES } from './queues';
 import type pg from 'pg';
 import type { Clock } from '@barakah/shared';
 import type { Logger } from 'pino';
@@ -50,7 +50,7 @@ export function createScheduler(poolUrl: string, deps: JobDeps): Scheduler {
     });
     await boss.work('apply-fines', async () => {
       const { applyFinesJob } = await import('./workers/fines');
-      await applyFinesJob(deps);
+      await applyFinesJob({ ...deps, finesFrom: deps.env.AUTO_FINES_FROM || undefined });
     });
     await boss.work('remind-dues', async () => {
       const { remindDuesJob } = await import('./workers/reminders');
@@ -109,6 +109,10 @@ export function createScheduler(poolUrl: string, deps: JobDeps): Scheduler {
     // covers a queue added in code before the next migrate run.
     for (const name of JOB_QUEUES) {
       await boss.createQueue(name, { name, policy: 'singleton' });
+    }
+
+    if (!(await boss.getQueue(CRON_QUEUE))) {
+      deps.log.error('Scheduled jobs cannot run: a job queue is missing. Run the migrate step again.');
     }
 
     const scheduleOpts = { tz: 'Asia/Dhaka' as const };

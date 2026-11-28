@@ -26,6 +26,7 @@
     "perf": "PERF=1 pnpm --filter @barakah/api exec vitest run src/perf/perf.test.ts",
     "dues:generate": "pnpm --filter @barakah/api dues:generate",
     "constitution:load": "pnpm --filter @barakah/api constitution:load",
+    "jobs:preview": "pnpm --filter @barakah/api jobs:preview",
     "import:convert": "pnpm --filter @barakah/api import:convert",
     "import:load": "pnpm --filter @barakah/api import:load",
     "import:verify": "pnpm --filter @barakah/api import:verify",

@@ -150,6 +150,9 @@ interface PushGroup {
   tokens: { deviceId: string; token: string }[];
 }
 
+/** A notification still unsent this long after its time is not sent any more. */
+export const STALE_AFTER_MS = 48 * 3600_000;
+
 /**
  * Send a batch of queued notifications. Called by the worker job.
  * For push, marks the row sent if at least one device accepted; on FCM UNREGISTERED
@@ -157,6 +160,8 @@ interface PushGroup {
  */
 export async function sendQueuedNotifications(deps: NotificationDeps, batchSize = 100): Promise<number> {
   const now = deps.clock.now();
+  // After an outage (or the first start of the jobs) old news must not go out as push or paid SMS.
+  await repo.skipStaleNotifications(deps.pool, new Date(now.getTime() - STALE_AFTER_MS));
   const rows = await repo.fetchDueNotifications(deps.pool, now, batchSize);
   if (!rows.length) return 0;
 

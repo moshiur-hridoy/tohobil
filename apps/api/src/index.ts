@@ -1,6 +1,6 @@
 import { buildApp } from './app';
 import { createPool } from './lib/db';
-import { loadEnv, EnvError } from './lib/env';
+import { autoJobsOn, loadEnv, EnvError } from './lib/env';
 import { createLogger } from './lib/logger';
 import { systemClock } from '@barakah/shared';
 import { createScheduler } from './jobs';
@@ -45,7 +45,9 @@ async function main(): Promise<void> {
   });
 
   await app.listen({ port: env.PORT, host: env.HOST });
-  await scheduler.start();
+  const jobsOn = autoJobsOn(env);
+  if (jobsOn) await scheduler.start();
+  else logger.warn('Automatic jobs are OFF: no dues, fines, reminders or vote closing. See docs/RUNBOOK.md.');
   logger.info(
     { port: env.PORT, host: env.HOST, version: env.APP_VERSION },
     'Barakah API started',
@@ -57,7 +59,7 @@ async function main(): Promise<void> {
     shuttingDown = true;
     logger.info({ signal }, 'Shutting down');
     try {
-      await scheduler.stop();
+      if (jobsOn) await scheduler.stop();
       await app.close();
       await pool.end();
       process.exit(0);

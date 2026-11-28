@@ -19,7 +19,7 @@ export function ActionError({ error }: { error: unknown }) {
     <div role="alert" className="mt-3 rounded-xl border border-border p-3 text-sm">
       <p className="text-bad">{errorMessage(t, error).message}</p>
       {needsStepUp && (
-        <Link to="/totp" className="mt-1 inline-block font-medium text-primary underline">
+        <Link to="/totp" className="mt-1 inline-block font-medium text-accent underline">
           {t('common.goToTotp')}
         </Link>
       )}
@@ -109,7 +109,7 @@ export function TelegramCard() {
         <div className="mt-1 flex flex-wrap items-center gap-3 text-sm">
           <span className="font-medium">{t('settingsPage.telegram.botName', { name: s.bot_username })}</span>
           <span className="text-muted">{t('settingsPage.telegram.tokenSaved')}</span>
-          <button type="button" className="text-primary underline" onClick={() => setReplacing(true)}>
+          <button type="button" className="text-accent underline" onClick={() => setReplacing(true)}>
             {t('settingsPage.telegram.replaceToken')}
           </button>
         </div>

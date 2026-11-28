@@ -222,7 +222,7 @@ export function AdminAssetsPage() {
         <li>
           <button type="button" onClick={() => { setPartnerError(null); setPartnerOpen(true); }} data-testid="add-partner"
             className="flex h-full min-h-[11.5rem] w-full flex-col items-center justify-center gap-2.5 rounded-[18px] border-2 border-dashed border-border bg-card p-[18px] text-muted outline-none transition hover:border-input hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
-            <span className="grid h-12 w-12 place-items-center rounded-full bg-primary-soft text-primary"><Icon d={ICONS.plus} size={26} /></span>
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-accent-soft text-accent"><Icon d={ICONS.plus} size={26} /></span>
             <span className="font-semibold">{t('assetsAdmin.addSector')}</span>
           </button>
         </li>
@@ -235,7 +235,7 @@ export function AdminAssetsPage() {
       <AdminHeader title={t('assetsAdmin.title')} subtitle={t('adminUi.sub.assets')} />
 
       <StatGrid>
-        <StatTile tone="bg-primary-soft text-primary" icon={ICONS.trend} label={t('assetsAdmin.netAssets')} value={nav.data ? taka(nav.data.net_assets_paisa) : null} />
+        <StatTile tone="bg-accent-soft text-accent" icon={ICONS.trend} label={t('assetsAdmin.netAssets')} value={nav.data ? taka(nav.data.net_assets_paisa) : null} />
         <StatTile tone="bg-blue-bg text-blue" icon={ICONS.layers} label={t('assetsAdmin.navPerShare')} value={nav.data ? taka(nav.data.nav_per_share_paisa) : null} />
         <StatTile tone="bg-soft text-ink2" icon={ICONS.users} label={t('assetsAdmin.shares')} value={nav.data ? formatCount(Number(nav.data.shares_outstanding)) : null} />
         {/* What the fund has put into shops, with how many shops and own assets; the old single "assets" count hid the investment. */}

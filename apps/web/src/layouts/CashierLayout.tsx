@@ -90,7 +90,7 @@ function ExtraLink({ to, label, icon, compact = false }: { to: string; label: st
       to={to}
       className={({ isActive }) =>
         `flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors ${compact ? 'whitespace-nowrap' : ''} ${
-          isActive ? 'bg-primary-soft font-bold text-primary' : 'text-foreground hover:bg-hover'
+          isActive ? 'bg-accent-soft font-bold text-accent' : 'text-foreground hover:bg-hover'
         }`
       }
     >
@@ -285,7 +285,7 @@ function ProfileCard() {
 
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-border bg-background p-2.5">
-      <div className="grid h-9 w-9 place-items-center rounded-full bg-primary-soft text-sm font-bold text-primary">
+      <div className="grid h-9 w-9 place-items-center rounded-full bg-accent-soft text-sm font-bold text-accent">
         {initials}
       </div>
       <div className="min-w-0 flex-1">
@@ -322,7 +322,7 @@ function SidebarLink({
           compact ? 'whitespace-nowrap' : ''
         } ${
           isActive
-            ? 'bg-primary-soft font-bold text-primary'
+            ? 'bg-accent-soft font-bold text-accent'
             : 'text-foreground hover:bg-hover'
         }`
       }

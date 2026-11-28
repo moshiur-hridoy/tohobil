@@ -76,7 +76,7 @@ export function SettingsPage() {
                 onClick={() => setParams(s.id === 'general' ? {} : { tab: s.id }, { replace: true })}
                 className={`flex shrink-0 items-center gap-2.5 rounded-full border px-3.5 py-2 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring lg:min-h-11 lg:rounded-xl lg:border-transparent lg:px-3 ${
                   active
-                    ? 'border-primary bg-primary-soft font-semibold text-primary'
+                    ? 'border-accent bg-accent-soft font-semibold text-accent'
                     : 'border-border bg-card text-ink2 hover:bg-hover lg:bg-transparent'
                 }`}
               >
@@ -214,7 +214,7 @@ function PaymentsSection({ data }: { data: SettingsResponse | undefined }) {
           {PAYMENT_METHODS.map((m) => {
             const on = pay.methods.includes(m);
             return (
-              <label key={m} className={`flex h-10 cursor-pointer items-center gap-2 rounded-full border px-3 text-sm ${on ? 'border-primary bg-primary-soft font-semibold text-primary' : 'border-border text-ink2'}`}>
+              <label key={m} className={`flex h-10 cursor-pointer items-center gap-2 rounded-full border px-3 text-sm ${on ? 'border-accent bg-accent-soft font-semibold text-accent' : 'border-border text-ink2'}`}>
                 <input type="checkbox" className="h-4 w-4" checked={on} disabled={on && pay.methods.length === 1} onChange={(e) => toggleMethod(m, e.target.checked)} />
                 {t(`payment.methods.${m}`)}
               </label>

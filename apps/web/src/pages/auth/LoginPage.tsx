@@ -109,9 +109,9 @@ export function LoginPage() {
       </div>
       {/* who is signing in, with the way out right next to it */}
       <div className="flex items-center gap-3 rounded-2xl bg-soft p-2.5 pr-3">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary-soft text-sm font-bold text-primary">{activeRef}</span>
+        <span className="grid h-10 w-10 place-items-center rounded-xl bg-accent-soft text-sm font-bold text-accent">{activeRef}</span>
         <span className="flex-1 text-sm font-semibold">{t('auth.signingInAs', { ref: activeRef })}</span>
-        <button type="button" className="min-h-11 text-sm font-semibold text-primary hover:underline" onClick={notYou} aria-label={t('auth.notYou')}>
+        <button type="button" className="min-h-11 text-sm font-semibold text-accent hover:underline" onClick={notYou} aria-label={t('auth.notYou')}>
           {t('auth.change')}
         </button>
       </div>
@@ -123,7 +123,7 @@ export function LoginPage() {
           {/* A cashier-issued activation code is the other way back in (ASSUMPTIONS 80). */}
           <button
             type="button"
-            className="mx-auto min-h-11 text-sm font-semibold text-primary hover:underline"
+            className="mx-auto min-h-11 text-sm font-semibold text-accent hover:underline"
             onClick={() => navigate(`/activate?ref=${encodeURIComponent(activeRef)}`)}
           >
             {t('auth.haveActivationCode')}

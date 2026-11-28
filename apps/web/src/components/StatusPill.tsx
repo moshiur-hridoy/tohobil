@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 const TONE: Record<string, string> = {
   paid: 'bg-ok-bg text-ok',
   paid_late: 'bg-warn-bg text-warn',
-  advance: 'bg-primary-soft text-primary',
+  advance: 'bg-accent-soft text-accent',
   confirmed: 'bg-ok-bg text-ok',
   partial: 'bg-warn-bg text-warn',
   pending: 'bg-warn-bg text-warn',
@@ -11,8 +11,8 @@ const TONE: Record<string, string> = {
   overdue: 'bg-bad-bg text-bad',
   rejected: 'bg-bad-bg text-bad',
   reversed: 'bg-bad-bg text-bad',
-  approved: 'bg-primary-soft text-primary',
-  executed: 'bg-ok-bg text-ok',
+  approved: 'bg-accent-soft text-accent',
+  executed: 'bg-soft text-ink2',
 };
 
 /** Colour plus a word and a glyph: status must never rely on colour alone. */

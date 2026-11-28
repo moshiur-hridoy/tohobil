@@ -8,7 +8,7 @@ export function RoleBadges({ roles }: { roles: readonly string[] | undefined }) 
   return (
     <>
       {shown.map((r) => (
-        <span key={r} className={`shrink-0 rounded-full px-2 py-px text-[0.6875rem] font-semibold ${r === 'cashier' ? 'bg-primary-soft text-primary' : 'bg-blue-bg text-blue'}`}>
+        <span key={r} className={`shrink-0 rounded-full px-2 py-px text-[0.6875rem] font-semibold ${r === 'cashier' ? 'bg-accent-soft text-accent' : 'bg-blue-bg text-blue'}`}>
           {t(`roles.${r}`)}
         </span>
       ))}

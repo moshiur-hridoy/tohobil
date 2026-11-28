@@ -91,7 +91,7 @@ export function MembersAdminPage() {
       {members.error && <LoadError error={members.error} onRetry={() => void members.refetch()} />}
 
       <StatGrid>
-        <StatTile tone="bg-primary-soft text-primary" icon={ICONS.users} label={t('adminUi.members.statActive')} value={members.data ? formatCount(working.length) : null}
+        <StatTile tone="bg-accent-soft text-accent" icon={ICONS.users} label={t('adminUi.members.statActive')} value={members.data ? formatCount(working.length) : null}
           sub={members.data ? `${t('common.total')} ${formatCount(all.length)}` : undefined} />
         <StatTile tone="bg-blue-bg text-blue" icon={ICONS.layers} label={t('adminUi.members.statShares')} value={members.data ? formatCount(working.reduce((n, m) => n + m.shares, 0)) : null} />
         <StatTile tone="bg-ok-bg text-ok" icon={ICONS.wallet} label={t('adminUi.members.statCapital')} value={members.data ? taka(all.reduce((n, m) => n + BigInt(m.capital_paisa), 0n)) : null} />
@@ -148,7 +148,7 @@ export function MembersAdminPage() {
                       const gone = isGone(m);
                       const status = shownStatus(m);
                       return (
-                        <tr key={m.id} aria-selected={isSel} onClick={() => choose(m)} className={`cursor-pointer transition-colors ${isSel ? 'bg-primary-soft' : 'hover:bg-hover'} ${(gone || isLeaving(m)) && !isSel ? 'opacity-55' : ''}`}>
+                        <tr key={m.id} aria-selected={isSel} onClick={() => choose(m)} className={`cursor-pointer transition-colors ${isSel ? 'bg-accent-soft' : 'hover:bg-hover'} ${(gone || isLeaving(m)) && !isSel ? 'opacity-55' : ''}`}>
                           <td className="border-b border-border px-2 py-2.5">
                             <button type="button" onClick={(e) => { e.stopPropagation(); choose(m); }} className="flex min-w-0 items-center gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
                               <Avatar fileId={m.photo_file_id} fallback={m.full_name.trim().charAt(0)} className="h-8 w-8 bg-soft text-sm font-bold text-ink2" />
@@ -306,7 +306,7 @@ function MemberPanel({ member: m, totalShares, loading, isCashier, onAction }: {
         <InfoRow label={t('membersAdmin.ownership')} value={`${formatCount(percent)}%`} />
         <InfoRow label={t('adminUi.members.thisMonth')} value={m.under_verification ? <StatusPill status="pending" /> : m.current_period_status ? <StatusPill status={m.current_period_status} /> : '—'} />
         {BigInt(m.outstanding_fines_paisa) > 0n && <InfoRow label={t('matrixPage.fine')} value={taka(m.outstanding_fines_paisa)} valueClass="text-bad" />}
-        <InfoRow label={t('admin.members.phone')} value={m.phone ? <a href={`tel:${m.phone}`} className="text-primary hover:underline">{m.phone}</a> : '—'} />
+        <InfoRow label={t('admin.members.phone')} value={m.phone ? <a href={`tel:${m.phone}`} className="text-accent hover:underline">{m.phone}</a> : '—'} />
         <InfoRow label={t('admin.members.joined')} value={m.joined_on ? fmtDate(m.joined_on) : '—'} />
       </dl>
 
@@ -329,7 +329,7 @@ function MemberPanel({ member: m, totalShares, loading, isCashier, onAction }: {
       <p className="mb-2 mt-4 text-xs font-semibold text-muted">{t('adminUi.members.actions')}</p>
       <div className="grid grid-cols-2 gap-2">
         {actions.filter(([, , show]) => show).map(([kind, label]) => (
-          <button key={kind} type="button" onClick={() => onAction(kind, m)} className={`${BTN_SECONDARY} h-auto min-h-11 px-3 py-2 text-[0.8125rem] leading-snug `}>
+          <button key={kind} type="button" onClick={() => onAction(kind, m)} className={`${BTN_SECONDARY} h-auto min-h-11 !px-3 py-2 text-[0.8125rem] leading-snug `}>
             {label}
           </button>
         ))}
@@ -759,7 +759,7 @@ function ContactLogDialog({ member, open, onClose, isCashier }: { member: Member
     <AdminDialog open={open} onClose={onClose} title={<>{t('membersAdmin.contactLogTitle')} — {member.code} {member.full_name}</>}>
 
       {isCashier && member.status === 'suspended' && (
-        <div className="mb-3 rounded-xl bg-primary-soft p-2">
+        <div className="mb-3 rounded-xl bg-accent-soft p-2">
           <button type="button" disabled={busy} onClick={() => void reinstate()} className={`${BTN_PRIMARY} w-full`}>
             {busy ? t('common.working') : t('membersAdmin.reinstate')}
           </button>

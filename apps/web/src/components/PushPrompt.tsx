@@ -47,9 +47,9 @@ export function PushPrompt() {
   };
 
   return (
-    <section role="region" aria-label={t('pushPrompt.title')} className="mx-4 mt-3 rounded-[18px] border border-primary bg-primary-soft p-4 lg:mx-6 lg:mt-4">
+    <section role="region" aria-label={t('pushPrompt.title')} className="mx-4 mt-3 rounded-[18px] border border-accent bg-accent-soft p-4 lg:mx-6 lg:mt-4">
       <div className="flex items-start gap-3">
-        <span className="grid h-10 w-10 flex-none place-items-center rounded-xl bg-primary text-primary-foreground">
+        <span className="grid h-10 w-10 flex-none place-items-center rounded-xl bg-accent-fill text-on-accent">
           <Icon d={BELL} size={20} />
         </span>
         <div className="min-w-0 flex-1">

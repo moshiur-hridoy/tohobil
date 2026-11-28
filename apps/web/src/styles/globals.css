@@ -7,17 +7,18 @@
 
 /* ---------------------------------------------------------------------------------------------
  * Form fields: one look for every text input, select and textarea (add the `field` class; layout
- * such as width and margin stays on the element). `field-lg` is the roomy variant for the sign-in
- * screens and the member pay form. Labels use `field-label`, help text `field-hint`. Checkboxes and
- * radios take the brand colour below.
+ * such as width and margin stays on the element). A box is told apart by a lighter fill and only a
+ * faint outline (owner choice, docs/ASSUMPTIONS.md 135); the strong outline comes on focus and on an
+ * invalid value. `field-lg` is the roomy variant for the sign-in screens and the member pay form.
+ * Labels use `field-label`, help text `field-hint`. Checkboxes and radios take the accent colour below.
  * --------------------------------------------------------------------------------------------- */
 @layer components {
   .field {
     height: 2.75rem;
     padding: 0 0.875rem;
-    border: 1px solid var(--input);
+    border: 1px solid var(--edge);
     border-radius: 0.75rem;
-    background-color: var(--background);
+    background-color: var(--soft);
     color: var(--foreground);
     font-size: 0.9375rem;
     font-weight: 400;
@@ -26,13 +27,10 @@
   .field::placeholder {
     color: var(--muted);
   }
-  .field:hover:not(:disabled):not(:focus) {
-    border-color: var(--ink2);
-  }
   .field:focus {
     outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-soft);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
   }
   .field:disabled {
     cursor: not-allowed;
@@ -75,15 +73,17 @@
     height: 1px;
     background-color: var(--border);
   }
-  /* Labels and help text: the label names the field (semibold, full colour); the hint under it
-     explains (smaller, muted, regular). An optional field ends its label with the muted
-     `<Optional />` mark; required fields carry no mark (docs/ASSUMPTIONS.md 98). */
+  /* Labels and help text: the label names the field (semibold, a little quieter than body text); the
+     hint under it explains (smaller, muted, regular). An optional field ends its label with the muted
+     `<Optional />` mark; required fields carry no mark (docs/ASSUMPTIONS.md 98). Browsers without
+     color-mix keep the full colour. */
   .field-label {
     display: block;
     font-size: 0.875rem;
     font-weight: 600;
     line-height: 1.45;
     color: var(--foreground);
+    color: color-mix(in srgb, var(--foreground) 75%, transparent);
   }
   .field-hint {
     display: block;
@@ -107,7 +107,7 @@
 @layer base {
   input[type='checkbox'],
   input[type='radio'] {
-    accent-color: var(--primary);
+    accent-color: var(--accent-fill);
   }
   /* native date pickers and scrollbars match the active theme */
   :root {
@@ -121,4 +121,45 @@
   :root[data-theme='dark'] {
     color-scheme: dark;
   }
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Solid buttons look raised (owner choice, docs/ASSUMPTIONS.md 137): a darker rim, a light line
+ * inside the top edge, a gentle top-down sheen and a soft glow in the button's own colour; pressed,
+ * it sinks. Picked up from the fill class, so every solid button gets it and a new one needs nothing
+ * extra. The rim and the light are see-through layers, so they work on any fill. Outline and text
+ * buttons stay flat, which keeps the main action the one that stands out.
+ * --------------------------------------------------------------------------------------------- */
+:where(button, a):is(.bg-primary, .bg-bad, .bg-hero-action) {
+  background-image: linear-gradient(to bottom, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0) 50%, rgb(0 0 0 / 0.04));
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.18),
+    inset 0 2px 0 rgb(255 255 255 / 0.28),
+    0 1px 2px rgb(0 0 0 / 0.16);
+}
+@supports (color: color-mix(in srgb, red 50%, transparent)) {
+  :where(button, a).bg-primary {
+    --glow: var(--primary);
+  }
+  :where(button, a).bg-bad {
+    --glow: var(--bad);
+  }
+  :where(button, a).bg-hero-action {
+    --glow: var(--hero-action);
+  }
+  :where(button, a):is(.bg-primary, .bg-bad, .bg-hero-action) {
+    box-shadow:
+      inset 0 0 0 1px rgb(0 0 0 / 0.18),
+      inset 0 2px 0 rgb(255 255 255 / 0.28),
+      0 1px 2px rgb(0 0 0 / 0.16),
+      0 6px 16px -6px color-mix(in srgb, var(--glow) 55%, transparent);
+  }
+}
+:where(button, a):is(.bg-primary, .bg-bad, .bg-hero-action):active:not(:disabled) {
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.22),
+    inset 0 2px 4px rgb(0 0 0 / 0.22);
+}
+:where(button, a):is(.bg-primary, .bg-bad, .bg-hero-action):disabled {
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.18);
 }

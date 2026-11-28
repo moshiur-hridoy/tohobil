@@ -15,18 +15,18 @@
   justify-content: center;
   gap: 44px;
   background: #ffffff;
-  color: #0e1a12;
+  color: #12141a;
   transition: opacity 320ms ease;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) #splash {
-    background: #0b100d;
-    color: #eef3ef;
+    background: #0e0f13;
+    color: #eef0f4;
   }
 }
 :root[data-theme='dark'] #splash {
-  background: #0b100d;
-  color: #eef3ef;
+  background: #0e0f13;
+  color: #eef0f4;
 }
 #splash.splash-out {
   opacity: 0;

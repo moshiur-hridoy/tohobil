@@ -26,10 +26,28 @@ const hasValue = (v: unknown) => v !== undefined && v !== null && v !== '' && !(
  * proposals page: Bengali labels, amounts in taka, names instead of ids, a button to open an attached
  * file, and the investment checklist as ticks. Nothing is shown as raw JSON or an id.
  */
-export function ProposalDetails({ type, payload }: { type: ProposalType; payload: Record<string, unknown> }) {
+export function ProposalDetails({ type, payload, plain = false, table }: {
+  type: ProposalType;
+  payload: Record<string, unknown>;
+  plain?: boolean;
+  /**
+   * One flat list without tinted boxes, for a panel that has its own heading (the cashier's
+   * proposals page): `lead` rows come first, and `omit` names the fields already shown above it.
+   */
+  table?: { lead: ReadonlyArray<readonly [label: string, value: ReactNode]>; omit: readonly string[] };
+}) {
+  if (table) {
+    return (
+      <div className="space-y-3 text-sm">
+        <DetailRows type={type} payload={payload} table={table} />
+        <ComplianceChecklist type={type} payload={payload} bare />
+      </div>
+    );
+  }
   if (TEXT_TYPES.includes(type)) {
     const text = payload.text as string | undefined;
-    return text ? <p className="whitespace-pre-line rounded-xl bg-soft p-3 text-sm [overflow-wrap:anywhere]">{text}</p> : null;
+    // `plain`: running text under a title, without the tinted box.
+    return text ? <p className={`whitespace-pre-line [overflow-wrap:anywhere] ${plain ? 'text-ink2' : 'rounded-xl bg-soft p-3 text-sm'}`}>{text}</p> : null;
   }
   return (
     <div className="space-y-3 text-sm">
@@ -39,7 +57,8 @@ export function ProposalDetails({ type, payload }: { type: ProposalType; payload
   );
 }
 
-function ComplianceChecklist({ type, payload }: { type: ProposalType; payload: Record<string, unknown> }) {
+/** `bare` drops the box around a complete declaration; an incomplete one keeps its warning box. */
+function ComplianceChecklist({ type, payload, bare = false }: { type: ProposalType; payload: Record<string, unknown>; bare?: boolean }) {
   const { t } = useTranslation();
   if (type !== 'investment_purchase' && type !== 'investment_mandate') return null;
   const compliance = (payload.compliance ?? {}) as Record<string, boolean>;
@@ -47,7 +66,7 @@ function ComplianceChecklist({ type, payload }: { type: ProposalType; payload: R
   // One declaration on the form ticks every point (ASSUMPTIONS 127), so a complete one reads as one line.
   if (allTrue) {
     return (
-      <div className="rounded-xl bg-soft p-3">
+      <div className={bare ? '' : 'rounded-xl bg-soft p-3'}>
         <p className="flex items-start gap-2 font-medium"><span className="text-ok">✓</span>{t('proposalsPage.halalPledge')}</p>
         <p className="mt-0.5 pl-5 text-xs text-muted">{t('proposalsPage.halalPledgeHint')}</p>
       </div>
@@ -69,9 +88,9 @@ function ComplianceChecklist({ type, payload }: { type: ProposalType; payload: R
   );
 }
 
-function DetailRows({ type, payload }: { type: ProposalType; payload: Record<string, unknown> }) {
+function DetailRows({ type, payload, table }: { type: ProposalType; payload: Record<string, unknown>; table?: Parameters<typeof ProposalDetails>[0]['table'] }) {
   const { t } = useTranslation();
-  const keys = Object.keys(payload).filter((k) => k !== 'compliance' && hasValue(payload[k]));
+  const keys = Object.keys(payload).filter((k) => k !== 'compliance' && hasValue(payload[k]) && !table?.omit.includes(k));
 
   // Look names up only when this proposal points at a member, a shop or an asset.
   const needsMembers = keys.some((k) => MEMBER_KEYS.has(k));
@@ -81,7 +100,8 @@ function DetailRows({ type, payload }: { type: ProposalType; payload: Record<str
   const partners = useQuery({ queryKey: ['partners'], queryFn: () => api<{ items: PartnerRow[] }>('/partners'), enabled: needsPartners });
   const assets = useQuery({ queryKey: ['assets'], queryFn: () => api<{ items: AssetRow[] }>('/assets?limit=200'), enabled: needsAssets });
 
-  if (keys.length === 0) return null;
+  const lead = table?.lead ?? [];
+  if (keys.length === 0 && lead.length === 0) return null;
 
   const memberName = (id: string) => {
     const m = members.data?.items.find((x) => x.id === id);
@@ -132,17 +152,25 @@ function DetailRows({ type, payload }: { type: ProposalType; payload: Record<str
     return '—';
   };
 
+  const rows: ReadonlyArray<readonly [string, ReactNode]> = [
+    ...lead,
+    ...keys.map((k) => [t(`proposalFields.${k}`, { defaultValue: k.replace(/_/g, ' ') }), value(k, payload[k])] as const),
+  ];
+  const list = (
+    <dl>
+      {rows.map(([label, content], i) => (
+        <div key={i} className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)] gap-3 border-t border-border py-2 first:border-t-0">
+          <dt className="text-muted">{label}</dt>
+          <dd className="min-w-0 whitespace-pre-line [overflow-wrap:anywhere]">{content}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+  if (table) return list;
   return (
     <div className="rounded-xl bg-soft p-3">
       <p className="mb-1 font-medium">{t('proposal.payload')}</p>
-      <dl>
-        {keys.map((k) => (
-          <div key={k} className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)] gap-3 border-t border-border py-2 first:border-t-0">
-            <dt className="text-muted">{t(`proposalFields.${k}`, { defaultValue: k.replace(/_/g, ' ') })}</dt>
-            <dd className="min-w-0 whitespace-pre-line [overflow-wrap:anywhere]">{value(k, payload[k])}</dd>
-          </div>
-        ))}
-      </dl>
+      {list}
     </div>
   );
 }
@@ -163,7 +191,7 @@ function FileButton({ fileId }: { fileId: string }) {
     window.open(URL.createObjectURL(await apiBlob(`/files/${fileId}`)), '_blank', 'noopener');
   };
   return (
-    <button type="button" onClick={() => void open()} className="h-9 rounded-xl border border-border bg-card px-3 text-sm font-semibold text-primary">
+    <button type="button" onClick={() => void open()} className="h-9 rounded-xl border border-border bg-card px-3 text-sm font-semibold text-accent">
       {t('proposalFields.viewFile')}
     </button>
   );

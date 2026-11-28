@@ -23,7 +23,7 @@ type Look = DueStatus | 'advance';
 
 const CELL: Record<Look, { glyph: string; tone: string; chip: string; legend: string }> = {
   // Paid before the month began: a small reward, so paying ahead is visible to everyone.
-  advance: { glyph: '★', tone: 'bg-primary-soft text-primary', chip: 'bg-primary-soft text-primary', legend: 'matrixPage.legendAdvance' },
+  advance: { glyph: '★', tone: 'bg-accent-soft text-accent', chip: 'bg-accent-soft text-accent', legend: 'matrixPage.legendAdvance' },
   paid: { glyph: '✓', tone: 'text-ok opacity-80 hover:bg-ok-bg hover:opacity-100', chip: 'bg-ok-bg text-ok', legend: 'matrixPage.legendPaid' },
   paid_late: { glyph: '✓', tone: 'bg-warn-bg text-warn', chip: 'bg-warn-bg text-warn', legend: 'matrixPage.legendLate' },
   partial: { glyph: '½', tone: 'bg-warn-bg text-warn', chip: 'bg-warn-bg text-warn', legend: 'matrixPage.legendPartial' },
@@ -229,7 +229,7 @@ export function MatrixPage() {
               <tr className="text-xs font-semibold text-muted">
                 <th className="sticky left-0 z-20 border-b border-r border-border bg-card px-4 py-3 text-left">{t('common.member')}</th>
                 {periods.map((p) => (
-                  <th key={p} ref={p === current ? currentHead : undefined} className={`border-b border-border px-1 py-3 text-center font-semibold transition-colors ${p === current ? 'bg-primary-soft text-primary' : ''} ${p === hoverCol ? 'text-ink2' : ''}`}>
+                  <th key={p} ref={p === current ? currentHead : undefined} className={`border-b border-border px-1 py-3 text-center font-semibold transition-colors ${p === current ? 'bg-accent-soft text-accent' : ''} ${p === hoverCol ? 'text-ink2' : ''}`}>
                     {fmtPeriodShort(p)}
                   </th>
                 ))}
@@ -258,7 +258,7 @@ export function MatrixPage() {
                       // Unpaid cells print what they still owe (dues plus fine), so the amount reads without a click.
                       const showAmount = c && owed && owed.total > 0n && (c.status === 'overdue' || c.status === 'partial');
                       return (
-                        <td key={p} className={`border-b border-border px-1 py-1.5 text-center transition-colors group-hover:bg-hover ${p === current ? 'bg-primary-soft' : ''} ${p === hoverCol ? 'bg-hover' : ''}`}>
+                        <td key={p} className={`border-b border-border px-1 py-1.5 text-center transition-colors group-hover:bg-hover ${p === current ? 'bg-accent-soft' : ''} ${p === hoverCol ? 'bg-hover' : ''}`}>
                           {c ? (
                             <button
                               type="button"

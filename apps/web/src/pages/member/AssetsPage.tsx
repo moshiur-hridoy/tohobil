@@ -28,9 +28,9 @@ export const ASSET_META: Record<
   },
   land: {
     labelKey: 'assets.land',
-    color: 'text-primary',
-    bg: 'bg-primary-soft',
-    bar: 'bg-primary',
+    color: 'text-ok',
+    bg: 'bg-ok-bg',
+    bar: 'bg-ok',
     icon: (c) => (
       <svg className={c} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 19l5-9 4 6 3-4 6 7z" /></svg>
     ),
@@ -177,7 +177,7 @@ function SummaryCard({ nav, assets }: { nav: NavResponse | undefined; assets: As
     ...(['gold', 'land', 'house', 'other'] as const)
       .filter((k) => (byKind.get(k) ?? 0n) !== 0n)
       .map((k) => ({ key: k, label: t(ASSET_META[k].labelKey), bar: ASSET_META[k].bar, paisa: byKind.get(k) ?? 0n })),
-    ...(cash !== 0n ? [{ key: 'cash', label: t('assets.cash'), bar: 'bg-vio', paisa: cash }] : []),
+    ...(cash !== 0n ? [{ key: 'cash', label: t('assets.cash'), bar: 'bg-muted', paisa: cash }] : []),
   ];
   // A negative amount (cash below the deductions) cannot be drawn as a share of the bar; it still shows in the legend.
   const barTotal = parts.reduce((sum, p) => sum + (p.paisa > 0n ? p.paisa : 0n), 0n);

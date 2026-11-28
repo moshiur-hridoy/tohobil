@@ -139,7 +139,7 @@ export function ClauseSelect({
 export function ClauseLink({ clause, className = '' }: { clause: string; className?: string }) {
   const { t } = useTranslation();
   return (
-    <Link to={`/menu/constitution?clause=${encodeURIComponent(clause)}`} className={`font-semibold text-primary hover:underline ${className}`}>
+    <Link to={`/menu/constitution?clause=${encodeURIComponent(clause)}`} className={`font-semibold text-accent hover:underline ${className}`}>
       {t('rulesPage.readClause', { clause: localDigits(clause) })}
     </Link>
   );

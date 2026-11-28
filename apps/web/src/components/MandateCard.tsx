@@ -14,7 +14,7 @@ import { MandatePurchaseSheet, mandateLeft } from './MandatePurchaseSheet';
 import { Icon } from './ui';
 
 const STATUS_TONE: Record<MandateRow['status'], string> = {
-  active: 'bg-ok-bg text-ok',
+  active: 'bg-accent-soft text-accent',
   upcoming: 'bg-blue-bg text-blue',
   expired: 'bg-soft text-muted',
   ended: 'bg-soft text-muted',
@@ -97,7 +97,7 @@ export function MandateCard({ partner, mandates, onChanged }: { partner: Partner
               </div>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-border" aria-hidden="true">
                 <div
-                  className="h-full rounded-full bg-primary"
+                  className="h-full rounded-full bg-accent"
                   style={{ width: `${Math.min(100, Number((BigInt(shown.used_this_month_paisa) * 100n) / BigInt(shown.monthly_max_paisa)))}%` }}
                 />
               </div>

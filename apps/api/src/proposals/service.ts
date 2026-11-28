@@ -769,6 +769,7 @@ export async function getProposal(
 interface ProposalListRow extends ProposalRow {
   created_key: string;
   voted_count: number;
+  voters: Array<{ code: string; full_name: string; voted: boolean }> | null;
   my_choice: string | null;
   can_vote: boolean;
 }
@@ -796,6 +797,12 @@ export async function listProposals(
             (SELECT count(*)::int FROM votes v
                JOIN proposal_voters pv ON pv.proposal_id = v.proposal_id AND pv.member_id = v.member_id
               WHERE v.proposal_id = proposals.id AND v.superseded_at IS NULL) AS voted_count,
+            -- Who has voted (never what), in member order; null until the vote has voters.
+            (SELECT jsonb_agg(jsonb_build_object('code', m.code, 'full_name', m.full_name, 'voted',
+                      EXISTS (SELECT 1 FROM votes v WHERE v.proposal_id = pv.proposal_id
+                                AND v.member_id = pv.member_id AND v.superseded_at IS NULL)) ORDER BY m.code)
+               FROM proposal_voters pv JOIN members m ON m.id = pv.member_id
+              WHERE pv.proposal_id = proposals.id) AS voters,
             -- The caller's own ballot and whether they may vote, so the list can offer the buttons.
             (SELECT v.choice FROM votes v
               WHERE v.proposal_id = proposals.id AND v.member_id = $7 AND v.superseded_at IS NULL) AS my_choice,
@@ -830,6 +837,8 @@ export async function listProposals(
     ballots_hidden: ballotsHidden(row.status),
     my_choice: row.my_choice,
     can_vote: row.can_vote,
+    // Who has voted is open to everyone, as on the proposal's own page (ASSUMPTIONS 95).
+    voters: row.voters ?? [],
     ...(seesTurnout(user) ? { voted_count: row.voted_count, can_close_early: row.status === 'open' && outcomeDecided(row) } : {}),
     opens_at: row.opens_at,
     closes_at: row.closes_at,

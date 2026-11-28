@@ -67,14 +67,14 @@ export function DevicesPage() {
             const name = deviceName(t, d.label, d.platform);
             return (
               <li key={d.id} className="flex items-center gap-3 px-4 py-3">
-                <Chip tone={d.current ? 'bg-primary-soft text-primary' : 'bg-soft text-muted'} d={isPhone(d.label, d.platform) ? PHONE : COMPUTER} size={40} iconSize={20} />
+                <Chip tone={d.current ? 'bg-accent-soft text-accent' : 'bg-soft text-muted'} d={isPhone(d.label, d.platform) ? PHONE : COMPUTER} size={40} iconSize={20} />
                 <div className="min-w-0 flex-1">
                   <p className="break-words font-medium">{name}</p>
                   <p className="text-sm text-muted">
                     {t('devices.lastUsed', { when: when(lastUsed) })} · {t('devices.added', { date: fmtDate(toDhakaDate(new Date(d.created_at))) })}
                   </p>
                   {d.current ? (
-                    <span className="mt-1 inline-block rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">{t('menu.thisDevice')}</span>
+                    <span className="mt-1 inline-block rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent">{t('menu.thisDevice')}</span>
                   ) : (
                     idle >= IDLE_DAYS && <span className="mt-1 inline-block rounded-full bg-warn-bg px-2.5 py-0.5 text-xs font-semibold text-warn">{t('devices.idle', { days: idle })}</span>
                   )}
@@ -98,7 +98,7 @@ export function DevicesPage() {
 
         <p className="px-1 text-sm text-muted">
           {t('devices.pinTip')}{' '}
-          <Link to="/menu/pin" className="font-semibold text-primary underline">
+          <Link to="/menu/pin" className="font-semibold text-accent underline">
             {t('pinChange.title')}
           </Link>
         </p>

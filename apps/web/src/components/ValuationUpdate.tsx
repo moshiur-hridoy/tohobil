@@ -101,11 +101,11 @@ export function ValuationRequestSheet({ open, onClose, partner, currentValue, on
 /** Where one sent update stands, in words. */
 function statusKey(r: ValuationRequestRow): { key: string; tone: string } {
   if (r.route === 'auditor') {
-    if (r.status === 'approved') return { key: 'valuation.status.approved', tone: 'bg-ok-bg text-ok' };
+    if (r.status === 'approved') return { key: 'valuation.status.approved', tone: 'bg-soft text-ink2' };
     if (r.status === 'rejected') return { key: 'valuation.status.rejected', tone: 'bg-bad-bg text-bad' };
     return { key: 'valuation.status.waitAuditor', tone: 'bg-warn-bg text-warn' };
   }
-  if (r.status === 'executed') return { key: 'valuation.status.executed', tone: 'bg-ok-bg text-ok' };
+  if (r.status === 'executed') return { key: 'valuation.status.executed', tone: 'bg-soft text-ink2' };
   if (r.status === 'approved') return { key: 'valuation.status.passed', tone: 'bg-warn-bg text-warn' };
   if (r.status === 'rejected') return { key: 'valuation.status.failed', tone: 'bg-bad-bg text-bad' };
   if (r.status === 'lapsed' || r.status === 'cancelled') return { key: 'valuation.status.cancelled', tone: 'bg-soft text-muted' };
@@ -139,8 +139,8 @@ export function ValuationRequestList({ requests, voteLink }: { requests: Valuati
             {r.note && <p className="mt-0.5 text-xs text-ink2">{r.note}</p>}
             {r.status === 'rejected' && r.decision_note && <p className="mt-0.5 text-xs text-bad">{t('valuation.reason', { reason: r.decision_note })}</p>}
             <div className="mt-1 flex gap-3 text-xs font-semibold">
-              <button type="button" className="text-primary hover:underline" onClick={() => void openStatement(r.proof_file_id)}>{t('valuation.viewStatement')}</button>
-              {r.proposal_id && <Link to={voteLink(r.proposal_id)} className="text-primary hover:underline">{t('valuation.viewVote')}</Link>}
+              <button type="button" className="text-accent hover:underline" onClick={() => void openStatement(r.proof_file_id)}>{t('valuation.viewStatement')}</button>
+              {r.proposal_id && <Link to={voteLink(r.proposal_id)} className="text-accent hover:underline">{t('valuation.viewVote')}</Link>}
             </div>
           </li>
         );

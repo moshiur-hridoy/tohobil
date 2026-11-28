@@ -2,7 +2,7 @@ import type { Config } from 'tailwindcss';
 
 // Colours are CSS variables from theme.css (semantic and component tokens only, never the --ref-* palette). They resolve to plain hex, so Tailwind opacity modifiers such as
 // `bg-primary/10` cannot work with them (and silently emit nothing); use the dedicated tokens
-// instead: `bg-primary-soft`, `hover:bg-hover`.
+// instead: `bg-accent-soft`, `hover:bg-hover`.
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
@@ -14,8 +14,12 @@ export default {
         muted: 'var(--muted)',
         primary: 'var(--primary)',
         'primary-foreground': 'var(--primary-foreground)',
-        'primary-soft': 'var(--primary-soft)',
-        'primary-deep': 'var(--primary-deep)',
+        accent: 'var(--accent)',
+        'accent-soft': 'var(--accent-soft)',
+        'accent-fill': 'var(--accent-fill)',
+        'on-accent': 'var(--on-accent)',
+        fab: 'var(--fab)',
+        'on-fab': 'var(--on-fab)',
         vio: 'var(--vio)',
         'vio-bg': 'var(--vio-bg)',
         ink2: 'var(--ink2)',
@@ -25,6 +29,7 @@ export default {
         'card-foreground': 'var(--card-foreground)',
         hover: 'var(--hover)',
         soft: 'var(--soft)',
+        edge: 'var(--edge)',
         'ok-bg': 'var(--ok-bg)',
         'warn-bg': 'var(--warn-bg)',
         'bad-bg': 'var(--bad-bg)',

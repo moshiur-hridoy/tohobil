@@ -26,7 +26,7 @@ const ATTENDANCE_TONE: Record<AttendanceStatus, string> = {
 };
 const STATUS_TONE: Record<MeetingRow['status'], string> = {
   draft: 'bg-warn-bg text-warn',
-  scheduled: 'bg-primary-soft text-primary',
+  scheduled: 'bg-accent-soft text-accent',
   held: 'bg-ok-bg text-ok',
   cancelled: 'bg-soft text-muted',
 };
@@ -104,7 +104,7 @@ export function MeetingsPage() {
                             <MeetingStatus status={m.status} />
                           </div>
                           {m.link && (
-                            <a href={m.link} target="_blank" rel="noreferrer" className="mt-2 flex items-center gap-1.5 break-all text-sm font-semibold text-primary hover:underline">
+                            <a href={m.link} target="_blank" rel="noreferrer" className="mt-2 flex items-center gap-1.5 break-all text-sm font-semibold text-accent hover:underline">
                               <Icon d={LINK_ICON} size={15} />{m.link}
                             </a>
                           )}

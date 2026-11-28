@@ -47,11 +47,11 @@ test('(4) member votes on a proposal', async ({ browser, request }) => {
     console.error('vote failed', await voteResponse.text());
   }
   expect(voteResponse.ok()).toBeTruthy();
-  await expect(page.getByTestId('voted-label')).toContainText(tr('votes.yes'));
+  // The chosen button is how the page says what you voted.
+  await expect(page.getByTestId('vote-yes')).toHaveAttribute('aria-pressed', 'true');
 
   await page.reload();
   await expect(page.getByTestId('vote-yes')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByTestId('voted-label')).toBeVisible();
 
   await memberCtx.close();
 });

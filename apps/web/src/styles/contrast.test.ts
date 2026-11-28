@@ -63,7 +63,14 @@ const PAIRS: Array<[string, string, number]> = [
   ['bad', 'bad-bg', 4.5],
   ['primary', 'background', 4.5],
   ['primary', 'card', 4.5],
-  ['primary', 'primary-soft', 4.5],
+  ['accent', 'background', 4.5],
+  ['accent', 'card', 4.5],
+  ['accent', 'soft', 4.5],
+  ['accent', 'hover', 4.5],
+  ['accent', 'accent-soft', 4.5],
+  ['muted', 'accent-soft', 4.5],
+  ['on-accent', 'accent-fill', 4.5],
+  ['on-fab', 'fab', 4.5],
   ['primary-foreground', 'primary', 4.5],
   ['blue', 'blue-bg', 4.5],
   ['blue', 'card', 4.5],
@@ -101,8 +108,8 @@ const PAIRS: Array<[string, string, number]> = [
   ['ring', 'card', 3],
   ['primary', 'hover', 4.5],
   ['foreground', 'hover', 4.5],
-  ['foreground', 'primary-soft', 4.5],
-  // the outline of a text field must be visible against the page (non-text contrast, 3:1)
+  ['foreground', 'accent-soft', 4.5],
+  // the outline of a small control must be visible against the page (non-text contrast, 3:1)
   ['input', 'card', 3],
   ['input', 'background', 3],
 ];

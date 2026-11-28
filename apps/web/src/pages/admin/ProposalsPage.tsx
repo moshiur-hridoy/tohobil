@@ -1,26 +1,23 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Dialog from '@radix-ui/react-dialog';
-import { useState } from 'react';
-import type { TFunction } from 'i18next';
+import { useId, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { PROPOSAL_TYPES, type ProposalType } from '@barakah/shared';
 import {
-  AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, BTN_SM, BTN_SM_PRIMARY, Card, EmptyCard, ICONS, InfoRow, MemberBadge, Segmented, SplitLayout,
+  AdminDialog, AdminHeader, AdminPage, BTN_PRIMARY, BTN_SECONDARY, BTN_SM, BTN_SM_PRIMARY, Card, EmptyCard, ICONS, MemberBadge, Segmented, SplitLayout,
 } from '../../components/admin';
 import { ConfirmSheet } from '../../components/ConfirmSheet';
 import { ListSkeleton, Skeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
 import { Icon, Optional } from '../../components/ui';
-import { StatusPill } from '../../components/StatusPill';
 import { ProposalDetails } from '../../components/ProposalDetails';
-import { CountdownChip } from '../../components/VoteCountdown';
+import { AmountLine, PillWithTimeLeft, TurnoutDots, VoteMeter, voteTally, writtenKey, writtenText } from '../../components/ProposalCardParts';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
-import { fmtInstant } from '../../lib/dates';
-import { formatCount, localDigits } from '../../lib/format';
+import { formatCount } from '../../lib/format';
 import { ClauseLink, ClauseSelect, usePolicyClause } from '../../components/ClauseSelect';
-import { parseAmountInput, taka } from '../../lib/money';
+import { parseAmountInput } from '../../lib/money';
 import { useMediaQuery } from '../../lib/useMediaQuery';
 import type { ProposalDetail } from '../../lib/types';
 import { FORM_TYPES, ProposalFields, buildPayload, emptyForm, type FormState } from './proposalForms';
@@ -40,12 +37,15 @@ interface ProposalListRow {
   counts: { yes: number; no: number; abstain: number; yes_weight: string; no_weight: string; abstain_weight: string };
   ballots_hidden: boolean;
   voted_count?: number;
+  /** Who has voted, never what; sent to the cashier and the auditor, empty for a draft. */
+  voters?: Array<{ code: string; full_name: string; voted: boolean }>;
   can_close_early?: boolean;
   subject_member_id: string | null;
   opens_at: string | null;
   closes_at: string | null;
   created_at: string;
   amount_paisa: string | null;
+  payload: Record<string, unknown>;
 }
 
 /**
@@ -173,66 +173,6 @@ export function ProposalsPage() {
   );
 }
 
-/**
- * Yes votes and the pass mark, always with their unit: a share-weighted vote needs e.g. "9 shares (of 16)",
- * which read as a bare "9" looks like more people than the fund has. `yes` is null while ballots are hidden;
- * the two percentages (of everyone eligible) draw the vote bar.
- */
-function voteTally(
-  p: Pick<ProposalListRow, 'status' | 'ballots_hidden' | 'basis' | 'counts' | 'threshold' | 'threshold_weight' | 'eligible_count' | 'eligible_weight'>,
-  t: TFunction,
-): { counted: boolean; yes: string | null; need: string; yesPercent: number; needPercent: number } {
-  const byShare = p.basis === 'share';
-  const yes = byShare ? String(p.counts.yes_weight) : String(p.counts.yes);
-  const need = byShare ? String(p.threshold_weight) : String(p.threshold);
-  const total = byShare ? String(p.eligible_weight) : String(p.eligible_count);
-  // A draft (or one cancelled before opening) has no voters and a pass mark of 0, so 0 >= 0 must not read as passed.
-  const counted = p.status !== 'draft' && BigInt(need) > 0n;
-  const percent = (n: string) => (Number(total) > 0 ? Math.min(100, (Number(n) * 100) / Number(total)) : 0);
-  return {
-    counted,
-    yes: p.ballots_hidden ? null : t(byShare ? 'proposal.countShares' : 'proposal.countMembers', { n: localDigits(yes) }),
-    need: t(byShare ? 'proposal.needShares' : 'proposal.needMembers', { n: localDigits(need), total: localDigits(total) }),
-    yesPercent: percent(yes),
-    needPercent: percent(need),
-  };
-}
-
-/**
- * The vote at a glance: yes votes as a bar, a tick where it passes, and the numbers in words. The bar
- * stays grey (red when rejected): the status pill already says how it ended, and a page of green bars
- * tired the eyes (owner).
- */
-function VoteMeter({ tally, status, voted, eligible }: { tally: ReturnType<typeof voteTally>; status: string; voted?: number; eligible: number }) {
-  const { t } = useTranslation();
-  const fill = status === 'rejected' ? 'bg-bad' : 'bg-muted';
-  return (
-    <div className="space-y-1.5 text-[0.8125rem]">
-      <p>
-        {tally.yes === null ? (
-          <span className="text-muted">{t('votes.hiddenUntilClose')}</span>
-        ) : (
-          <><span className="text-muted">{t('proposal.yesVotes')}</span> <span className="font-bold tabular-nums">{tally.yes}</span></>
-        )}
-      </p>
-      {tally.yes !== null && (
-        <div aria-hidden="true" className="relative h-2 rounded-full bg-track">
-          <div className={`h-full rounded-full ${fill}`} style={{ width: `${tally.yesPercent}%` }} />
-          <span className="absolute -inset-y-1 w-0.5 -translate-x-1/2 rounded-full bg-ink2" style={{ left: `${tally.needPercent}%` }} />
-        </div>
-      )}
-      <div className="flex flex-wrap justify-between gap-x-3 gap-y-0.5 text-xs text-muted">
-        <span>{t('proposal.needToPass')} <span className="tabular-nums">{tally.need}</span></span>
-        {voted !== undefined && (
-          <span data-testid="turnout">{t('proposalsPage.voted')} <span className="font-semibold tabular-nums">{formatCount(voted)}/{formatCount(eligible)}</span></span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-const pillStatus = (status: string) => (status === 'open' ? 'pending' : status);
-
 function ProposalItem({
   p,
   privileged,
@@ -248,6 +188,9 @@ function ProposalItem({
 }) {
   const { t } = useTranslation();
   const tally = voteTally(p, t);
+  const written = writtenText(p.payload);
+  const showActions = privileged && hasActions(p.status);
+  const voters = p.voters ?? [];
 
   // The title button's hit area is stretched over the whole card (its ::after), so a tap anywhere
   // opens it; the action buttons sit above that layer.
@@ -257,29 +200,29 @@ function ProposalItem({
       aria-current={selected}
       className={`relative flex min-w-0 flex-col gap-3 rounded-[18px] border p-4 shadow-card transition-all sm:p-5 ${selected ? 'border-track bg-soft shadow-lift' : 'border-border bg-card hover:border-track hover:shadow-lift'}`}
     >
-      <div className="flex items-center justify-between gap-3">
-        <p className="min-w-0 truncate text-xs text-muted">
-          <span className="font-semibold text-ink2">{t(`proposalType.${p.type}`)}</span> · {fmtInstant(p.created_at)}
-        </p>
-        <StatusPill status={pillStatus(p.status)} label={t(`status.proposal.${p.status}`)} />
+      {/* The title is the first thing on the card (owner); the pill drops under it when there is no room. */}
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+        <div className="min-w-0 flex-1 basis-48 space-y-1">
+          <button type="button" className="block rounded-lg text-left text-base font-bold leading-snug outline-none [overflow-wrap:anywhere] after:absolute after:inset-0 after:rounded-[18px] after:content-[''] focus-visible:after:ring-2 focus-visible:after:ring-ring" onClick={onSelect}>
+            {p.title}
+          </button>
+          {written && <p className="line-clamp-2 text-[0.8125rem] text-muted [overflow-wrap:anywhere]">{written}</p>}
+        </div>
+        <PillWithTimeLeft status={p.status} closesAt={p.closes_at} />
       </div>
 
-      <button type="button" className="rounded-lg text-left text-base font-bold leading-snug outline-none [overflow-wrap:anywhere] after:absolute after:inset-0 after:rounded-[18px] after:content-[''] focus-visible:after:ring-2 focus-visible:after:ring-ring" onClick={onSelect}>
-        {p.title}
-      </button>
+      {p.amount_paisa && <AmountLine paisa={p.amount_paisa} />}
 
-      {(p.amount_paisa || (p.closes_at && p.status === 'open')) && (
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-[0.8125rem]">
-          {p.amount_paisa && <p className="flex items-baseline gap-1.5"><span className="text-muted">{t('common.amount')}</span><span className="text-lg font-bold tabular-nums">{taka(p.amount_paisa)}</span></p>}
-          {p.closes_at && p.status === 'open' && <CountdownChip closesAt={p.closes_at} />}
-        </div>
-      )}
+      {tally.counted && tally.yes !== null && <VoteMeter tally={tally} status={p.status} />}
 
-      {tally.counted && <VoteMeter tally={tally} status={p.status} voted={p.voted_count} eligible={p.eligible_count} />}
-
-      {privileged && hasActions(p.status) && (
-        <div className="relative z-10 mt-auto flex flex-wrap items-center gap-2 border-t border-border pt-3">
-          <ProposalActions p={p} onDone={onRefresh} />
+      {(showActions || voters.length > 0) && (
+        <div className={`mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 ${showActions ? 'border-t border-border pt-3' : ''}`}>
+          {showActions && (
+            <div className="relative z-10 flex flex-wrap items-center gap-2">
+              <ProposalActions p={p} onDone={onRefresh} />
+            </div>
+          )}
+          {voters.length > 0 && <TurnoutDots voters={voters} />}
         </div>
       )}
     </li>
@@ -408,18 +351,30 @@ function ReopenButton({ id, onDone }: { id: string; onDone: () => void }) {
 function CloseEarlyButton({ id, onDone, canClose }: { id: string; onDone: () => void; canClose: boolean }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const reasonId = useId();
   return (
     <>
-      <button
-        type="button"
-        disabled={!canClose}
-        title={canClose ? undefined : t('proposal.closeEarlyDisabled')}
-        className={BTN_SM}
-        onClick={() => setOpen(true)}
-      >
-        {t('proposal.closeEarly')}
-      </button>
-      {!canClose && <p className="basis-full text-xs text-muted">{t('proposal.closeEarlyDisabled')}</p>}
+      {/* A disabled button takes no hover or tap, so the wrapper does: it shows why (tap or Tab on a phone or keyboard). */}
+      <span className="group relative inline-flex rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring" tabIndex={canClose ? undefined : 0}>
+        <button
+          type="button"
+          disabled={!canClose}
+          aria-describedby={canClose ? undefined : reasonId}
+          className={`${BTN_SM} disabled:pointer-events-none`}
+          onClick={() => setOpen(true)}
+        >
+          {t('proposal.closeEarly')}
+        </button>
+        {!canClose && (
+          <span
+            id={reasonId}
+            role="tooltip"
+            className="invisible absolute bottom-full left-0 z-20 mb-2 w-max max-w-[16rem] rounded-lg border border-track bg-card px-3 py-2 text-xs text-ink2 opacity-0 shadow-lift transition-opacity group-hover:visible group-hover:opacity-100 group-focus:visible group-focus:opacity-100"
+          >
+            {t('proposal.closeEarlyDisabled')}
+          </span>
+        )}
+      </span>
       <ConfirmSheet
         open={open}
         onClose={() => setOpen(false)}
@@ -686,69 +641,67 @@ function ProposalPanel({ id, loading, actions = false, onRefresh }: { id: string
 
   const voted = d.voters.filter((v) => v.voted).length;
   const tally = voteTally(d, t);
+  const textKey = writtenKey(d.payload);
+  const written = writtenText(d.payload);
+  // The headline amount is not repeated in the details; a "maximum amount" row stays, for its label.
+  const omit = [textKey, d.amount_paisa && d.payload.amount_paisa === d.amount_paisa ? 'amount_paisa' : undefined].filter((k): k is string => !!k);
+  const lead: Array<[string, ReactNode]> = [[t('proposalsPage.typeRow'), t(`proposalType.${d.type}`)]];
+  if (d.subject) lead.push([t('proposal.subject'), `${d.subject.code} ${d.subject.full_name}`]);
+  if (d.clause_ref) lead.push([t('proposal.clauseRef'), <ClauseLink clause={d.clause_ref} />]);
+
+  // Laid out like the card in the list (owner): title, amount and vote bar, then one section per subject.
   return (
-    <Card>
-      <header className="border-b border-border px-5 py-4">
+    <Card className="divide-y divide-border">
+      <div className="space-y-3 p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+          <div className="min-w-0 flex-1 basis-48 space-y-1">
+            <h2 className="text-base font-bold leading-snug [overflow-wrap:anywhere]">{d.title}</h2>
+            {written && <p className="whitespace-pre-line text-[0.8125rem] text-muted [overflow-wrap:anywhere]">{written}</p>}
+          </div>
+          <PillWithTimeLeft status={d.status} closesAt={d.closes_at} />
+        </div>
+        {d.description && d.description !== written && <p className="text-sm [overflow-wrap:anywhere]">{d.description}</p>}
+        {d.amount_paisa && <AmountLine paisa={d.amount_paisa} />}
+        {tally.counted && <VoteMeter tally={tally} status={d.status} voted={d.voted_count} eligible={d.eligible_count} showNeed />}
+        {actions && onRefresh && hasActions(d.status) && (
+          <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
+            <ProposalActions p={d} onDone={onRefresh} />
+          </div>
+        )}
+      </div>
+
+      <section className="p-4 sm:p-5">
+        <h3 className="mb-1 text-sm font-bold">{t('proposal.payload')}</h3>
+        <ProposalDetails type={d.type} payload={d.payload} table={{ lead, omit }} />
+      </section>
+
+      <section className="p-4 sm:p-5">
         <div className="mb-2 flex items-center justify-between gap-3">
-          <p className="min-w-0 text-xs font-semibold text-ink2">{t(`proposalType.${d.type}`)}</p>
-          <StatusPill status={pillStatus(d.status)} label={t(`status.proposal.${d.status}`)} />
+          <h3 className="text-sm font-bold">{t('proposal.voterList')}</h3>
+          <span className="text-xs text-muted tabular-nums">{formatCount(voted)}/{formatCount(d.voters.length)}</span>
         </div>
-        <h2 className="text-lg font-bold leading-snug [overflow-wrap:anywhere]">{d.title}</h2>
-        {d.closes_at && d.status === 'open' && <div className="mt-2"><CountdownChip closesAt={d.closes_at} /></div>}
-      </header>
-
-      <div className="p-5">
-      {d.description && <p className="mb-3 text-sm [overflow-wrap:anywhere]">{d.description}</p>}
-
-      {actions && onRefresh && hasActions(d.status) && (
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <ProposalActions p={d} onDone={onRefresh} />
-        </div>
-      )}
-
-      {tally.counted && (
-        <div className="mb-3 rounded-xl border border-border p-3">
-          <VoteMeter tally={tally} status={d.status} voted={d.voted_count} eligible={d.eligible_count} />
-        </div>
-      )}
-
-      {(d.subject || d.clause_ref) && (
-        <dl>
-          {d.subject && <InfoRow label={t('proposal.subject')} value={`${d.subject.code} ${d.subject.full_name}`} />}
-          {d.clause_ref && <InfoRow label={t('proposal.clauseRef')} value={<ClauseLink clause={d.clause_ref} />} />}
-        </dl>
-      )}
-
-      <div className="mt-3 space-y-3 text-sm">
-        <ProposalDetails type={d.type} payload={d.payload} />
-      </div>
-
-      <div className="mb-1 mt-4 flex items-center justify-between">
-        <h3 className="text-sm font-bold">{t('proposal.voterList')}</h3>
-        <span className="text-xs text-muted tabular-nums">{formatCount(voted)}/{formatCount(d.voters.length)}</span>
-      </div>
-      {d.status === 'open' && d.voted_count !== undefined && voted < d.voters.length && (
-        <RemindButton id={d.id} count={d.voters.length - voted} />
-      )}
-      <ul className="max-h-80 overflow-y-auto text-sm">
-        {d.voters.map((v) => {
-          const cast = d.votes.find((vote) => vote.member_id === v.member_id);
-          return (
-            <li key={v.member_id} className="flex items-center justify-between gap-2 border-t border-border py-2">
-              <span className="flex min-w-0 items-center gap-2">
-                <MemberBadge code={v.code} />
-                <span className="truncate">{v.full_name}{d.basis === 'share' && <span className="text-muted"> · {v.weight}</span>}</span>
-              </span>
-              {/* While the vote is open only whether they voted is shown (green/red dot), never their choice. */}
-              <span className={`flex shrink-0 items-center gap-1.5 text-xs font-semibold ${v.voted ? 'text-ink2' : 'text-bad'}`}>
-                <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-full ${v.voted ? 'bg-ok' : 'bg-bad'}`} />
-                {!d.ballots_hidden && cast ? t(`votes.${cast.choice}`) : v.voted ? t('proposal.votedYes') : t('proposal.votedNo')}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-      </div>
+        {d.status === 'open' && d.voted_count !== undefined && voted < d.voters.length && (
+          <RemindButton id={d.id} count={d.voters.length - voted} />
+        )}
+        <ul className="max-h-80 overflow-y-auto text-sm">
+          {d.voters.map((v) => {
+            const cast = d.votes.find((vote) => vote.member_id === v.member_id);
+            return (
+              <li key={v.member_id} className="flex items-center justify-between gap-2 border-t border-border py-2">
+                <span className="flex min-w-0 items-center gap-2">
+                  <MemberBadge code={v.code} />
+                  <span className="truncate">{v.full_name}{d.basis === 'share' && <span className="text-muted"> · {v.weight}</span>}</span>
+                </span>
+                {/* While the vote is open only whether they voted is shown, never their choice; the dot is the card's. */}
+                <span className={`flex shrink-0 items-center gap-1.5 text-xs font-semibold ${v.voted ? 'text-ink2' : 'text-muted'}`}>
+                  <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-full border-[1.5px] ${v.voted ? 'border-ok bg-ok' : 'border-bad'}`} />
+                  {!d.ballots_hidden && cast ? t(`votes.${cast.choice}`) : v.voted ? t('proposal.votedYes') : t('proposal.votedNo')}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
     </Card>
   );
 }

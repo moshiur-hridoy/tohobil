@@ -1,25 +1,27 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Segmented } from '../../components/admin';
+import { ProposalVoteCard } from '../../components/ProposalVoteCard';
 import { PageHeader } from '../../components/ui';
 import { ListSkeleton } from '../../components/Skeleton';
 import { PullToRefresh } from '../../components/PullToRefresh';
 import { Empty, LoadError } from '../../components/StateViews';
-import { StatusPill } from '../../components/StatusPill';
 import { api } from '../../lib/api';
-import { errorMessage } from '../../lib/errors';
-import { CountdownChip } from '../../components/VoteCountdown';
-import { fmtInstant } from '../../lib/dates';
-import { localDigits } from '../../lib/format';
+import { formatCount } from '../../lib/format';
 import type { ProposalSummary } from '../../lib/types';
 
 const LIMIT = 200;
-const CHOICES = ['yes', 'no', 'abstain'] as const;
 const FINAL_STATUSES = new Set(['approved', 'rejected', 'executed', 'lapsed', 'cancelled']);
+
+/** The page opens on the running votes (owner); `all` adds the finished ones below them. */
+const TABS = ['active', 'all'] as const;
+type Tab = (typeof TABS)[number];
 
 export function VotesPage() {
   const { t } = useTranslation();
   const qc = useQueryClient();
+  const [tab, setTab] = useState<Tab>('active');
 
   const proposals = useQuery({
     queryKey: ['proposals', 'member'],
@@ -30,119 +32,40 @@ export function VotesPage() {
 
   const open = proposals.data?.items.filter((p) => p.status === 'open') ?? [];
   const past = proposals.data?.items.filter((p) => FINAL_STATUSES.has(p.status)) ?? [];
+  const lists: Record<Tab, ProposalSummary[]> = { active: open, all: [...open, ...past] };
+  const shown = lists[tab];
 
   return (
     <PullToRefresh onRefresh={refresh}>
       <PageHeader title={t('votes.title')} />
       <div className="space-y-4 px-4 pb-4 pt-2">
 
+        <Segmented
+          wide
+          label={t('common.status')}
+          value={tab}
+          onChange={setTab}
+          options={TABS.map((value) => ({
+            value,
+            label: t(`proposalsPage.tabs.${value}`),
+            count: proposals.data ? formatCount(lists[value].length) : undefined,
+          }))}
+        />
+
         {proposals.error ? (
           <LoadError error={proposals.error} onRetry={() => void proposals.refetch()} />
         ) : !proposals.data ? (
           <ListSkeleton rows={4} />
-        ) : proposals.data.items.length === 0 ? (
-          <Empty text={t('common.noData')} />
+        ) : shown.length === 0 ? (
+          <Empty text={t(tab === 'active' ? 'votes.noOpen' : 'common.noData')} />
         ) : (
-          <>
-            <section className="space-y-2">
-              <h3 className="px-1 text-sm font-semibold text-ink2">{t('votes.open')}</h3>
-              {open.length === 0 ? (
-                <p className="text-muted">{t('votes.openCount', { count: 0 })}</p>
-              ) : (
-                open.map((p) => <ProposalCard key={p.id} proposal={p} />)
-              )}
-            </section>
-
-            {past.length > 0 && (
-              <section className="space-y-2">
-                <h3 className="px-1 text-sm font-semibold text-ink2">{t('votes.past')}</h3>
-                {past.map((p) => (
-                  <ProposalCard key={p.id} proposal={p} />
-                ))}
-              </section>
-            )}
-          </>
+          <div className="space-y-2">
+            {shown.map((p) => (
+              <ProposalVoteCard key={p.id} proposal={p} />
+            ))}
+          </div>
         )}
       </div>
     </PullToRefresh>
-  );
-}
-
-function ProposalCard({ proposal }: { proposal: ProposalSummary }) {
-  const { t } = useTranslation();
-  const qc = useQueryClient();
-  const vote = useMutation({
-    mutationFn: (choice: (typeof CHOICES)[number]) => api(`/proposals/${proposal.id}/vote`, { method: 'POST', body: { choice } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['proposals'] }),
-  });
-  const mine = proposal.my_choice ?? null;
-  return (
-    <div data-testid="proposal-card" className="rounded-[20px] border border-border bg-card shadow-card">
-      <Link to={`/votes/${proposal.id}`} className="block rounded-[20px] p-4 hover:bg-hover">
-        <div className="flex items-center justify-between gap-3">
-          <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">{t(`proposalType.${proposal.type}`)}</span>
-          {proposal.status === 'open' ? (
-            <StatusPill status="pending" label={t(`status.proposal.${proposal.status}`)} />
-          ) : (
-            <StatusPill status={proposal.status} label={t(`status.proposal.${proposal.status}`)} />
-          )}
-        </div>
-        <p className="mt-2.5 text-base font-bold leading-snug [overflow-wrap:anywhere]">{proposal.title}</p>
-        <div className="mt-2">
-          {proposal.status === 'open' && proposal.closes_at ? (
-            <CountdownChip closesAt={proposal.closes_at} />
-          ) : (
-            <span className="text-sm text-muted">
-              {t('votes.deadline')}: {fmtInstant(proposal.finalized_at ?? proposal.closes_at ?? proposal.created_at)}
-            </span>
-          )}
-        </div>
-        <div className="mt-3 rounded-xl bg-soft px-3 py-2 text-sm">
-          {proposal.ballots_hidden ? (
-            <span className="text-muted">{t('votes.hiddenUntilClose')}</span>
-          ) : (
-            <>
-              <span className="text-muted">{t('votes.result')}:</span>{' '}
-              <span className="font-medium">
-                {localDigits(proposal.basis === 'share'
-                  ? `${proposal.counts.yes_weight} / ${proposal.threshold_weight}`
-                  : `${proposal.counts.yes} / ${proposal.threshold}`)}
-              </span>
-            </>
-          )}
-        </div>
-        <p className="mt-2 text-sm font-medium text-primary">{t('votes.seeDetails')} ›</p>
-      </Link>
-
-      {proposal.can_vote && (
-        <div className="px-4 pb-4">
-          <div className="grid grid-cols-3 gap-2">
-            {CHOICES.map((choice) => {
-              const active = mine === choice;
-              return (
-                <button
-                  key={choice}
-                  type="button"
-                  aria-pressed={active}
-                  disabled={vote.isPending}
-                  onClick={() => vote.mutate(choice)}
-                  className={`h-12 rounded-2xl text-base font-bold disabled:opacity-50 ${
-                    choice === 'yes'
-                      ? active ? 'bg-ok text-primary-foreground' : 'bg-primary text-primary-foreground'
-                      : choice === 'no'
-                        ? active ? 'bg-bad text-primary-foreground' : 'border-[1.5px] border-bad bg-card text-bad'
-                        : active ? 'bg-muted text-primary-foreground' : 'border-[1.5px] border-border bg-card text-ink2'
-                  }`}
-                >
-                  {active ? `${t(`votes.${choice}`)} ✓` : t(`votes.${choice}`)}
-                </button>
-              );
-            })}
-          </div>
-          {vote.error && <p role="alert" className="mt-2 text-bad">{errorMessage(t, vote.error).message}</p>}
-          {mine && !vote.error && <p className="mt-2 text-sm text-ok">{t('votes.youVoted', { choice: t(`votes.${mine}`) })}</p>}
-        </div>
-      )}
-    </div>
   );
 }

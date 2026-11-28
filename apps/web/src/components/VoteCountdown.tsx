@@ -15,55 +15,35 @@ export function closesAtText(t: TFunction, iso: string): string {
 }
 
 /**
- * The vote page's live countdown to `closesAt`: days, hours, minutes and seconds ticking down on the
- * dark brand card (the warning colours in the last hour), with the closing date and time under it.
+ * The vote page's live countdown to `closesAt`: one strip across the top of the proposal card, on the
+ * dark brand colour (the warning colours in the last hour).
  */
 export function VoteCountdown({ closesAt }: { closesAt: string }) {
   const { t } = useTranslation();
   const ms = useTimeLeft(closesAt) ?? 0;
   const left = splitTimeLeft(ms);
-  const parts = left
-    ? ([
-        ['days', left.days],
-        ['hours', left.hours],
-        ['minutes', left.minutes],
-        ['seconds', left.seconds],
-      ] as const)
-    : null;
   return (
-    <section
+    <div
       data-testid="vote-countdown"
-      className={`relative overflow-hidden rounded-3xl bg-hero p-4 text-on-hero ${left && ms < URGENT_MS ? 'hero-alert' : ''}`}
+      className={`flex flex-wrap items-center justify-between gap-x-3 gap-y-1 bg-hero px-4 py-3 text-on-hero ${left && ms < URGENT_MS ? 'hero-alert' : ''}`}
     >
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'radial-gradient(70% 70% at 90% 0%, var(--hero-icon) 0%, transparent 70%)' }} />
-      <div className="relative">
-        <div className="flex items-center gap-2 text-sm text-on-hero-muted">
-          <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-hero-icon text-hero-action">
-            <Icon d={CLOCK} size={18} />
+      <span className="flex items-center gap-2 text-sm font-semibold">
+        <Icon d={CLOCK} size={18} />
+        {left ? t('votes.countdown.title') : t('votes.countdown.over')}
+      </span>
+      {left && (
+        <>
+          {/* Screen readers get one sentence, not a number changing every second. */}
+          <span className="sr-only">
+            {t('votes.countdown.sr', { days: formatCount(left.days), hours: formatCount(left.hours), minutes: formatCount(left.minutes) })}
           </span>
-          <span className="flex-1 font-semibold text-on-hero">{parts ? t('votes.countdown.title') : t('votes.countdown.over')}</span>
-        </div>
-        {parts ? (
-          <>
-            {/* Screen readers get one sentence, not a number changing every second. */}
-            <p className="sr-only">
-              {t('votes.countdown.sr', { days: formatCount(left!.days), hours: formatCount(left!.hours), minutes: formatCount(left!.minutes) })}
-            </p>
-            <div aria-hidden="true" className="mt-3 grid grid-cols-4 gap-2">
-              {parts.map(([unit, n]) => (
-                <div key={unit} className="rounded-2xl bg-hero-chip px-1 py-2.5 text-center">
-                  <div className="text-[1.75rem] font-bold leading-none tabular-nums">{unit === 'days' ? formatCount(n) : twoDigits(n)}</div>
-                  <div className="mt-1.5 text-xs text-on-hero-muted">{t(`votes.countdown.${unit}`)}</div>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <p className="mt-2 text-sm text-on-hero-muted">{t('votes.countdown.counting')}</p>
-        )}
-        <p className="mt-3 text-sm text-on-hero-muted">{t('votes.countdown.closesAt', { when: closesAtText(t, closesAt) })}</p>
-      </div>
-    </section>
+          <span aria-hidden="true" className="ml-auto text-xl font-bold tabular-nums">
+            {left.days > 0 && <span className="mr-3">{formatCount(left.days)} {t('votes.countdown.days')}</span>}
+            {twoDigits(left.hours)} : {twoDigits(left.minutes)} : {twoDigits(left.seconds)}
+          </span>
+        </>
+      )}
+    </div>
   );
 }
 

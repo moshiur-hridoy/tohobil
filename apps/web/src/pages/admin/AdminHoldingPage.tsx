@@ -21,12 +21,12 @@ import { RemarkLine } from '../../components/EntryRemarks';
 import { MandateCard } from '../../components/MandateCard';
 import { MandatePurchaseSheet } from '../../components/MandatePurchaseSheet';
 
-/** A withdrawal's stage: waiting on someone (amber), voting (blue), money due (amber), done (green). */
+/** A withdrawal's stage: waiting on someone (amber), voting (blue), money due (amber), done (grey). */
 const STAGE_TONE: Record<HoldingWithdrawal['status'], string> = {
   draft: 'bg-warn-bg text-warn',
   open: 'bg-blue-bg text-blue',
   approved: 'bg-warn-bg text-warn',
-  executed: 'bg-ok-bg text-ok',
+  executed: 'bg-soft text-ink2',
 };
 
 type Action =
@@ -312,7 +312,7 @@ function HoldingView({ id }: { id: string }) {
                     <p className="mt-1 text-muted">{t(`holding.withdrawalNext.${w.status}`)}</p>
                   )}
                   <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
-                    <Link to={`/admin/proposals?id=${w.proposal_id}`} className="text-[0.8125rem] font-semibold text-primary hover:underline">
+                    <Link to={`/admin/proposals?id=${w.proposal_id}`} className="text-[0.8125rem] font-semibold text-accent hover:underline">
                       {t('holding.withdrawalOpenProposal')} →
                     </Link>
                     {gain !== null && gain !== 0n && (

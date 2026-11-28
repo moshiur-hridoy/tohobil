@@ -206,7 +206,7 @@ export function ReconcilePage() {
                 aria-pressed={p === period}
                 aria-label={`${fmtPeriod(p)}: ${t(`reconcile.state.${st}`)}`}
                 onClick={() => setPeriod(p)}
-                className={`flex flex-col items-center rounded-xl border px-1 py-1.5 text-xs font-semibold ${STATE_TONE[st]} ${p === period ? 'ring-2 ring-primary' : ''}`}
+                className={`flex flex-col items-center rounded-xl border px-1 py-1.5 text-xs font-semibold ${STATE_TONE[st]} ${p === period ? 'ring-2 ring-accent' : ''}`}
               >
                 <span>{fmtPeriodShort(p).split(' ')[0]}</span>
                 <span aria-hidden="true" className="mt-0.5 text-[0.6875rem]">{st === 'locked' ? '✓' : st === 'approved' ? '✓' : st === 'counted' ? '…' : st === 'todo' ? '•' : ''}</span>
@@ -371,7 +371,7 @@ export function ReconcilePage() {
 function StepTitle({ n, text }: { n: number; text: string }) {
   return (
     <span className="flex items-center gap-2">
-      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{localDigits(String(n))}</span>
+      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent-fill text-xs font-bold text-on-accent">{localDigits(String(n))}</span>
       {text}
     </span>
   );

@@ -41,7 +41,7 @@ export function DemoLogin() {
           }}
           className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 text-left transition-colors hover:bg-soft disabled:opacity-60"
         >
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-soft text-sm font-bold text-primary">{ref}</span>
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent-soft text-sm font-bold text-accent">{ref}</span>
           <span className="flex flex-col">
             <span className="font-semibold">{t(`demo.${key}`)}</span>
             <span className="text-[0.8125rem] text-muted">{t(`demo.${key}Hint`)}</span>

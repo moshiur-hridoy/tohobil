@@ -141,7 +141,7 @@ function RuleItem({ ruleKey: key, versions, today, canPropose, onPropose, onHist
             {current.clause_ref && (
               <>
                 {' · '}
-                <Link to={`/menu/constitution?clause=${encodeURIComponent(current.clause_ref)}`} className="font-semibold text-primary hover:underline">
+                <Link to={`/menu/constitution?clause=${encodeURIComponent(current.clause_ref)}`} className="font-semibold text-accent hover:underline">
                   {t('rulesPage.clause')} {current.clause_ref}
                 </Link>
               </>

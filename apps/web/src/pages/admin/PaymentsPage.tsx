@@ -303,7 +303,7 @@ function QueueRow({ r, selected, match, isCashier, onPick, onAct }: {
     <li
       aria-current={selected}
       onClick={onPick}
-      className={`-mx-2 flex cursor-pointer flex-wrap items-center gap-3 rounded-xl border-b border-border px-2 py-3 transition-colors last:border-b-0 ${selected ? 'bg-primary-soft' : 'hover:bg-hover'}`}
+      className={`-mx-2 flex cursor-pointer flex-wrap items-center gap-3 rounded-xl border-b border-border px-2 py-3 transition-colors last:border-b-0 ${selected ? 'bg-accent-soft' : 'hover:bg-hover'}`}
     >
       {/* the click bubbles to the row; the button makes the row reachable by keyboard */}
       <button type="button" className="flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -313,7 +313,7 @@ function QueueRow({ r, selected, match, isCashier, onPick, onAct }: {
           <span className="block truncate text-xs text-muted">
             {PAYMENT_METHOD_LABELS[r.method].bn} · {fmtInstant(r.paid_at)}
             {r.trx_id && <> · <span className="font-mono">{r.trx_id}</span></>}
-            {r.partner_name && <> · <span className="font-semibold text-primary">{t('pay.toShop', { name: r.partner_name })}</span></>}
+            {r.partner_name && <> · <span className="font-semibold text-accent">{t('pay.toShop', { name: r.partner_name })}</span></>}
           </span>
           <MatchLine match={match} />
         </span>

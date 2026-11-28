@@ -141,7 +141,7 @@ export function ConstitutionPage() {
               <div className="flex-1">
                 <div className="text-[1.0625rem] font-bold">
                   {t('constitutionPage.version')} {current.version}
-                  {isLatest && <span className="ml-2 text-xs font-semibold text-primary">{t('constitutionPage.current')}</span>}
+                  {isLatest && <span className="ml-2 text-xs font-semibold text-accent">{t('constitutionPage.current')}</span>}
                 </div>
                 <div className="text-xs text-muted">
                   {t('constitutionPage.effectiveFrom')} {fmtDate(current.effective_from)}
@@ -154,7 +154,7 @@ export function ConstitutionPage() {
                   type="button"
                   disabled={pdf.isPending}
                   onClick={() => pdf.mutate(current.file_id as string)}
-                  className="h-11 text-[0.8125rem] font-bold text-primary"
+                  className="h-11 text-[0.8125rem] font-bold text-accent"
                 >
                   {t('constitutionPage.pdf')}
                 </button>
@@ -162,7 +162,7 @@ export function ConstitutionPage() {
             </section>
             {pdf.error && <LoadError error={pdf.error} />}
 
-            <label className="flex h-[52px] items-center gap-2.5 rounded-2xl border-[1.5px] border-border bg-card px-3.5 text-muted">
+            <label className="flex h-[52px] items-center gap-2.5 rounded-2xl border border-edge bg-soft px-3.5 text-muted focus-within:border-accent">
               <input
                 type="text"
                 value={query}
@@ -190,7 +190,7 @@ export function ConstitutionPage() {
                         onClick={() => setOpen(open === c.id ? null : c.id)}
                         className="flex min-h-[54px] w-full items-center gap-3 text-left"
                       >
-                        <span className="grid h-11 min-w-11 flex-none place-items-center rounded-[13px] bg-primary-soft px-2 text-sm font-bold text-primary">
+                        <span className="grid h-11 min-w-11 flex-none place-items-center rounded-[13px] bg-accent-soft px-2 text-sm font-bold text-accent">
                           {localDigits(c.clause_no)}
                         </span>
                         <span className="flex-1">
@@ -210,7 +210,7 @@ export function ConstitutionPage() {
                 <button
                   type="button"
                   onClick={() => setShowOlder(!showOlder)}
-                  className="flex min-h-11 items-center gap-1.5 text-sm font-bold text-primary"
+                  className="flex min-h-11 items-center gap-1.5 text-sm font-bold text-accent"
                 >
                   {showOlder ? t('constitutionPage.hideOlder') : t('constitutionPage.olderVersions')}
                 </button>
@@ -224,7 +224,7 @@ export function ConstitutionPage() {
                             setSelected(v.id);
                             setOpen(null);
                           }}
-                          className={`flex min-h-11 w-full items-center justify-between py-2 text-left ${v.id === versionId ? 'font-bold text-primary' : ''}`}
+                          className={`flex min-h-11 w-full items-center justify-between py-2 text-left ${v.id === versionId ? 'font-bold text-accent' : ''}`}
                         >
                           <span>
                             {t('constitutionPage.version')} {v.version}

@@ -7,6 +7,7 @@ import { ListSkeleton, Skeleton } from '../../components/Skeleton';
 import { PullToRefresh } from '../../components/PullToRefresh';
 import { LoadError } from '../../components/StateViews';
 import { Chip, Icon } from '../../components/ui';
+import { ProposalVoteCard } from '../../components/ProposalVoteCard';
 import { StatusPill } from '../../components/StatusPill';
 import { RoleBadges } from '../../components/RoleBadge';
 import { Avatar } from '../../components/MemberPhoto';
@@ -15,7 +16,7 @@ import { useAuth } from '../../lib/auth';
 import { fmtClock, fmtDate, fmtPeriod, todayDhaka } from '../../lib/dates';
 import { arrearsOf, negClass, profitPercent, taka } from '../../lib/money';
 import { charityBalance, fundSplit, shareValue } from '../../lib/nav';
-import { useCountdown } from '../../lib/countdown';
+import { useTimeLeft } from '../../lib/countdown';
 import { advanceOf } from '../../lib/advance';
 import { thisMonthOf } from '../../lib/thisMonth';
 import { formatCount } from '../../lib/format';
@@ -23,7 +24,7 @@ import type { AccountBalance, ApprovalRow, DueRow, MatrixResponse, MeetingRow, M
 import { AheadBadge } from '../../components/AheadBadge';
 import { AnimatedTaka, useFirstVisit } from '../../components/AnimatedTaka';
 
-const AVATAR = ['bg-primary-soft text-primary', 'bg-blue-bg text-blue', 'bg-vio-bg text-vio', 'bg-warn-bg text-warn'];
+const AVATAR = ['bg-accent-soft text-accent', 'bg-blue-bg text-blue', 'bg-vio-bg text-vio', 'bg-warn-bg text-warn'];
 
 export function HomePage() {
   const { t } = useTranslation();
@@ -53,7 +54,6 @@ export function HomePage() {
     queryFn: () => api<{ items: ProposalSummary[]; next_cursor: string | null }>('/proposals?limit=200'),
   });
   const openVotes = proposals.data?.items.filter((p) => p.status === 'open') ?? [];
-  const firstOpen = openVotes[0];
   const meeting = useQuery({ queryKey: ['meetings', 'next'], queryFn: () => api<{ meeting: MeetingRow | null }>('/meetings/next') });
   const nextMeeting = meeting.data?.meeting;
   // The auditor decides value updates and reversals; without a computer this card is the way in.
@@ -66,7 +66,6 @@ export function HomePage() {
     queryFn: () => api<{ items: ApprovalRow[] }>('/approvals?status=pending&limit=200'),
   });
   const waitingApprovals = approvals.data?.items.filter((a) => a.requested_by_code !== me?.member_code).length ?? 0;
-  const remaining = useCountdown(firstOpen?.closes_at ?? null);
 
   const mine = members.data?.items.find((m) => m.id === me?.member_id);
   // Dues past their due date and unpaid fines are arrears (the red card). This month's dues are open
@@ -107,6 +106,7 @@ export function HomePage() {
       qc.invalidateQueries({ queryKey: ['member', me?.member_id] }),
       qc.invalidateQueries({ queryKey: ['matrix'] }),
       qc.invalidateQueries({ queryKey: ['meetings', 'next'] }),
+      qc.invalidateQueries({ queryKey: ['proposals'] }),
     ]);
 
   if (members.error) return <div className="p-4"><LoadError error={members.error} onRetry={() => void members.refetch()} /></div>;
@@ -140,7 +140,7 @@ export function HomePage() {
                 <p className="mt-2.5 text-[2.625rem] font-bold leading-[1.15]"><AnimatedTaka paisa={toPay} intro={intro} /></p>
                 {owed === 0n && now.amount > 0n ? (
                   <div className="mt-2.5 flex flex-wrap gap-2 text-[0.8125rem]">
-                    <span className={`rounded-full px-2.5 py-1 ${now.daysLeft !== null && now.daysLeft <= 3 ? 'bg-hero-action font-semibold text-on-hero-action' : 'bg-hero-chip'}`}>{dueChip}</span>
+                    <span className={`rounded-full px-2.5 py-1 ${now.daysLeft !== null && now.daysLeft <= 3 ? 'bg-on-hero font-semibold text-hero' : 'bg-hero-chip'}`}>{dueChip}</span>
                   </div>
                 ) : owed === 0n ? (
                   <>
@@ -163,7 +163,8 @@ export function HomePage() {
                   </>
                 ) : (
                   <div className="mt-2.5 flex flex-wrap gap-2 text-[0.8125rem]">
-                    {principal > 0n && <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.overdue')} {taka(principal)}</span>}
+                    {/* Only as a part of a bigger total: alone it would repeat the title and the figure above (owner). */}
+                    {principal > 0n && principal !== toPay && <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.overdue')} {taka(principal)}</span>}
                     {fines > 0n && <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.fines')} {taka(fines)}</span>}
                     {now.amount > 0n ? (
                       <span className="rounded-full bg-hero-chip px-2.5 py-1">{t('home.thisMonthPart', { amount: taka(now.amount) })} · {daysChip}</span>
@@ -186,6 +187,11 @@ export function HomePage() {
           </div>
         </section>
 
+        {/* Running votes sit right under the big card, to vote from here (owner). */}
+        {openVotes.map((p) => (
+          <RunningVote key={p.id} proposal={p} />
+        ))}
+
         <FundCard nav={nav.data} intro={intro} />
 
         <section className="grid grid-cols-2 gap-3">
@@ -195,7 +201,7 @@ export function HomePage() {
             <h2 className="mt-2.5 text-[0.8125rem] font-normal text-muted">{t('home.myCapital')}</h2>
             <p className="mt-0.5 text-[1.3125rem] font-bold [overflow-wrap:anywhere]">{mine && myCredit !== null ? <AnimatedTaka paisa={BigInt(mine.capital_paisa) - myCredit} intro={intro} /> : '…'}</p>
             {mine && <p className="mt-0.5 text-xs text-muted">{t('home.sharesCount', { count: mine.shares })}</p>}
-            {myCredit !== null && myCredit > 0n && <p className="text-xs font-semibold text-primary">{t('home.capitalAdvance', { amount: taka(myCredit) })}</p>}
+            {myCredit !== null && myCredit > 0n && <p className="text-xs font-semibold text-accent">{t('home.capitalAdvance', { amount: taka(myCredit) })}</p>}
           </div>
           {/* Charity balance (18.2): fines and riba are donated at year end, never fund income */}
           <div className="col-span-2 rounded-[18px] border border-border bg-card px-3.5 py-3">
@@ -224,17 +230,6 @@ export function HomePage() {
           </Link>
         )}
 
-        {openVotes.length > 0 && firstOpen && (
-          <Link to="/votes" className="flex items-center gap-3 rounded-[18px] border border-border bg-card p-3.5 text-foreground">
-            <Chip tone="bg-warn-bg text-warn" size={40} iconSize={22} d="M4 7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z M9 12l2 2 4-4" />
-            <div className="min-w-0 flex-1">
-              <div className="text-base font-bold">{t('votes.openCount', { count: openVotes.length })}</div>
-              <div className="truncate text-[0.8125rem] text-ink2">{firstOpen.title}{remaining ? ` · ${remaining}` : ''}</div>
-            </div>
-            <span className="text-muted"><Icon d="M9 5l7 7-7 7" sw={2} /></span>
-          </Link>
-        )}
-
         {nextMeeting?.date && nextMeeting.time && (
           <section className="flex items-center gap-3 rounded-[18px] border border-border bg-card p-3.5" aria-labelledby="home-meeting">
             <Chip tone="bg-blue-bg text-blue" size={40} iconSize={22} d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M8 14h3" />
@@ -255,6 +250,12 @@ export function HomePage() {
       </div>
     </PullToRefresh>
   );
+}
+
+/** Leaves Home the moment its time is up, without waiting for the server to close it. */
+function RunningVote({ proposal }: { proposal: ProposalSummary }) {
+  const left = useTimeLeft(proposal.closes_at ?? null);
+  return left === 0 ? null : <ProposalVoteCard proposal={proposal} />;
 }
 
 /** Display only: a share of a bar as a CSS width. */
@@ -282,7 +283,7 @@ function FundCard({ nav, intro }: { nav: NavResponse | undefined; intro: boolean
   return (
     <Link to="/assets" className="block rounded-[18px] border border-border bg-card p-3.5 text-foreground">
       <div className="flex items-center gap-2.5">
-        <Chip tone="bg-primary-soft text-primary" d="M3 17l6-6 4 4 8-8 M15 7h6v6" />
+        <Chip tone="bg-accent-soft text-accent" d="M3 17l6-6 4 4 8-8 M15 7h6v6" />
         <h2 className="flex-1 text-[0.8125rem] font-normal text-muted">{t('home.fundNetAssets')}</h2>
         <span className="text-muted"><Icon d="M9 5l7 7-7 7" sw={2} /></span>
       </div>
@@ -291,14 +292,14 @@ function FundCard({ nav, intro }: { nav: NavResponse | undefined; intro: boolean
           <p className={`mt-2 text-[1.75rem] font-bold leading-tight [overflow-wrap:anywhere] ${negClass(split.total)}`}><AnimatedTaka paisa={split.total} intro={intro} /></p>
           {cashBar + investedBar > 0n && (
             <div className="mt-3 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-background" aria-hidden="true">
-              {cashBar > 0n && <span className="h-full bg-vio" style={{ width: pct(cashBar, cashBar + investedBar) }} />}
-              {investedBar > 0n && <span className="h-full bg-primary" style={{ width: pct(investedBar, cashBar + investedBar) }} />}
+              {cashBar > 0n && <span className="h-full bg-muted" style={{ width: pct(cashBar, cashBar + investedBar) }} />}
+              {investedBar > 0n && <span className="h-full bg-accent" style={{ width: pct(investedBar, cashBar + investedBar) }} />}
             </div>
           )}
           <dl className="mt-3 grid gap-1.5 text-[0.875rem]">
             <div>
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-vio" aria-hidden="true" />
+                <span className="h-2.5 w-2.5 rounded-full bg-muted" aria-hidden="true" />
                 <dt className="flex-1 text-muted">{t('home.split.cash')}</dt>
                 <dd className={`font-semibold ${negClass(split.ownCash)}`}>{taka(split.ownCash)}</dd>
               </div>
@@ -309,7 +310,7 @@ function FundCard({ nav, intro }: { nav: NavResponse | undefined; intro: boolean
               )}
             </div>
             <div className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-primary" aria-hidden="true" />
+              <span className="h-2.5 w-2.5 rounded-full bg-accent" aria-hidden="true" />
               <dt className="flex-1 text-muted">{t('home.split.invested')}</dt>
               <dd className="font-semibold">{taka(split.invested)}</dd>
             </div>
@@ -435,14 +436,14 @@ function EveryoneStanding({ members, intro }: { members?: MemberRow[]; intro: bo
   return (
     <section className="overflow-hidden rounded-[18px] border border-border bg-card" aria-labelledby="home-everyone">
       <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
-        <Chip tone="bg-primary-soft text-primary" d="M16 20v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1 M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7 M20 20v-1a4 4 0 0 0-3-3.8 M16 4.2a3.5 3.5 0 0 1 0 6.6" />
+        <Chip tone="bg-accent-soft text-accent" d="M16 20v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1 M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7 M20 20v-1a4 4 0 0 0-3-3.8 M16 4.2a3.5 3.5 0 0 1 0 6.6" />
         <h2 id="home-everyone" className="min-w-0 flex-1 text-base font-bold">{t('home.everyoneInMonth')}</h2>
         {matrix.data && rows.length > 0 && (
           <span className="flex flex-none items-center gap-2">
             <span aria-hidden="true" className="h-2 w-24 overflow-hidden rounded-full bg-track">
-              <span className="block h-full bg-primary" style={{ width: `${(paidCount / rows.length) * 100}%` }} />
+              <span className="block h-full bg-accent" style={{ width: `${(paidCount / rows.length) * 100}%` }} />
             </span>
-            <span className="text-sm font-bold text-primary">{paidCount}/{rows.length}</span>
+            <span className="text-sm font-bold text-accent">{paidCount}/{rows.length}</span>
           </span>
         )}
       </div>
@@ -469,8 +470,8 @@ function EveryoneStanding({ members, intro }: { members?: MemberRow[]; intro: bo
               const owed = owedById.get(m.member_id);
               const settled = cell?.status === 'paid' || cell?.status === 'paid_late';
               return (
-                <li key={m.member_id} className={`flex min-h-[58px] items-center gap-3 border-border px-4 py-2 ${i ? 'border-t' : ''} ${isMe ? 'bg-primary-soft' : ''}`}>
-                  <Avatar fileId={m.member_photo_file_id} fallback={m.member_name.trim().charAt(0)} className={`h-[34px] w-[34px] text-sm font-bold ${isMe ? 'bg-primary text-primary-foreground' : AVATAR[i % AVATAR.length]}`} />
+                <li key={m.member_id} className={`flex min-h-[58px] items-center gap-3 border-border px-4 py-2 ${i ? 'border-t' : ''} ${isMe ? 'bg-accent-soft' : ''}`}>
+                  <Avatar fileId={m.member_photo_file_id} fallback={m.member_name.trim().charAt(0)} className={`h-[34px] w-[34px] text-sm font-bold ${isMe ? 'bg-accent-fill text-on-accent' : AVATAR[i % AVATAR.length]}`} />
                   <div className="min-w-0 flex-1">
                     <div className={`flex min-w-0 items-center gap-1.5 text-[0.9375rem] ${isMe ? 'font-bold' : 'font-medium'}`}><span className="shrink-0 text-xs font-normal text-muted tabular-nums">{m.member_code}</span><span className="truncate">{m.member_name}</span><RoleBadges roles={rolesById.get(m.member_id)} /><AheadBadge months={m.ahead_months} /></div>
                     {owed !== undefined && (

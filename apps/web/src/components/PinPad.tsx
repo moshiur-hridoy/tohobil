@@ -45,8 +45,8 @@ export function PinPad({ value, onChange, onComplete, disabled, invalid }: PinPa
           <span
             key={i}
             className={`h-3.5 w-3.5 rounded-full border-2 transition-all duration-150 ${
-              invalid ? 'border-bad' : i < value.length ? 'border-primary' : 'border-input'
-            } ${i < value.length ? (invalid ? 'scale-110 bg-bad' : 'scale-110 bg-primary') : 'bg-transparent'}`}
+              invalid ? 'border-bad' : i < value.length ? 'border-accent' : 'border-input'
+            } ${i < value.length ? (invalid ? 'scale-110 bg-bad' : 'scale-110 bg-accent') : 'bg-transparent'}`}
           />
         ))}
       </div>
@@ -62,7 +62,7 @@ export function PinPad({ value, onChange, onComplete, disabled, invalid }: PinPa
               onClick={() => (k === 'back' ? back() : press(k))}
               aria-label={k === 'back' ? t('auth.pinDelete') : k}
               className={`h-[3.75rem] rounded-2xl text-2xl font-semibold outline-none transition-[background-color,transform] duration-100 focus-visible:ring-2 focus-visible:ring-ring active:scale-95 disabled:opacity-50 ${
-                k === 'back' ? 'text-muted hover:bg-soft' : 'bg-soft hover:bg-hover active:bg-primary-soft'
+                k === 'back' ? 'text-muted hover:bg-soft' : 'bg-soft hover:bg-hover active:bg-accent-soft'
               }`}
             >
               {k === 'back' ? '⌫' : k}

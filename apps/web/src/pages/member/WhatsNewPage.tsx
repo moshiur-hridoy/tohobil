@@ -20,7 +20,7 @@ export function WhatsNewPage() {
               <span className="text-lg font-bold">{t('whatsNew.version', { version: localDigits(r.version) })}</span>
               <span className="text-sm text-muted">{fmtDate(r.date)}</span>
             </h2>
-            {r.version === APP_VERSION && <span className="mt-1 inline-block rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">{t('whatsNew.thisOne')}</span>}
+            {r.version === APP_VERSION && <span className="mt-1 inline-block rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent">{t('whatsNew.thisOne')}</span>}
             {r.sections.map((s) => (
               <div key={s.title} className="mt-3">
                 <h3 className="text-sm font-semibold text-muted">{s.title}</h3>

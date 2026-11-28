@@ -102,7 +102,7 @@ export function PhotoSheet({ open, onClose, memberId, name, fileId, asCashier = 
           </div>
 
           <div className="flex flex-col items-center gap-3 py-2">
-            <Avatar fileId={fileId} fallback={name.trim().charAt(0)} className="h-28 w-28 bg-primary-soft text-4xl font-bold text-primary" />
+            <Avatar fileId={fileId} fallback={name.trim().charAt(0)} className="h-28 w-28 bg-accent-soft text-4xl font-bold text-accent" />
             <p id="photo-sheet-hint" className="text-center text-sm text-muted">{t(asCashier ? 'photo.hintCashier' : 'photo.hint')}</p>
           </div>
 

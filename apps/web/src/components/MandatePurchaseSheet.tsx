@@ -115,7 +115,7 @@ export function MandatePurchaseSheet({ partnerName, mandate, onClose, onSaved, o
           <input className="field mt-1 w-full" value={note} onChange={(e) => setNote(e.target.value)} />
         </label>
         {onVoteInstead && (
-          <button type="button" className="min-h-11 text-left text-sm font-semibold text-primary underline" onClick={() => { close(); onVoteInstead(); }}>
+          <button type="button" className="min-h-11 text-left text-sm font-semibold text-accent underline" onClick={() => { close(); onVoteInstead(); }}>
             {t('mandate.voteInstead')}
           </button>
         )}

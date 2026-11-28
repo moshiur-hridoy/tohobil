@@ -42,7 +42,7 @@ export function ChangePinPage() {
 
   return (
     <div className="space-y-4 p-4">
-      <Link to="/menu" className="text-sm text-primary">{t('common.back')}</Link>
+      <Link to="/menu" className="text-sm text-accent">{t('common.back')}</Link>
       <h1 className="text-xl font-semibold">{t('pinChange.title')}</h1>
       {field(t('pinChange.current'), current, setCurrent, 'current-password')}
       {field(t('pinChange.new'), next, setNext, 'new-password')}

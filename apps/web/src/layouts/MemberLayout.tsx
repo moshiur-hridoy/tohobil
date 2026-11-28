@@ -64,7 +64,7 @@ export function MemberLayout() {
           aria-label={t('nav.menu')}
           className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <Avatar fileId={myPhoto} fallback={initial} className="h-11 w-11 bg-primary-soft text-lg font-bold text-primary" />
+          <Avatar fileId={myPhoto} fallback={initial} className="h-11 w-11 bg-accent-soft text-lg font-bold text-accent" />
         </Link>
         <div className="min-w-0 flex-1">
           <div className="text-[0.8125rem] text-muted">{t('app.greeting')}</div>
@@ -113,7 +113,7 @@ export function MemberLayout() {
 }
 
 /**
- * The raised green "+" in the middle of the tab bar: report a payment, with its name under it like the
+ * The raised white "+" in the middle of the tab bar: report a payment, with its name under it like the
  * other tabs. It has the same 30px icon slot as a tab and the circle rises out of it, so the name sits
  * on exactly the same line as the others whatever the font or screen.
  */
@@ -122,15 +122,15 @@ function PayButton({ label }: { label: string }) {
     <NavLink
       to="/pay"
       className={({ isActive }) =>
-        `group flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-1 text-xs ${isActive ? 'font-bold text-primary' : 'text-muted'}`
+        `group flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-1 text-xs ${isActive ? 'font-bold text-accent' : 'text-muted'}`
       }
     >
       {({ isActive }) => (
         <>
           <span className="relative h-[30px] w-[52px]">
             <span
-              className={`absolute bottom-0 left-1/2 grid h-14 w-14 -translate-x-1/2 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-4 transition-transform group-active:scale-95 motion-reduce:transition-none motion-reduce:group-active:scale-100 ${
-                isActive ? 'ring-primary-soft' : 'ring-card'
+              className={`absolute bottom-0 left-1/2 grid h-14 w-14 -translate-x-1/2 place-items-center rounded-full border border-input bg-fab text-on-fab shadow-lg ring-4 transition-transform group-active:scale-95 motion-reduce:transition-none motion-reduce:group-active:scale-100 ${
+                isActive ? 'ring-accent-soft' : 'ring-card'
               }`}
             >
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
@@ -152,7 +152,7 @@ function TabItem({ to, label, icon, badge = 0 }: { to: string; label: string; ic
       to={to}
       className={({ isActive }) =>
         `flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-1 text-xs ${
-          isActive ? 'font-bold text-primary' : 'text-muted'
+          isActive ? 'font-bold text-accent' : 'text-muted'
         }`
       }
     >
@@ -160,7 +160,7 @@ function TabItem({ to, label, icon, badge = 0 }: { to: string; label: string; ic
         <>
           <span
             className={`relative grid h-[30px] w-[52px] place-items-center rounded-[15px] ${
-              isActive ? 'bg-primary-soft text-primary' : 'text-muted'
+              isActive ? 'bg-accent-soft text-accent' : 'text-muted'
             }`}
           >
             <svg

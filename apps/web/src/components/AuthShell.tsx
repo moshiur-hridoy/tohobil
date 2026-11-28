@@ -24,7 +24,7 @@ export function AuthShell({ children, footer }: { children: ReactNode; footer?: 
     <div className="min-h-screen bg-background lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <aside className="relative overflow-hidden rounded-b-[32px] bg-hero px-6 pb-16 pt-10 text-on-hero lg:flex lg:min-h-screen lg:flex-col lg:rounded-none lg:px-14 lg:py-12">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'radial-gradient(70% 60% at 85% 0%, var(--hero-icon) 0%, transparent 70%)' }} />
-        <svg aria-hidden="true" viewBox="10 20 75 56" className="pointer-events-none absolute -bottom-6 -right-6 hidden w-[380px] text-hero-action opacity-[0.07] lg:block">
+        <svg aria-hidden="true" viewBox="10 20 75 56" className="pointer-events-none absolute -bottom-6 -right-6 hidden w-[380px] text-on-hero opacity-[0.07] lg:block">
           <path d={MARK} fill="currentColor" />
         </svg>
 
@@ -34,7 +34,7 @@ export function AuthShell({ children, footer }: { children: ReactNode; footer?: 
           <ul className="mt-10 hidden space-y-5 lg:block">
             {TRUST.map(([key, d]) => (
               <li key={key} className="flex items-center gap-4">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-hero-chip text-hero-action">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-hero-chip text-on-hero">
                   <Icon d={d} />
                 </span>
                 <span className="text-[0.9375rem] text-on-hero-muted">{t(key)}</span>

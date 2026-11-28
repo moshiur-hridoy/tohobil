@@ -12,7 +12,7 @@
   try {
     var dark = root.dataset.theme === 'dark' ||
       (root.dataset.theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    if (dark) document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0b100d');
+    if (dark) document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0e0f13');
   } catch (e) {}
   // The animated splash (#splash, public/splash.css) only when opened from the app icon: the
   // installed PWA or the Android app. `?splash` previews it in a browser tab, and the tab keeps

@@ -43,15 +43,16 @@ export const ICONS = {
   wallet: 'M3 7h18v12H3zM3 11h18M16 15h2',
 } as const;
 
-/** Button looks. Height 44px (h-11) everywhere a finger may tap; `BTN_SM` is for dense table rows. */
+/** Button looks. Height 44px (h-11) everywhere a finger may tap; `BTN_SM` is for dense table rows.
+ * The sides are generous because the buttons are pills (owner). */
 export const BTN_PRIMARY =
-  'inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50';
 export const BTN_SECONDARY =
-  'inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-medium text-ink2 transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-card px-6 text-sm font-medium text-ink2 transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50';
 export const BTN_SM =
-  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-ink2 transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-5 text-xs font-semibold text-ink2 transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50';
 export const BTN_SM_PRIMARY =
-  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50';
 
 export function AdminPage({ children }: { children: ReactNode }) {
   return <div className="mx-auto max-w-[1400px] space-y-5">{children}</div>;
@@ -81,7 +82,7 @@ export function Card({ children, className = '', ...rest }: { children: ReactNod
  * A card's title row: optional icon chip, title and muted line, and an action on the right. A line
  * under it runs edge to edge whatever the card's padding (`card-head` in globals.css; the card clips it).
  */
-export function CardHead({ title, sub, icon, tone = 'bg-primary-soft text-primary', action, id }: {
+export function CardHead({ title, sub, icon, tone = 'bg-accent-soft text-accent', action, id }: {
   title: ReactNode;
   sub?: ReactNode;
   icon?: string;
@@ -125,7 +126,7 @@ export function StatTile({ tone, icon, label, value, valueClass = '', sub, to, o
 }) {
   const interactive = !!(to || onClick);
   const body = (
-    <div className={`flex h-full items-center gap-3.5 rounded-[18px] border bg-card px-3.5 py-3.5 text-left shadow-card sm:px-[18px] sm:py-4 ${pressed ? 'border-primary ring-1 ring-primary' : 'border-border'} ${interactive ? 'transition-all hover:border-input hover:shadow-lift' : ''}`}>
+    <div className={`flex h-full items-center gap-3.5 rounded-[18px] border bg-card px-3.5 py-3.5 text-left shadow-card sm:px-[18px] sm:py-4 ${pressed ? 'border-accent ring-1 ring-accent' : 'border-border'} ${interactive ? 'transition-all hover:border-input hover:shadow-lift' : ''}`}>
       {/* the chip is decoration: on a phone the two-up tiles need the width for the figure */}
       <span className="hidden sm:block"><Chip tone={tone} d={icon} size={44} /></span>
       <div className="min-w-0 flex-1">
@@ -190,11 +191,11 @@ export function Segmented<T extends string>({ label, value, options, onChange, w
             type="button"
             aria-pressed={active}
             onClick={() => onChange(o.value)}
-            className={`flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring ${wide ? 'h-10' : 'py-1.5'} ${active ? 'bg-primary font-bold text-primary-foreground shadow-card' : 'font-medium text-ink2 hover:bg-hover hover:text-foreground'}`}
+            className={`flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring ${wide ? 'h-10' : 'py-1.5'} ${active ? 'bg-accent-fill font-bold text-on-accent shadow-card' : 'font-medium text-ink2 hover:bg-hover hover:text-foreground'}`}
           >
             {o.label}
             {o.count !== undefined && (
-              <span className={`min-w-5 rounded-full px-1.5 text-center text-xs font-semibold tabular-nums ${active ? 'bg-card text-primary' : 'bg-card text-muted'}`}>
+              <span className={`min-w-5 rounded-full px-1.5 text-center text-xs font-semibold tabular-nums ${active ? 'bg-card text-accent' : 'bg-card text-muted'}`}>
                 {o.count}
               </span>
             )}

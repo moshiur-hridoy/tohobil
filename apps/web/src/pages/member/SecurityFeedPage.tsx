@@ -16,7 +16,7 @@ interface DeviceEvent {
 }
 
 const KIND = {
-  registered: { tone: 'bg-primary-soft text-primary', d: 'M12 5v14 M5 12h14' },
+  registered: { tone: 'bg-accent-soft text-accent', d: 'M12 5v14 M5 12h14' },
   revoked: { tone: 'bg-bad-bg text-bad', d: 'M6 6l12 12 M18 6L6 18' },
   reset: { tone: 'bg-warn-bg text-warn', d: 'M4 4v6h6 M20 20v-6h-6 M5.6 15a7 7 0 0 0 11.8 2.4 M18.4 9A7 7 0 0 0 6.6 6.6' },
 } as const;
@@ -61,7 +61,7 @@ export function SecurityFeedPage() {
                     <div className="min-w-0 flex-1">
                       <p className="break-words font-medium">
                         {e.full_name} <span className="font-normal text-muted">· {e.member_code}</span>
-                        {mine && <span className="ml-2 inline-block rounded-full bg-primary px-2 py-0.5 align-middle text-xs font-semibold text-primary-foreground">{t('securityFeed.you')}</span>}
+                        {mine && <span className="ml-2 inline-block rounded-full bg-accent-fill px-2 py-0.5 align-middle text-xs font-semibold text-on-accent">{t('securityFeed.you')}</span>}
                       </p>
                       <p className="text-sm text-muted">
                         {t(`menu.deviceEvent.${e.kind}`)} · <time dateTime={e.at}>{fmtClock(t, dhakaTime(e.at))}</time>

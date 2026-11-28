@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRef, useState, type ReactNode } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PAYMENT_METHOD_LABELS, type PaymentMethod } from '@barakah/shared';
 import { Icon, Optional, PageHeader, DateInput } from '../../components/ui';
@@ -15,9 +15,9 @@ import { api } from '../../lib/api';
 import { uuid } from '../../lib/uuid';
 import { useAuth } from '../../lib/auth';
 import { dayToIso, fmtDate, fmtInstant, fmtPeriod, todayDhaka } from '../../lib/dates';
-import { formatCount } from '../../lib/format';
-import { taka } from '../../lib/money';
+import { paisaToDecimal, parseAmountInput, taka, takaExact } from '../../lib/money';
 import { monthsAhead } from '../../lib/advance';
+import { BKASH_CHARGE_PER_THOUSAND, FILL_ORDER, bkashGross, bkashNet, fillRows, type FillPart } from '../../lib/sendMoney';
 import type { DueRow, FineRow, MandateRow, Page, PaymentDetail, PaymentInstructions, PaymentRow } from '../../lib/types';
 
 const NEEDS_TRX: PaymentMethod[] = ['bkash', 'nagad', 'bank'];
@@ -71,7 +71,7 @@ export function PayPage() {
         title={t('payment.title')}
         subtitle={t('pay.subtitle')}
         action={
-          <button type="button" onClick={() => setHowTo(true)} className="-mx-2 flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-sm font-semibold text-primary hover:bg-hover">
+          <button type="button" onClick={() => setHowTo(true)} className="-mx-2 flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-sm font-semibold text-accent hover:bg-hover">
             <Icon d={INFO_ICON} size={18} />
             {t('pay.howTo')}
           </button>
@@ -103,21 +103,26 @@ export function PayPage() {
   );
 }
 
-/** A numbered step: the page reads top to bottom as "what, how, then the details". */
-function Step({ n, title, hint, children }: { n: number; title: string; hint?: string; children: ReactNode }) {
+/**
+ * One part of the form: the page reads top to bottom as "how, what, then the details". With `flush`
+ * the content runs edge to edge (lists and bands), so a phone never shows a box inside a box.
+ */
+function Step({ title, hint, flush, children }: { title: string; hint?: string; flush?: boolean; children: ReactNode }) {
+  const id = useId();
   return (
-    <section className="rounded-[20px] border border-border bg-card" aria-labelledby={`pay-step-${n}`}>
-      <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
-        <span aria-hidden="true" className="grid h-7 w-7 flex-none place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground">{formatCount(n)}</span>
-        <div className="min-w-0">
-          <h2 id={`pay-step-${n}`} className="text-base font-bold leading-7">{title}</h2>
-          {hint && <p className="text-[0.8125rem] leading-snug text-muted">{hint}</p>}
-        </div>
+    <section className="overflow-hidden rounded-[20px] border border-border bg-card" aria-labelledby={id}>
+      <div className="border-b border-border px-4 py-3.5">
+        <h2 id={id} className="text-lg font-bold leading-7">{title}</h2>
+        {hint && <p className="text-[0.8125rem] leading-snug text-muted">{hint}</p>}
       </div>
-      <div className="p-4">{children}</div>
+      <div className={flush ? undefined : 'p-4'}>{children}</div>
     </section>
   );
 }
+
+/** A row of choices as one bar, the chosen one filled. Wraps when a cashier enables many methods. */
+const segmentBar = 'grid grid-cols-[repeat(auto-fit,minmax(4.5rem,1fr))] gap-1 rounded-[1.75rem] border border-edge bg-soft p-1';
+const segment = (chosen: boolean) => `rounded-full text-sm ${chosen ? 'bg-accent-fill font-bold text-on-accent' : 'text-ink2 hover:bg-hover'}`;
 
 type Purpose = 'dues' | 'levy' | 'special';
 const PURPOSES: readonly Purpose[] = ['dues', 'special', 'levy'];
@@ -125,9 +130,10 @@ const SEPARATE_KINDS = new Set<string>(['levy', 'special']);
 const PURPOSE_LABEL: Record<Purpose, string> = { dues: 'pay.purposeDues', levy: 'pay.purposeLevy', special: 'pay.purposeSpecial' };
 
 /**
- * The member never types an amount: they tick what they are paying for and the total is worked out
- * from the dues, so a mistyped figure (or one that includes the bKash charge) cannot unbalance the books.
- * Months are paid oldest first: ticking a month ticks every earlier one, unticking it unticks the later ones.
+ * The member ticks what they are paying for and the total is worked out from the dues, so a mistyped
+ * figure cannot unbalance the books. Months are paid oldest first: ticking a month ticks every earlier
+ * one, unticking it unticks the later ones. With bKash they may instead type what they sent (ASSUMPTIONS
+ * 134): the charge is taken out, and the rest fills the months in the order the server will pay them.
  */
 function SendMoneyForm({
   allDues,
@@ -164,6 +170,12 @@ function SendMoneyForm({
   const [file, setFile] = useState<File | null>(null);
   const [invalid, setInvalid] = useState<string | null>(null);
   const [sheet, setSheet] = useState(false);
+  // bKash only: the amount sent, charge included, as typed. While `byAmount` it drives the ticks;
+  // after a month is tapped the ticks drive it and the box shows what they cost with the charge.
+  const [sentText, setSentText] = useState('');
+  const [byAmount, setByAmount] = useState(false);
+  // The box stays folded away until "other amount" is tapped.
+  const [otherOpen, setOtherOpen] = useState(false);
   // The amount just sent: while set, a confirmation card tells the member it is with the cashier.
   const [sentAmount, setSentAmount] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -174,6 +186,14 @@ function SendMoneyForm({
   // The cashier picks which methods members see; until that loads the usual three are offered.
   const methods = instructions.data?.methods?.length ? instructions.data.methods : (['bkash', 'bank', 'cash'] as PaymentMethod[]);
   const method: PaymentMethod = chosenMethod && methods.includes(chosenMethod) ? chosenMethod : methods[0]!;
+  const canTypeAmount = method === 'bkash' && purpose === 'dues';
+  const amountMode = canTypeAmount && byAmount && sentText.trim() !== '';
+  /** Folds the box away and forgets what was typed, so a hidden figure can never be sent. */
+  const closeOther = () => {
+    setOtherOpen(false);
+    setSentText('');
+    setByAmount(false);
+  };
 
   // Levy and a special contribution are paid on their own, so a monthly payment never lands on them.
   const purposes = PURPOSES.filter((p) => p === 'dues' || openDues.some((d) => d.kind === p));
@@ -207,7 +227,7 @@ function SendMoneyForm({
   const owed = months.length;
   const [ahead, setAhead] = useState(SHOWN_AHEAD);
   if (purpose === 'dues' && lastMonthly) {
-    for (const { period, need } of monthsAhead(lastPeriod, BigInt(lastMonthly.amount_paisa), creditPaisa, ahead)) {
+    for (const { period, need } of monthsAhead(lastPeriod, BigInt(lastMonthly.amount_paisa), creditPaisa, amountMode ? MAX_AHEAD : ahead)) {
       months.push({ period, list: [], fine: 0n, principal: need, dueDate: `${period}-01`, verifying: pendingPeriods.has(period), status: 'advance' });
     }
   }
@@ -223,41 +243,90 @@ function SendMoneyForm({
     if (!nextAhead) return;
     setAhead((n) => n + 1);
   };
+  const shop = purpose === 'dues' ? (mandates.data?.find((m) => m.partner_id === shopId) ?? null) : null;
+
+  // The typed amount, spread over the rows as the confirmation will spread it.
+  const parts: FillPart[] = [
+    ...payable.flatMap((m): FillPart[] =>
+      m.list.length === 0
+        ? [{ key: m.period, amount: m.principal, order: FILL_ORDER.noDueYet }]
+        : m.list.map((d) => ({ key: m.period, amount: BigInt(d.outstanding_paisa), order: d.due_date > today ? FILL_ORDER.notYetDue : FILL_ORDER.due })),
+    ),
+    // Money sent to a shop never pays a fine (ASSUMPTIONS 131).
+    ...(shop
+      ? []
+      : [
+          ...payable.map((m): FillPart => ({ key: m.period, amount: m.fine, order: FILL_ORDER.fine })),
+          ...looseFines.map((f): FillPart => ({ key: f.id, amount: BigInt(f.outstanding_paisa), order: FILL_ORDER.fine })),
+        ]),
+  ];
+  const typedPaisa = amountMode ? parseAmountInput(sentText) : null;
+  const typedNet = typedPaisa ? bkashNet(BigInt(typedPaisa)) : 0n;
+  const fill = amountMode ? fillRows(parts, typedNet) : null;
+  const needOf = (key: string) => {
+    const m = payable.find((x) => x.period === key);
+    if (m) return m.principal + m.fine;
+    return BigInt(looseFines.find((f) => f.id === key)?.outstanding_paisa ?? '0');
+  };
+  /** Ticked: picked by hand, or paid in full by the typed amount. */
+  const ticked = fill ? new Set([...fill.covered].filter(([key, got]) => got === needOf(key)).map(([key]) => key)) : picked;
+  const touched = (key: string) => (fill ? fill.covered.has(key) : picked.has(key));
+  // With a typed amount, list as far as it reaches and a couple of months more.
+  const lastReached = months.reduce((at, m, i) => (fill?.covered.has(m.period) ? i : at), -1);
+  const shownMonths = fill ? months.slice(0, Math.max(owed + ahead, lastReached + 1 + SHOWN_AHEAD)) : months;
+
+  /** A tap starts from what is ticked now and switches back to picking by hand. */
+  const pickByHand = (change: (next: Set<string>) => void) => {
+    const next = new Set(ticked);
+    change(next);
+    setPicked(next);
+    if (fill) setAhead((n) => Math.max(n, shownMonths.length - owed));
+    setByAmount(false);
+  };
   const toggleMonth = (period: string) =>
-    setPicked((prev) => {
-      const next = new Set(prev);
-      const on = !prev.has(period);
+    pickByHand((next) => {
+      const on = !next.has(period);
       for (const m of payable) {
         if (on && m.period <= period) next.add(m.period);
         if (!on && m.period >= period) next.delete(m.period);
       }
-      return next;
     });
   const toggleFine = (id: string) =>
-    setPicked((prev) => {
-      const next = new Set(prev);
+    pickByHand((next) => {
       if (next.has(id)) next.delete(id);
       else next.add(id);
-      return next;
     });
 
-  const chosen = payable.filter((m) => picked.has(m.period));
-  const chosenLoose = looseFines.filter((f) => picked.has(f.id));
-  const fineTotal = chosen.reduce((sum, m) => sum + m.fine, 0n) + chosenLoose.reduce((sum, f) => sum + BigInt(f.outstanding_paisa), 0n);
-  const total = chosen.reduce((sum, m) => sum + m.principal, 0n) + fineTotal;
+  const chosen = payable.filter((m) => touched(m.period));
+  const chosenLoose = looseFines.filter((f) => touched(f.id));
+  const fineTotal = fill
+    ? fill.fines
+    : chosen.reduce((sum, m) => sum + m.fine, 0n) + chosenLoose.reduce((sum, f) => sum + BigInt(f.outstanding_paisa), 0n);
+  const total = fill
+    ? typedNet
+    : chosen.reduce((sum, m) => sum + m.principal, 0n) + fineTotal;
   const periods = chosen.map((m) => m.period);
+  // What the amount box shows, and the sent amount and charge when it is in use.
+  const sentValue = byAmount || sentText === '' ? sentText : total > 0n ? paisaToDecimal(bkashGross(total)) : '';
+  const sentPaisa = canTypeAmount ? parseAmountInput(sentValue) : null;
+  const charge = sentPaisa ? BigInt(sentPaisa) - total : 0n;
 
   // Bengali digits are accepted and turned into 0-9; exactly four are kept as the sender's identity.
   const senderDigits = /^\d{4}$/.test(toAscii(digits.trim())) ? toAscii(digits.trim()) : '';
   const paisa = total > 0n ? total.toString() : null;
-  const shop = purpose === 'dues' ? (mandates.data?.find((m) => m.partner_id === shopId) ?? null) : null;
   const trxNeeded = NEEDS_TRX.includes(method);
   const noteText = method === 'cash' ? cashNote.trim() : '';
+  // The cashier matches the bKash message, which shows the sent amount, so it travels in the note.
+  const note = [
+    senderDigits ? t(method === 'bank' ? 'pay.senderNoteBank' : 'pay.senderNotePhone', { digits: senderDigits }) : '',
+    sentPaisa ? t('pay.bkashNote', { sent: takaExact(sentPaisa), charge: takaExact(charge) }) : '',
+    noteText,
+  ].filter(Boolean).join('\n').slice(0, 500);
   const readOnly = !!me?.read_only;
 
   const review = () => {
     setDone(false);
-    if (!paisa) return setInvalid(t('pay.pickSomething'));
+    if (!paisa) return setInvalid(t(amountMode ? 'pay.invalidAmount' : 'pay.pickSomething'));
     if (date > todayDhaka()) return setInvalid(t('pay.invalidDate'));
     if (digits.trim() && !senderDigits) return setInvalid(t('pay.senderDigitsInvalid'));
     if (trxNeeded && !senderDigits) return setInvalid(t('errors.payment.trx_required'));
@@ -280,16 +349,16 @@ function SendMoneyForm({
       body: {
         amount_paisa: paisa,
         method,
-        ...(senderDigits ? { note: t(method === 'bank' ? 'pay.senderNoteBank' : 'pay.senderNotePhone', { digits: senderDigits }) } : {}),
-        ...(noteText ? { note: noteText } : {}),
+        ...(note ? { note } : {}),
         paid_at: dayToIso(date),
         ...(purpose !== 'dues' ? { purpose } : {}),
-        ...(periods.length > 0 ? { for_periods: periods } : {}),
+        ...(periods.length > 0 ? { for_periods: periods.slice(0, 24) } : {}),
         ...(proof ? { proof_file_id: proof } : {}),
         ...(shop ? { partner_id: shop.partner_id } : {}),
       },
     });
     setPicked(new Set());
+    closeOther();
     setAhead(SHOWN_AHEAD);
     setDigits('');
     setCashNote('');
@@ -297,7 +366,7 @@ function SendMoneyForm({
     setShopId(null);
     setFile(null);
     setDone(true);
-    setSentAmount(taka(paisa as string));
+    setSentAmount(takaExact(paisa as string));
     window.scrollTo({ top: 0 });
     onSent();
   };
@@ -314,17 +383,34 @@ function SendMoneyForm({
         review();
       }}
     >
-      <Step n={1} title={t('pay.step1')}>
+      <Step title={t('pay.step2')}>
+        <div role="radiogroup" aria-label={t('pay.step2')} className={segmentBar}>
+          {methods.map((m) => (
+            <button
+              key={m}
+              type="button"
+              role="radio"
+              aria-checked={method === m}
+              onClick={() => setMethod(m)}
+              className={`h-11 ${segment(method === m)}`}
+            >
+              {t(`pay.via.${m}`)}
+            </button>
+          ))}
+        </div>
+      </Step>
+
+      <Step flush title={t('pay.step1')}>
         {purposes.length > 1 && (
-          <div role="radiogroup" aria-label={t('pay.purposeLabel')} className="mb-3 flex rounded-2xl border border-border bg-background p-1">
+          <div role="radiogroup" aria-label={t('pay.purposeLabel')} className={`m-4 ${segmentBar}`}>
             {purposes.map((p) => (
               <button
                 key={p}
                 type="button"
                 role="radio"
                 aria-checked={purpose === p}
-                onClick={() => { setPurpose(p); setPicked(new Set()); }}
-                className={`flex-1 rounded-xl py-2 text-sm font-bold ${purpose === p ? 'bg-primary-soft text-primary' : 'text-muted'}`}
+                onClick={() => { setPurpose(p); setPicked(new Set()); closeOther(); }}
+                className={`py-2 ${segment(purpose === p)}`}
               >
                 {t(PURPOSE_LABEL[p])}
               </button>
@@ -332,25 +418,28 @@ function SendMoneyForm({
           </div>
         )}
 
-        {owed + looseFines.length === 0 && months.length > 0 && <p className="mb-2 rounded-2xl bg-ok-bg p-3 text-center text-sm font-semibold text-ok">{t('pay.noDuesAhead')}</p>}
+        {owed + looseFines.length === 0 && months.length > 0 && <p className="bg-ok-bg px-4 py-3 text-center text-sm font-semibold text-ok">{t('pay.noDuesAhead')}</p>}
         {months.length + looseFines.length === 0 ? (
-          <p className="rounded-2xl bg-ok-bg p-4 text-center font-semibold text-ok">{t('pay.noDues')}</p>
+          <p className="bg-ok-bg p-4 text-center font-semibold text-ok">{t('pay.noDues')}</p>
         ) : (
           // min-w-0: a fieldset is otherwise as wide as its longest row, which overflows at large text.
           <fieldset className="min-w-0">
             <legend className="sr-only">{t('pay.step1')}</legend>
-            <ul className="space-y-2">
-              {months.map((m) => {
+            <ul className="divide-y divide-border">
+              {shownMonths.map((m) => {
+                const got = fill?.covered.get(m.period) ?? 0n;
+                const part = got > 0n && got < m.principal + m.fine;
                 const kinds = [...new Set(m.list.map((d) => d.kind))].filter((k) => k !== 'monthly');
                 return (
                   <PickRow
                     key={m.period}
-                    checked={!m.verifying && picked.has(m.period)}
+                    checked={!m.verifying && ticked.has(m.period)}
+                    partial={part}
                     disabled={m.verifying}
                     onToggle={() => toggleMonth(m.period)}
                     title={`${fmtPeriod(m.period)}${kinds.length ? ` · ${kinds.map((k) => t(`pay.dueKind.${k}`)).join(', ')}` : ''}`}
-                    sub={m.fine > 0n ? t('pay.withFine', { due: taka(m.principal), fine: taka(m.fine) }) : m.list.length === 0 ? undefined : t('pay.dueDate', { date: fmtDate(m.dueDate) })}
-                    subBad={m.fine > 0n}
+                    sub={part ? t('pay.rowPartial', { paid: takaExact(got), left: takaExact(m.principal + m.fine - got) }) : m.fine > 0n ? t('pay.withFine', { due: taka(m.principal), fine: taka(m.fine) }) : m.list.length === 0 ? undefined : t('pay.dueDate', { date: fmtDate(m.dueDate) })}
+                    subBad={!part && m.fine > 0n}
                     amount={taka(m.principal + m.fine)}
                     status={m.verifying ? 'pending' : m.period > currentPeriod ? 'advance' : m.status}
                   />
@@ -359,9 +448,11 @@ function SendMoneyForm({
               {looseFines.map((f) => (
                 <PickRow
                   key={f.id}
-                  checked={picked.has(f.id)}
+                  checked={ticked.has(f.id)}
+                  partial={touched(f.id) && !ticked.has(f.id)}
                   onToggle={() => toggleFine(f.id)}
                   title={`${t('pay.fineLabel')}${f.period ? ` · ${fmtPeriod(f.period)}` : ''}`}
+                  sub={fill && touched(f.id) && !ticked.has(f.id) ? t('pay.rowPartial', { paid: takaExact(fill.covered.get(f.id) ?? 0n), left: takaExact(BigInt(f.outstanding_paisa) - (fill.covered.get(f.id) ?? 0n)) }) : undefined}
                   amount={taka(f.outstanding_paisa)}
                   status="overdue"
                 />
@@ -369,43 +460,50 @@ function SendMoneyForm({
             </ul>
           </fieldset>
         )}
-        {nextAhead && (
-          <button type="button" onClick={addAhead} className="mt-1 flex min-h-11 items-center gap-1.5 rounded-xl px-1 text-sm font-semibold text-primary hover:bg-hover">
-            <Icon d="M12 5v14M5 12h14" size={16} sw={2} />
-            {t('pay.addAhead')}
-          </button>
-        )}
-        {months.slice(owed).some((m) => picked.has(m.period)) && <p className="field-hint">{t('pay.aheadHint')}</p>}
+        <div className="flex flex-wrap items-center gap-x-2 border-t border-border px-2 py-2.5 empty:hidden">
+          {nextAhead && !fill && (
+            <button type="button" onClick={addAhead} className="flex min-h-12 items-center gap-1 rounded-xl px-2 text-[0.8125rem] font-semibold text-accent hover:bg-hover">
+              <Icon d="M12 5v14M5 12h14" size={16} sw={2} />
+              {t('pay.addAhead')}
+            </button>
+          )}
+          {canTypeAmount && (
+            <button type="button" aria-expanded={otherOpen} onClick={() => (otherOpen ? closeOther() : setOtherOpen(true))} className="ml-auto flex min-h-12 items-center rounded-xl px-2 text-[0.8125rem] font-semibold text-accent underline underline-offset-4 hover:bg-hover">
+              {t('pay.otherAmount')}
+            </button>
+          )}
+        </div>
+        {months.slice(owed).some((m) => touched(m.period)) && <p className="field-hint px-4 pb-3">{t('pay.aheadHint')}</p>}
 
-        <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-primary-soft px-4 py-3" aria-live="polite">
+        {canTypeAmount && otherOpen && (
+          <div className="px-4 pb-4 pt-1">
+            <label className="block">
+              <span className={label}>{t('pay.sentAmount')}</span>
+              <input className={field} autoFocus inputMode="decimal" value={sentValue} onChange={(e) => { setSentText(e.target.value); setByAmount(true); }} placeholder={t('pay.sentAmountExample')} autoComplete="off" />
+              <span className={hint}>{t('pay.sentAmountHint')}</span>
+            </label>
+            {sentPaisa && (
+              <dl className="mt-3 space-y-1 text-sm">
+                <div className="flex justify-between gap-3"><dt className="text-ink2">{t('pay.bkashSent')}</dt><dd className="font-semibold">{takaExact(sentPaisa)}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-ink2">{t('pay.bkashCharge', { rate: takaExact(BKASH_CHARGE_PER_THOUSAND) })}</dt><dd className="font-semibold">−{takaExact(charge)}</dd></div>
+              </dl>
+            )}
+            {fill && fill.leftover > 0n && <p className="mt-2 text-sm text-warn">{t('pay.leftover', { amount: takaExact(fill.leftover) })}</p>}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between gap-3 border-t border-border bg-accent-soft px-4 py-3" aria-live="polite">
           <div>
-            <p className="text-[0.9375rem] font-semibold text-ink2">{t('pay.payableTotal')}</p>
+            <p className="text-[0.9375rem] font-semibold text-ink2">{t(sentPaisa ? 'pay.totalCredit' : 'pay.payableTotal')}</p>
             {fineTotal > 0n && <p className="text-xs font-semibold text-bad">{t('pay.includesFine', { fine: taka(fineTotal) })}</p>}
           </div>
-          <p data-testid="pay-total" className="text-[1.75rem] font-bold leading-tight text-primary">{taka(total)}</p>
-        </div>
-      </Step>
-
-      <Step n={2} title={t('pay.step2')}>
-        <div role="radiogroup" aria-label={t('pay.step2')} className="grid grid-cols-3 gap-2">
-          {methods.map((m) => (
-            <button
-              key={m}
-              type="button"
-              role="radio"
-              aria-checked={method === m}
-              onClick={() => setMethod(m)}
-              className={`h-12 rounded-[14px] border-[1.5px] text-sm ${method === m ? 'border-primary bg-primary-soft font-bold text-primary' : 'border-border bg-card text-ink2'}`}
-            >
-              {t(`pay.via.${m}`)}
-            </button>
-          ))}
+          <p data-testid="pay-total" className="text-[1.75rem] font-bold leading-tight text-accent">{takaExact(total)}</p>
         </div>
       </Step>
 
       {purpose === 'dues' && (mandates.data?.length ?? 0) > 0 && (
-        <Step n={3} title={t('pay.whereTitle')}>
-          <div role="radiogroup" aria-label={t('pay.whereTitle')} className="grid gap-2">
+        <Step flush title={t('pay.whereTitle')}>
+          <div role="radiogroup" aria-label={t('pay.whereTitle')} className="divide-y divide-border">
             {[null, ...mandates.data!].map((m) => (
               <button
                 key={m?.id ?? 'fund'}
@@ -413,17 +511,18 @@ function SendMoneyForm({
                 role="radio"
                 aria-checked={(shopId ?? null) === (m?.partner_id ?? null)}
                 onClick={() => setShopId(m?.partner_id ?? null)}
-                className={`min-h-12 rounded-[14px] border-[1.5px] px-4 py-2 text-left text-sm ${(shopId ?? null) === (m?.partner_id ?? null) ? 'border-primary bg-primary-soft font-bold text-primary' : 'border-border bg-card text-ink2'}`}
+                className={`flex min-h-12 w-full items-center justify-between gap-3 px-4 py-2 text-left text-sm ${(shopId ?? null) === (m?.partner_id ?? null) ? 'bg-accent-soft font-bold text-accent' : 'text-ink2 hover:bg-hover'}`}
               >
                 {m ? t('pay.whereShop', { name: m.partner_name }) : t('pay.whereFund')}
+                {(shopId ?? null) === (m?.partner_id ?? null) && <Icon d="M5 12l5 5 9-10" size={18} sw={2.4} />}
               </button>
             ))}
           </div>
-          {shop && <p className="field-hint mt-2">{t(fineTotal > 0n ? 'pay.whereShopFineHint' : 'pay.whereShopHint', { name: shop.partner_name })}</p>}
+          {shop && <p className="field-hint border-t border-border px-4 py-3">{t(fineTotal > 0n ? 'pay.whereShopFineHint' : 'pay.whereShopHint', { name: shop.partner_name })}</p>}
         </Step>
       )}
 
-      <Step n={purpose === 'dues' && (mandates.data?.length ?? 0) > 0 ? 4 : 3} title={t('pay.step3')} hint={t('pay.step3Hint')}>
+      <Step title={t('pay.step3')} hint={t('pay.step3Hint')}>
         <div className="space-y-3.5">
           {trxNeeded && (
             <label className="block">
@@ -457,7 +556,7 @@ function SendMoneyForm({
 
       <button type="submit" disabled={readOnly} className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-[1.0625rem] font-bold text-primary-foreground disabled:opacity-50">
         {t('pay.send')}
-        {total > 0n && <span>· {taka(total)}</span>}
+        {total > 0n && <span>· {takaExact(total)}</span>}
       </button>
       {readOnly && <p className="text-warn">{t('errors.auth.read_only')}</p>}
 
@@ -474,7 +573,9 @@ function SendMoneyForm({
       </Dialog.Root>
 
       <ConfirmSheet open={sheet} onClose={() => setSheet(false)} title={t('pay.reviewTitle')} confirmLabel={t('pay.send')} onConfirm={send}>
-        <SheetRow label={t('payment.amount')} value={paisa ? taka(paisa) : ''} strong />
+        <SheetRow label={t('payment.amount')} value={paisa ? takaExact(paisa) : ''} strong />
+        {sentPaisa && <SheetRow label={t('pay.bkashSent')} value={takaExact(sentPaisa)} />}
+        {sentPaisa && <SheetRow label={t('pay.bkashCharge', { rate: takaExact(BKASH_CHARGE_PER_THOUSAND) })} value={`−${takaExact(charge)}`} />}
         <SheetRow label={t('payment.method')} value={PAYMENT_METHOD_LABELS[method].bn} />
         {shop && <SheetRow label={t('pay.whereTitle')} value={shop.partner_name} />}
         {senderDigits && <SheetRow label={t(method === 'bank' ? 'pay.senderDigitsBank' : 'pay.senderDigitsPhone')} value={senderDigits} />}
@@ -568,8 +669,10 @@ function CopyRow({ label, value }: { label: string; value: string }) {
 
 const toAscii = (v: string): string => v.replace(/[০-৯]/g, (c) => String(c.charCodeAt(0) - 0x09e6));
 
-function PickRow({ checked, disabled, onToggle, title, sub, subBad, amount, status }: {
+function PickRow({ checked, partial, disabled, onToggle, title, sub, subBad, amount, status }: {
   checked: boolean;
+  /** The typed amount reaches this row but does not pay it in full. */
+  partial?: boolean;
   disabled?: boolean;
   onToggle: () => void;
   title: string;
@@ -580,11 +683,11 @@ function PickRow({ checked, disabled, onToggle, title, sub, subBad, amount, stat
 }) {
   return (
     <li>
-      <label className={`flex min-h-16 items-center gap-3 rounded-[14px] border-[1.5px] px-3.5 py-2.5 ${disabled ? 'cursor-not-allowed border-border bg-card opacity-60' : checked ? 'cursor-pointer border-primary bg-primary-soft' : 'cursor-pointer border-border bg-card'}`}>
-        <input type="checkbox" checked={checked} disabled={disabled} onChange={onToggle} className="h-5 w-5 shrink-0 accent-[var(--primary)]" />
+      <label className={`flex min-h-16 items-center gap-3 px-4 py-2.5 ${disabled ? 'cursor-not-allowed opacity-60' : checked ? 'cursor-pointer bg-accent-soft' : partial ? 'cursor-pointer bg-warn-bg' : 'cursor-pointer hover:bg-hover'}`}>
+        <input type="checkbox" checked={checked} disabled={disabled} onChange={onToggle} className="h-5 w-5 shrink-0 accent-[var(--accent-fill)]" />
         <span className="min-w-0 flex-1">
           <span className="block text-[0.9375rem] font-semibold">{title}</span>
-          {sub && <span className={`block text-xs ${subBad ? 'font-semibold text-bad' : 'text-muted'}`}>{sub}</span>}
+          {sub && <span className={`block text-xs ${partial ? 'font-semibold text-warn' : subBad ? 'font-semibold text-bad' : 'text-muted'}`}>{sub}</span>}
         </span>
         <span className="flex flex-col items-end gap-1">
           <span className="text-base font-bold">{amount}</span>
@@ -601,6 +704,9 @@ const HISTORY_MORE = 10;
 
 function History({ memberId }: { memberId: string | undefined }) {
   const { t } = useTranslation();
+  // Folded until asked for: the page is for sending money, the history is looked at now and then.
+  const [open, setOpen] = useState(false);
+  const bodyId = useId();
   const q = useInfiniteQuery({
     queryKey: ['payments', 'me', memberId],
     enabled: !!memberId,
@@ -612,8 +718,13 @@ function History({ memberId }: { memberId: string | undefined }) {
 
   return (
     <section className="rounded-[20px] border border-border bg-card">
-      <h3 className="border-b border-border px-4 py-3.5 text-base font-bold leading-7">{t('pay.history')}</h3>
-      <div className="px-4 pb-4 pt-1">
+      <h3 className="text-lg font-bold leading-7">
+        <button type="button" aria-expanded={open} aria-controls={bodyId} onClick={() => setOpen((o) => !o)} className={`flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-hover ${open ? 'rounded-t-[20px] border-b border-border' : 'rounded-[20px]'}`}>
+          <span className="min-w-0 flex-1">{t('pay.history')}</span>
+          <Icon d={open ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'} size={22} sw={2} />
+        </button>
+      </h3>
+      <div id={bodyId} hidden={!open} className="px-4 pb-4 pt-1">
         {q.error ? (
           <LoadError error={q.error} onRetry={() => void q.refetch()} />
         ) : !q.data ? (

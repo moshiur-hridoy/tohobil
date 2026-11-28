@@ -121,7 +121,7 @@ export function Switch({ checked, onChange, label, disabled = false }: { checked
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`relative h-7 w-12 shrink-0 rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 ${checked ? 'bg-primary' : 'bg-input'}`}
+      className={`relative h-7 w-12 shrink-0 rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 ${checked ? 'bg-accent' : 'bg-input'}`}
     >
       <span aria-hidden="true" className={`absolute top-0.5 h-6 w-6 rounded-full shadow transition-[left] ${checked ? 'left-[1.375rem] bg-card' : 'left-0.5 bg-white'}`} />
     </button>

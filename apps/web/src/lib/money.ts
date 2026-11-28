@@ -1,11 +1,14 @@
 import { tryParseBDT } from '@barakah/shared';
-import { formatTaka, localDigits } from './format';
+import { formatTaka, getDigits, localDigits } from './format';
 
 /** A paisa string from the API as "৳৫,০০০". */
 /** Red for any amount below zero, so a negative balance is never missed. */
 export const negClass = (paisa: string | bigint | null): string => (paisa !== null && BigInt(paisa) < 0n ? 'text-bad' : '');
 
 export const taka = (paisa: string | bigint): string => formatTaka(typeof paisa === 'bigint' ? paisa : BigInt(paisa));
+
+/** The same with the paisa shown when there are any ("৳১৪,৭২৭.৫৪"), for a figure that must add up. */
+export const takaExact = (paisa: string | bigint): string => formatTaka(BigInt(paisa), getDigits(), true);
 
 /** Sum of paisa strings. */
 export const sumPaisa = (values: Array<string | null | undefined>): bigint =>

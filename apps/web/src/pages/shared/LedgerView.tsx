@@ -129,7 +129,7 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
           {(cash.length > 0 ? cash : NAV_CASH_ACCOUNTS.map((code) => ({ code, natural_balance_paisa: null }))).map((a) => (
             <StatTile
               key={a.code}
-              tone={account === a.code ? 'bg-primary text-primary-foreground' : 'bg-primary-soft text-primary'}
+              tone={account === a.code ? 'bg-accent-fill text-on-accent' : 'bg-accent-soft text-accent'}
               icon={ICONS.wallet}
               label={t(`cashAccount.${a.code}`, { defaultValue: a.code })}
               value={a.natural_balance_paisa === null ? null : taka(a.natural_balance_paisa)}
@@ -303,7 +303,7 @@ export function LedgerView({ variant, children }: { variant: 'member' | 'admin';
           {account || memberId || from || to ? (
             <button
               type="button"
-              className="h-9 rounded-xl px-2 text-sm font-semibold text-primary"
+              className="h-9 rounded-xl px-2 text-sm font-semibold text-accent"
               onClick={() => { setAccount(''); setMemberId(''); setFrom(''); setTo(''); }}
             >
               {t('ledgerEntry.clearFilters')}

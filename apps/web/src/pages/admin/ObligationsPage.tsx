@@ -58,7 +58,7 @@ export function ObligationsPage() {
       <AdminHeader title={t('obligations.title')} subtitle={t('adminUi.sub.obligations')} />
 
       <StatGrid>
-        <StatTile tone="bg-primary-soft text-primary" icon={ICONS.layers} label={t('adminUi.obligations.statInstalments')} value={financing.data ? formatCount(unpaid.length) : null}
+        <StatTile tone="bg-accent-soft text-accent" icon={ICONS.layers} label={t('adminUi.obligations.statInstalments')} value={financing.data ? formatCount(unpaid.length) : null}
           sub={financing.data && unpaid.length > 0 ? taka(unpaid.reduce((n, i) => n + BigInt(i.amount_paisa), 0n)) : undefined} />
         <StatTile tone="bg-bad-bg text-bad" icon={ICONS.alert} label={t('adminUi.obligations.statNext')}
           value={financing.data ? (next ? fmtDate(next.due_on) : '—') : null}
@@ -67,7 +67,7 @@ export function ObligationsPage() {
 
       {(special.error || (special.data && special.data.items.length > 0)) && (
         <Card className="px-5 pb-3 pt-5 sm:px-6">
-          <CardHead icon={ICONS.layers} tone="bg-primary-soft text-primary" title={t('obligations.special')} sub={t('obligations.specialHint')} />
+          <CardHead icon={ICONS.layers} tone="bg-accent-soft text-accent" title={t('obligations.special')} sub={t('obligations.specialHint')} />
           {special.error ? (
             <LoadError error={special.error} onRetry={() => void special.refetch()} />
           ) : (
@@ -125,7 +125,7 @@ export function ObligationsPage() {
                     </div>
                     <p className="text-xs text-muted">{f.counterparty} · {formatCount(paid)}/{formatCount(f.instalments.length)}</p>
                     <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-soft">
-                      <div className="h-full rounded-full bg-primary" style={{ width: `${f.instalments.length ? Math.round((paid * 100) / f.instalments.length) : 0}%` }} />
+                      <div className="h-full rounded-full bg-accent" style={{ width: `${f.instalments.length ? Math.round((paid * 100) / f.instalments.length) : 0}%` }} />
                     </div>
                     <ul className="mt-2 text-sm">
                       {f.instalments.map((i) => (

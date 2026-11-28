@@ -121,7 +121,7 @@ export function AdminRentPage() {
           sub={expected.data && totalExpected > 0n ? `${formatCount(pct(totalReceived, totalExpected))}%` : undefined} />
         <StatTile tone="bg-warn-bg text-warn" icon={ICONS.clock} label={t('adminUi.rent.statRemaining')} value={expected.data ? taka(totalExpected - totalReceived) : null}
           valueClass={totalExpected - totalReceived > 0n ? 'text-warn' : ''} />
-        <StatTile tone="bg-primary-soft text-primary" icon={ICONS.layers} label={t('adminUi.rent.statStreams')} value={streams.data ? formatCount(streams.data.items.length) : null} />
+        <StatTile tone="bg-accent-soft text-accent" icon={ICONS.layers} label={t('adminUi.rent.statStreams')} value={streams.data ? formatCount(streams.data.items.length) : null} />
       </StatGrid>
 
       <SplitLayout
@@ -150,7 +150,7 @@ export function AdminRentPage() {
                       <div className="w-40 min-w-0">
                         <p className="text-right text-[0.8125rem] tabular-nums"><b>{taka(e.received_paisa)}</b> <span className="text-muted">/ {taka(e.amount_paisa)}</span></p>
                         <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-soft">
-                          <div className={`h-full rounded-full ${left > 0n ? 'bg-warn' : 'bg-primary'}`} style={{ width: `${p}%` }} />
+                          <div className={`h-full rounded-full ${left > 0n ? 'bg-warn' : 'bg-accent'}`} style={{ width: `${p}%` }} />
                         </div>
                       </div>
                       <div className="w-24 text-right">

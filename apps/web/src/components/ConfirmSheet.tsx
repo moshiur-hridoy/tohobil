@@ -74,7 +74,7 @@ export function ConfirmSheet({ open, onClose, title, children, confirmLabel, onC
                 </p>
               )}
               {needsStepUp && (
-                <Link to="/totp" className="mt-2 inline-block font-medium text-primary underline">
+                <Link to="/totp" className="mt-2 inline-block font-medium text-accent underline">
                   {t('common.goToTotp')}
                 </Link>
               )}

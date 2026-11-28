@@ -56,9 +56,9 @@ export function MenuPage() {
   const tiles = [
     { to: '/menu/constitution', label: t('menuLinks.constitution'), tone: 'bg-blue-bg text-blue', d: 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z M5 17a3 3 0 0 1 3-3h11' },
     { to: '/menu/notices', label: t('menuLinks.notices'), tone: 'bg-warn-bg text-warn', d: 'M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7 M10 20a2 2 0 0 0 4 0' },
-    { to: '/menu/ledger', label: t('menuLinks.ledger'), tone: 'bg-primary-soft text-primary', d: 'M6 3h8l4 4v14H6z M14 3v4h4 M9 13h6 M9 17h6' },
+    { to: '/menu/ledger', label: t('menuLinks.ledger'), tone: 'bg-accent-soft text-accent', d: 'M6 3h8l4 4v14H6z M14 3v4h4 M9 13h6 M9 17h6' },
     { to: '/menu/settlement', label: t('menuLinks.settlement'), tone: 'bg-vio-bg text-vio', d: 'M4 12h12 M12 7l5 5-5 5 M20 5v14' },
-    { to: '/menu/members', label: t('menuLinks.members'), tone: 'bg-primary-soft text-primary', d: 'M16 20v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1 M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7 M20 20v-1a4 4 0 0 0-3-3.8 M16 4.2a3.5 3.5 0 0 1 0 6.6' },
+    { to: '/menu/members', label: t('menuLinks.members'), tone: 'bg-accent-soft text-accent', d: 'M16 20v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1 M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7 M20 20v-1a4 4 0 0 0-3-3.8 M16 4.2a3.5 3.5 0 0 1 0 6.6' },
   ];
 
   return (
@@ -68,7 +68,7 @@ export function MenuPage() {
       {me && (
         <section className={CARD + ' flex items-center gap-3'}>
           <button type="button" onClick={() => setPhotoOpen(true)} aria-label={t('photo.edit')} className="relative shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            <Avatar fileId={myPhoto} fallback={me.full_name.trim().charAt(0)} className="h-[50px] w-[50px] bg-primary text-xl font-bold text-primary-foreground" />
+            <Avatar fileId={myPhoto} fallback={me.full_name.trim().charAt(0)} className="h-[50px] w-[50px] bg-accent-fill text-xl font-bold text-on-accent" />
             <span aria-hidden="true" className="absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full border-2 border-card bg-foreground text-background">
               <Icon d="M4 8h3l2-3h6l2 3h3v11H4z M12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" size={11} sw={2.2} />
             </span>
@@ -87,7 +87,7 @@ export function MenuPage() {
       {/* Cashier and auditor reach the admin pages from a phone too (the auditor may have no computer). */}
       {privileged && (
         <Link to="/admin" className="flex items-center gap-3 rounded-[18px] border border-border bg-card p-3.5 text-foreground">
-          <Chip tone="bg-primary-soft text-primary" size={40} iconSize={22} d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />
+          <Chip tone="bg-accent-soft text-accent" size={40} iconSize={22} d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />
           <span className="min-w-0 flex-1">
             <span className="block font-semibold">{t('menu.adminPanel')}</span>
             <span className="block text-sm text-muted">{t('menu.adminPanelHint')}</span>
@@ -224,7 +224,7 @@ function LinkRow({ to, icon, label, hint, hintClass = 'text-muted', value }: { t
 function PdfRow({ label, hint, disabled, onClick }: { label: string; hint: string; disabled?: boolean; onClick: () => void }) {
   return (
     <button type="button" disabled={disabled} onClick={onClick} className={ROW + ' w-full text-left text-foreground hover:bg-hover disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent'}>
-      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
+      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent">
         <Icon d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5zm0 0v5h5M9 13h6M9 17h4" size={20} />
       </span>
       <span className="min-w-0 flex-1">

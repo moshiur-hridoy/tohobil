@@ -46,7 +46,7 @@ export function MembersPage() {
             const mine = register.data?.items.filter((r) => r.member_id === m.id) ?? [];
             return (
               <li key={m.id} className="flex gap-3 rounded-[18px] border border-border bg-card p-3 shadow-card">
-                <Avatar fileId={m.photo_file_id} fallback={m.full_name.trim().charAt(0)} className="h-11 w-11 bg-primary-soft font-bold text-primary" />
+                <Avatar fileId={m.photo_file_id} fallback={m.full_name.trim().charAt(0)} className="h-11 w-11 bg-accent-soft font-bold text-accent" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-3">
                     <span className="flex min-w-0 flex-wrap items-center gap-2 font-semibold">{m.code} · {m.full_name} <RoleBadges roles={m.roles} /><AheadBadge months={m.ahead_months} /></span>
@@ -59,7 +59,7 @@ export function MembersPage() {
                   </div>
                   {mine.length > 0 && (
                     <details className="mt-2 text-sm">
-                      <summary className="cursor-pointer text-primary">{t('membersPage.register')}</summary>
+                      <summary className="cursor-pointer text-accent">{t('membersPage.register')}</summary>
                       <ul className="mt-1 space-y-1">
                         {mine.map((r) => (
                           <li key={r.share_no}>

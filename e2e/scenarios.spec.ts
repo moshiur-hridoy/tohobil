@@ -93,6 +93,8 @@ test('(2) member submits, cashier pastes the SMS and approves, member sees it co
 
   // The member sees it confirmed, with a receipt, and the waiting banner is gone.
   await member.page.goto('/pay');
+  // The history starts folded: open it first.
+  await member.page.getByRole('button', { name: tr('pay.history') }).click();
   const item = member.page.getByRole('button', { name: new RegExp(tr('payment.status.confirmed')) }).first();
   await expect(item).toBeVisible();
   await item.click();

@@ -427,6 +427,10 @@ export interface ProposalSummary {
   can_vote?: boolean;
   /** How many have voted (never what); only sent to the cashier and the auditor. */
   voted_count?: number;
+  /** In a list: what the proposal is about (the written fields are shown under its title). */
+  payload?: Record<string, unknown>;
+  /** In a list: who has voted (never what), in member order; empty for a draft. */
+  voters?: Array<{ code: string; full_name: string; voted: boolean }>;
   /** Cashier and auditor only: the outcome is already certain, so an open vote may be closed early. */
   can_close_early?: boolean;
   opens_at: string | null;

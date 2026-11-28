@@ -2,6 +2,12 @@
  * All colours, radii, spacing, and fonts come from CSS variables, so this single file can be
  * restyled without touching components. Colours are plain hex on purpose (designer friendly).
  *
+ * Colour roles (owner decision, ASSUMPTIONS 133):
+ *   --primary  lime/green: ONLY the main thing to do on a screen (a filled button).
+ *   --accent   deep indigo: chosen tab or menu item, links, icons, progress, the dark brand cards.
+ *   neutrals   surfaces, labels, finished states.
+ *   --ok       a soft green for good news about money (paid, profit); --warn waiting; --bad owed or refused.
+ *
  * Contrast (WCAG AA, 4.5:1 for text) is checked against --background/--card for the status colours
  * that are used as text: --ok, --warn, --bad, --muted. Keep that in mind when restyling.
  */
@@ -22,39 +28,45 @@
 :root {
   /* 1. Palette ------------------------------------------------------------------------------ */
   /* Brand: lime from the logo, its green, and the dark olive of the wordmark */
-  --ref-lime-100: #eaf7d3;
   --ref-lime-300: #c7fa4e;
   --ref-lime-400: #aff900;
   --ref-green-700: #007a24; /* the logo green (#008427), one notch darker so text on tinted surfaces passes AA */
   --ref-olive-950: #1d2900;
-  --ref-olive-900: #26320a;
-  --ref-olive-800: #354800;
-  --ref-olive-700: #4b6212;
-  --ref-olive-600: #5c7a14;
+
+  /* Accent: deep indigo, set against the lime */
+  --ref-indigo-100: #e9ebfd;
+  --ref-indigo-300: #aab4ff;
+  --ref-indigo-500: #4a45b8;
+  --ref-indigo-600: #3d3aa8;
+  --ref-indigo-700: #3730a3;
+  --ref-indigo-800: #2a2670;
+  --ref-indigo-900: #242852;
+  --ref-indigo-950: #1c1a4a;
 
   /* Neutrals (light surfaces and ink) */
   --ref-white: #ffffff;
-  --ref-gray-50: #f6f8f7;
-  --ref-gray-100: #f3f4f6;
-  --ref-gray-150: #eef1ef;
-  --ref-gray-200: #e4e9e6;
+  --ref-gray-50: #f6f7f9;
+  --ref-gray-100: #f2f3f6;
+  --ref-gray-150: #edeff3;
+  --ref-gray-200: #e3e6eb;
+  --ref-gray-250: #dadee5;
   --ref-gray-400: #868e9b;
-  --ref-gray-600: #5d6a64;
-  --ref-gray-700: #44534c;
-  --ref-gray-950: #0f1b16;
+  --ref-gray-600: #5b6370;
+  --ref-gray-700: #434a56;
+  --ref-gray-950: #12141a;
 
-  /* Neutrals (dark surfaces and ink): green-tinted so they sit with the lime/olive brand. Surfaces
+  /* Neutrals (dark surfaces and ink): no tint, so the lime and the indigo stand out. Surfaces
      step up in lightness with elevation: page 950 < card 900 < inset 850 < hover 800. */
-  --ref-night-50: #ecf2ee;
-  --ref-night-200: #bccac2;
-  --ref-night-400: #8f9e96;
-  --ref-night-500: #617369;
-  --ref-night-700: #2a362f;
-  --ref-night-800: #222d27;
-  --ref-night-820: #1e2722; /* card outlines: barely there, the card is told apart by its lighter fill */
-  --ref-night-850: #1b241f;
-  --ref-night-900: #131a16;
-  --ref-night-950: #0b100d;
+  --ref-night-50: #eef0f4;
+  --ref-night-200: #c5cad3;
+  --ref-night-400: #949ba7;
+  --ref-night-500: #6b7280;
+  --ref-night-700: #2f333c;
+  --ref-night-800: #262a32;
+  --ref-night-820: #24272e; /* card outlines: barely there, the card is told apart by its lighter fill */
+  --ref-night-850: #1e2127;
+  --ref-night-900: #16181d;
+  --ref-night-950: #0e0f13;
 
   /* Status hues: a strong text/fill stop and a tinted background stop per mode */
   --ref-ok-600: #12794f;
@@ -92,7 +104,8 @@
   --soft: var(--ref-gray-150);
   --border: var(--ref-gray-200);
   --track: var(--ref-gray-200); /* empty part of toggles, progress bars, step lines */
-  --input: var(--ref-gray-400); /* field outlines need 3:1 against the page (WCAG 1.4.11) */
+  --edge: var(--ref-gray-250); /* the faint outline of a form field (owner choice) */
+  --input: var(--ref-gray-400); /* outlines of toggles, PIN dots and the like: 3:1 against the page (WCAG 1.4.11) */
 
   /* Text */
   --foreground: var(--ref-gray-950);
@@ -100,13 +113,19 @@
   --ink2: var(--ref-gray-700); /* secondary text */
   --muted: var(--ref-gray-600); /* tertiary text, captions */
 
-  /* Brand / interactive. --primary is both a fill (buttons) and text/outline on a surface, so it
+  /* The main action. --primary is both a fill (buttons) and text/outline on a surface, so it
      must pass against --primary-foreground AND against the surfaces: on light, the logo green. */
   --primary: var(--ref-green-700);
   --primary-foreground: var(--ref-white);
-  --primary-soft: var(--ref-lime-100); /* tinted background for the active item */
-  --primary-deep: var(--ref-olive-950); /* solid dark brand surface, pressed states */
-  --ring: var(--ref-green-700);
+  --accent: var(--ref-indigo-700); /* links, icons, progress, outlines of the chosen thing */
+  --accent-soft: var(--ref-indigo-100); /* tinted background for the active item */
+  --accent-fill: var(--ref-indigo-700); /* solid: the chosen tab or choice */
+  --on-accent: var(--ref-white);
+  --ring: var(--ref-indigo-700);
+
+  /* The round "+" in the member's tab bar: white, in both themes */
+  --fab: var(--ref-white);
+  --on-fab: var(--ref-gray-950);
 
   /* Status */
   --ok: var(--ref-ok-600);
@@ -122,11 +141,11 @@
   --vio-bg: var(--ref-violet-100);
 
   /* 3. Component: the outstanding card on the member home screen ------------------------------- */
-  --hero: var(--ref-olive-950);
+  --hero: var(--ref-indigo-950);
   --on-hero: var(--ref-white);
   --on-hero-muted: var(--ref-night-200);
-  --hero-chip: var(--ref-olive-700);
-  --hero-icon: var(--ref-olive-700);
+  --hero-chip: var(--ref-indigo-700);
+  --hero-icon: var(--ref-indigo-700);
   --hero-action: var(--ref-lime-400);
   --on-hero-action: var(--ref-olive-950);
   /* The same card in its warning colours, while the member owes something (.hero-alert below) */
@@ -173,6 +192,7 @@
     --soft: var(--ref-night-850);
     --border: var(--ref-night-820);
     --track: var(--ref-night-700);
+    --edge: var(--ref-night-700);
     --input: var(--ref-night-500);
 
     --foreground: var(--ref-night-50);
@@ -182,9 +202,10 @@
 
     --primary: var(--ref-lime-400);
     --primary-foreground: var(--ref-olive-950);
-    --primary-soft: var(--ref-olive-900);
-    --primary-deep: var(--ref-olive-800);
-    --ring: var(--ref-lime-400);
+    --accent: var(--ref-indigo-300);
+    --accent-soft: var(--ref-indigo-900);
+    --accent-fill: var(--ref-indigo-600);
+    --ring: var(--ref-indigo-300);
 
     --ok: var(--ref-ok-400);
     --ok-bg: var(--ref-ok-900);
@@ -198,9 +219,9 @@
     --vio: var(--ref-violet-300);
     --vio-bg: var(--ref-violet-900);
 
-    --hero: var(--ref-olive-800);
-    --hero-chip: var(--ref-olive-600);
-    --hero-icon: var(--ref-olive-600);
+    --hero: var(--ref-indigo-800);
+    --hero-chip: var(--ref-indigo-500);
+    --hero-icon: var(--ref-indigo-500);
     --hero-alert: var(--ref-red-900);
     --hero-alert-chip: var(--ref-red-700);
     --hero-alert-icon: var(--ref-red-700);
@@ -213,6 +234,7 @@
     --soft: var(--ref-night-850);
     --border: var(--ref-night-820);
     --track: var(--ref-night-700);
+    --edge: var(--ref-night-700);
     --input: var(--ref-night-500);
 
     --foreground: var(--ref-night-50);
@@ -222,9 +244,10 @@
 
     --primary: var(--ref-lime-400);
     --primary-foreground: var(--ref-olive-950);
-    --primary-soft: var(--ref-olive-900);
-    --primary-deep: var(--ref-olive-800);
-    --ring: var(--ref-lime-400);
+    --accent: var(--ref-indigo-300);
+    --accent-soft: var(--ref-indigo-900);
+    --accent-fill: var(--ref-indigo-600);
+    --ring: var(--ref-indigo-300);
 
     --ok: var(--ref-ok-400);
     --ok-bg: var(--ref-ok-900);
@@ -238,9 +261,9 @@
     --vio: var(--ref-violet-300);
     --vio-bg: var(--ref-violet-900);
 
-    --hero: var(--ref-olive-800);
-    --hero-chip: var(--ref-olive-600);
-    --hero-icon: var(--ref-olive-600);
+    --hero: var(--ref-indigo-800);
+    --hero-chip: var(--ref-indigo-500);
+    --hero-icon: var(--ref-indigo-500);
     --hero-alert: var(--ref-red-900);
     --hero-alert-chip: var(--ref-red-700);
     --hero-alert-icon: var(--ref-red-700);

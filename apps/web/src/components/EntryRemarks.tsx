@@ -37,7 +37,7 @@ export function RemarkLine({ seq, remark, count, onSaved }: { seq: string; remar
         </span>
       )}
       {canWrite && (
-        <button type="button" onClick={() => setOpen(true)} className="mt-0.5 text-xs font-semibold text-primary hover:underline">
+        <button type="button" onClick={() => setOpen(true)} className="mt-0.5 text-xs font-semibold text-accent hover:underline">
           {remark ? t('remarks.change') : t('remarks.add')}
           {(count ?? 0) > 1 && <span className="font-normal text-muted"> · {t('remarks.historyCount', { n: localDigits(String((count ?? 1) - 1)) })}</span>}
         </button>

@@ -180,11 +180,23 @@ describe('proposals lifecycle', () => {
     expect(detail.votes[0]!.member_id).toBe(fund.members.M02);
 
     const list = (await call('GET', '/proposals?limit=50', s.M02.access_token)).json() as {
-      items: Array<{ id: string; counts: { yes: number; no: number }; ballots_hidden: boolean }>;
+      items: Array<{
+        id: string;
+        counts: { yes: number; no: number };
+        ballots_hidden: boolean;
+        voters: Array<{ code: string; voted: boolean }>;
+      }>;
     };
     const listed = list.items.find((p) => p.id === id)!;
     expect(listed.ballots_hidden).toBe(true);
     expect(listed.counts.yes + listed.counts.no).toBe(0);
+    expect(listed).not.toHaveProperty('voted_count');
+
+    // Every member's list says who has voted, again never what.
+    const dots = listed.voters;
+    expect(dots.filter((v) => v.voted).map((v) => v.code)).toEqual(['M02', 'M03']);
+    expect(dots.length).toBe(detail.voters.length);
+    expect(Object.keys(dots[0]!).sort()).toEqual(['code', 'full_name', 'voted']);
   });
 
   dbIt('rejects voting by a non-eligible subject member', async () => {

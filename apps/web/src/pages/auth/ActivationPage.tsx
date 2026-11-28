@@ -59,7 +59,7 @@ export function ActivationPage() {
           <li key={s} className="flex flex-1 items-center gap-2 last:flex-none">
             <span
               className={`grid h-[22px] w-[22px] place-items-center rounded-full text-xs font-bold ${
-                i <= stepIndex ? 'bg-primary text-primary-foreground' : 'bg-hover'
+                i <= stepIndex ? 'bg-accent-fill text-on-accent' : 'bg-hover'
               }`}
             >
               {i < stepIndex ? '✓' : i + 1}
@@ -142,7 +142,7 @@ export function ActivationPage() {
           />
           <FieldError message={error?.message ?? null} />
           {error && (
-            <button type="button" className="text-sm font-bold text-primary" onClick={() => { setPin(''); setError(null); }}>
+            <button type="button" className="text-sm font-bold text-accent" onClick={() => { setPin(''); setError(null); }}>
               {t('auth.tryAnotherPin')}
             </button>
           )}

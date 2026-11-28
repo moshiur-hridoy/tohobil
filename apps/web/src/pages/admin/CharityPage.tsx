@@ -82,7 +82,7 @@ function LevyRow({ e }: { e: LevyEntry }) {
       sub={`${fmtDate(e.entry_date)} · #${localDigits(e.seq)}${e.moved_from_seq ? ` · ${t('fundsPage.movedFrom', { seq: localDigits(e.moved_from_seq) })}` : ''}`}
       amount={e.amount_paisa}
       into={into}
-      extra={e.receipt_file_id && <> · <button type="button" onClick={() => void openReceipt()} className="font-semibold text-primary underline">{t('fundsPage.receipt')}</button></>}
+      extra={e.receipt_file_id && <> · <button type="button" onClick={() => void openReceipt()} className="font-semibold text-accent underline">{t('fundsPage.receipt')}</button></>}
     />
   );
 }

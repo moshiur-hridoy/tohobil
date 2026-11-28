@@ -182,7 +182,7 @@ function NetAssetsHero({ accounts, members, matrix }: { accounts?: AccountBalanc
   return (
     <Card className="relative overflow-hidden">
       {/* a soft brand glow behind the headline figure */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'radial-gradient(90% 120% at 0% 0%, var(--primary-soft) 0%, transparent 60%)' }} />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'radial-gradient(90% 120% at 0% 0%, var(--accent-soft) 0%, transparent 60%)' }} />
       <div className="relative grid gap-8 p-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:p-7">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-ink2">{t('admin.netAssets')}</p>
@@ -202,13 +202,13 @@ function NetAssetsHero({ accounts, members, matrix }: { accounts?: AccountBalanc
               </div>
             ))}
           </dl>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl bg-primary-soft px-4 py-3" data-testid="usable-balance">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl bg-accent-soft px-4 py-3" data-testid="usable-balance">
             <div className="min-w-0">
               <p className="text-sm font-semibold text-foreground">{t('adminDash.usableBalance')}</p>
               <p className="text-xs text-ink2">{t('adminDash.usableBalanceHint')}</p>
               {advance !== null && advance > 0n && <p className="text-xs text-ink2">{t('adminDash.usableAdvance', { amount: taka(advance) })}</p>}
             </div>
-            {usable === null ? <Skeleton className="h-7 w-28" /> : <p className={`text-xl font-bold tabular-nums ${negClass(usable) || 'text-primary'}`}>{taka(usable)}</p>}
+            {usable === null ? <Skeleton className="h-7 w-28" /> : <p className={`text-xl font-bold tabular-nums ${negClass(usable) || 'text-accent'}`}>{taka(usable)}</p>}
           </div>
           {perAccount.length > 0 && (
             <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-[0.8125rem]" data-testid="cash-by-account">
@@ -260,7 +260,7 @@ function CollectionTrend({ matrix }: { matrix?: MatrixResponse }) {
           )}
         </div>
         <div className="flex gap-4 text-[0.8125rem] text-ink2">
-          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-primary" />{t('adminDash.legendPaid')}</span>
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-accent" />{t('adminDash.legendPaid')}</span>
           <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm border border-input bg-soft" />{t('adminDash.legendDue')}</span>
         </div>
       </div>
@@ -275,7 +275,7 @@ function CollectionTrend({ matrix }: { matrix?: MatrixResponse }) {
             <span className="text-xl font-bold tabular-nums">{taka(months[shown]!.paid)}</span>
             <span className="text-sm text-muted tabular-nums">/ {taka(months[shown]!.due)}</span>
             {months[shown]!.due > 0n && (
-              <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary tabular-nums">{formatCount(percent(months[shown]!.paid, months[shown]!.due))}%</span>
+              <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-bold text-accent tabular-nums">{formatCount(percent(months[shown]!.paid, months[shown]!.due))}%</span>
             )}
           </div>
           <div className="mt-3 flex h-44 items-end gap-2 border-b border-border sm:gap-3" onMouseLeave={() => setActive(null)}>
@@ -294,7 +294,7 @@ function CollectionTrend({ matrix }: { matrix?: MatrixResponse }) {
                 >
                   <span className="absolute inset-x-[18%] bottom-0 rounded-t-md border border-b-0 border-input bg-soft" style={{ height: `${dueH}%` }} />
                   <span
-                    className={`absolute inset-x-[18%] bottom-0 rounded-t-md transition-[height] duration-500 ${i === last ? 'bg-primary' : 'bg-primary opacity-70'}`}
+                    className={`absolute inset-x-[18%] bottom-0 rounded-t-md transition-[height] duration-500 ${i === last ? 'bg-accent' : 'bg-accent opacity-70'}`}
                     style={{ height: `${paidH}%` }}
                   />
                 </button>
@@ -348,7 +348,7 @@ function CollectedTile({ totals, loaded }: { totals?: { due_paisa: string; paid_
   return (
     <Kpi
       label={t('adminDash.collectedThisMonth')}
-      tone="bg-primary-soft text-primary"
+      tone="bg-accent-soft text-accent"
       icon={ICONS.trend}
       to="/admin/matrix"
       value={loaded ? taka(paid) : null}
@@ -356,7 +356,7 @@ function CollectedTile({ totals, loaded }: { totals?: { due_paisa: string; paid_
     >
       {loaded && due > 0n && (
         <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-soft" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-          <div className="h-full rounded-full bg-primary transition-[width] duration-700" style={{ width: `${Math.min(pct, 100)}%` }} />
+          <div className="h-full rounded-full bg-accent transition-[width] duration-700" style={{ width: `${Math.min(pct, 100)}%` }} />
         </div>
       )}
     </Kpi>
@@ -511,7 +511,7 @@ function StatusTable({ rows }: { rows: StatusRow[] }) {
           const due = BigInt(r.cell?.due_paisa ?? '0');
           const paid = BigInt(r.cell?.paid_paisa ?? '0');
           const pct = Math.min(percent(paid, due), 100);
-          const bar = r.month === 'pending' ? 'bg-warn' : r.month === 'overdue' ? 'bg-bad' : 'bg-primary';
+          const bar = r.month === 'pending' ? 'bg-warn' : r.month === 'overdue' ? 'bg-bad' : 'bg-accent';
           return (
             <div role="row" key={r.id} className={`${COLS} flex min-h-[3.5rem] border-b border-border py-2 last:border-b-0 ${r.settling ? 'opacity-55' : ''}`}>
               <div role="cell" className="flex min-w-0 flex-1 items-center gap-3">
@@ -545,7 +545,7 @@ function StatusTable({ rows }: { rows: StatusRow[] }) {
           );
         })}
       </div>
-      <Link to="/admin/matrix" className="flex min-h-11 items-center gap-1 text-[0.8125rem] font-semibold text-primary hover:underline">
+      <Link to="/admin/matrix" className="flex min-h-11 items-center gap-1 text-[0.8125rem] font-semibold text-accent hover:underline">
         {hidden > 0 ? t('adminDash.moreMembers', { n: formatCount(hidden) }) : t('adminDash.openMatrix')}
         <Icon d={ICONS.chevron} size={14} sw={2.2} />
       </Link>
@@ -605,7 +605,7 @@ function Tasks({ pending, approvals, objections, votes }: {
   for (const v of [...(votes?.items ?? [])].sort((a, b) => (a.closes_at ?? '').localeCompare(b.closes_at ?? '')).slice(0, 3)) {
     const date = v.closes_at ? fmtInstant(v.closes_at) : '—';
     rows.push(
-      <TaskRow key={v.id} to="/admin/proposals" tone="bg-primary-soft text-primary" icon={ICONS.vote} title={v.title}
+      <TaskRow key={v.id} to="/admin/proposals" tone="bg-accent-soft text-accent" icon={ICONS.vote} title={v.title}
         sub={v.voted_count !== undefined
           ? t('adminDash.taskVoteSubCount', { date, voted: formatCount(v.voted_count), eligible: formatCount(v.eligible_count) })
           : t('adminDash.taskVoteSub', { date })} />,
@@ -689,7 +689,7 @@ function Safety({ system, systemFailed, verify, today }: { system?: SystemStatus
           ))}
         </dl>
       )}
-      <Link to="/admin/system" className="flex min-h-11 items-center gap-1 border-t border-border text-[0.8125rem] font-semibold text-primary hover:underline">
+      <Link to="/admin/system" className="flex min-h-11 items-center gap-1 border-t border-border text-[0.8125rem] font-semibold text-accent hover:underline">
         {t('adminDash.safetyMore')}
         <Icon d={ICONS.chevron} size={14} sw={2.2} />
       </Link>

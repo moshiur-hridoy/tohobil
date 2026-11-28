@@ -90,7 +90,7 @@ function kindMeta(kind: NoticeKind): { icon: JSX.Element; borderClass: string; c
     case 'announcement':
       return {
         borderClass: 'border-border',
-        chipClass: 'bg-primary-soft text-primary',
+        chipClass: 'bg-accent-soft text-accent',
         icon: (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1z" />
@@ -174,7 +174,7 @@ export function NoticesPage() {
       <main className="flex-1 space-y-3 overflow-y-auto px-4 py-1 pb-4">
         {unreadCount > 0 && (
           <div className="flex items-center justify-between gap-3 px-1">
-            <span className="text-sm font-semibold text-primary">{t('notices.newCount', { n: formatCount(unreadCount) })}</span>
+            <span className="text-sm font-semibold text-accent">{t('notices.newCount', { n: formatCount(unreadCount) })}</span>
             <button
               type="button"
               disabled={openAll.isPending}
@@ -222,7 +222,7 @@ function NoticeCard({ item, onOpen }: { item: InboxItem; onOpen: () => void }) {
   return (
     <article
       onClick={onOpen}
-      className={`rounded-[18px] border bg-card p-4 shadow-sm transition-opacity ${meta.borderClass} ${unread ? 'ring-1 ring-primary' : 'opacity-75'}`}
+      className={`rounded-[18px] border bg-card p-4 shadow-sm transition-opacity ${meta.borderClass} ${unread ? 'ring-1 ring-accent' : 'opacity-75'}`}
     >
       <div className="flex items-center gap-2.5">
         <span className={`grid h-9 w-9 flex-none place-items-center rounded-[11px] ${meta.chipClass}`}>{meta.icon}</span>
@@ -231,7 +231,7 @@ function NoticeCard({ item, onOpen }: { item: InboxItem; onOpen: () => void }) {
         </span>
         <span className="ml-auto flex items-center gap-2 text-xs text-muted">
           {whenText(t, item.sent_at ?? item.scheduled_for)}
-          {unread && <span aria-label={t('notices.new')} className="h-2.5 w-2.5 rounded-full bg-primary" />}
+          {unread && <span aria-label={t('notices.new')} className="h-2.5 w-2.5 rounded-full bg-accent" />}
         </span>
       </div>
       {item.template === 'custom_notice' && item.payload._title && <p className="mt-2.5 font-bold text-foreground">{item.payload._title}</p>}

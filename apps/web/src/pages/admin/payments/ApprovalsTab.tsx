@@ -97,7 +97,7 @@ export function ApprovalsTab() {
                     {a.reason && <p className="mt-1 text-sm">{a.reason}</p>}
                     {a.status === 'rejected' && a.decision_note && <p className="mt-1 text-sm text-bad">{t('valuation.reason', { reason: a.decision_note })}</p>}
                     {isValue(a) && a.valuation_proof_file_id && (
-                      <button type="button" className="mt-1 text-xs font-semibold text-primary hover:underline" onClick={() => void openStatement(a.valuation_proof_file_id as string)}>
+                      <button type="button" className="mt-1 text-xs font-semibold text-accent hover:underline" onClick={() => void openStatement(a.valuation_proof_file_id as string)}>
                         {t('valuation.viewStatement')}
                       </button>
                     )}

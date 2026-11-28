@@ -1,19 +1,20 @@
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Avatar } from '../../components/MemberPhoto';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Chip, Icon } from '../../components/ui';
-import { ClauseLink } from '../../components/ClauseSelect';
 import { ProposalDetails } from '../../components/ProposalDetails';
 import { ListSkeleton } from '../../components/Skeleton';
 import { LoadError } from '../../components/StateViews';
 import { StatusPill } from '../../components/StatusPill';
-import { VoteCountdown } from '../../components/VoteCountdown';
+import { VoteCountdown, closesAtText } from '../../components/VoteCountdown';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useTimeLeft } from '../../lib/countdown';
 import type { ProposalDetail } from '../../lib/types';
 import { formatCount, localDigits } from '../../lib/format';
+import { choiceTone } from '../../lib/voteTone';
 
 const CHOICES = ['yes', 'no', 'abstain'] as const;
 type Choice = (typeof CHOICES)[number];
@@ -25,13 +26,11 @@ const CHOICE_ICON: Record<Choice, string> = {
 };
 /** A ballot's pill in the voter list: colour plus the word, never colour alone. */
 const CHOICE_PILL: Record<Choice, string> = {
-  yes: 'bg-ok-bg text-ok',
+  yes: 'bg-accent-soft text-accent',
   no: 'bg-bad-bg text-bad',
   abstain: 'bg-soft text-ink2',
 };
 const ICON_RESULT = 'M4 20v-6M10 20V5M16 20v-9M21 20H3';
-const ICON_LOCK = 'M6 11V8a6 6 0 0 1 12 0v3M5 11h14v10H5z';
-const ICON_PEOPLE = 'M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM21 19v-1a4 4 0 0 0-3-3.9M15 3.1a3.5 3.5 0 0 1 0 6.8';
 
 /** Integer percent of two non-negative whole numbers, for bar widths (no floating-point money). */
 const pct = (part: bigint, whole: bigint): string => (whole > 0n ? `${Number((part * 1000n) / whole) / 10}%` : '0%');
@@ -63,6 +62,16 @@ export function VoteDetailPage() {
     },
   });
 
+  // The voting sheet floats over the page, so the page ends with a gap of its height (it grows with large text).
+  const [sheet, setSheet] = useState<HTMLElement | null>(null);
+  const [sheetHeight, setSheetHeight] = useState(0);
+  useEffect(() => {
+    if (!sheet) return;
+    const observer = new ResizeObserver(() => setSheetHeight(sheet.offsetHeight));
+    observer.observe(sheet);
+    return () => observer.disconnect();
+  }, [sheet]);
+
   const d = proposal.data;
   const left = useTimeLeft(d?.status === 'open' ? (d.closes_at ?? null) : null, 1000);
   const timeUp = left === 0;
@@ -93,30 +102,30 @@ export function VoteDetailPage() {
         <ListSkeleton rows={6} />
       ) : (
         <>
-          {isOpen && d.closes_at && <VoteCountdown closesAt={d.closes_at} />}
-
-          {/* The proposal */}
-          <section className="rounded-[20px] border border-border bg-card p-4 shadow-card">
-            <div className="flex flex-wrap gap-2">
-              <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">{t(`proposalType.${d.type}`)}</span>
-              <span className="rounded-full bg-soft px-2.5 py-1 text-xs font-semibold text-ink2">{d.basis === 'share' ? t('proposal.byShares') : t('proposal.byMembers')}</span>
-            </div>
-            <h2 className="mt-3 text-[1.375rem] font-bold leading-snug [overflow-wrap:anywhere]">{d.title}</h2>
-            {d.description && <p className="mt-2 whitespace-pre-line text-ink2 [overflow-wrap:anywhere]">{d.description}</p>}
-            {d.subject && (
-              <p className="mt-2 text-sm text-muted">
-                {t('proposal.subject')}: <span className="font-semibold text-foreground">{d.subject.code} {d.subject.full_name}</span>
-              </p>
-            )}
-            {d.clause_ref && <ClauseLink clause={d.clause_ref} className="mt-2 inline-block text-sm" />}
-            <div className="mt-3">
-              <ProposalDetails type={d.type} payload={d.payload} />
+          {/* The proposal, under the time left while the vote runs */}
+          <section className="overflow-hidden rounded-[20px] border border-border bg-card shadow-card">
+            {isOpen && d.closes_at && <VoteCountdown closesAt={d.closes_at} />}
+            <div className="space-y-2 p-4">
+              <h2 className="text-[1.375rem] font-bold leading-snug [overflow-wrap:anywhere]">{d.title}</h2>
+              {d.description && <p className="whitespace-pre-line text-ink2 [overflow-wrap:anywhere]">{d.description}</p>}
+              {d.subject && (
+                <p className="text-sm text-muted">
+                  {t('proposal.subject')}: <span className="font-semibold text-foreground">{d.subject.code} {d.subject.full_name}</span>
+                </p>
+              )}
+              <ProposalDetails type={d.type} payload={d.payload} plain />
+              {isOpen && d.closes_at && <p className="pt-1 text-sm text-muted">{t('votes.countdown.closesAt', { when: closesAtText(t, d.closes_at) })}</p>}
             </div>
           </section>
 
-          {/* Your vote, while the vote is open */}
+          {/* Your vote, while the vote is open: a sheet fixed above the tab bar, within thumb reach (owner).
+              The bottom padding keeps the buttons clear of the raised pay button. */}
           {isOpen && (
-            <section className="rounded-[20px] border border-border bg-card p-4 shadow-card">
+            <section
+              ref={setSheet}
+              data-testid="vote-sheet"
+              className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] mx-auto max-h-[60dvh] max-w-lg overflow-y-auto rounded-t-[24px] border border-b-0 border-track bg-card px-4 pb-8 pt-3 shadow-[0_-12px_28px_-14px_rgba(0,0,0,0.45)]"
+            >
               <h3 className="text-base font-bold">{t('votes.yourVote')}</h3>
               {isSubject ? (
                 <p className="mt-2 rounded-xl bg-warn-bg p-2.5 text-sm text-warn">{t('votes.cannotVoteSubject')}</p>
@@ -124,7 +133,7 @@ export function VoteDetailPage() {
                 <>
                   <div className="mt-3 grid grid-cols-3 gap-2">
                     {CHOICES.map((choice) => (
-                      <ChoiceButton key={choice} choice={choice} active={myVote?.choice === choice} anyChosen={!!myVote} disabled={!canVote} onPick={() => vote.mutate(choice)} />
+                      <ChoiceButton key={choice} choice={choice} active={myVote?.choice === choice} disabled={!canVote} onPick={() => vote.mutate(choice)} />
                     ))}
                   </div>
                   {vote.error && (
@@ -134,42 +143,26 @@ export function VoteDetailPage() {
                         : t('errors.generic')}
                     </p>
                   )}
-                  {myVote ? (
-                    <p data-testid="voted-label" className="mt-2.5 text-sm font-semibold text-ok">
-                      ✓ {t('votes.youVoted', { choice: t(`votes.${myVote.choice}`) })}
-                    </p>
-                  ) : null}
-                  <p className="mt-1 text-xs text-muted">{timeUp ? t('votes.countdown.counting') : t('votes.changeHint')}</p>
+                  <p className="mt-2.5 text-center text-xs leading-relaxed text-muted">{t(timeUp ? 'votes.countdown.counting' : 'votes.deadlineNote')}</p>
                 </>
               )}
             </section>
           )}
 
-          <ResultCard d={d} />
+          {!d.ballots_hidden && <ResultCard d={d} />}
 
           <VoterList d={d} myId={me?.member_id} />
+
+          {isOpen && <div aria-hidden="true" style={{ height: `calc(${sheetHeight}px - 2rem + env(safe-area-inset-bottom))` }} />}
         </>
       )}
     </div>
   );
 }
 
-function ChoiceButton({ choice, active, anyChosen, disabled, onPick }: { choice: Choice; active: boolean; anyChosen: boolean; disabled: boolean; onPick: () => void }) {
+function ChoiceButton({ choice, active, disabled, onPick }: { choice: Choice; active: boolean; disabled: boolean; onPick: () => void }) {
   const { t } = useTranslation();
-  // Before voting "yes" is the filled button; after voting the chosen one is filled and the rest outlined.
-  const tone = active
-    ? choice === 'yes'
-      ? 'bg-ok text-primary-foreground'
-      : choice === 'no'
-        ? 'bg-bad text-primary-foreground'
-        : 'bg-muted text-primary-foreground'
-    : choice === 'yes' && !anyChosen
-      ? 'bg-primary text-primary-foreground'
-      : choice === 'no'
-        ? 'border-[1.5px] border-bad bg-card text-bad'
-        : choice === 'yes'
-          ? 'border-[1.5px] border-ok bg-card text-ok'
-          : 'border-[1.5px] border-border bg-card text-ink2';
+  const tone = choiceTone(choice, active);
   return (
     <button
       type="button"
@@ -185,10 +178,7 @@ function ChoiceButton({ choice, active, anyChosen, disabled, onPick }: { choice:
   );
 }
 
-/**
- * While the vote is open the tally is hidden (only who has voted is known), so the card shows the
- * turnout and what is needed to pass. Once it closes: the yes/no bar against everyone eligible.
- */
+/** The yes/no bar against everyone eligible, once the vote closes. While it runs, the voter list below says who has voted (owner). */
 function ResultCard({ d }: { d: ProposalDetail }) {
   const { t } = useTranslation();
   const byShare = d.basis === 'share';
@@ -199,32 +189,6 @@ function ResultCard({ d }: { d: ProposalDetail }) {
     ? t('proposal.needShares', { n: localDigits(String(need)), total: localDigits(String(eligible)) })
     : t('proposal.needMembers', { n: localDigits(String(need)), total: localDigits(String(eligible)) });
 
-  if (d.ballots_hidden) {
-    const voted = d.voters.filter((v) => v.voted).length;
-    const total = d.voters.length;
-    return (
-      <section className="rounded-[20px] border border-border bg-card p-4 shadow-card">
-        <div className="flex items-center gap-3">
-          <Chip tone="bg-primary-soft text-primary" d={ICON_PEOPLE} />
-          <h3 className="flex-1 text-base font-bold">{t('votes.turnoutTitle')}</h3>
-          <span className="text-sm font-semibold">{localDigits(`${voted}/${total}`)}</span>
-        </div>
-        <div className="mt-3 h-3 overflow-hidden rounded-full bg-soft" role="img" aria-label={t('votes.turnout', { voted: formatCount(voted), total: formatCount(total) })}>
-          <div className="h-full rounded-full bg-ok transition-[width] duration-500" style={{ width: pct(BigInt(voted), BigInt(total)) }} />
-        </div>
-        <p className="mt-2 text-sm text-ink2">{t('votes.turnout', { voted: formatCount(voted), total: formatCount(total) })}</p>
-        <p className="mt-3 text-sm">
-          <span className="text-muted">{t('proposal.needToPass')}: </span>
-          <span className="font-semibold">{needText}</span>
-        </p>
-        <p className="mt-3 flex items-start gap-2 rounded-xl bg-soft p-2.5 text-xs text-ink2">
-          <span className="mt-px shrink-0 text-muted"><Icon d={ICON_LOCK} size={16} /></span>
-          {t('votes.hiddenUntilClose')}
-        </p>
-      </section>
-    );
-  }
-
   const c = d.counts;
   const yes = byShare ? BigInt(c.yes_weight) : BigInt(c.yes);
   const no = byShare ? BigInt(c.no_weight) : BigInt(c.no);
@@ -232,7 +196,7 @@ function ResultCard({ d }: { d: ProposalDetail }) {
   const notVoted = eligible - yes - no - abstain > 0n ? eligible - yes - no - abstain : 0n;
   const passed = need > 0n && yes >= need;
   const legend = [
-    ['bg-ok', t('votes.yes'), yes],
+    ['bg-accent', t('votes.yes'), yes],
     ['bg-bad', t('votes.no'), no],
     ['bg-muted', t('votes.abstain'), abstain],
     ['border border-border bg-soft', t('votes.notVotedShort'), notVoted],
@@ -240,12 +204,12 @@ function ResultCard({ d }: { d: ProposalDetail }) {
   return (
     <section className="rounded-[20px] border border-border bg-card p-4 shadow-card">
       <div className="flex items-center gap-3">
-        <Chip tone="bg-primary-soft text-primary" d={ICON_RESULT} />
+        <Chip tone="bg-accent-soft text-accent" d={ICON_RESULT} />
         <h3 className="flex-1 text-base font-bold">{t('votes.result')}</h3>
         <span className="text-sm text-muted">{t('votes.totalOf', { amount: amount(eligible) })}</span>
       </div>
       <div className="mt-3.5 flex h-3.5 gap-0.5 overflow-hidden rounded-full bg-soft" aria-hidden="true">
-        {yes > 0n && <div className="h-full bg-ok" style={{ width: pct(yes, eligible) }} />}
+        {yes > 0n && <div className="h-full bg-accent" style={{ width: pct(yes, eligible) }} />}
         {no > 0n && <div className="h-full bg-bad" style={{ width: pct(no, eligible) }} />}
         {abstain > 0n && <div className="h-full bg-muted" style={{ width: pct(abstain, eligible) }} />}
       </div>
@@ -262,7 +226,7 @@ function ResultCard({ d }: { d: ProposalDetail }) {
         <span className="text-muted">{t('proposal.needToPass')}: </span>
         <span className="font-semibold">{needText}</span>
       </p>
-      {passed && <p className="mt-1 text-sm font-semibold text-ok">✓ {t('proposal.passed')}</p>}
+      {passed && <p className="mt-1 text-sm font-semibold text-foreground">✓ {t('proposal.passed')}</p>}
     </section>
   );
 }
@@ -285,11 +249,11 @@ function VoterList({ d, myId }: { d: ProposalDetail; myId: string | undefined })
           const [pill, label] = cast
             ? [CHOICE_PILL[cast.choice], t(`votes.${cast.choice}`)]
             : v.voted
-              ? ['bg-ok-bg text-ok', t('proposal.votedYes')]
+              ? ['bg-soft text-ink2', t('proposal.votedYes')]
               : ['bg-soft text-muted', t('proposal.votedNo')];
           return (
             <li key={v.member_id} className="flex min-h-[52px] items-center gap-3 border-t border-border py-2">
-              <Avatar fileId={v.photo_file_id} fallback={Array.from(v.full_name.trim())[0] ?? '?'} className={`h-9 w-9 text-sm font-bold ${me ? 'bg-primary text-primary-foreground' : 'bg-primary-soft text-primary'}`} />
+              <Avatar fileId={v.photo_file_id} fallback={Array.from(v.full_name.trim())[0] ?? '?'} className={`h-9 w-9 text-sm font-bold ${me ? 'bg-accent-fill text-on-accent' : 'bg-accent-soft text-accent'}`} />
               <span className="min-w-0 flex-1">
                 <span className={`block truncate text-[0.9375rem] ${me ? 'font-bold' : 'font-medium'}`}>
                   {v.full_name}
